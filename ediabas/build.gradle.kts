@@ -6,6 +6,8 @@ kotlin {
     jvmToolchain(21)
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        // UIntArray (C# UInt32[] for communication parameters and table offsets)
+        optIn.add("kotlin.ExperimentalUnsignedTypes")
     }
 }
 
@@ -24,6 +26,11 @@ tasks.test {
     useJUnitPlatform()
     // Optional: folder with the user's own EDIABAS ECU files, for tests that need real .PRG files.
     System.getenv("BIMMERDATA_ECU_DIR")?.let { environment("BIMMERDATA_ECU_DIR", it) }
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
 }
 
 // Small command-line tool: ./gradlew :ediabas:prgDump --args="/path/MSV70.PRG [TABLE_NAME]"
