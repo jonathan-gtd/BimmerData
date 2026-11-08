@@ -23,6 +23,8 @@ data class Settings(
     val api: ApiConfig = ApiConfig(),
     /** Mode of the last connection the user made; null until the first one (the Connect pill then asks). */
     val lastMode: LiveMode? = null,
+    val recording: RecordingConfig = RecordingConfig(),
+    val telegraf: TelegrafSettings = TelegrafSettings(),
 )
 
 data class ApiConfig(
@@ -68,6 +70,8 @@ class AppSettings private constructor(context: Context) {
                     ?: ApiConfig().scopes,
             ),
             lastMode = prefs.getString(K_LAST_MODE, null)?.let { m -> LiveMode.entries.firstOrNull { it.name == m } },
+            recording = loadRecording(prefs),
+            telegraf = loadTelegraf(prefs),
         )
     }
 
@@ -84,10 +88,15 @@ class AppSettings private constructor(context: Context) {
             putStringSet(K_SCOPES, s.api.scopes.filter { it in ApiConfig.GRANTABLE }.map { it.id }.toSet())
             if (s.lastMode != null) putString(K_LAST_MODE, s.lastMode.name) else remove(K_LAST_MODE)
             remove(K_AUTO_OLD)
+            saveExtras(s)
         }
     }
 
     fun updateApi(transform: (ApiConfig) -> ApiConfig) = update { it.copy(api = transform(it.api)) }
+
+    fun updateRecording(transform: (RecordingConfig) -> RecordingConfig) = update { it.copy(recording = transform(it.recording)) }
+
+    fun updateTelegraf(transform: (TelegrafSettings) -> TelegrafSettings) = update { it.copy(telegraf = transform(it.telegraf)) }
 
     /** New random token: every client using the old one gets 401 from now on. */
     fun regenerateToken() = updateApi { it.copy(token = ApiTokens.generate()) }

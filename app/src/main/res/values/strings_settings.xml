@@ -16,8 +16,6 @@
     <string name="settings_section_recording">Recording</string>
     <string name="settings_rec_folder">Folder</string>
     <string name="settings_rec_folder_hint">Internal storage › %1$s, visible in the Files app and over USB.</string>
-    <string name="settings_rec_rate">Sample rate</string>
-    <string name="settings_rec_rate_value">One row per read cycle: the rate follows the reads/s shown on the dashboard. Fewer measurements on screen means faster rows.</string>
     <string name="settings_rec_columns">Columns</string>
     <string name="settings_rec_columns_value">Every measurement being read when the recording starts.</string>
 

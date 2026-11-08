@@ -131,6 +131,39 @@ class CsvSessionRecorderTest {
     }
 
     @Test
+    fun `file prefix and minimum row interval`() = runBlocking {
+        val source = FakeSource()
+        val sink = Sink()
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val now = 1_762_590_652_000L
+        val names = ArrayList<String>()
+        val recorder = CsvSessionRecorder(
+            source = source, columns = { listOf(oil) }, output = { names += it; sink }, scope = scope,
+            dispatcher = Dispatchers.Default, clock = { now }, zone = ZoneId.of("UTC"),
+            fileNamer = { CsvSessionRecorder.fileName(it, ZoneId.of("UTC"), "e90 trip/1") },
+            minRowIntervalMs = { 500 },
+        )
+        try {
+            recorder.start()
+            awaitUntil { names.isNotEmpty() }
+            assertEquals("e90trip1_20251108_083052.csv", names.single())
+            for (i in 0 until 20) { // 20 reads at 100 ms -> rows at 0, 500, 1000, 1500
+                source.samples.value = mapOf(oil.id to Sample(i.toDouble(), null, now + i * 100L))
+                delay(15)
+            }
+            awaitUntil { recorder.state.value.rows == 4L }
+            recorder.mark("m") // markers are never thinned out
+            awaitUntil { recorder.state.value.rows == 5L }
+            delay(50)
+            assertEquals(5L, recorder.state.value.rows)
+        } finally {
+            recorder.stop()
+            scope.cancel()
+        }
+        assertEquals("bimmerdata", CsvSessionRecorder.safePrefix("  /// "))
+    }
+
+    @Test
     fun `number format`() {
         assertEquals("14.5", CsvSessionRecorder.number(14.500000223517418))
         assertEquals("0", CsvSessionRecorder.number(2.220446E-14))

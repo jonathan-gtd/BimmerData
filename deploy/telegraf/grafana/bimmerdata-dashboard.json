@@ -1,0 +1,232 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_BIMMERDATA",
+      "label": "BimmerData (TimescaleDB)",
+      "type": "datasource",
+      "pluginId": "grafana-postgresql-datasource",
+      "pluginName": "PostgreSQL"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "datasource",
+      "id": "grafana-postgresql-datasource",
+      "name": "PostgreSQL",
+      "version": "1.0.0"
+    }
+  ],
+  "title": "BimmerData",
+  "uid": "bimmerdata",
+  "editable": true,
+  "schemaVersion": 39,
+  "version": 1,
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "refresh": "",
+  "tags": [
+    "bimmerdata",
+    "car"
+  ],
+  "description": "Live data exported by the BimmerData app (phone -> Telegraf -> TimescaleDB).",
+  "templating": {
+    "list": [
+      {
+        "name": "car",
+        "label": "Car",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "${DS_BIMMERDATA}"
+        },
+        "multi": true,
+        "includeAll": true,
+        "refresh": 2,
+        "query": "SELECT DISTINCT car FROM bimmerdata WHERE $__timeFilter(time) ORDER BY 1",
+        "definition": "SELECT DISTINCT car FROM bimmerdata WHERE $__timeFilter(time) ORDER BY 1"
+      },
+      {
+        "name": "measurement",
+        "label": "Measurement",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "${DS_BIMMERDATA}"
+        },
+        "multi": true,
+        "includeAll": true,
+        "refresh": 2,
+        "query": "SELECT DISTINCT ecu || '/' || id AS __value, ecu || ' · ' || COALESCE(label, id) AS __text FROM bimmerdata WHERE $__timeFilter(time) AND car IN ($car) ORDER BY 2",
+        "definition": "measurements of the selected cars"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Selected measurements",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_BIMMERDATA}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 12
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 1,
+            "spanNulls": 30000,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "min",
+            "mean",
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_BIMMERDATA}"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time_bucket('$__interval', time) AS time, ecu || ' · ' || COALESCE(label, id) || COALESCE(' [' || unit || ']', '') AS metric, avg(value) AS value\nFROM bimmerdata\nWHERE $__timeFilter(time) AND car IN ($car) AND (ecu || '/' || id) IN ($measurement) AND value IS NOT NULL\nGROUP BY 1, 2\nORDER BY 1"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "One panel per measurement",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_BIMMERDATA}"
+      },
+      "repeat": "measurement",
+      "repeatDirection": "h",
+      "maxPerRow": 3,
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 8,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 1,
+            "spanNulls": 30000,
+            "showPoints": "never",
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_BIMMERDATA}"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time_bucket('$__interval', time) AS time, ecu || ' · ' || COALESCE(label, id) || COALESCE(' [' || unit || ']', '') AS metric, avg(value) AS value\nFROM bimmerdata\nWHERE $__timeFilter(time) AND car IN ($car) AND (ecu || '/' || id) = '$measurement' AND value IS NOT NULL\nGROUP BY 1, 2\nORDER BY 1"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "table",
+      "title": "Summary over the time range",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_BIMMERDATA}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 16,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_BIMMERDATA}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ecu || ' · ' || COALESCE(label, id) || COALESCE(' [' || unit || ']', '') AS measurement, count(*) AS points, min(value) AS min, avg(value) AS mean, max(value) AS max, last(value, time) AS last, max(time) AS last_seen\nFROM bimmerdata\nWHERE $__timeFilter(time) AND car IN ($car) AND (ecu || '/' || id) IN ($measurement)\nGROUP BY 1\nORDER BY 1"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Points in range",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_BIMMERDATA}"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 20,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_BIMMERDATA}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT count(*) AS points FROM bimmerdata WHERE $__timeFilter(time) AND car IN ($car)"
+        }
+      ]
+    }
+  ]
+}

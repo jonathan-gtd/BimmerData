@@ -193,6 +193,7 @@ internal object OpenApi {
         "Dashboard" to "Card layouts of the phone and of Android Auto. Changes are saved at once; Android Auto follows them live.",
         "Connection" to "Connect to the car (USB K+DCAN cable) or to the built-in simulated ECU, and record CSV logs.",
         "Settings" to "App settings that may be changed remotely. API settings (enable, port, token, scopes) can only be changed on the phone.",
+        "Export" to "Export of the live values to Telegraf (line protocol over HTTP), which writes them to TimescaleDB for Grafana. See docs/TELEGRAF.md in the BimmerData repository.",
     )
 
     private val INTRO = """
@@ -375,6 +376,17 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
             "name" to S.str(example = "bimmerdata_2026-11-08_14-03-12.csv"),
             "sizeBytes" to S.int(format = "int64"),
             "modifiedMs" to S.int(format = "int64"),
+        ))
+        put("TelegrafExport", S.obj(
+            "Telegraf export (secrets are never returned).", listOf("enabled", "url", "auth", "username", "secretSet", "car", "pointsPerSecond", "mode", "state"), false, null,
+            "enabled" to S.bool(), "url" to S.str("Telegraf listener URL.", "http://192.168.1.10:8186/api/v2/write"),
+            "auth" to S.str("Authentication (phone only).", enum = listOf("none", "token", "basic")), "username" to S.str("User for basic auth."),
+            "secretSet" to S.bool("A token / password is stored, encrypted, on the phone."), "car" to S.str("Value of the `car` tag."),
+            "pointsPerSecond" to S.int("At most this many points per measurement and second.", 1, 5), "mode" to S.str(enum = listOf("live", "afterTrip")),
+            "state" to S.obj("Queue on the phone.", listOf("phase", "queuedPoints", "queuedBytes", "droppedPoints", "sentPoints"), false, null,
+                "phase" to S.str(enum = listOf("off", "idle", "waitingForNetwork", "waitingForUnmetered", "sending", "retrying", "authFailed")),
+                "queuedPoints" to S.int(), "queuedBytes" to S.int(), "droppedPoints" to S.int("Lost because the queue was full or refused by Telegraf."),
+                "sentPoints" to S.int("Since the app started."), "lastSuccessMs" to S.int(format = "int64"), "lastError" to S.str()),
         ))
         put("Settings", S.obj(
             "App settings.", listOf("defaultMode", "autoConnectOnCable", "recordingFolder", "api"), false, null,

@@ -110,12 +110,14 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
     private val csvRecorder = CsvSessionRecorder(
         source = proxy,
         columns = { proxy.requested },
-        output = { name -> CsvFiles.create(app, name) { uri -> _lastRecording.value = uri } },
+        output = { name -> RecordingStorage.create(app, name) { uri -> _lastRecording.value = uri } },
         scope = scope,
         pin = proxy::setPinned,
+        fileNamer = { t -> CsvSessionRecorder.fileName(t, prefix = AppSettings.get(app).state.value.recording.filePrefix) },
+        minRowIntervalMs = { AppSettings.get(app).state.value.recording.rowIntervalMs },
     )
 
-    /** CSV logger of the live values, files in Documents/BimmerData/. */
+    /** CSV logger of the live values, files in the folder of Settings › Recording ([RecordingStorage]). */
     val recorder: SessionRecorder get() = csvRecorder
 
     private val _connection = MutableStateFlow<LiveConnection>(LiveConnection.Disconnected)

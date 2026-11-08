@@ -12,6 +12,10 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.util.Log
 import io.github.jonathangtd.bimmerdata.api.ApiAccess
+import io.github.jonathangtd.bimmerdata.api.ApiDocs
+import io.github.jonathangtd.bimmerdata.api.ApiJson
+import io.github.jonathangtd.bimmerdata.api.ApiService
+import io.github.jonathangtd.bimmerdata.api.OpenApi
 import io.github.jonathangtd.bimmerdata.api.ApiServer
 import io.github.jonathangtd.bimmerdata.settings.AppSettings
 import kotlinx.coroutines.CoroutineScope
@@ -109,7 +113,7 @@ class ApiRuntime private constructor(context: Context) {
             return@withLock
         }
         stopServer()
-        val s = ApiServer(backend, ::currentAccess, log = { msg, e -> Log.w(TAG, msg, e) })
+        val s = ApiServer(backend, ::currentAccess, docsAssets = ::docsAsset, log = { msg, e -> Log.w(TAG, msg, e) })
         try {
             s.start(addresses, api.port)
             server = s
@@ -127,6 +131,21 @@ class ApiRuntime private constructor(context: Context) {
         server?.stop()
         server = null
         bound = null
+    }
+
+    private val docsCache = java.util.concurrent.ConcurrentHashMap<String, ByteArray>()
+
+    /** Embedded Swagger UI files (assets/swagger-ui/), cached after the first read. */
+    private fun docsAsset(name: String): ByteArray? {
+        if (name !in ApiDocs.ASSETS) return null
+        docsCache[name]?.let { return it }
+        return runCatching { app.assets.open("swagger-ui/$name").use { it.readBytes() } }.getOrNull()?.also { docsCache[name] = it }
+    }
+
+    /** The OpenAPI document, for the in-app documentation (works with the server off). */
+    fun openApiJson(): String {
+        val service = server?.service ?: ApiService(backend, ::currentAccess)
+        return ApiJson.encodeToString(kotlinx.serialization.json.JsonElement.serializer(), OpenApi.document(service.routes, null, backend.appVersion))
     }
 
     private fun currentAccess(): ApiAccess {

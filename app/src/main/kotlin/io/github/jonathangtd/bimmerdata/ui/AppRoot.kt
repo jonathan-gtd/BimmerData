@@ -3,6 +3,7 @@
  */
 package io.github.jonathangtd.bimmerdata.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
@@ -30,9 +31,11 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
@@ -52,35 +55,53 @@ import androidx.compose.ui.unit.sp
 import io.github.jonathangtd.bimmerdata.R
 import io.github.jonathangtd.bimmerdata.dashboard.ui.DashboardScreen
 import io.github.jonathangtd.bimmerdata.faults.FaultsScreen
+import io.github.jonathangtd.bimmerdata.settings.ApiDocsScreen
 import io.github.jonathangtd.bimmerdata.settings.AppServices
 import io.github.jonathangtd.bimmerdata.settings.SettingsScreen
 
 enum class AppTab(@param:DrawableRes val icon: Int, @param:StringRes val label: Int) {
     Dashboard(R.drawable.ic_dashboard, R.string.nav_dashboard),
-    Tool32(R.drawable.ic_tool32, R.string.nav_tool32),
     Faults(R.drawable.ic_faults, R.string.nav_faults),
     Settings(R.drawable.ic_settings, R.string.nav_settings),
 }
 
-/** Top-level screens with a bottom navigation bar (hidden while editing the dashboard layout). */
+/**
+ * Top-level screens with a bottom navigation bar (hidden while editing the dashboard layout).
+ * Tool32 and the API documentation are secondary screens ([AppOverlay]) opened through
+ * [LocalAppNavigator]: from Settings › Tools, and from an ECU's detail with its SGBD selected.
+ */
 @Composable
 fun AppRoot() {
     var tab by rememberSaveable { mutableStateOf(AppTab.Dashboard) }
     var editing by rememberSaveable { mutableStateOf(false) }
+    var overlay by rememberSaveable { mutableStateOf<AppOverlay?>(null) }
+    var tool32Sgbd by rememberSaveable { mutableStateOf<String?>(null) }
     val holder = rememberSaveableStateHolder()
-    val barVisible = !(editing && tab == AppTab.Dashboard)
+    val navigator = remember {
+        AppNavigator(
+            openTool32 = { sgbd -> tool32Sgbd = sgbd; overlay = AppOverlay.Tool32 },
+            openApiDocs = { overlay = AppOverlay.ApiDocs },
+        )
+    }
+    BackHandler(enabled = overlay != null) { overlay = null }
+    val barVisible = overlay == null && !(editing && tab == AppTab.Dashboard)
     // REST API server and USB auto-connect follow the settings for the whole process life.
     val context = LocalContext.current
     LaunchedEffect(Unit) { AppServices.start(context) }
     Column(Modifier.fillMaxSize().background(Cockpit.Background)) {
         // While the bottom bar is shown it owns the navigation bar inset.
         Box(Modifier.fillMaxWidth().weight(1f).then(if (barVisible) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
-            holder.SaveableStateProvider(tab.name) {
-                when (tab) {
-                    AppTab.Dashboard -> DashboardScreen(onEditingChange = { editing = it })
-                    AppTab.Tool32 -> Tool32Screen()
-                    AppTab.Faults -> FaultsScreen()
-                    AppTab.Settings -> SettingsScreen()
+            CompositionLocalProvider(LocalAppNavigator provides navigator) {
+                when (overlay) {
+                    AppOverlay.Tool32 -> Tool32Screen(initialSgbd = tool32Sgbd, onBack = { overlay = null })
+                    AppOverlay.ApiDocs -> ApiDocsScreen(onBack = { overlay = null })
+                    null -> holder.SaveableStateProvider(tab.name) {
+                        when (tab) {
+                            AppTab.Dashboard -> DashboardScreen(onEditingChange = { editing = it })
+                            AppTab.Faults -> FaultsScreen()
+                            AppTab.Settings -> SettingsScreen()
+                        }
+                    }
                 }
             }
         }

@@ -11,6 +11,8 @@ import io.github.jonathangtd.bimmerdata.i18n.rememberTranslator
 import io.github.jonathangtd.bimmerdata.i18n.translationVersion
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -56,11 +58,13 @@ import io.github.jonathangtd.bimmerdata.live.vehicle.Vehicle
 import io.github.jonathangtd.bimmerdata.live.vehicle.VehicleEcu
 import io.github.jonathangtd.bimmerdata.ui.BarlowCondensed
 import io.github.jonathangtd.bimmerdata.ui.Cockpit
+import io.github.jonathangtd.bimmerdata.ui.LocalAppNavigator
 import io.github.jonathangtd.bimmerdata.vehicle.DetailState
 import io.github.jonathangtd.bimmerdata.vehicle.VehicleState
 import java.text.NumberFormat
 
-/** One ECU: identification, fault memory with details, read again / clear (with confirmation). */
+/** One ECU: identification, fault memory with details, read again / clear (with confirmation), its jobs in Tool32. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun EcuDetailScreen(
     vehicle: Vehicle,
@@ -102,7 +106,8 @@ internal fun EcuDetailScreen(
             }
         }
         item(key = "actions") {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            val navigator = LocalAppNavigator.current
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 PillButton(stringResource(R.string.veh_ecu_read_again), onReadAgain, icon = R.drawable.ic_reset, enabled = !state.busy && ecu.sgbdAvailable)
                 if (canClear) {
                     PillButton(
@@ -110,6 +115,11 @@ internal fun EcuDetailScreen(
                         color = Cockpit.Danger, background = Cockpit.Danger.copy(alpha = 0.12f), enabled = !state.busy,
                     )
                 }
+                // Tool32 with this ECU's SGBD already selected
+                PillButton(
+                    stringResource(R.string.settings2_ecu_jobs), { ecu.sgbd?.let(navigator.openTool32) }, icon = R.drawable.ic_tool32,
+                    enabled = ecu.sgbdAvailable && ecu.sgbd != null,
+                )
             }
         }
         if (state.busy) item(key = "task") { TaskCard(state.task, onCancel) }

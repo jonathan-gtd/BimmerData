@@ -3,6 +3,7 @@
  */
 package io.github.jonathangtd.bimmerdata.live
 
+import android.content.ClipData
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -60,10 +61,12 @@ object CsvFiles {
 
     /** "Share" chooser for a recording (e.g. to mail it or open it in a spreadsheet app). */
     fun shareIntent(uri: Uri, title: String = "Share recording"): Intent {
+        // ClipData carries the read grant to the chosen app (needed for SAF document Uris too)
         val send = Intent(Intent.ACTION_SEND)
             .setType(CsvSessionRecorder.MimeType)
             .putExtra(Intent.EXTRA_STREAM, uri)
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        send.clipData = ClipData.newRawUri(null, uri)
         return Intent.createChooser(send, title).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
 

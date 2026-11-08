@@ -31,6 +31,18 @@ Supported EDIABAS concepts so far: BMW-FAST (0x010F). DS2, KWP2000\* and D-CAN a
 Safety: the interface refuses flashing, coding writes, security access and the programming
 session before anything is sent to the car. Fault memory clear is allowed.
 
+## Settings
+
+- **Tools › Tool32**: the mini Tool32 above. It also opens from an ECU's detail (Faults tab,
+  **Jobs (Tool32)**) with that ECU's SGBD already selected.
+- **Recording**: CSV files go to `Documents/BimmerData/`, or to a folder you choose (Android
+  folder picker); row rate (every read cycle, or at most 10/5/2/1 rows per second) and file
+  name prefix.
+- **Telegraf export**: live values to Telegraf → TimescaleDB → Grafana, live or after the trip
+  over home Wi-Fi. See [docs/TELEGRAF.md](docs/TELEGRAF.md) and [deploy/telegraf/](deploy/telegraf/).
+- **Local API**: REST/JSON API for scripts and AI agents, with Swagger UI built in. See
+  [docs/API.md](docs/API.md).
+
 ## Android Auto
 
 The car pages of the dashboard (edited on the phone: **Edit** › **Android Auto**) are shown in

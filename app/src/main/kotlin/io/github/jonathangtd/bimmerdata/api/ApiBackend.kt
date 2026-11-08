@@ -77,7 +77,60 @@ interface ApiBackend {
 
     /** Applies the writable settings of [patch] (validated by the caller) and returns the result. */
     fun updateSettings(patch: SettingsPatch): SettingsView
+
+    /** Telegraf export settings and state, without the token / password; null = not available. */
+    fun telegraf(): TelegrafView? = null
+
+    /** Applies [patch] (validated by the caller) and returns the result. */
+    fun updateTelegraf(patch: TelegrafPatch): TelegrafView = throw ApiException(501, "not_available", "The Telegraf export is not available")
+
+    /** Empty write to the configured Telegraf listener. */
+    fun testTelegraf(): TelegrafTest = throw ApiException(501, "not_available", "The Telegraf export is not available")
+
+    /** Upload the waiting points now (also after an authentication error). */
+    fun sendTelegrafNow() = Unit
 }
+
+/** Telegraf export as seen through the API (secrets are never returned). */
+@Serializable
+data class TelegrafView(
+    val enabled: Boolean,
+    val url: String,
+    /** none, token or basic; changed on the phone only, with the secret. */
+    val auth: String,
+    val username: String,
+    /** A token / password is stored (encrypted) on the phone. */
+    val secretSet: Boolean,
+    val car: String,
+    val pointsPerSecond: Int,
+    /** live or afterTrip */
+    val mode: String,
+    val state: TelegrafStateView,
+)
+
+@Serializable
+data class TelegrafStateView(
+    /** off, idle, waitingForNetwork, waitingForUnmetered, sending, retrying, authFailed */
+    val phase: String,
+    val queuedPoints: Long,
+    val queuedBytes: Long,
+    val droppedPoints: Long,
+    val sentPoints: Long,
+    val lastSuccessMs: Long? = null,
+    val lastError: String? = null,
+)
+
+data class TelegrafPatch(
+    val enabled: Boolean? = null,
+    val url: String? = null,
+    val car: String? = null,
+    val pointsPerSecond: Int? = null,
+    /** "live" or "afterTrip" */
+    val mode: String? = null,
+)
+
+@Serializable
+data class TelegrafTest(val ok: Boolean, val message: String)
 
 /** Future vehicle detection plugs in here (detected ECUs are offered before the catalog ones). */
 fun interface DetectedEcuProvider {
