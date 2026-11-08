@@ -221,7 +221,10 @@ class EdiabasMeasurementCatalog(
     private fun scanFile(f: File, st: FileStamp): CacheEntry = try {
         val tables = PrgTableDirectory.tables(f)
         val desc = SgbdDescription.read(f)
-        val count = (tables[MesswerteTab.TableName] ?: 0) + (tables[GenericMeasurements.SgFunktionenTable] ?: 0) +
+        // Only vehicle ECUs are offered in the card picker: a file without an IDENT job is a series
+        // file (functional jobs), a software-key, table or tool file (00SWTKWS, T_GRTB, UTILITY...).
+        val ecu = desc == null || desc.jobs.any { it.name.equals("IDENT", ignoreCase = true) }
+        val count = if (!ecu) 0 else (tables[MesswerteTab.TableName] ?: 0) + (tables[GenericMeasurements.SgFunktionenTable] ?: 0) +
             (desc?.let { GenericMeasurements.countJobResults(it) } ?: 0)
         CacheEntry(st.size, st.mtime, count, desc?.summary.orEmpty())
     } catch (_: Exception) {
@@ -262,7 +265,7 @@ class EdiabasMeasurementCatalog(
 
     companion object {
         /** First line of the disk cache; bump the version when the scan result changes meaning. */
-        const val CacheHeader = "# BimmerData measurement catalog v2"
+        const val CacheHeader = "# BimmerData measurement catalog v3"
 
         fun normalize(sgbd: String): String = sgbd.trim().lowercase(Locale.ROOT).removeSuffix(".prg")
 
