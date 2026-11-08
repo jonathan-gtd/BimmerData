@@ -203,9 +203,10 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
             val bitmap = createBitmap(sizePx, sizePx)
             state.sync(spec, feed, now)
             drawGlyph(Canvas(bitmap), rect, spec, state)
-            val value = spec.channels.indices.joinToString("  ") { c ->
+            val signed = spec.type == GaugeType.BipolarBar
+            val value = spec.channels.indices.joinToString(" · ") { c ->
                 val ch = spec.channels[c]
-                val text = state.text(c) ?: state.valueText(c, format, ch.decimals)
+                val text = state.text(c) ?: state.valueText(c, format, ch.decimals, signed)
                 if (state.target(c).isNaN()) text else format.withUnit(text, ch.unit)
             }
             CardImage(bitmap, spec.title, value)
@@ -233,7 +234,7 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
             val mid = s / 2f
             for (i in 0 until n) {
                 val y = s * (0.5f + (i - (n - 1) / 2f) * 0.26f)
-                glyphPaint.color = theme.track
+                glyphPaint.color = GLYPH_TRACK
                 canvas.drawLine(left, y, right, y, glyphPaint)
                 val v = state.smoothed(i)
                 if (!v.isNaN()) {
@@ -249,7 +250,7 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
         glyphRect.set(r)
         glyphRect.inset(stroke / 2f + s * 0.08f, stroke / 2f + s * 0.08f)
         glyphRect.offset(0f, s * 0.04f)
-        glyphPaint.color = theme.track
+        glyphPaint.color = GLYPH_TRACK
         canvas.drawArc(glyphRect, 135f, 270f, false, glyphPaint)
         val v = state.smoothed(0)
         if (!v.isNaN() && spec.max > spec.min) {
@@ -394,6 +395,9 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
         private const val TAG = "CarSurfaceRenderer"
         const val FRAME_MS = 33L
         private const val MESSAGE_COLOR = 0xFF8E97A3.toInt()
+
+        /** Gauge track of the grid glyphs: the host draws them on its own grey, lighter than our cards. */
+        private const val GLYPH_TRACK = 0xFF525A66.toInt()
 
         /** Failed surface locks in a row (100 ms apart) before giving up on the surface. */
         private const val MAX_LOCK_FAILURES = 30
