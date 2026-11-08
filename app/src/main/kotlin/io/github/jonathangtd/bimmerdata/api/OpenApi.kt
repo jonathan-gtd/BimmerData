@@ -192,7 +192,8 @@ internal object OpenApi {
     private val TAGS = listOf(
         "General" to "Discovery and status.",
         "Live data" to "ECUs, measurements and live values. Values are only read while someone shows or requests them: the K-line is slow (≈ 10–40 reads/s in total), so request only what you need.",
-        "Dashboard" to "Card layouts of the phone and of Android Auto. Changes are saved at once; Android Auto follows them live.",
+        "Dashboard" to "Card layouts of the phone and of Android Auto, of the active profile. Changes are saved at once; Android Auto follows them live.",
+        "Profiles" to "A profile is a car, its main ECUs and its own phone and Android Auto pages. One is active at a time: the dashboard routes act on it.",
         "Connection" to "Connect to the car (USB K+DCAN cable) or to the built-in simulated ECU, and record CSV logs.",
         "Settings" to "App settings that may be changed remotely. API settings (enable, port, token, scopes) can only be changed on the phone.",
         "Export" to "Export of the live values to Telegraf (line protocol over HTTP), which writes them to TimescaleDB for Grafana. See docs/TELEGRAF.md in the BimmerData repository.",
@@ -209,6 +210,7 @@ BimmerData reads live data from BMW ECUs (E-series, K+DCAN cable) and shows it o
 5. Read values: `POST /api/v1/values/read` with `{"ids":["msv70/0x4402"]}` waits for fresh samples; add `"seconds":10` to sample for a while and get min / max / mean.
 
 ## Building dashboards
+- Layouts belong to **profiles** (a car, its main ECUs and its pages; `GET /api/v1/profiles`). The dashboard routes act on the active profile; `POST /api/v1/profiles/{profile}/activate` switches the phone and Android Auto to another one. A fresh install has no profile: `POST /api/v1/profiles` creates one (a `PUT /api/v1/dashboard` without profile creates one too).
 - `GET /api/v1/dashboard` returns the whole layout: `phonePages` (portrait phone, grid up to ${GridLimits.Phone.maxColumns}×${GridLimits.Phone.maxRows}, ${GridLimits.Phone.maxCards} cards) and `carPages` (Android Auto, landscape, grid up to ${GridLimits.Car.maxColumns}×${GridLimits.Car.maxRows}, at most ${GridLimits.Car.maxCards} big cards).
 - A page is a `columns × rows` grid; a card covers `colSpan × rowSpan` cells from its top-left cell (`col`, `row`, 0-based). Cards may not overlap or leave the grid.
 - Card types (`GET /api/v1/card-types`): ${GaugeType.entries.joinToString { it.name }}. Most take one measurement; `BipolarBar` takes 1–4 (e.g. fuel trims per bank), `MultiValue` 2–3.
@@ -326,6 +328,31 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
             "formatVersion" to S.int("Layout format, currently 1.", 1, 1, default = 1),
             "phonePages" to S.arr(S.ref("Page"), "Pages of the phone dashboard (portrait), in swipe order. At least one."),
             "carPages" to S.arr(S.ref("Page"), "Pages of the Android Auto dashboard (landscape ~1280×480). At least one."),
+        ))
+        put("ProfileSummary", S.obj(
+            "A profile without its pages.", listOf("id", "name", "active", "vehicle", "ecus"), false, null,
+            "id" to S.str(example = "a1b2c3d4e5"),
+            "name" to S.str(example = "E90 330i · Lambda"),
+            "active" to S.bool("Shown on the phone and in Android Auto."),
+            "vehicle" to S.obj(null, listOf("label"), false, null,
+                "series" to S.str(example = "E90"), "model" to S.str(example = "330i"),
+                "vehicleId" to S.str("Linked car of the Faults tab (short VIN)."),
+                "label" to S.str("Series and model, as tagged on exported points.", "E90 330i")),
+            "ecus" to S.arr(S.str(example = "msv70"), "Main ECUs (SGBD names)."),
+            "phonePages" to S.int("Number of phone pages."),
+            "carPages" to S.int("Number of Android Auto pages."),
+            "lastUsedMs" to S.int("Last time it was active, epoch ms.", format = "int64"),
+        ))
+        put("Profile", S.obj(
+            "A profile with its layout.", listOf("id", "name"), false, null,
+            "id" to S.str(example = "a1b2c3d4e5"),
+            "name" to S.str(example = "E90 330i · Lambda"),
+            "vehicle" to S.obj(null, emptyList(), false, null,
+                "series" to S.str(example = "E90"), "model" to S.str(example = "330i"),
+                "vehicleId" to S.str("Linked car of the Faults tab (short VIN).")),
+            "ecus" to S.arr(S.str(example = "msv70"), "Main ECUs (SGBD names): the card picker opens on them."),
+            "dashboard" to S.ref("Dashboard"),
+            "lastUsedMs" to S.int("Last time it was active, epoch ms.", format = "int64"),
         ))
         put("Page", S.obj(
             "One screen of cards on a columns × rows grid that fills the screen.", listOf("name", "columns", "rows"), false, null,

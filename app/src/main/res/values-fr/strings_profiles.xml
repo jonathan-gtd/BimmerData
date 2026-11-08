@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Profils : une voiture, ses calculateurs et ses propres pages. -->
+<resources>
+    <string name="profile_default_name">Mon profil</string>
+    <string name="profiles_title">Profils</string>
+    <string name="profile_new">Nouveau profil</string>
+    <string name="profile_create">Créer un profil</string>
+    <string name="profile_create_button">Créer</string>
+    <string name="profile_create_hint">Un profil, c’est une voiture, ses calculateurs et ses propres pages, par exemple « E90 330i · Lambda » ou « 120d · Turbo ». Les cartes se choisissent ensuite directement dans les calculateurs du profil.</string>
+    <string name="profile_import">Importer un profil</string>
+    <string name="profile_edit">Modifier le profil</string>
+    <string name="profile_duplicate">Dupliquer</string>
+    <string name="profile_duplicated">Copie créée : %1$s</string>
+    <string name="profile_export">Exporter</string>
+    <string name="profile_exported">Profil exporté</string>
+    <string name="profile_imported">Profil « %1$s » importé</string>
+    <string name="profile_delete">Supprimer</string>
+    <string name="profile_delete_confirm">Supprimer le profil « %1$s » et ses pages ?</string>
+    <string name="profile_deleted">Profil « %1$s » supprimé</string>
+    <string name="profile_actions">Actions pour %1$s</string>
+    <string name="profile_name">Nom</string>
+    <string name="profile_name_placeholder">E90 330i · Lambda</string>
+    <string name="profile_name_required">Donnez un nom au profil</string>
+    <string name="profile_series">Série</string>
+    <string name="profile_model">Modèle</string>
+    <string name="profile_car_link">Voiture de l’onglet Défauts</string>
+    <string name="profile_car_link_none">Aucune</string>
+    <string name="profile_car_link_hint">Quand l’appli lit le numéro de châssis de cette voiture à la connexion, elle passe au dernier profil utilisé pour elle.</string>
+    <string name="profile_ecus">Calculateurs du profil</string>
+    <string name="profile_ecus_none">Aucun pour l’instant : choisissez-en un ou plusieurs ci-dessous.</string>
+    <string name="profile_ecus_hint">Le choix des cartes s’ouvre sur ces calculateurs. Touchez-en un pour le retirer.</string>
+    <string name="profile_ecu_remove">Retirer %1$s</string>
+    <string name="profile_no_details">Ni voiture ni calculateur pour l’instant</string>
+    <string name="profile_pages">Pages : %1$d téléphone · %2$d Android Auto</string>
+    <string name="profile_switched">Profil « %1$s »</string>
+    <string name="profile_suggest">Cette voiture a le profil « %1$s »</string>
+    <string name="profile_suggest_action">Changer</string>
+    <string name="profile_ecus_not_responding">Pas de réponse de %1$s : vérifiez le calculateur, ou son protocole n’est pas encore géré (DS2, D-CAN).</string>
+    <string name="profile_ok">OK</string>
+    <string name="profile_other_ecu">Autre calculateur…</string>
+    <string name="car_no_profile">Aucun profil : créez-en un sur le téléphone</string>
+    <string name="car_profile_active">Actif</string>
+</resources>

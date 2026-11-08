@@ -175,7 +175,7 @@ internal fun newCard(type: GaugeType, ids: List<String>, target: Target, page: P
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CockpitSheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
+internal fun CockpitSheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = onDismiss, sheetState = state, containerColor = Cockpit.Card, contentColor = Cockpit.Text,
@@ -186,7 +186,7 @@ private fun CockpitSheet(onDismiss: () -> Unit, content: @Composable () -> Unit)
 }
 
 @Composable
-private fun SheetHeader(title: String, onBack: (() -> Unit)? = null, trailing: @Composable () -> Unit = {}) {
+internal fun SheetHeader(title: String, onBack: (() -> Unit)? = null, trailing: @Composable () -> Unit = {}) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
         if (onBack != null) {
             RoundIconButton(R.drawable.ic_chevron_left, stringResource(R.string.back), onClick = onBack, background = Color.Transparent)
@@ -270,6 +270,8 @@ private fun demoSpec(type: GaugeType, title: String, rpmUnit: String): GaugeSpec
 
 /**
  * Add-card flow: type → SGBD → measurement(s). With [fixedType] it only (re)picks measurements.
+ * When the active profile has ECUs, the SGBD step is skipped: the measurements of the profile's
+ * first ECU show at once, the others are one tap away, and "Other ECU" opens the full list.
  */
 @Composable
 internal fun MeasurementPickerSheet(
@@ -285,9 +287,15 @@ internal fun MeasurementPickerSheet(
     val choices by produceState<SgbdChoices?>(null) { value = vm.sgbdChoices() }
     val selected = remember { mutableStateListOf<String>().apply { addAll(initialIds) } }
     var autoSkipped by remember { mutableStateOf(false) }
+    val profileEcus = remember { vm.profileEcus() }
+    /** The user left the profile's ECUs for the full ECU list. */
+    var otherEcu by remember { mutableStateOf(false) }
     LaunchedEffect(choices, type) {
         val list = choices?.all
-        if (type != null && sgbd == null && list != null && list.size == 1 && !autoSkipped) {
+        if (type != null && sgbd == null && !otherEcu && profileEcus.isNotEmpty()) {
+            sgbd = profileEcus[0]
+            autoSkipped = true
+        } else if (type != null && sgbd == null && list != null && list.size == 1 && !autoSkipped) {
             sgbd = list[0].name
             autoSkipped = true
         }
@@ -303,7 +311,15 @@ internal fun MeasurementPickerSheet(
                     TypeStep(renderer) { type = it }
                 }
                 s == null -> {
-                    SheetHeader(stringResource(R.string.choose_sgbd), onBack = if (fixedType == null) ({ type = null }) else null)
+                    SheetHeader(
+                        stringResource(R.string.choose_sgbd),
+                        onBack = when {
+                            // back from "Other ECU" to the profile's ECUs
+                            otherEcu && profileEcus.isNotEmpty() -> ({ otherEcu = false; sgbd = profileEcus[0] })
+                            fixedType == null -> ({ type = null })
+                            else -> null
+                        },
+                    )
                     SgbdStep(choices) { sgbd = it }
                 }
                 else -> {
@@ -319,6 +335,9 @@ internal fun MeasurementPickerSheet(
                             }
                         },
                     )
+                    if (profileEcus.isNotEmpty()) {
+                        ProfileEcuBar(profileEcus, current = s, onPick = { sgbd = it }, onOther = { otherEcu = true; sgbd = null })
+                    }
                     MeasurementStep(vm, s, t, selected, onConfirm = { onConfirm(t, selected.toList()) })
                 }
             }

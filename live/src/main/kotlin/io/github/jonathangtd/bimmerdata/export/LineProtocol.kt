@@ -70,11 +70,15 @@ object LineProtocol {
 
 /**
  * Turns samples into line-protocol points:
- * `bimmerdata,car=<car>,ecu=msv70,id=0x4402,label=Oil temperature,unit=°C value=87.5 <ns>`.
+ * `bimmerdata,car=<car>,profile=<profile>,ecu=msv70,id=0x4402,label=Oil temperature,unit=°C value=87.5 <ns>`.
  * Text results go into a `text` string field instead of `value`. Times are the sample times
- * (when the value was read in the car), in nanoseconds.
+ * (when the value was read in the car), in nanoseconds. A blank [profile] leaves its tag out.
  */
-class LineEncoder(private val car: String, private val measurementName: String = DEFAULT_MEASUREMENT) {
+class LineEncoder(
+    private val car: String,
+    private val measurementName: String = DEFAULT_MEASUREMENT,
+    private val profile: String = "",
+) {
 
     fun encode(m: Measurement, s: Sample): String? {
         val fields = ArrayList<Pair<String, String>>(1)
@@ -83,7 +87,7 @@ class LineEncoder(private val car: String, private val measurementName: String =
         val key = m.id.substringAfter('/', m.id)
         return LineProtocol.line(
             measurementName,
-            listOf("car" to car.ifBlank { "car" }, "ecu" to m.sgbd, "id" to key, "label" to m.label, "unit" to m.unit),
+            listOf("car" to car.ifBlank { "car" }, "profile" to profile, "ecu" to m.sgbd, "id" to key, "label" to m.label, "unit" to m.unit),
             fields,
             s.timestampMs * 1_000_000L,
         )

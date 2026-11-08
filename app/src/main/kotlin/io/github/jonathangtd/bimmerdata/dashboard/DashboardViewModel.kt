@@ -29,6 +29,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import io.github.jonathangtd.bimmerdata.profiles.Profile
+import io.github.jonathangtd.bimmerdata.profiles.ProfileJson
+import io.github.jonathangtd.bimmerdata.profiles.ProfileSet
+import io.github.jonathangtd.bimmerdata.profiles.ProfileStore
+import io.github.jonathangtd.bimmerdata.profiles.ProfileVehicle
+import io.github.jonathangtd.bimmerdata.profiles.Profiles
 
 data class DashboardUi(
     val dashboard: Dashboard? = null,
@@ -41,6 +47,8 @@ data class DashboardUi(
     val undo: Dashboard? = null,
     /** A layout written elsewhere (REST API...) while the user was editing; see [DashboardSync]. */
     val external: Dashboard? = null,
+    /** Profile whose layout is shown (and saved to); null = no profile yet. */
+    val profileId: String? = null,
 ) {
     fun pageIndex(t: Target) = if (t == Target.Phone) phonePage else carPage
     fun currentPage(t: Target): Page? = dashboard?.pages(t)?.let { pages -> pages.getOrNull(pageIndex(t).coerceIn(0, (pages.size - 1).coerceAtLeast(0))) }
@@ -80,7 +88,15 @@ data class SgbdChoices(val detected: List<SgbdInfo>, val all: List<SgbdInfo>) {
 @OptIn(FlowPreview::class)
 class DashboardViewModel(app: Application) : AndroidViewModel(app) {
     private val deps = dashboardDependencies(app)
-    private val store = DashboardStore(app)
+    private val profileStore = ProfileStore.get(app)
+
+    private val _profiles = MutableStateFlow(ProfileSet())
+
+    /** Every profile and which one is active (profile list, card picker). */
+    val profiles: StateFlow<ProfileSet> = _profiles.asStateFlow()
+
+    /** Set of profiles before the last delete, for "Undo". */
+    @Volatile private var deletedFrom: ProfileSet? = null
 
     private val _ui = MutableStateFlow(DashboardUi())
     val ui: StateFlow<DashboardUi> = _ui.asStateFlow()
@@ -107,19 +123,12 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         viewModelScope.launch {
-            val d = withContext(Dispatchers.IO) { store.load() }
-            lastPersisted = d
-            _ui.update { it.copy(dashboard = d) }
+            val set = withContext(Dispatchers.IO) { profileStore.load() }
+            applyProfiles(set)
         }
-        // Follow layouts written elsewhere (REST API, ...), see DashboardSync.
+        // Follow profile switches and layouts written elsewhere (REST API, Android Auto...), see DashboardSync.
         viewModelScope.launch {
-            DashboardStore.saved.filterNotNull().collect { saved ->
-                _ui.update { ui ->
-                    val next = DashboardSync.onSaved(ui, saved, lastPersisted)
-                    if (next.dashboard === saved) lastPersisted = saved
-                    next
-                }
-            }
+            ProfileStore.state.filterNotNull().collect { applyProfiles(it) }
         }
         viewModelScope.launch {
             deps.liveDataSource.samples.collect { feed.update(it) }
@@ -129,14 +138,16 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
             _ui.map { it.dashboard }.filterNotNull().map { longestTrendWindowMs(it.phonePages + it.carPages) }
                 .distinctUntilChanged().collect { feed.retainMs = it }
         }
-        // Persist (debounced) after every own change; adopted external layouts are already on disk.
+        // Persist (debounced) after every own change, into the profile it belongs to; adopted
+        // external layouts are already on disk.
         viewModelScope.launch {
-            _ui.map { it.dashboard }.filterNotNull().distinctUntilChanged().debounce(400).filter { it != lastPersisted }.collect { d ->
-                lastPersisted = d // before the write: its echo in DashboardStore.saved is then recognized as ours
-                withContext(Dispatchers.IO) { store.save(d) }
-                // our write is the newest on disk: a pending external layout has been replaced
-                if (DashboardStore.saved.value == d) _ui.update { DashboardSync.onOwnSave(it) }
-            }
+            _ui.map { ui -> ui.profileId?.let { id -> ui.dashboard?.let { id to it } } }.filterNotNull().distinctUntilChanged().debounce(400)
+                .filter { it.second != lastPersisted }.collect { (id, d) ->
+                    lastPersisted = d // before the write: its echo in ProfileStore.state is then recognized as ours
+                    val written = withContext(Dispatchers.IO) { profileStore.update { Profiles.writeDashboard(it, id, d) } }
+                    // our write is the newest on disk: a pending external layout has been replaced
+                    if (written?.activeId == id && written.activeDashboard() == d) _ui.update { DashboardSync.onOwnSave(it) }
+                }
         }
         // Load catalog metadata for every SGBD referenced by the layout.
         viewModelScope.launch {
@@ -162,6 +173,93 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
                 pages.flatMap { it.measurementIds() }.distinct().mapNotNull { index[it] } to fg
             }.distinctUntilChanged().collect { (list, fg) -> deps.requestMeasurements(MeasurementClient.Phone, list, fg) }
         }
+    }
+
+    /**
+     * A new set of profiles (load, own or external write): another active profile replaces the
+     * whole screen state (editor closed, first pages); the same profile goes through [DashboardSync].
+     */
+    private fun applyProfiles(set: ProfileSet) {
+        _profiles.value = set
+        val shown = set.activeDashboard()
+        _ui.update { ui ->
+            if (ui.dashboard == null || ui.profileId != set.activeId) {
+                lastPersisted = shown
+                ui.copy(
+                    dashboard = shown, profileId = set.activeId, editing = false, target = Target.Phone,
+                    phonePage = 0, carPage = 0, undo = null, external = null,
+                )
+            } else {
+                val next = DashboardSync.onSaved(ui, shown, lastPersisted)
+                if (next.dashboard === shown) lastPersisted = shown
+                next
+            }
+        }
+    }
+
+    // ---- profiles ----
+
+    /** ECUs of the active profile (the card picker opens on them). */
+    fun profileEcus(): List<String> = _profiles.value.active?.ecus.orEmpty()
+
+    /** Creates a profile and makes it active; null if it could not be saved. */
+    suspend fun createProfile(name: String, vehicle: ProfileVehicle, ecus: List<String>): Profile? = withContext(Dispatchers.IO) {
+        flushNow()
+        profileStore.create(name, vehicle, ecus)
+    }
+
+    suspend fun activateProfile(id: String) {
+        withContext(Dispatchers.IO) {
+            flushNow()
+            profileStore.activate(id)
+        }
+    }
+
+    suspend fun duplicateProfile(id: String): Profile? = withContext(Dispatchers.IO) {
+        flushNow()
+        profileStore.duplicate(id)
+    }
+
+    suspend fun editProfile(id: String, name: String, vehicle: ProfileVehicle, ecus: List<String>) {
+        withContext(Dispatchers.IO) {
+            flushNow()
+            profileStore.edit(id, name, vehicle, ecus)
+        }
+    }
+
+    /** Deletes a profile; [undoDelete] puts it back. */
+    suspend fun deleteProfile(id: String) {
+        withContext(Dispatchers.IO) {
+            flushNow()
+            deletedFrom = profileStore.load()
+            profileStore.delete(id)
+        }
+    }
+
+    suspend fun undoDelete() {
+        withContext(Dispatchers.IO) {
+            deletedFrom?.let { profileStore.restore(it) }
+            deletedFrom = null
+        }
+    }
+
+    /** File content to share profile [id] (no VIN, no link to the user's car). */
+    fun exportProfile(id: String): String? = _profiles.value.profile(id)?.let { ProfileJson.export(it) }
+
+    /** Adds the profile of an exported file and makes it active; returns its name, or throws [IllegalArgumentException]. */
+    suspend fun importProfile(text: String, fallbackName: String): String = withContext(Dispatchers.IO) {
+        flushNow()
+        profileStore.import(text, fallbackName).name
+    }
+
+    /** Writes the shown layout at once (before a profile switch, so no edit is lost). */
+    private fun flushNow() {
+        val ui = _ui.value
+        val id = ui.profileId ?: return
+        val d = ui.dashboard ?: return
+        if (d == lastPersisted) return
+        lastPersisted = d
+        profileStore.update { Profiles.writeDashboard(it, id, d) }
     }
 
     /** True while the dashboard is on the phone screen (lifecycle started). */

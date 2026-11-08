@@ -17,6 +17,8 @@ import android.util.Log
 import io.github.jonathangtd.bimmerdata.live.LiveRepository
 import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.PhoneSensors
+import io.github.jonathangtd.bimmerdata.profiles.Profile
+import io.github.jonathangtd.bimmerdata.profiles.ProfileStore
 import io.github.jonathangtd.bimmerdata.settings.AppSettings
 import io.github.jonathangtd.bimmerdata.settings.SecretStore
 import io.github.jonathangtd.bimmerdata.settings.TelegrafAuthMode
@@ -52,7 +54,8 @@ class TelegrafRuntime private constructor(context: Context) {
     private val network = MutableStateFlow(NetworkKind.None)
     private val known = ConcurrentHashMap<String, Measurement>()
 
-    val config: StateFlow<ExportConfig> = combine(settings.state.map { it.telegraf }, secrets.version) { t, _ -> toConfig(t) }
+    /** Settings + secrets + active profile (its car and name tag the points). */
+    val config: StateFlow<ExportConfig> = combine(settings.state.map { it.telegraf }, secrets.version, ProfileStore.state) { t, _, _ -> toConfig(t) }
         .stateIn(scope, SharingStarted.Eagerly, toConfig(settings.state.value.telegraf))
 
     private val exporter = TelegrafExporter(
@@ -120,7 +123,13 @@ class TelegrafRuntime private constructor(context: Context) {
     /** Background job: upload everything; true when nothing is left. */
     suspend fun drain(): Boolean = exporter.drain()
 
-    private fun toConfig(t: TelegrafSettings) = ExportConfig(
+    private fun toConfig(t: TelegrafSettings): ExportConfig {
+        val profile = (ProfileStore.state.value ?: runCatching { ProfileStore.get(app).load() }.getOrNull())?.active
+        return toConfig(t, profile)
+    }
+
+    /** `car` tag: the active profile's car ("E90 330i"), else the car name of the settings. */
+    private fun toConfig(t: TelegrafSettings, profile: Profile?) = ExportConfig(
         enabled = t.enabled,
         url = t.url.trim(),
         auth = when (t.authMode) {
@@ -128,7 +137,8 @@ class TelegrafRuntime private constructor(context: Context) {
             TelegrafAuthMode.Token -> TelegrafAuth.Token(secrets.get(SecretStore.TELEGRAF_TOKEN))
             TelegrafAuthMode.Basic -> TelegrafAuth.Basic(t.username, secrets.get(SecretStore.TELEGRAF_PASSWORD))
         },
-        car = t.car.trim(),
+        car = profile?.vehicle?.label?.takeIf { it.isNotBlank() } ?: t.car.trim(),
+        profile = profile?.name.orEmpty(),
         pointsPerSecond = t.pointsPerSecond,
         mode = t.mode,
         reserveBytes = t.reserveMb * LineQueue.MB,

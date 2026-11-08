@@ -104,6 +104,8 @@ import io.github.jonathangtd.bimmerdata.ui.BarlowCondensed
 import io.github.jonathangtd.bimmerdata.ui.Cockpit
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import io.github.jonathangtd.bimmerdata.profiles.ProfileNotice
+import io.github.jonathangtd.bimmerdata.profiles.ProfileRuntime
 
 /** What is open on top of the dashboard. */
 internal sealed interface Sheet {
@@ -114,6 +116,11 @@ internal sealed interface Sheet {
     data object CarFullscreen : Sheet
     data class ConfirmReset(val target: Target) : Sheet
     data object RenameDashboard : Sheet
+    data object Profiles : Sheet
+
+    /** New profile ([id] null) or changes of profile [id]. */
+    data class EditProfile(val id: String?) : Sheet
+    data class ConfirmDeleteProfile(val id: String, val name: String) : Sheet
 }
 
 @Composable
@@ -123,6 +130,7 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
     val rec by vm.recording.collectAsStateWithLifecycle()
     val connection by vm.connection.collectAsStateWithLifecycle()
     val index by vm.measurementIndex.collectAsStateWithLifecycle()
+    val profiles by vm.profiles.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val appSettings by remember { AppSettings.get(context) }.state.collectAsStateWithLifecycle()
     val res = LocalResources.current
@@ -145,13 +153,56 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
         return
     }
 
-    fun message(text: String, withUndo: Boolean = false) {
+    /** Snackbar; with an action ([withUndo] = layout undo, or [action] with its label). */
+    fun message(text: String, withUndo: Boolean = false, actionLabel: String? = null, action: (suspend () -> Unit)? = null) {
         scope.launch {
             snackbar.currentSnackbarData?.dismiss()
-            val r = snackbar.showSnackbar(text, actionLabel = if (withUndo) res.getString(R.string.undo) else null, duration = SnackbarDuration.Short)
-            if (r == SnackbarResult.ActionPerformed) vm.undo()
+            val label = actionLabel ?: if (withUndo) res.getString(R.string.undo) else null
+            val r = snackbar.showSnackbar(text, actionLabel = label, duration = if (action != null) SnackbarDuration.Long else SnackbarDuration.Short)
+            if (r == SnackbarResult.ActionPerformed) {
+                if (action != null) action() else vm.undo()
+            }
         }
     }
+
+    // Automatic profile choice and ECU check at connection (ProfileRuntime).
+    LaunchedEffect(Unit) {
+        ProfileRuntime.notices.collect { n ->
+            when (n) {
+                is ProfileNotice.Switched -> message(res.getString(R.string.profile_switched, n.name))
+                is ProfileNotice.Suggest -> message(
+                    res.getString(R.string.profile_suggest, n.name), actionLabel = res.getString(R.string.profile_suggest_action),
+                    action = { vm.activateProfile(n.id) },
+                )
+                is ProfileNotice.EcusNotResponding -> message(
+                    res.getString(R.string.profile_ecus_not_responding, n.ecus.joinToString(", ") { it.uppercase() }),
+                    actionLabel = res.getString(R.string.profile_ok), action = {},
+                )
+            }
+        }
+    }
+
+    // ---- profile files ----
+    var exportId by remember { mutableStateOf<String?>(null) }
+    val saveProfile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        val json = exportId?.let { vm.exportProfile(it) }
+        if (uri != null && json != null) {
+            runCatching { context.contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) } }
+                .onSuccess { message(res.getString(R.string.profile_exported)) }
+                .onFailure { message(res.getString(R.string.import_failed, it.message.orEmpty())) }
+        }
+        exportId = null
+    }
+    val openProfile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) scope.launch {
+            val text = runCatching { context.contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) } }.getOrNull()
+            val result = if (text == null) Result.failure(IllegalArgumentException("?")) else runCatching { vm.importProfile(text, res.getString(R.string.profile_default_name)) }
+            result.onSuccess { message(res.getString(R.string.profile_imported, it)) }
+                .onFailure { message(res.getString(R.string.import_failed, it.message.orEmpty())) }
+        }
+    }
+    fun importProfile() = openProfile.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
+    val noProfile = ui.profileId == null
 
     // A layout written elsewhere (REST API...) during an edit: offer it (see DashboardSync).
     val external = ui.external
@@ -230,9 +281,9 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
             } else {
                 DashboardHeader(
                     title = dashboard.title(stringResource(R.string.app_name)),
-                    onRename = { sheet = Sheet.RenameDashboard },
+                    onRename = { sheet = if (noProfile) Sheet.EditProfile(null) else Sheet.Profiles },
                     status = status, rec = rec,
-                    onRecord = vm::toggleRecording, onEdit = { vm.setEditing(true) },
+                    onRecord = vm::toggleRecording, onEdit = { if (noProfile) sheet = Sheet.EditProfile(null) else vm.setEditing(true) },
                     connection = connection, lastMode = appSettings.lastMode, onConnect = vm::connect, onDisconnect = vm::disconnect,
                 )
             }
@@ -272,7 +323,10 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
             }
 
             Box(Modifier.fillMaxWidth().weight(1f)) {
-                if (pages.isEmpty()) {
+                if (noProfile) {
+                    // First launch: nothing at all until the user creates (or imports) a profile.
+                    NoProfile(onCreate = { sheet = Sheet.EditProfile(null) }, onImport = ::importProfile)
+                } else if (pages.isEmpty()) {
                     // No page at all (first launch, or after a reset): add a card or a page.
                     EmptyPage(
                         onAdd = { addFirstOrNext(target) },
@@ -422,7 +476,71 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
             },
             onDismiss = { sheet = null },
         )
+        Sheet.Profiles -> ProfilesSheet(
+            set = profiles, onDismiss = { sheet = null },
+            onActivate = { id ->
+                sheet = null
+                scope.launch { vm.activateProfile(id) }
+            },
+            onNew = { sheet = Sheet.EditProfile(null) },
+            onImport = {
+                sheet = null
+                importProfile()
+            },
+            onEdit = { id -> sheet = Sheet.EditProfile(id) },
+            onDuplicate = { id ->
+                sheet = null
+                scope.launch { vm.duplicateProfile(id)?.let { message(res.getString(R.string.profile_duplicated, it.name)) } }
+            },
+            onExport = { id ->
+                exportId = id
+                val name = profiles.profile(id)?.name ?: "profile"
+                saveProfile.launch(profileFileName(name))
+            },
+            onDelete = { id -> sheet = Sheet.ConfirmDeleteProfile(id, profiles.profile(id)?.name.orEmpty()) },
+        )
+        is Sheet.EditProfile -> {
+            val editing = s.id?.let { profiles.profile(it) }
+            val cars = rememberCarChoices()
+            ProfileEditorSheet(
+                initial = editing, cars = cars, loadChoices = { vm.sgbdChoices() }, onDismiss = { sheet = null },
+                onSave = { name, vehicle, ecus ->
+                    sheet = null
+                    scope.launch {
+                        if (editing == null) vm.createProfile(name, vehicle, ecus) else vm.editProfile(editing.id, name, vehicle, ecus)
+                    }
+                },
+            )
+        }
+        is Sheet.ConfirmDeleteProfile -> ConfirmDialog(
+            text = stringResource(R.string.profile_delete_confirm, s.name),
+            confirm = stringResource(R.string.profile_delete),
+            onConfirm = {
+                sheet = null
+                scope.launch {
+                    vm.deleteProfile(s.id)
+                    message(res.getString(R.string.profile_deleted, s.name), actionLabel = res.getString(R.string.undo), action = { vm.undoDelete() })
+                }
+            },
+            onDismiss = { sheet = null },
+        )
     }
+}
+
+/** File name for an exported profile: "bimmerdata-profile-<name>.json". */
+internal fun profileFileName(name: String): String {
+    val slug = java.text.Normalizer.normalize(name, java.text.Normalizer.Form.NFD).replace(Regex("\\p{M}+"), "")
+        .replace(Regex("[^A-Za-z0-9]+"), "-").trim('-').lowercase().take(40)
+    return "bimmerdata-profile" + (if (slug.isEmpty()) "" else "-$slug") + ".json"
+}
+
+/** Cars of the Faults tab, for linking a profile to one. */
+@Composable
+private fun rememberCarChoices(): List<CarChoice> {
+    val context = LocalContext.current
+    val repo = remember { io.github.jonathangtd.bimmerdata.vehicle.VehicleRepository.get(context) }
+    val state by repo.state.collectAsStateWithLifecycle()
+    return state.garage.vehicles.map { v -> CarChoice(v.id, v.label) }
 }
 
 /** Opens the add-card flow if the page has room, else reports why. */

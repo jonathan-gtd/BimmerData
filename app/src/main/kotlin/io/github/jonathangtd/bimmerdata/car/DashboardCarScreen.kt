@@ -31,6 +31,8 @@ import io.github.jonathangtd.bimmerdata.dashboard.dashboardDependencies
 import io.github.jonathangtd.bimmerdata.live.LiveConnection
 import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.MeasurementClient
+import io.github.jonathangtd.bimmerdata.profiles.ProfileStore
+import io.github.jonathangtd.bimmerdata.profiles.Profiles
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -72,6 +74,8 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
     private var fallback = false
     private var images: List<CardImage> = emptyList()
     private var fallbackJob: Job? = null
+    private var activeProfileId: String? = null
+    private var profileCount = 0
 
     init {
         try {
@@ -107,6 +111,20 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
         lifecycleScope.launch {
             dashboard.value = DashboardStore.saved.value ?: withContext(Dispatchers.IO) { DashboardStore(carContext).load() }
             DashboardStore.saved.filterNotNull().collect { dashboard.value = it }
+        }
+        // Another profile: back to its first page; the profile button shows from two profiles on.
+        lifecycleScope.launch {
+            ProfileStore.state.filterNotNull().collect { set ->
+                if (set.activeId != activeProfileId) {
+                    activeProfileId = set.activeId
+                    pageIndex.value = 0
+                }
+                val count = Profiles.sameCar(set).size
+                if (count != profileCount) {
+                    profileCount = count
+                    invalidate()
+                }
+            }
         }
         lifecycleScope.launch {
             dashboard.filterNotNull().collect { d ->
@@ -195,12 +213,20 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
 
     private fun icon(res: Int) = CarIcon.Builder(IconCompat.createWithResource(carContext, res)).build()
 
-    /** Previous, next, connect; [compact] (plain templates allow only 2 actions): next and connect. */
+    /**
+     * Previous, next, profiles (from two profiles on), connect: at most 4, the navigation template's
+     * limit. [compact] (plain templates allow only 2 actions): next and connect.
+     */
     private fun actionStrip(compact: Boolean = false): ActionStrip {
         val strip = ActionStrip.Builder()
         if (pageCount > 1) {
             if (!compact) strip.addAction(Action.Builder().setIcon(icon(R.drawable.ic_chevron_left)).setOnClickListener { changePage(-1) }.build())
             strip.addAction(Action.Builder().setIcon(icon(R.drawable.ic_chevron_right)).setOnClickListener { changePage(1) }.build())
+        }
+        if (!compact && profileCount > 1) {
+            strip.addAction(
+                Action.Builder().setIcon(icon(R.drawable.ic_profile)).setOnClickListener { screenManager.push(ProfilesCarScreen(carContext)) }.build(),
+            )
         }
         val connect = Action.Builder().setIcon(icon(R.drawable.ic_plug))
             .setOnClickListener { screenManager.push(ConnectCarScreen(carContext, deps)) }

@@ -45,13 +45,15 @@ data class ExportConfig(
     /** Telegraf listener URL, e.g. `http://192.168.1.10:8186/api/v2/write`. */
     val url: String = "",
     val auth: TelegrafAuth = TelegrafAuth.None,
-    /** Value of the `car` tag. */
+    /** Value of the `car` tag (the active profile's car, else the car name of the settings). */
     val car: String = "",
     /** At most this many points per measurement and second (independent of the read rate). */
     val pointsPerSecond: Int = 1,
     val mode: ExportMode = ExportMode.AfterTrip,
     /** Free space kept on the phone: the queue stops growing (never deletes) below it. */
     val reserveBytes: Long = LineQueue.DEFAULT_RESERVE_BYTES,
+    /** Value of the `profile` tag (active profile name); empty = no tag. */
+    val profile: String = "",
 ) {
     val usable: Boolean get() = enabled && TelegrafClient.isValidUrl(url)
 
@@ -221,7 +223,7 @@ class TelegrafExporter(
             }
             sampler.pointsPerSecond = cfg.pointsPerSecond.coerceIn(ExportConfig.RATES)
             queue.reserveBytes = cfg.reserveBytes
-            val enc = encoderFor(cfg.car)
+            val enc = encoderFor(cfg.car, cfg.profile)
             val lines = sampler.select(snapshot).mapNotNull { (id, s) -> enc.encode(metadata(id) ?: unknown(id), s) }
             if (lines.isEmpty()) return@collect
             if (queue.append(lines)) rate.add(clock(), lines.sumOf { it.length + 1L })
@@ -231,9 +233,10 @@ class TelegrafExporter(
         }
     }
 
-    private fun encoderFor(car: String): LineEncoder {
-        encoder?.let { (c, e) -> if (c == car) return e }
-        return LineEncoder(car).also { encoder = car to it }
+    private fun encoderFor(car: String, profile: String): LineEncoder {
+        val key = car + "\u0000" + profile
+        encoder?.let { (k, e) -> if (k == key) return e }
+        return LineEncoder(car, profile = profile).also { encoder = key to it }
     }
 
     private fun unknown(id: String) = Measurement(id, id.substringBefore('/'), "", "", MeasurementSource.JobResult("", "", ""))

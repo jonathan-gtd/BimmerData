@@ -37,6 +37,9 @@ import java.util.concurrent.atomic.AtomicReference
  *   `yyyy-MM-ddTHH:mm:ss.SSS+hh:mm` (e.g. `2026-11-08T21:45:00.123+01:00` in Paris in winter,
  *   `+02:00` in summer): unambiguous across a daylight saving change, and spreadsheet / pandas
  *   friendly. The file name uses the local time of the start, without offset.
+ * - File name `<prefix>_<profile>_<yyyyMMdd_HHmmss>.csv`: the active profile (see [profileSlug]),
+ *   e.g. `bimmerdata_E90-330i-Lambda_20261108_214500.csv`, so the car and the purpose of a log are
+ *   known without opening it; no profile part when there is no profile. The columns never change.
  * - One row per new sample batch of the source (one engine cycle on the fast path). Each column
  *   holds the latest value of its measurement; it is left empty when the value is older than
  *   [staleAfterMs] (ECU not answering) or missing. State values are written as numbers; only
@@ -208,8 +211,17 @@ class CsvSessionRecorder(
         const val DefaultPrefix = "bimmerdata"
 
         /** `<prefix>_YYYYMMDD_HHMMSS.csv` (local time), default prefix "bimmerdata". */
-        fun fileName(timeMs: Long, zone: ZoneId = ZoneId.systemDefault(), prefix: String = DefaultPrefix): String =
-            safePrefix(prefix) + "_" + FileTime.format(Instant.ofEpochMilli(timeMs).atZone(zone)) + ".csv"
+        fun fileName(timeMs: Long, zone: ZoneId = ZoneId.systemDefault(), prefix: String = DefaultPrefix, profile: String? = null): String =
+            safePrefix(prefix) + (profile?.let(::profileSlug)?.takeIf { it.isNotEmpty() }?.let { "_$it" } ?: "") + "_" +
+                FileTime.format(Instant.ofEpochMilli(timeMs).atZone(zone)) + ".csv"
+
+        /**
+         * Profile name for a file name: accents dropped, every other character than a letter, a
+         * digit or `-` becomes `-` ("E90 330i · Lambda" → "E90-330i-Lambda"), at most 40.
+         */
+        fun profileSlug(name: String): String =
+            java.text.Normalizer.normalize(name, java.text.Normalizer.Form.NFD).replace(Regex("\\p{M}+"), "")
+                .replace(Regex("[^A-Za-z0-9-]+"), "-").replace(Regex("-{2,}"), "-").trim('-').take(40).trimEnd('-')
 
         /** Keeps letters, digits, `-` and `_` (at most 40); falls back to [DefaultPrefix]. */
         fun safePrefix(prefix: String): String =

@@ -65,7 +65,8 @@ One table, `bimmerdata`:
 | Column | Example | From |
 |---|---|---|
 | `time` | `2026-11-08 18:00:00.25+00` | when the value was read in the car (not when it was uploaded), UTC |
-| `car` | `E90 330i` | Settings › Telegraf export › Car name |
+| `car` | `E90 330i` | the active profile's car (series and model), else Settings › Telegraf export › Car name |
+| `profile` | `E90 330i · Lambda` | the active profile (left out when there is none) |
 | `ecu` | `msv70`, `gps` | SGBD of the measurement; `gps` for the phone's position |
 | `id` | `0x4402`, `STATUS_OEL/STAT_PHY_NIVOEL_WERT`, `speed` | measurement key (same as the dashboard) |
 | `label` | `Oil temperature` | label shown in the app |
