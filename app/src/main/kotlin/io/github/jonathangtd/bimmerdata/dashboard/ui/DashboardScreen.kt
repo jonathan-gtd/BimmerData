@@ -113,7 +113,6 @@ internal sealed interface Sheet {
     data class Pages(val target: Target) : Sheet
     data object CarFullscreen : Sheet
     data object ConfirmReset : Sheet
-    data object ConfirmExample : Sheet
     data object RenameDashboard : Sheet
 }
 
@@ -255,7 +254,6 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                     onImport = { openFile.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
                     onReset = { sheet = Sheet.ConfirmReset },
                     onRename = { sheet = Sheet.RenameDashboard },
-                    onExample = { sheet = Sheet.ConfirmExample },
                 )
                 Text(
                     stringResource(R.string.edit_hint), color = Cockpit.Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -397,15 +395,6 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
             },
             onDismiss = { sheet = null },
         )
-        Sheet.ConfirmExample -> ConfirmDialog(
-            text = stringResource(R.string.example_confirm), confirm = stringResource(R.string.example_apply),
-            onConfirm = {
-                vm.applyMsv70Example()
-                sheet = null
-                message(res.getString(R.string.example_applied), withUndo = true)
-            },
-            onDismiss = { sheet = null },
-        )
         Sheet.RenameDashboard -> TextInputDialog(
             title = stringResource(R.string.dashboard_name), initial = dashboard.name.orEmpty(),
             placeholder = stringResource(R.string.app_name), maxLength = Dashboard.MAX_NAME_LENGTH,
@@ -516,7 +505,7 @@ private fun EditorHeader(target: Target, onTarget: (Target) -> Unit, onDone: () 
 private fun EditorToolbar(
     onLayout: () -> Unit, onPages: () -> Unit, onAddCard: () -> Unit,
     onShare: () -> Unit, onSaveFile: () -> Unit, onImport: () -> Unit, onReset: () -> Unit,
-    onRename: () -> Unit, onExample: () -> Unit,
+    onRename: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -530,7 +519,6 @@ private fun EditorToolbar(
                 MenuItem(R.drawable.ic_share, stringResource(R.string.share_layout)) { menu = false; onShare() }
                 MenuItem(R.drawable.ic_download, stringResource(R.string.export_file)) { menu = false; onSaveFile() }
                 MenuItem(R.drawable.ic_upload, stringResource(R.string.import_file)) { menu = false; onImport() }
-                MenuItem(R.drawable.ic_dashboard, stringResource(R.string.example_msv70)) { menu = false; onExample() }
                 MenuItem(R.drawable.ic_reset, stringResource(R.string.reset_default)) { menu = false; onReset() }
             }
         }

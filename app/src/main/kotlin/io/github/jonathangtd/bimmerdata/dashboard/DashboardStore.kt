@@ -108,34 +108,8 @@ class DashboardStore(
          */
         val saved: StateFlow<Dashboard?> = _saved.asStateFlow()
 
-        fun exampleLabels(context: Context) = with(context) {
-            ExampleLabels(
-                pageEngine = getString(R.string.default_page_engine),
-                pageMixture = getString(R.string.default_page_mixture),
-                pageTemperatures = getString(R.string.default_page_temperatures),
-                oil = getString(R.string.default_oil),
-                coolant = getString(R.string.default_coolant),
-                fuelTrim = getString(R.string.default_fuel_trim),
-                fuelTrimShort = getString(R.string.default_fuel_trim_short),
-                rpm = getString(R.string.default_rpm),
-                lambda = getString(R.string.default_lambda),
-                lambdaB1 = getString(R.string.default_lambda_b1),
-                lambdaB2 = getString(R.string.default_lambda_b2),
-                ignition = getString(R.string.default_ignition),
-                load = getString(R.string.default_load),
-                intakeAir = getString(R.string.default_intake_air),
-                battery = getString(R.string.default_battery),
-                speed = getString(R.string.default_speed),
-                bank1 = getString(R.string.default_bank1),
-                bank2 = getString(R.string.default_bank2),
-                trimB1 = getString(R.string.default_trim_b1),
-                trimB2 = getString(R.string.default_trim_b2),
-            )
-        }
 
         fun defaultDashboard(context: Context): Dashboard = DefaultDashboard.create(context.getString(R.string.new_page, 1))
 
-        /** The optional MSV70 (N52) example layout, localized. */
-        fun msv70Example(context: Context): Dashboard = Msv70Example.create(exampleLabels(context))
     }
 }

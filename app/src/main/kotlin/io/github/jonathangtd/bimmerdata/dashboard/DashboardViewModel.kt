@@ -290,11 +290,6 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
         _ui.update { it.copy(dashboard = d.copy(name = it.dashboard?.name), phonePage = 0, carPage = 0, undo = it.dashboard) }
     }
 
-    /** Replaces the pages with the MSV70 (N52 engine) example layout; the name is kept, undo restores. */
-    fun applyMsv70Example() {
-        val d = DashboardStore.msv70Example(getApplication())
-        _ui.update { it.copy(dashboard = d.copy(name = it.dashboard?.name), phonePage = 0, carPage = 0, undo = it.dashboard) }
-    }
 
     /** Header name (blank = the app name). */
     fun renameDashboard(name: String) = _ui.update { ui ->

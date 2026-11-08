@@ -231,7 +231,7 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
 
     companion object {
         private const val Tag = "LiveRepository"
-        const val SimulationLabel = "Simulation (E90 with MSV70)"
+        const val SimulationLabel = "Simulation"
         const val NoCableMessage = "No FTDI cable found (VID 0403). Plug the K+DCAN cable via USB-C OTG."
         const val UsbDeniedMessage = "USB permission denied"
 

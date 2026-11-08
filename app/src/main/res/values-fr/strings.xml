@@ -145,26 +145,6 @@
     <string name="fullscreen_preview">Aperçu plein écran</string>
 
     <!-- First-launch dashboard -->
-    <string name="default_page_engine">Moteur</string>
-    <string name="default_page_mixture">Richesse</string>
-    <string name="default_page_temperatures">Températures</string>
-    <string name="default_oil">Huile</string>
-    <string name="default_coolant">Eau</string>
-    <string name="default_fuel_trim">Correction de richesse</string>
-    <string name="default_fuel_trim_short">Richesse CT</string>
-    <string name="default_rpm">Régime</string>
-    <string name="default_lambda">Lambda B1 · B2</string>
-    <string name="default_lambda_b1">Lambda B1</string>
-    <string name="default_lambda_b2">Lambda B2</string>
-    <string name="default_ignition">Avance cyl. 1</string>
-    <string name="default_load">Charge</string>
-    <string name="default_intake_air">Air admission</string>
-    <string name="default_battery">Batterie</string>
-    <string name="default_speed">Vitesse</string>
-    <string name="default_bank1">Banc 1</string>
-    <string name="default_bank2">Banc 2</string>
-    <string name="default_trim_b1">Richesse B1</string>
-    <string name="default_trim_b2">Richesse B2</string>
 
     <!-- Android Auto -->
     <string name="car_connect">Connecter</string>
@@ -180,10 +160,6 @@
     <string name="dashboard_name">Nom du tableau de bord</string>
     <string name="dashboard_rename">Renommer le tableau de bord</string>
     <string name="dashboard_name_hint">Affiché en haut, par exemple votre voiture (« 330i »). Laissez vide pour afficher BimmerData.</string>
-    <string name="example_msv70">Exemple : MSV70 (moteur N52)</string>
-    <string name="example_confirm">Remplacer vos pages par l’exemple MSV70 ? Ses cartes sont faites pour le calculateur moteur MSV70 (six-cylindres N52, E60 / E9x) et restent vides avec un autre moteur.</string>
-    <string name="example_apply">Appliquer</string>
-    <string name="example_applied">Exemple MSV70 appliqué</string>
     <string name="sgbd_search">Chercher un calculateur : nom ou description</string>
     <string name="sgbd_detected">Détectés dans la voiture</string>
     <string name="sgbd_loading">Lecture du dossier Ecu…</string>

@@ -143,26 +143,6 @@
     <string name="fullscreen_preview">Full screen preview</string>
 
     <!-- First-launch dashboard -->
-    <string name="default_page_engine">Engine</string>
-    <string name="default_page_mixture">Mixture</string>
-    <string name="default_page_temperatures">Temperatures</string>
-    <string name="default_oil">Oil</string>
-    <string name="default_coolant">Coolant</string>
-    <string name="default_fuel_trim">Fuel trim</string>
-    <string name="default_fuel_trim_short">Fuel trim ST</string>
-    <string name="default_rpm">RPM</string>
-    <string name="default_lambda">Lambda B1 · B2</string>
-    <string name="default_lambda_b1">Lambda B1</string>
-    <string name="default_lambda_b2">Lambda B2</string>
-    <string name="default_ignition">Advance cyl. 1</string>
-    <string name="default_load">Load</string>
-    <string name="default_intake_air">Intake air</string>
-    <string name="default_battery">Battery</string>
-    <string name="default_speed">Speed</string>
-    <string name="default_bank1">Bank 1</string>
-    <string name="default_bank2">Bank 2</string>
-    <string name="default_trim_b1">Trim B1</string>
-    <string name="default_trim_b2">Trim B2</string>
 
     <!-- Android Auto -->
     <string name="car_connect">Connect</string>
@@ -178,10 +158,6 @@
     <string name="dashboard_name">Dashboard name</string>
     <string name="dashboard_rename">Rename dashboard</string>
     <string name="dashboard_name_hint">Shown at the top, e.g. your car (“330i”). Leave empty to show BimmerData.</string>
-    <string name="example_msv70">Example: MSV70 (N52 engine)</string>
-    <string name="example_confirm">Replace your pages with the MSV70 example layout? Its cards are made for the MSV70 engine ECU (N52 six-cylinder, E60 / E9x) and stay empty with other engines.</string>
-    <string name="example_apply">Apply</string>
-    <string name="example_applied">MSV70 example applied</string>
     <string name="sgbd_search">Search an ECU: name or description</string>
     <string name="sgbd_detected">Detected in your car</string>
     <string name="sgbd_loading">Reading the ECU folder…</string>
