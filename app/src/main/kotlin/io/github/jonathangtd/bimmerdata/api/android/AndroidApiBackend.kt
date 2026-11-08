@@ -121,7 +121,7 @@ class AndroidApiBackend(
     override fun renderPage(request: RenderRequest): ByteArray = renderer.render(request)
 
     override fun connect(mode: ConnectMode?) {
-        repo.connect(mode?.let(::live) ?: settingsStore.state.value.defaultMode)
+        repo.connect(mode?.let(::live) ?: settingsStore.state.value.lastMode ?: return)
     }
 
     override fun disconnect() = repo.disconnect()
@@ -139,12 +139,12 @@ class AndroidApiBackend(
     override fun settings(): SettingsView {
         val s = settingsStore.state.value
         return SettingsView(
-            defaultMode = mode(s.defaultMode),
             autoConnectOnCable = s.autoConnectOnCable,
             recordingFolder = RecordingStorage.describe(app),
             api = ApiSettingsView(s.api.enabled, s.api.port, s.api.scopes.sortedBy { it.ordinal }.map { it.id }),
             bluetoothAdapter = s.bluetooth.address?.let { BluetoothAdapterView(s.bluetooth.name, it) },
             bluetoothConnectOnStart = s.bluetooth.connectOnStart,
+            lastMode = s.lastMode?.let(::mode),
         )
     }
 
@@ -202,7 +202,6 @@ class AndroidApiBackend(
     override fun updateSettings(patch: SettingsPatch): SettingsView {
         settingsStore.update { s ->
             s.copy(
-                defaultMode = patch.defaultMode?.let(::live) ?: s.defaultMode,
                 autoConnectOnCable = patch.autoConnectOnCable ?: s.autoConnectOnCable,
                 bluetooth = s.bluetooth.copy(connectOnStart = patch.bluetoothConnectOnStart ?: s.bluetooth.connectOnStart),
             )

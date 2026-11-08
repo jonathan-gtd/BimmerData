@@ -16,12 +16,13 @@ import kotlinx.coroutines.flow.update
 
 /** User settings of the app (Settings screen). */
 data class Settings(
-    /** Mode used when connecting without choosing (API `POST /connect`, future quick-connect). */
-    val defaultMode: LiveMode = LiveMode.Usb,
-    /** Connect over USB as soon as the K+DCAN cable is plugged in (on by default). */
-    val autoConnectOnCable: Boolean = true,
+    /** Connect over USB as soon as the K+DCAN cable is plugged in (off by default). */
+    val autoConnectOnCable: Boolean = false,
     val api: ApiConfig = ApiConfig(),
-    /** Mode of the last connection the user made; null until the first one (the Connect pill then asks). */
+    /**
+     * Mode of the last connection the user made; null until the first one (the Connect pill then
+     * asks). Used by Connect, by `POST /connect` without a mode and by on-demand connections.
+     */
     val lastMode: LiveMode? = null,
     val recording: RecordingConfig = RecordingConfig(),
     val telegraf: TelegrafSettings = TelegrafSettings(),
@@ -60,9 +61,8 @@ class AppSettings private constructor(context: Context) {
             prefs.edit { putString(K_TOKEN, token) }
         }
         return Settings(
-            defaultMode = runCatching { LiveMode.valueOf(prefs.getString(K_MODE, null) ?: "") }.getOrDefault(LiveMode.Usb),
-            // new key: the first versions saved "false" as their default under K_AUTO_OLD
-            autoConnectOnCable = prefs.getBoolean(K_AUTO, true),
+            // new key, off by default: earlier versions saved their own default (on) under the old keys
+            autoConnectOnCable = prefs.getBoolean(K_AUTO, false),
             api = ApiConfig(
                 enabled = prefs.getBoolean(K_API_ON, false),
                 port = prefs.getInt(K_PORT, ApiConfig.DEFAULT_PORT).takeIf { it in ApiConfig.PORT_RANGE } ?: ApiConfig.DEFAULT_PORT,
@@ -82,7 +82,7 @@ class AppSettings private constructor(context: Context) {
         _state.update(transform)
         val s = _state.value
         prefs.edit {
-            putString(K_MODE, s.defaultMode.name)
+            remove(K_MODE_OLD)
             putBoolean(K_AUTO, s.autoConnectOnCable)
             putBoolean(K_API_ON, s.api.enabled)
             putInt(K_PORT, s.api.port)
@@ -90,6 +90,7 @@ class AppSettings private constructor(context: Context) {
             putStringSet(K_SCOPES, s.api.scopes.filter { it in ApiConfig.GRANTABLE }.map { it.id }.toSet())
             if (s.lastMode != null) putString(K_LAST_MODE, s.lastMode.name) else remove(K_LAST_MODE)
             remove(K_AUTO_OLD)
+            remove(K_AUTO_OLD2)
             saveExtras(s)
             saveBluetooth(s)
         }
@@ -107,9 +108,10 @@ class AppSettings private constructor(context: Context) {
     fun regenerateToken() = updateApi { it.copy(token = ApiTokens.generate()) }
 
     companion object {
-        private const val K_MODE = "default_mode"
+        private const val K_MODE_OLD = "default_mode" // removed setting
         private const val K_AUTO_OLD = "auto_connect_cable"
-        private const val K_AUTO = "auto_connect_cable_v2"
+        private const val K_AUTO_OLD2 = "auto_connect_cable_v2"
+        private const val K_AUTO = "auto_connect_cable_v3"
         private const val K_LAST_MODE = "last_connect_mode"
         private const val K_API_ON = "api_enabled"
         private const val K_PORT = "api_port"

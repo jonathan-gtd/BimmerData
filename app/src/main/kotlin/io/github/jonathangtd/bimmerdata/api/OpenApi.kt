@@ -389,9 +389,9 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
                 "sentPoints" to S.int("Since the app started."), "lastSuccessMs" to S.int(format = "int64"), "lastError" to S.str()),
         ))
         put("Settings", S.obj(
-            "App settings.", listOf("defaultMode", "autoConnectOnCable", "recordingFolder", "api"), false, null,
-            "defaultMode" to S.str("Mode used by `POST /connect` without a mode.", enum = listOf("usb", "bluetooth", "simulation")),
-            "autoConnectOnCable" to S.bool("Connect over USB as soon as the K+DCAN cable is plugged in."),
+            "App settings.", listOf("autoConnectOnCable", "recordingFolder", "api"), false, null,
+            "lastMode" to S.str("Mode of the last connection (read-only), used by `POST /connect` without a mode; absent until the first connection.", enum = listOf("usb", "bluetooth", "simulation")),
+            "autoConnectOnCable" to S.bool("Connect over USB as soon as the K+DCAN cable is plugged in (off by default)."),
             "recordingFolder" to S.str("Where CSV recordings go (read-only).", "Documents/BimmerData/"),
             "bluetoothAdapter" to S.obj("Deep OBD Bluetooth adapter chosen on the phone (read-only); absent when none.", listOf("address"), false, null,
                 "name" to S.str(example = "Deep OBD BMW"), "address" to S.str(example = "00:11:22:33:44:55")),

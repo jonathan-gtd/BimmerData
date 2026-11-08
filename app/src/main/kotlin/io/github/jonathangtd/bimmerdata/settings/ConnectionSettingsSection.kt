@@ -53,8 +53,7 @@ import io.github.jonathangtd.bimmerdata.ui.Cockpit
 import kotlinx.coroutines.launch
 
 /**
- * Settings › Connection, self-contained (reads its own state): default mode, auto-connect on the
- * cable, and the Deep OBD Bluetooth adapter (choice among the paired devices, connect at start,
+ * Settings › Connection, self-contained (reads its own state): auto-connect on the cable, and the Deep OBD Bluetooth adapter (choice among the paired devices, connect at start,
  * adapter state and CAN mode).
  */
 @Composable
@@ -65,18 +64,6 @@ fun ConnectionSettingsSection() {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SettingsCard {
             SectionLabel(stringResource(R.string.settings_section_connection))
-            Text(stringResource(R.string.settings_default_mode), color = Cockpit.Text, fontSize = 16.sp)
-            Segmented(
-                options = listOf(
-                    LiveMode.Usb to stringResource(R.string.settings_mode_usb),
-                    LiveMode.Bluetooth to stringResource(R.string.bt_short),
-                    LiveMode.Simulation to stringResource(R.string.settings_mode_sim),
-                ),
-                selected = settings.defaultMode,
-                onSelect = { m -> store.update { it.copy(defaultMode = m) } },
-            )
-            Hint(stringResource(R.string.settings_default_mode_hint))
-            Divider()
             SwitchRow(
                 title = stringResource(R.string.settings_auto_connect),
                 hint = stringResource(R.string.settings_auto_connect_hint),

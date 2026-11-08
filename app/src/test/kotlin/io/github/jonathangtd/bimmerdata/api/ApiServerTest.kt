@@ -224,6 +224,20 @@ class ApiServerTest {
     }
 
     @Test
+    fun `connect without a mode uses the last mode, 409 before any connection`() {
+        val none = call("POST", "/api/v1/connect", "{}")
+        assertEquals(409, none.status)
+        assertEquals("no_mode", none.errorCode)
+        assertEquals(400, call("POST", "/api/v1/connect", """{"mode":"wifi"}""").status)
+
+        call("POST", "/api/v1/connect", """{"mode":"bluetooth"}""")
+        assertEquals("bluetooth", call("GET", "/api/v1/settings").json()["lastMode"]!!.jsonPrimitive.content)
+        call("POST", "/api/v1/disconnect")
+        val again = call("POST", "/api/v1/connect", "{}").json()
+        assertEquals("bluetooth", again["connection"]!!.jsonObject["mode"]!!.jsonPrimitive.content, "last mode reused")
+    }
+
+    @Test
     fun `read_values needs a connection, then waits for fresh values and samples a series`() {
         val notConnected = call("POST", "/api/v1/values/read", """{"ids":["msv70/0x4402"]}""")
         assertEquals(409, notConnected.status)
@@ -436,9 +450,10 @@ class ApiServerTest {
         assertTrue(csv.text.startsWith("time;oil"))
         assertEquals(404, call("GET", "/api/v1/recordings/..%2Fetc%2Fpasswd").status)
 
-        val s = call("PATCH", "/api/v1/settings", """{"autoConnectOnCable":true,"defaultMode":"usb"}""").json()
+        val s = call("PATCH", "/api/v1/settings", """{"autoConnectOnCable":true,"bluetoothConnectOnStart":true}""").json()
         assertTrue(s["autoConnectOnCable"]!!.jsonPrimitive.boolean)
-        assertEquals("usb", s["defaultMode"]!!.jsonPrimitive.content)
+        assertTrue(s["bluetoothConnectOnStart"]!!.jsonPrimitive.boolean)
+        assertEquals(400, call("PATCH", "/api/v1/settings", """{"defaultMode":"usb"}""").status, "no default mode any more")
         val api = call("PATCH", "/api/v1/settings", """{"api":{"scopes":["read","layout","config","diag"]}}""")
         assertEquals(403, api.status)
         assertEquals("phone_only", api.errorCode)

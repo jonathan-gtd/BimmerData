@@ -39,7 +39,7 @@ class FakeApiBackend : ApiBackend {
     )
     var saves = 0
     var lastRender: RenderRequest? = null
-    var settings = SettingsView(ConnectMode.Simulation, false, "Documents/BimmerData/", ApiSettingsView(true, 8765, listOf("read", "layout")))
+    var settings = SettingsView(false, "Documents/BimmerData/", ApiSettingsView(true, 8765, listOf("read", "layout")))
     private val _recording = MutableStateFlow(RecordingState())
     override val recording: StateFlow<RecordingState> = _recording
     val markers = ArrayList<String>()
@@ -83,7 +83,8 @@ class FakeApiBackend : ApiBackend {
     }
 
     override fun connect(mode: ConnectMode?) {
-        val m = mode ?: settings.defaultMode
+        val m = mode ?: settings.lastMode ?: return
+        settings = settings.copy(lastMode = m)
         connection = ConnectionInfo("connecting", m)
         thread(isDaemon = true) {
             Thread.sleep(100)
@@ -107,8 +108,8 @@ class FakeApiBackend : ApiBackend {
     override fun settings() = settings
     override fun updateSettings(patch: SettingsPatch): SettingsView {
         settings = settings.copy(
-            defaultMode = patch.defaultMode ?: settings.defaultMode,
             autoConnectOnCable = patch.autoConnectOnCable ?: settings.autoConnectOnCable,
+            bluetoothConnectOnStart = patch.bluetoothConnectOnStart ?: settings.bluetoothConnectOnStart,
         )
         return settings
     }

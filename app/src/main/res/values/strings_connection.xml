@@ -14,8 +14,6 @@
     <string name="cp_no_answer">%1$s · no answer</string>
     <string name="cp_failed">Connection failed: %1$s</string>
     <string name="cp_disconnect">Disconnect</string>
-    <string name="cp_switch_usb">Switch to the cable</string>
-    <string name="cp_switch_sim">Switch to simulation</string>
     <string name="cp_ignition">Ignition</string>
     <string name="cp_ignition_on">On</string>
     <string name="cp_ignition_off">Off</string>

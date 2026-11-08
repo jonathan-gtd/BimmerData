@@ -162,7 +162,7 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
     /**
      * Runs a one-off operation on the shared cable between two read cycles (see
      * [AcquisitionEngine.exclusive]). Connects first when needed, in the last mode the user
-     * chose ([Settings.lastMode], else [Settings.defaultMode]).
+     * chose ([Settings.lastMode]); fails when no mode was ever chosen.
      *
      * @throws CableUnavailableException with a readable reason when no connection can be made.
      */
@@ -175,8 +175,8 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
     private suspend fun ensureEngine(): AcquisitionEngine {
         connectJob?.join() // a connection in progress
         currentEngine()?.let { return it }
-        val s = settings.state.value
-        val job = scope.launch { connectNow(s.lastMode ?: s.defaultMode) }
+        val mode = settings.state.value.lastMode ?: throw CableUnavailableException(NoModeMessage)
+        val job = scope.launch { connectNow(mode) }
         connectJob = job
         job.join()
         currentEngine()?.let { return it }
@@ -296,6 +296,7 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
         const val BtPermissionMessage = "Bluetooth permission not granted"
         const val BtOffMessage = "Bluetooth is off"
         const val NotBluetoothMessage = "Not connected over Bluetooth"
+        const val NoModeMessage = "Not connected: tap Connect and choose the cable, Bluetooth or the simulation"
 
         // holds only the application context
         @SuppressLint("StaticFieldLeak")

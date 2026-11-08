@@ -97,12 +97,13 @@ fun ConnectionPill(modifier: Modifier = Modifier) {
 
 /**
  * Stateless pill:
- * - disconnected (or failed): a big "Connect" pill. The first time it asks Cable / Simulation;
- *   afterwards it connects at once in the last mode, and its "▾" end changes the mode;
+ * - disconnected (or failed): a big "Connect" pill. The first time it asks Cable / Bluetooth /
+ *   Simulation; afterwards it connects at once in the last mode, and its "▾" end changes the mode;
  * - connecting / connected: a colored status pill (green = reading, amber = connecting or
- *   reconnecting, red = error) with the read rate; a tap opens "Disconnect / switch mode".
+ *   reconnecting, red = error) with the read rate; a tap opens a menu with only "Disconnect".
  *
- * USB: asks for the notification permission first (the acquisition runs in a foreground service).
+ * Cable and Bluetooth: asks first for the missing runtime permissions (notification of the
+ * foreground service, Bluetooth connect).
  */
 @Composable
 fun ConnectionPillContent(
@@ -150,16 +151,11 @@ fun ConnectionPillContent(
         }
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Cockpit.Card) {
             val current = (connection as? LiveConnection.Connected)?.mode ?: (connection as? LiveConnection.Connecting)?.mode
-            if (current == null) {
+            if (current == null) { // mode chooser (the "▾" of Connect, or the first Connect)
                 MenuEntry(stringResource(R.string.cp_mode_usb), R.drawable.ic_plug) { menu = false; connect(LiveMode.Usb) }
                 MenuEntry(stringResource(R.string.bt_mode), R.drawable.ic_bluetooth) { menu = false; connect(LiveMode.Bluetooth) }
                 MenuEntry(stringResource(R.string.cp_mode_sim), R.drawable.ic_dashboard) { menu = false; connect(LiveMode.Simulation) }
-            } else {
-                if (current == LiveMode.Usb) {
-                    MenuEntry(stringResource(R.string.cp_switch_sim), R.drawable.ic_dashboard) { menu = false; connect(LiveMode.Simulation) }
-                } else {
-                    MenuEntry(stringResource(R.string.cp_switch_usb), R.drawable.ic_plug) { menu = false; connect(LiveMode.Usb) }
-                }
+            } else { // connected: only Disconnect (to change the mode: disconnect, then Connect ▾)
                 MenuEntry(stringResource(R.string.cp_disconnect), null, Cockpit.Danger) { menu = false; onDisconnect() }
             }
         }
