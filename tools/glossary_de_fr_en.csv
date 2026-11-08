@@ -117,3 +117,8 @@ Signal zu hoch;signal trop élevé;signal too high;
 Signal zu niedrig;signal trop faible;signal too low;
 Fehler momentan vorhanden;défaut présent;fault currently present;
 Fehler momentan nicht vorhanden;défaut non présent actuellement;fault not currently present;
+Kurbelwelle;vilebrequin;crankshaft;
+Kurbelwellensensor;capteur de vilebrequin;crankshaft sensor;
+Kurbelwellengeber;capteur de vilebrequin;crankshaft sensor;
+Zündspule;bobine d'allumage;ignition coil;
+Zündkerze;bougie d'allumage;spark plug;
