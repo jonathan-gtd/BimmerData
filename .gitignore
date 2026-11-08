@@ -1,0 +1,25 @@
+# Build
+.gradle/
+build/
+.kotlin/
+local.properties
+*.apk
+*.aab
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Signing keys never go in the repo
+*.jks
+*.keystore
+keystore.properties
+
+# EDIABAS ECU files are proprietary: each user provides their own, never commit them
+*.prg
+*.PRG
+*.grp
+*.GRP
+ecu/
+Ecu/
