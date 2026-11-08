@@ -73,6 +73,9 @@ class LiveRepository private constructor(context: Context) : InterfaceArbiter.Ca
     /** Samples and status of the current acquisition; [LiveDataSource.setMeasurements] survives reconnects. */
     val liveDataSource: LiveDataSource get() = proxy
 
+    /** What the phone dashboard and Android Auto want read; the engine reads their merge. */
+    val requests = MeasurementRequests(proxy::setMeasurements)
+
     private val _lastRecording = MutableStateFlow<Uri?>(null)
 
     /** Content Uri of the last finished CSV file (for [CsvFiles.shareIntent] / [CsvFiles.viewIntent]). */

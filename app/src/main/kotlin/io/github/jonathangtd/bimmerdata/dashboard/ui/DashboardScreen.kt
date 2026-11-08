@@ -79,6 +79,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.jonathangtd.bimmerdata.R
@@ -127,6 +128,10 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
     var sheet by remember { mutableStateOf<Sheet?>(null) }
 
     LaunchedEffect(ui.editing) { onEditingChange(ui.editing) }
+    LifecycleStartEffect(vm) {
+        vm.setForeground(true)
+        onStopOrDispose { vm.setForeground(false) }
+    }
     BackHandler(enabled = ui.editing) { vm.setEditing(false) }
 
     val dashboard = ui.dashboard
@@ -410,7 +415,7 @@ private fun DashboardHeader(
         is LiveConnection.Connected -> stringResource(
             R.string.status_running,
             stringResource(if (connection.mode == LiveMode.Usb) R.string.conn_usb_short else R.string.conn_sim),
-            String.format(java.util.Locale.getDefault(), "%.1f", status.cyclesPerSecond),
+            String.format(currentLocale(), "%.1f", status.cyclesPerSecond),
         )
     }
     val dotColor = when (connection) {

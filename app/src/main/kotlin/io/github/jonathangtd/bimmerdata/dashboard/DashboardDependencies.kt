@@ -11,7 +11,10 @@ import io.github.jonathangtd.bimmerdata.live.LiveConnection
 import io.github.jonathangtd.bimmerdata.live.LiveDataSource
 import io.github.jonathangtd.bimmerdata.live.LiveMode
 import io.github.jonathangtd.bimmerdata.live.LiveRepository
+import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.MeasurementCatalog
+import io.github.jonathangtd.bimmerdata.live.MeasurementClient
+import io.github.jonathangtd.bimmerdata.live.MeasurementRequests
 import io.github.jonathangtd.bimmerdata.live.SessionRecorder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +30,10 @@ interface DashboardDependencies {
     val connection: StateFlow<LiveConnection>
     fun connect(mode: LiveMode)
     fun disconnect()
+
+    /** Measurements [client] shows (see [MeasurementRequests] for how phone and car share the engine). */
+    fun requestMeasurements(client: MeasurementClient, measurements: List<Measurement>, foreground: Boolean)
+    fun clearMeasurements(client: MeasurementClient)
 }
 
 /** The single place that decides where live data comes from: the real acquisition engine. */
@@ -40,6 +47,9 @@ class LiveDashboardDependencies(private val repo: LiveRepository) : DashboardDep
     override val connection: StateFlow<LiveConnection> get() = repo.connection
     override fun connect(mode: LiveMode) = repo.connect(mode)
     override fun disconnect() = repo.disconnect()
+    override fun requestMeasurements(client: MeasurementClient, measurements: List<Measurement>, foreground: Boolean) =
+        repo.requests.set(client, measurements, foreground)
+    override fun clearMeasurements(client: MeasurementClient) = repo.requests.clear(client)
 }
 
 /** Fully in-process fake data (UI development and previews), no ECU file needed. */
@@ -52,6 +62,10 @@ class FakeDashboardDependencies private constructor() : DashboardDependencies {
     override val connection: StateFlow<LiveConnection> = _connection
     override fun connect(mode: LiveMode) { _connection.value = LiveConnection.Connected(mode, "Fake data") }
     override fun disconnect() { _connection.value = LiveConnection.Disconnected }
+    private val requests = MeasurementRequests(liveDataSource::setMeasurements)
+    override fun requestMeasurements(client: MeasurementClient, measurements: List<Measurement>, foreground: Boolean) =
+        requests.set(client, measurements, foreground)
+    override fun clearMeasurements(client: MeasurementClient) = requests.clear(client)
 
     companion object {
         @Volatile private var instance: FakeDashboardDependencies? = null

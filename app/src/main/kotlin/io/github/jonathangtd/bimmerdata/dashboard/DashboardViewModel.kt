@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.jonathangtd.bimmerdata.live.AcquisitionStatus
 import io.github.jonathangtd.bimmerdata.live.Measurement
+import io.github.jonathangtd.bimmerdata.live.MeasurementClient
 import io.github.jonathangtd.bimmerdata.live.RecordingState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -61,6 +62,7 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
     /** Catalog metadata of the measurements used on cards (label, unit, range), by id. */
     val measurementIndex: StateFlow<Map<String, Measurement>> = _index.asStateFlow()
     private val loadedSgbds = HashSet<String>()
+    private val foreground = MutableStateFlow(false)
 
     init {
         viewModelScope.launch {
@@ -82,16 +84,21 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
                 ids.map { sgbdOf(it) }.distinct().forEach { loadSgbd(it) }
             }
         }
-        // Ask the acquisition engine for what is on screen.
+        // Ask the acquisition engine for what is on screen (shared with Android Auto, see MeasurementRequests).
         viewModelScope.launch {
-            combine(_ui, _index) { ui, index ->
+            combine(_ui, _index, foreground) { ui, index, fg ->
                 val pages = listOfNotNull(
                     ui.currentPage(Target.Phone),
                     if (ui.editing && ui.target == Target.Car) ui.currentPage(Target.Car) else null,
                 )
-                pages.flatMap { it.measurementIds() }.distinct().mapNotNull { index[it] }
-            }.distinctUntilChanged().collect { deps.liveDataSource.setMeasurements(it) }
+                pages.flatMap { it.measurementIds() }.distinct().mapNotNull { index[it] } to fg
+            }.distinctUntilChanged().collect { (list, fg) -> deps.requestMeasurements(MeasurementClient.Phone, list, fg) }
         }
+    }
+
+    /** True while the dashboard is on the phone screen (lifecycle started). */
+    fun setForeground(on: Boolean) {
+        foreground.value = on
     }
 
     private fun sgbdOf(id: String) = id.substringBefore('/').lowercase()

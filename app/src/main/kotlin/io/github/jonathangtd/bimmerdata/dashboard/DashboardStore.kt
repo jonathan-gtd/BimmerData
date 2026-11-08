@@ -7,6 +7,9 @@ import android.content.Context
 import android.util.Log
 import androidx.core.util.AtomicFile
 import io.github.jonathangtd.bimmerdata.R
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
 
 /** Saves the layout as JSON in app storage (atomic writes, so a crash never corrupts it). */
@@ -28,6 +31,7 @@ class DashboardStore(private val context: Context) {
         try {
             out.write(DashboardJson.encode(dashboard).toByteArray(Charsets.UTF_8))
             file.finishWrite(out)
+            _saved.value = dashboard
         } catch (e: Exception) {
             file.failWrite(out)
             Log.w(TAG, "Could not save the dashboard", e)
@@ -36,6 +40,11 @@ class DashboardStore(private val context: Context) {
 
     companion object {
         private const val TAG = "DashboardStore"
+
+        private val _saved = MutableStateFlow<Dashboard?>(null)
+
+        /** Last layout saved in this process (the Android Auto screen follows phone edits with it). */
+        val saved: StateFlow<Dashboard?> = _saved.asStateFlow()
 
         fun defaultLabels(context: Context) = with(context) {
             DefaultLabels(
