@@ -39,7 +39,11 @@ import kotlin.coroutines.coroutineContext
  *   natively. All blocks of an SGBD share the ECU's local identifier F0, so with more blocks
  *   each read redefines (job path speed): keep one block per ECU for speed.
  * - [MeasurementSource.JobResult] measurements are grouped by (sgbd, job, args): one job run
- *   per group and cycle.
+ *   feeds every result of the group. When other groups are planned too, a job group runs at most
+ *   every [Config.jobMinIntervalMs], and at most every (1 + [Config.jobIntervalFactor]) times its
+ *   own duration (capped at [Config.jobMaxIntervalMs]), so a slow STATUS job does not starve the
+ *   fast path. Only read-only jobs are run ([ReadOnlyJobs.isReadOnlyName]): any other job in a
+ *   layout is reported in [unsupported] and never sent.
  *
  * Errors: a read whose answer no longer matches the definition triggers an immediate redefine.
  * Transport errors put the group in exponential backoff ([Config.retryDelayMinMs]..
@@ -67,6 +71,12 @@ class AcquisitionEngine(
         val minCycleMs: Long = 0,
         /** Extra EdiabasNet configuration ("Key=Value;..."), e.g. "IfhTrace=1". */
         val ediabasConfig: String = "",
+        /** Shortest period of a job group when other groups share the interface. */
+        val jobMinIntervalMs: Long = 200,
+        /** A job group waits this many times its own duration before it runs again (with other groups). */
+        val jobIntervalFactor: Double = 2.0,
+        /** Longest period the duration rule may give a job group. */
+        val jobMaxIntervalMs: Long = 5000,
     )
 
     private val _samples = MutableStateFlow<Map<String, Sample>>(emptyMap())
@@ -227,11 +237,12 @@ class AcquisitionEngine(
                 for (group in due) {
                     coroutineContext.ensureActive()
                     if (plannedFor != wanted) break // replanned (refused ids)
+                    val started = clock()
                     val error = readGroup(ed, group)
                     if (error == null) {
                         successes++
                         group.failures = 0
-                        group.retryAt = 0
+                        group.retryAt = if (group is JobGroup && plan.size > 1) started + jobPeriod(clock() - started) else 0
                     } else {
                         failures++
                         errorCount++
@@ -372,7 +383,11 @@ class AcquisitionEngine(
                 is MeasurementSource.MeasurementTable ->
                     tableBySgbd.getOrPut(EdiabasMeasurementCatalog.normalize(m.sgbd)) { ArrayList() } += m
                 is MeasurementSource.JobResult ->
-                    jobs.getOrPut(Triple(m.sgbd, src.job.uppercase(Locale.ROOT), src.args)) { ArrayList() } += m
+                    if (ReadOnlyJobs.isReadOnlyName(src.job)) {
+                        jobs.getOrPut(Triple(EdiabasMeasurementCatalog.normalize(m.sgbd), src.job.uppercase(Locale.ROOT), src.args)) { ArrayList() } += m
+                    } else {
+                        unknown += m.id // never run a job that could act on the car
+                    }
             }
         }
         for ((sgbd, members) in tableBySgbd) {
@@ -443,6 +458,11 @@ class AcquisitionEngine(
     }
 
     private fun effectiveNow(): List<Measurement> = (_measurements.value + _pinned.value).distinctBy { it.id }
+
+    /** Start-to-start period of a job group that took [durationMs], when it shares the interface. */
+    internal fun jobPeriod(durationMs: Long): Long =
+        maxOf(config.jobMinIntervalMs, (durationMs.coerceAtLeast(0) * (1.0 + config.jobIntervalFactor)).toLong())
+            .coerceAtMost(maxOf(config.jobMaxIntervalMs, config.jobMinIntervalMs))
 
     private fun backoff(failures: Int): Long =
         (config.retryDelayMinMs shl (failures - 1).coerceIn(0, 16)).coerceAtMost(config.retryDelayMaxMs)
