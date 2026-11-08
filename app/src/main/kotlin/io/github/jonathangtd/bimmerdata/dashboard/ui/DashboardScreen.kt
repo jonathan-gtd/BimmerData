@@ -112,7 +112,7 @@ internal sealed interface Sheet {
     data class Layout(val target: Target, val pageId: String) : Sheet
     data class Pages(val target: Target) : Sheet
     data object CarFullscreen : Sheet
-    data object ConfirmReset : Sheet
+    data class ConfirmReset(val target: Target) : Sheet
     data object RenameDashboard : Sheet
 }
 
@@ -208,6 +208,13 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
         onCardDoubleTap = { id -> vm.cycleTrendWindow(t, page.id, id)?.let { message(res.getString(R.string.trend_window_now, it)) } },
     )
 
+    /** "Add a card": on the current page of [t], or on a first page created on the fly (default grid). */
+    fun addFirstOrNext(t: Target) {
+        vm.setEditing(true)
+        val page = vm.ensurePage(t, res.getString(R.string.new_page, 1)) ?: return
+        sheet = addSheetOrMessage(res, t, page, null, null) { message(it) } ?: sheet
+    }
+
     Box(Modifier.fillMaxSize().background(Cockpit.Background)) {
         Column(
             Modifier
@@ -230,7 +237,7 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                 )
             }
             Spacer(Modifier.height(12.dp))
-            SegmentedTabs(
+            if (pages.isNotEmpty() || ui.editing) SegmentedTabs(
                 labels = pages.map { it.name }, selected = pageIndex, onSelect = { vm.selectPage(target, it) },
                 trailing = if (ui.editing) {
                     {
@@ -245,15 +252,17 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                 },
             )
             Spacer(Modifier.height(12.dp))
-            if (ui.editing && currentPage != null) {
+            if (ui.editing) {
                 EditorToolbar(
-                    onLayout = { sheet = Sheet.Layout(target, currentPage.id) },
+                    onLayout = {
+                        vm.ensurePage(target, res.getString(R.string.new_page, 1))?.let { sheet = Sheet.Layout(target, it.id) }
+                    },
                     onPages = { sheet = Sheet.Pages(target) },
-                    onAddCard = { sheet = addSheetOrMessage(res, target, currentPage, null, null) { message(it) } ?: sheet },
+                    onAddCard = { addFirstOrNext(target) },
                     onShare = ::share,
                     onSaveFile = { saveFile.launch("bimmerdata-layout.json") },
                     onImport = { openFile.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
-                    onReset = { sheet = Sheet.ConfirmReset },
+                    onReset = { sheet = Sheet.ConfirmReset(target) },
                     onRename = { sheet = Sheet.RenameDashboard },
                 )
                 Text(
@@ -263,7 +272,17 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
             }
 
             Box(Modifier.fillMaxWidth().weight(1f)) {
-                if (target == Target.Phone) {
+                if (pages.isEmpty()) {
+                    // No page at all (first launch, or after a reset): add a card or a page.
+                    EmptyPage(
+                        onAdd = { addFirstOrNext(target) },
+                        onAddPage = {
+                            vm.setEditing(true)
+                            vm.addPage(target, res.getString(R.string.new_page, 1))
+                        },
+                        car = target == Target.Car,
+                    )
+                } else if (target == Target.Phone) {
                     PhonePager(
                         pages = pages, pageIndex = pageIndex, editing = ui.editing,
                         onPageSettled = { vm.selectPage(Target.Phone, it) },
@@ -374,12 +393,8 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
             onRename = { id, name -> vm.renamePage(s.target, id, name) },
             onMove = { from, to -> vm.movePage(s.target, from, to) },
             onDelete = { id ->
-                if (dashboard.pages(s.target).size <= 1) {
-                    message(res.getString(R.string.last_page))
-                } else {
-                    vm.deletePage(s.target, id)
-                    message(res.getString(R.string.page_deleted), withUndo = true)
-                }
+                vm.deletePage(s.target, id)
+                message(res.getString(R.string.page_deleted), withUndo = true)
             },
             onAdd = { vm.addPage(s.target, res.getString(R.string.new_page, dashboard.pages(s.target).size + 1)) },
         )
@@ -387,10 +402,11 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
             pages = dashboard.carPages, initialIndex = ui.carPage, vm = vm, index = index, status = status, rec = rec,
             frame = frame, onDismiss = { sheet = null },
         )
-        Sheet.ConfirmReset -> ConfirmDialog(
-            text = stringResource(R.string.reset_confirm), confirm = stringResource(R.string.reset_default),
+        is Sheet.ConfirmReset -> ConfirmDialog(
+            text = stringResource(if (s.target == Target.Phone) R.string.reset_confirm_phone else R.string.reset_confirm_car),
+            confirm = stringResource(R.string.reset_default),
             onConfirm = {
-                vm.resetToDefault()
+                vm.resetTarget(s.target)
                 sheet = null
                 message(res.getString(R.string.reset_default), withUndo = true)
             },
@@ -538,7 +554,7 @@ private fun MenuItem(icon: Int, text: String, onClick: () -> Unit) {
 
 /** A page without cards: one big "+" that opens the card picker, and what can be shown. */
 @Composable
-internal fun EmptyPage(onAdd: () -> Unit) {
+internal fun EmptyPage(onAdd: () -> Unit, onAddPage: (() -> Unit)? = null, car: Boolean = false) {
     val addLabel = stringResource(R.string.empty_title)
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
@@ -565,7 +581,7 @@ internal fun EmptyPage(onAdd: () -> Unit) {
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                stringResource(R.string.empty_hint), color = Cockpit.Muted, fontSize = 15.sp, lineHeight = 21.sp,
+                stringResource(if (car) R.string.empty_hint_car else R.string.empty_hint), color = Cockpit.Muted, fontSize = 15.sp, lineHeight = 21.sp,
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(24.dp))
@@ -573,6 +589,10 @@ internal fun EmptyPage(onAdd: () -> Unit) {
                 stringResource(R.string.add_card), onClick = onAdd, icon = R.drawable.ic_add,
                 color = Cockpit.OnAccent, background = Cockpit.Accent,
             )
+            if (onAddPage != null) {
+                Spacer(Modifier.height(12.dp))
+                PillButton(stringResource(R.string.add_page), onClick = onAddPage, icon = R.drawable.ic_pages, color = Cockpit.Accent)
+            }
         }
     }
 }

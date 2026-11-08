@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reset_confirm_phone">Empty the phone dashboard (remove all its pages)? Android Auto pages are not touched.</string>
+    <string name="reset_confirm_car">Empty the Android Auto dashboard (remove all its pages)? Phone pages are not touched.</string>
+    <string name="empty_hint_car">Cards for the car screen: a few big values, readable at a glance while driving.</string>
+</resources>

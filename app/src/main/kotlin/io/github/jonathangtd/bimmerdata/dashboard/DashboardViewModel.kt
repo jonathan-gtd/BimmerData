@@ -256,7 +256,7 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
     fun addPage(t: Target, name: String) {
         _ui.update { ui ->
             val d = ui.dashboard ?: return@update ui
-            val page = if (t == Target.Phone) Page(name = name, columns = 2, rows = 6) else Page(name = name, columns = 4, rows = 1)
+            val page = DefaultDashboard.page(t, name)
             val pages = d.pages(t) + page
             val withPage = ui.copy(dashboard = d.withPages(t, pages))
             if (t == Target.Phone) withPage.copy(phonePage = pages.lastIndex) else withPage.copy(carPage = pages.lastIndex)
@@ -269,11 +269,12 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
         _ui.update { ui ->
             val d = ui.dashboard ?: return@update ui
             val pages = d.pages(t)
-            if (pages.size <= 1) return@update ui
+            if (pages.none { it.id == pageId }) return@update ui
             val remaining = pages.filterNot { it.id == pageId }
             val updated = ui.copy(dashboard = d.withPages(t, remaining), undo = d)
-            if (t == Target.Phone) updated.copy(phonePage = ui.phonePage.coerceAtMost(remaining.lastIndex))
-            else updated.copy(carPage = ui.carPage.coerceAtMost(remaining.lastIndex))
+            val last = remaining.lastIndex.coerceAtLeast(0)
+            if (t == Target.Phone) updated.copy(phonePage = ui.phonePage.coerceAtMost(last))
+            else updated.copy(carPage = ui.carPage.coerceAtMost(last))
         }
     }
 
@@ -300,10 +301,25 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
         e.message ?: "Invalid file"
     }
 
-    /** Back to the first-launch layout (one empty page each); the dashboard name is kept. */
-    fun resetToDefault() {
-        val d = DashboardStore.defaultDashboard(getApplication())
-        _ui.update { it.copy(dashboard = d.copy(name = it.dashboard?.name), phonePage = 0, carPage = 0, undo = it.dashboard) }
+    /**
+     * Empties the pages of [t] only (phone OR Android Auto); the other side and the dashboard name
+     * stay as they are. Undo restores the previous layout.
+     */
+    fun resetTarget(t: Target) = _ui.update { ui ->
+        val d = ui.dashboard ?: return@update ui
+        val next = ui.copy(dashboard = DashboardReset.target(d, t), undo = d)
+        if (t == Target.Phone) next.copy(phonePage = 0) else next.copy(carPage = 0)
+    }
+
+    /**
+     * Current page of [t], creating the first one (default grid, named [name]) when [t] has none.
+     * Null only before the layout is loaded.
+     */
+    fun ensurePage(t: Target, name: String): Page? {
+        _ui.value.currentPage(t)?.let { return it }
+        if (_ui.value.dashboard == null) return null
+        addPage(t, name)
+        return _ui.value.currentPage(t)
     }
 
 

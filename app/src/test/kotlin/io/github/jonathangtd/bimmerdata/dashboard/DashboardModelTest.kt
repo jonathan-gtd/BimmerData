@@ -4,6 +4,7 @@
 package io.github.jonathangtd.bimmerdata.dashboard
 
 import io.github.jonathangtd.bimmerdata.gauges.GaugeType
+import io.github.jonathangtd.bimmerdata.api.LayoutOps
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -21,20 +22,37 @@ class DashboardModelTest {
     // ---- default layout ----
 
     @Test
-    fun `first launch - one empty page on the phone and one in Android Auto, bound to no ECU`() {
-        val d = DefaultDashboard.create("Page 1")
-        assertEquals(1, d.phonePages.size)
-        assertEquals(1, d.carPages.size)
-        assertTrue(d.phonePages[0].cards.isEmpty() && d.carPages[0].cards.isEmpty())
+    fun `first launch - no page at all, on the phone and in Android Auto`() {
+        val d = DefaultDashboard.create()
+        assertTrue(d.phonePages.isEmpty())
+        assertTrue(d.carPages.isEmpty())
         assertTrue(d.measurementIds().isEmpty())
-        assertEquals("Page 1", d.phonePages[0].name)
-        assertEquals(2 to 6, d.phonePages[0].let { it.columns to it.rows })
-        assertEquals(4 to 1, d.carPages[0].let { it.columns to it.rows })
         assertNull(d.name)
         assertEquals("BimmerData", d.title("BimmerData"))
         assertEquals("330i", d.copy(name = " 330i ").title("BimmerData"))
-        // survives storage (an empty page is a valid dashboard)
-        assertEquals(d, DashboardJson.decode(DashboardJson.encode(d)))
+        // the first page created later gets the default grid of its side
+        assertEquals(2 to 6, DefaultDashboard.page(Target.Phone, "Page 1").let { it.columns to it.rows })
+        assertEquals(4 to 1, DefaultDashboard.page(Target.Car, "Page 1").let { it.columns to it.rows })
+        // the app's own file may be empty; an imported file needs a page
+        assertEquals(d, DashboardJson.decode(DashboardJson.encode(d), requirePages = false))
+        assertThrows<IllegalArgumentException> { DashboardJson.decode(DashboardJson.encode(d)) }
+        assertTrue(LayoutOps.validate(d).isEmpty(), "0 pages is a valid layout for the API")
+    }
+
+    @Test
+    fun `reset empties one side only, keeps the other side and the name`() {
+        val full = Msv70Example.create().copy(name = "330i")
+        val car = DashboardReset.target(full, Target.Car)
+        assertEquals(full.phonePages, car.phonePages)
+        assertTrue(car.carPages.isEmpty())
+        assertEquals("330i", car.name)
+        val phone = DashboardReset.target(full, Target.Phone)
+        assertEquals(full.carPages, phone.carPages)
+        assertTrue(phone.phonePages.isEmpty())
+        assertEquals("330i", phone.name)
+        val all = DashboardReset.all(full)
+        assertTrue(all.phonePages.isEmpty() && all.carPages.isEmpty())
+        assertEquals("330i", all.name)
     }
 
     @Test

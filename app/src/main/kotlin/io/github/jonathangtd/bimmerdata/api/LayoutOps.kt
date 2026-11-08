@@ -50,7 +50,6 @@ object LayoutOps {
             val key = pagesKey(t)
             val limits = GridLimits.of(t)
             val pages = d.pages(t)
-            if (pages.isEmpty()) issues += LayoutIssue(key, "no_pages", "$key needs at least one page")
             pages.forEachIndexed { pi, page ->
                 val pp = "$key[$pi]"
                 if (page.id.isBlank()) issues += LayoutIssue("$pp.id", "blank_id", "Page id must not be blank")
@@ -179,7 +178,6 @@ object LayoutOps {
 
     fun deletePage(d: Dashboard, t: Target, ref: String): Dashboard {
         val (_, page) = findPage(d, t, ref)
-        if (d.pages(t).size <= 1) throw ApiException(409, "last_page", "Cannot delete the last ${targetName(t)} page; add another one first or edit this one")
         return d.withPages(t, d.pages(t).filterNot { it.id == page.id })
     }
 

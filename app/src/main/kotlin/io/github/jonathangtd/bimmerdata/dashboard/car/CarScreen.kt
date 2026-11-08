@@ -73,10 +73,11 @@ object CarScreen {
 
     /**
      * Renders a car page as Android Auto would show it on a 1280×480 head unit, including a
-     * stand-in for the system rail that the host draws itself (preview and debug only).
+     * stand-in for the system rail that the host draws itself (preview and debug only). A null
+     * [page] (no Android Auto page at all) shows the "create it on the phone" message.
      */
     fun render(
-        context: Context, locale: Locale, page: Page, pageIndex: Int, pageCount: Int,
+        context: Context, locale: Locale, page: Page?, pageIndex: Int, pageCount: Int,
         index: Map<String, Measurement>, feed: GaugeFeed, status: AcquisitionStatus, rec: RecordingState,
         width: Int = 1280, height: Int = 480, frameNanos: Long = System.nanoTime(),
     ): Bitmap {
@@ -90,9 +91,18 @@ object CarScreen {
     /** Draws rail + page into a [width]×[height] canvas; [states] lets a live preview keep needle state. */
     fun drawWithRail(
         canvas: Canvas, width: Float, height: Float, renderer: CarPageRenderer, context: Context,
-        page: Page, pageIndex: Int, pageCount: Int, index: Map<String, Measurement>, feed: GaugeFeed,
+        page: Page?, pageIndex: Int, pageCount: Int, index: Map<String, Measurement>, feed: GaugeFeed,
         status: AcquisitionStatus, rec: RecordingState, frameNanos: Long, states: MutableMap<String, GaugeState>?,
     ): Boolean {
+        if (page == null) {
+            val u = height / CarPageRenderer.REFERENCE_HEIGHT
+            val rail = 88f * u
+            drawRail(canvas, rail, height, u, context)
+            val placeholder = Page(name = context.getString(R.string.app_name), columns = 1, rows = 1)
+            val chrome = chrome(context, placeholder, 0, 1, status, rec, feed.nowMs, renderer.gauges.format)
+                .copy(pageLabel = "", showArrows = false, emptyText = context.getString(R.string.car_no_pages))
+            return renderer.draw(canvas, rail, 0f, width - rail, height, placeholder, emptyList(), emptyList(), feed, frameNanos, chrome)
+        }
         val u = height / CarPageRenderer.REFERENCE_HEIGHT
         val rail = 88f * u
         drawRail(canvas, rail, height, u, context)

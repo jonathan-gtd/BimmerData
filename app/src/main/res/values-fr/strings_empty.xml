@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reset_confirm_phone">Vider le tableau de bord du téléphone (supprimer toutes ses pages) ? Les pages Android Auto ne changent pas.</string>
+    <string name="reset_confirm_car">Vider le tableau de bord Android Auto (supprimer toutes ses pages) ? Les pages du téléphone ne changent pas.</string>
+    <string name="empty_hint_car">Les cartes de l’écran de la voiture : quelques grandes valeurs, lisibles d’un coup d’œil en roulant.</string>
+</resources>
