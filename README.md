@@ -54,6 +54,10 @@ Inspect an ECU file from the command line:
 The EDIABAS file handling and job interpreter are a Kotlin port of
 [EdiabasLib](https://github.com/uholeschak/ediabaslib) by Ulrich Holeschak (GPL-3.0).
 
+The dashboard uses the [Barlow](https://github.com/jpt/barlow) and Barlow Semi Condensed fonts
+by Jeremy Tribby (SIL Open Font License 1.1, copied from
+[google/fonts](https://github.com/google/fonts); license texts in `app/src/main/assets/licenses/`).
+
 BMW, EDIABAS and related names are trademarks of their respective owners. This project is not
 affiliated with or endorsed by BMW.
 
