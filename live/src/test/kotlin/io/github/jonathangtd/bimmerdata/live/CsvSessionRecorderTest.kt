@@ -101,10 +101,10 @@ class CsvSessionRecorderTest {
             val lines = String(bytes, Charsets.UTF_8).removePrefix("﻿").split("\r\n")
             lines.forEach { println(it) }
             assertEquals("time_ms;iso_time;Öltemperatur [°C];\"Lambda; Bank 1\";Status [0-n];marker", lines[0])
-            assertEquals("100;2025-11-08T08:30:52.100;14.5;1;\"LSH_OFF; idle\";", lines[1])
-            assertEquals("160;2025-11-08T08:30:52.160;14.5;0.987654;\"LSH_OFF; idle\";", lines[2])
+            assertEquals("100;2025-11-08T08:30:52.100+00:00;14.5;1;\"LSH_OFF; idle\";", lines[1])
+            assertEquals("160;2025-11-08T08:30:52.160+00:00;14.5;0.987654;\"LSH_OFF; idle\";", lines[2])
             assertTrue(lines[3].endsWith(";full throttle"), lines[3])
-            assertEquals("7160;2025-11-08T08:30:59.160;;0;;", lines[4])
+            assertEquals("7160;2025-11-08T08:30:59.160+00:00;;0;;", lines[4])
             assertTrue(lines[5].endsWith(";mark 2"), lines[5])
             assertEquals("", lines[6])
             assertEquals(7, lines.size)

@@ -33,7 +33,10 @@ import java.util.concurrent.atomic.AtomicReference
  * - Separator `;`, decimal point `.` (locale independent; in Excel/LibreOffice choose "." as
  *   decimal separator in the import dialog if the system uses a comma).
  * - Header `time_ms;iso_time;<label [unit]>...;marker`. `time_ms` counts from the start of the
- *   recording, `iso_time` is local time `yyyy-MM-ddTHH:mm:ss.SSS`.
+ *   recording, `iso_time` is the local time with its UTC offset, ISO 8601
+ *   `yyyy-MM-ddTHH:mm:ss.SSS+hh:mm` (e.g. `2026-11-08T21:45:00.123+01:00` in Paris in winter,
+ *   `+02:00` in summer): unambiguous across a daylight saving change, and spreadsheet / pandas
+ *   friendly. The file name uses the local time of the start, without offset.
  * - One row per new sample batch of the source (one engine cycle on the fast path). Each column
  *   holds the latest value of its measurement; it is left empty when the value is older than
  *   [staleAfterMs] (ECU not answering) or missing. State values are written as numbers; only
@@ -194,7 +197,7 @@ class CsvSessionRecorder(
     }
 
     companion object {
-        private val IsoTime: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.ROOT)
+        private val IsoTime: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSxxx", Locale.ROOT)
         private val FileTime: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss", Locale.ROOT)
 
         const val MimeType = "text/csv"
