@@ -17,6 +17,9 @@ import io.github.jonathangtd.bimmerdata.api.ApiJson
 import io.github.jonathangtd.bimmerdata.api.ApiService
 import io.github.jonathangtd.bimmerdata.api.OpenApi
 import io.github.jonathangtd.bimmerdata.api.ApiServer
+import io.github.jonathangtd.bimmerdata.api.tls.TlsIdentity
+import io.github.jonathangtd.bimmerdata.api.tls.TlsIdentityStore
+import io.github.jonathangtd.bimmerdata.api.tls.TlsInfo
 import io.github.jonathangtd.bimmerdata.settings.AppSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +38,8 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.io.File
+import java.math.BigInteger
 import java.net.InetAddress
 
 /** What the Settings screen shows about the server. */
@@ -45,12 +50,22 @@ data class ApiRuntimeState(
     val addresses: List<LanAddress> = emptyList(),
     /** Why the server is not running although enabled (e.g. port in use). */
     val error: String? = null,
+    /** HTTPS asked in the settings. */
+    val https: Boolean = false,
+    /** Fingerprints of the TLS identity (HTTPS on and the identity ready). */
+    val tls: TlsInfo? = null,
+    /** Why the TLS identity could not be created or read (the server then stays off: never plain HTTP instead). */
+    val tlsError: String? = null,
 )
 
 /**
  * Runs the API server while it is enabled in the settings, on the phone's local-network
  * addresses (plus 127.0.0.1 for `adb forward` and on-phone scripts), and rebinds when Wi-Fi,
  * Ethernet or the hotspot change.
+ *
+ * HTTPS: with `api.https` the server speaks TLS only, with the identity of [TlsIdentityStore]
+ * (`filesDir/api_tls.bin`, encrypted by a Keystore key). If that identity cannot be prepared the
+ * server stays off rather than falling back to plain HTTP.
  *
  * Lifetime: the server lives in the app process. It keeps answering while the app is open, and
  * in the background while the acquisition foreground service runs (USB connection). Otherwise
@@ -70,7 +85,15 @@ class ApiRuntime private constructor(context: Context) {
     val state: StateFlow<ApiRuntimeState> = _state.asStateFlow()
 
     private var server: ApiServer? = null
-    private var bound: Pair<Int, List<InetAddress>>? = null
+    private var bound: Bound? = null
+
+    /** What the running server was started with; any change restarts it. */
+    private data class Bound(val port: Int, val addresses: List<InetAddress>, val tlsSerial: BigInteger?)
+
+    private val tlsStore by lazy {
+        val sealer = KeystoreSealer("bimmerdata_api_tls")
+        TlsIdentityStore(File(app.filesDir, "api_tls.bin"), sealer::seal, sealer::unseal, log = { msg, e -> Log.w(TAG, msg, e) })
+    }
     private var started = false
 
     @Synchronized
@@ -80,7 +103,7 @@ class ApiRuntime private constructor(context: Context) {
         registerNetworkCallback()
         scope.launch {
             merge(
-                settings.state.map { it.api.enabled to it.api.port }.distinctUntilChanged().map { },
+                settings.state.map { Triple(it.api.enabled, it.api.port, it.api.https) }.distinctUntilChanged().map { },
                 networkChanged.debounce(1500),
             ).collect { reconcile() }
         }
@@ -100,32 +123,63 @@ class ApiRuntime private constructor(context: Context) {
 
     private suspend fun reconcile() = mutex.withLock {
         val api = settings.state.value.api
+        val lan = LanAddresses.current(app)
+        var identity: TlsIdentity? = null
+        var tlsError: String? = null
+        if (api.https) {
+            try {
+                identity = tlsStore.ensure(lan.map { it.address })
+            } catch (e: Exception) {
+                Log.w(TAG, "Cannot prepare the TLS identity", e)
+                tlsError = e.message ?: e.javaClass.simpleName
+            }
+        }
+        val tls = identity?.info
         if (!api.enabled) {
             stopServer()
-            _state.value = ApiRuntimeState()
+            _state.value = ApiRuntimeState(https = api.https, tls = tls, tlsError = tlsError)
             return@withLock
         }
-        val lan = LanAddresses.current(app)
+        if (api.https && identity == null) {
+            stopServer()
+            _state.value = ApiRuntimeState(port = api.port, addresses = lan, error = "HTTPS: $tlsError", https = true, tlsError = tlsError)
+            return@withLock
+        }
         val addresses = lan.map { it.address } + InetAddress.getByName("127.0.0.1")
-        val wanted = api.port to addresses
+        val wanted = Bound(api.port, addresses, identity?.serverCert?.serialNumber)
         if (server?.isRunning == true && bound == wanted) {
-            _state.value = _state.value.copy(addresses = lan)
+            _state.value = _state.value.copy(addresses = lan, https = api.https, tls = tls)
             return@withLock
         }
         stopServer()
         val s = ApiServer(backend, ::currentAccess, docsAssets = ::docsAsset, log = { msg, e -> Log.w(TAG, msg, e) })
         try {
-            s.start(addresses, api.port)
+            s.start(addresses, api.port, identity?.sslContext())
             server = s
             bound = wanted
             val listening = s.boundAddresses.toSet()
-            _state.value = ApiRuntimeState(running = true, port = s.port, addresses = lan.filter { it.address in listening })
-            Log.i(TAG, "API listening on port ${s.port} (${listening.size} address(es))")
+            _state.value = ApiRuntimeState(running = true, port = s.port, addresses = lan.filter { it.address in listening }, https = api.https, tls = tls)
+            Log.i(TAG, "API listening on port ${s.port} (${listening.size} address(es), ${if (s.secure) "HTTPS" else "HTTP"})")
         } catch (e: Exception) {
             Log.w(TAG, "Cannot start the API on port ${api.port}", e)
-            _state.value = ApiRuntimeState(running = false, port = api.port, addresses = lan, error = e.message ?: e.javaClass.simpleName)
+            _state.value = ApiRuntimeState(running = false, port = api.port, addresses = lan, error = e.message ?: e.javaClass.simpleName, https = api.https, tls = tls)
         }
     }
+
+    /** New CA and server key: every client must trust or pin again. Restarts the server. */
+    fun regenerateCertificate() {
+        scope.launch {
+            mutex.withLock {
+                runCatching { tlsStore.regenerate(LanAddresses.current(app).map { it.address }) }
+                    .onFailure { Log.w(TAG, "Cannot regenerate the TLS identity", it) }
+                bound = null
+            }
+            reconcile()
+        }
+    }
+
+    /** PEM of the CA certificate clients trust, or null before HTTPS was first enabled. Blocking (file read). */
+    fun caPem(): String? = runCatching { tlsStore.current()?.caPem() }.getOrNull()
 
     private fun stopServer() {
         server?.stop()
@@ -145,7 +199,8 @@ class ApiRuntime private constructor(context: Context) {
     /** The OpenAPI document, for the in-app documentation (works with the server off). */
     fun openApiJson(): String {
         val service = server?.service ?: ApiService(backend, ::currentAccess)
-        return ApiJson.encodeToString(kotlinx.serialization.json.JsonElement.serializer(), OpenApi.document(service.routes, null, backend.appVersion))
+        val scheme = settings.state.value.api.scheme
+        return ApiJson.encodeToString(kotlinx.serialization.json.JsonElement.serializer(), OpenApi.document(service.routes, null, backend.appVersion, scheme))
     }
 
     private fun currentAccess(): ApiAccess {

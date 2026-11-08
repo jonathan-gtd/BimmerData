@@ -20,6 +20,10 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 import java.util.concurrent.atomic.AtomicInteger
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLServerSocket
+import javax.net.ssl.SSLSocket
+import io.github.jonathangtd.bimmerdata.api.tls.restrictToModernTls
 
 /**
  * One parsed HTTP request. [path] is percent-decoded and has no query string; header names are
@@ -32,6 +36,8 @@ class HttpRequest(
     val headers: Map<String, String>,
     val body: ByteArray,
     val remote: InetAddress,
+    /** True when the request came over TLS (HTTPS). */
+    val secure: Boolean = false,
 ) {
     fun header(name: String): String? = headers[name.lowercase()]
     fun queryParam(name: String): String? = query[name]?.firstOrNull()
@@ -73,7 +79,9 @@ data class HttpLimits(
  * uploads), `Expect: 100-continue` and streamed responses. Each connection is served by one thread
  * of a bounded pool; requests above [HttpLimits.maxConnections] get 503.
  *
- * It is meant for a token-protected LAN API, not for the internet: there is no TLS.
+ * It is meant for a token-protected LAN API, not for the internet. With an [SSLContext] given to
+ * [start] it speaks HTTPS only (TLS 1.3 / 1.2, see [restrictToModernTls]): a plain HTTP client
+ * fails the handshake and gets no answer. The handshake runs on the connection's own thread.
  */
 class HttpServer(
     private val handler: (HttpRequest) -> HttpResponse,
@@ -89,6 +97,10 @@ class HttpServer(
     @Volatile private var pool: ExecutorService? = null
     @Volatile private var running = false
 
+    /** True while serving HTTPS. */
+    @Volatile var secure: Boolean = false
+        private set
+
     /** Port actually bound (useful when started with port 0), or -1 when stopped. */
     @Volatile var port: Int = -1
         private set
@@ -98,10 +110,11 @@ class HttpServer(
 
     /**
      * Binds [port] on each of [addresses] (0 = pick a free port, then the same one everywhere).
-     * Addresses that cannot be bound are skipped; throws if none could be bound.
+     * Addresses that cannot be bound are skipped; throws if none could be bound. With [tls] every
+     * socket is a TLS server socket (HTTPS only).
      */
     @Synchronized
-    fun start(addresses: List<InetAddress>, port: Int) {
+    fun start(addresses: List<InetAddress>, port: Int, tls: SSLContext? = null) {
         check(!running) { "already started" }
         require(addresses.isNotEmpty()) { "no address to bind" }
         val executor = Executors.newCachedThreadPool { r ->
@@ -111,7 +124,11 @@ class HttpServer(
         var lastError: IOException? = null
         for (address in addresses.distinct()) {
             try {
-                val ss = ServerSocket()
+                val ss = if (tls != null) {
+                    (tls.serverSocketFactory.createServerSocket() as SSLServerSocket).apply { restrictToModernTls() }
+                } else {
+                    ServerSocket()
+                }
                 ss.reuseAddress = true
                 ss.bind(InetSocketAddress(address, chosen), 50)
                 chosen = ss.localPort
@@ -127,6 +144,7 @@ class HttpServer(
         }
         pool = executor
         running = true
+        secure = tls != null
         this.port = chosen
         for (ss in sockets.toList()) executor.execute { acceptLoop(ss) }
     }
@@ -140,6 +158,7 @@ class HttpServer(
         pool?.shutdownNow()
         pool = null
         port = -1
+        secure = false
     }
 
     val isRunning: Boolean get() = running
@@ -157,6 +176,7 @@ class HttpServer(
                 continue
             }
             if (!slots.tryAcquire()) {
+                if (socket is SSLSocket) { runCatching { socket.close() }; continue } // no handshake on the accept thread
                 runCatching {
                     socket.soTimeout = 2000
                     writeSimple(socket.getOutputStream(), 503, "busy", "Too many connections")
@@ -189,6 +209,14 @@ class HttpServer(
     private fun serve(socket: Socket) {
         socket.soTimeout = limits.readTimeoutMs
         socket.tcpNoDelay = true
+        if (socket is SSLSocket) {
+            try {
+                socket.startHandshake()
+            } catch (e: IOException) {
+                // plain HTTP on the HTTPS port, old TLS version, client that does not trust us...
+                return
+            }
+        }
         val input = BufferedInputStream(socket.getInputStream())
         val output = BufferedOutputStream(socket.getOutputStream())
         var served = 0
@@ -201,7 +229,7 @@ class HttpServer(
                     return
                 }
                 val request = try {
-                    parse(head, input, output, socket.inetAddress)
+                    parse(head, input, output, socket.inetAddress, socket is SSLSocket)
                 } catch (e: HttpError) {
                     writeSimple(output, e.status, e.code, e.message ?: "")
                     return
@@ -285,7 +313,7 @@ class HttpServer(
         return Head(method, parts[1], parts[2], headers)
     }
 
-    private fun parse(head: Head, input: InputStream, output: OutputStream, remote: InetAddress): HttpRequest {
+    private fun parse(head: Head, input: InputStream, output: OutputStream, remote: InetAddress, secure: Boolean): HttpRequest {
         if (!head.target.startsWith("/")) throw HttpError(400, "bad_request", "Only origin-form request targets are supported")
         if (head.headers.containsKey("transfer-encoding")) throw HttpError(501, "not_implemented", "Chunked request bodies are not supported; send Content-Length")
         val length = head.headers["content-length"]?.let { v ->
@@ -325,7 +353,7 @@ class HttpServer(
                 }
             }
         }
-        return HttpRequest(head.method, path, query, head.headers, body, remote)
+        return HttpRequest(head.method, path, query, head.headers, body, remote, secure)
     }
 
     private fun wantsKeepAlive(head: Head): Boolean {

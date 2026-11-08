@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="https_title">HTTPS</string>
+    <string name="https_hint">Encrypts the API traffic with the phone\'s own certificate. Plain http:// clients stop working: give them the fingerprint below.</string>
+    <string name="https_preparing">Preparing the certificate…</string>
+    <string name="https_error">Certificate unavailable: %1$s. The API stays off rather than run without encryption.</string>
+    <string name="https_fingerprint">Certificate fingerprint (SHA-256)</string>
+    <string name="https_pin">Public key pin (curl --pinnedpubkey)</string>
+    <string name="https_copy">Copy</string>
+    <string name="https_trust_hint">The certificate comes from the phone, not from a public authority. A client either trusts it once (Export, then curl --cacert or Python verify=) or pins the public key. Both stay valid when the phone changes address. Check that the fingerprint matches before trusting a file.</string>
+    <string name="https_export">Export certificate</string>
+    <string name="https_share">Share</string>
+    <string name="https_regenerate">Regenerate certificate</string>
+    <string name="https_regenerate_title">Regenerate the certificate?</string>
+    <string name="https_regenerate_text">The fingerprint and the pin change. Scripts and AI agents that trust or pin the current certificate are refused until you give them the new one.</string>
+    <string name="https_exported">Certificate exported</string>
+    <string name="https_export_failed">Could not export the certificate</string>
+    <string name="https_examples">Client examples</string>
+    <string name="https_examples_hint">The token is read from the BIMMERDATA_TOKEN environment variable.</string>
+    <string name="https_instruction_suffix">HTTPS with a self-signed certificate: pin the public key %1$s (curl --pinnedpubkey) or trust the certificate whose SHA-256 is %2$s.</string>
+</resources>

@@ -289,7 +289,8 @@ class ApiService(
                 reply = Reply(description = "OpenAPI document", schema = S.obj("OpenAPI 3.1 document", additional = true)),
             ) { call ->
                 val host = call.request.header("host")?.takeIf { h -> h.isNotBlank() && h.all { it.isLetterOrDigit() || it in ".:-[]" } }
-                ok(OpenApi.document(routes, host?.let { "http://$it" }, backend.appVersion))
+                val scheme = if (call.request.secure) "https" else "http"
+                ok(OpenApi.document(routes, host?.let { "$scheme://$it" }, backend.appVersion, scheme))
             },
             Route(
                 "GET", "/api/v1/docs", RouteAccess.Public, "General", "getDocs",

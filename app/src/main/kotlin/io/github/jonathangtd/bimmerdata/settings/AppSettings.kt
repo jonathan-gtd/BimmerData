@@ -33,7 +33,11 @@ data class ApiConfig(
     val port: Int = DEFAULT_PORT,
     val token: String = "",
     val scopes: Set<Scope> = setOf(Scope.Read, Scope.Layout),
+    /** Serve HTTPS only (self-signed certificate of the phone); off by default for existing clients. */
+    val https: Boolean = false,
 ) {
+    val scheme: String get() = if (https) "https" else "http"
+
     companion object {
         const val DEFAULT_PORT = 8765
         val PORT_RANGE = 1024..65535
@@ -68,6 +72,7 @@ class AppSettings private constructor(context: Context) {
                 token = token,
                 scopes = prefs.getStringSet(K_SCOPES, null)?.mapNotNull { Scope.fromId(it) }?.filter { it in ApiConfig.GRANTABLE }?.toSet()
                     ?: ApiConfig().scopes,
+                https = prefs.getBoolean(K_HTTPS, false),
             ),
             lastMode = prefs.getString(K_LAST_MODE, null)?.let { m -> LiveMode.entries.firstOrNull { it.name == m } },
             recording = loadRecording(prefs),
@@ -85,6 +90,7 @@ class AppSettings private constructor(context: Context) {
             putBoolean(K_API_ON, s.api.enabled)
             putInt(K_PORT, s.api.port)
             putString(K_TOKEN, s.api.token)
+            putBoolean(K_HTTPS, s.api.https)
             putStringSet(K_SCOPES, s.api.scopes.filter { it in ApiConfig.GRANTABLE }.map { it.id }.toSet())
             if (s.lastMode != null) putString(K_LAST_MODE, s.lastMode.name) else remove(K_LAST_MODE)
             remove(K_AUTO_OLD)
@@ -110,6 +116,7 @@ class AppSettings private constructor(context: Context) {
         private const val K_PORT = "api_port"
         private const val K_TOKEN = "api_token"
         private const val K_SCOPES = "api_scopes"
+        private const val K_HTTPS = "api_https"
 
         // holds only the application context
         @SuppressLint("StaticFieldLeak")

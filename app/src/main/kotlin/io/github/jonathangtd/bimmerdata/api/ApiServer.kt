@@ -8,6 +8,7 @@ import java.net.InetAddress
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
 
 /**
  * The API server: [ApiService] behind an [HttpServer] that only talks to local-network peers, plus
@@ -29,10 +30,14 @@ class ApiServer(
     val boundAddresses: List<InetAddress> get() = http.boundAddresses
     val isRunning: Boolean get() = http.isRunning
 
+    /** True while serving HTTPS. */
+    val secure: Boolean get() = http.secure
+
+    /** Starts listening; with [tls] the server speaks HTTPS only. */
     @Synchronized
-    fun start(addresses: List<InetAddress>, port: Int) {
+    fun start(addresses: List<InetAddress>, port: Int, tls: SSLContext? = null) {
         service.stopped = false
-        http.start(addresses, port)
+        http.start(addresses, port, tls)
         ticker = Executors.newSingleThreadScheduledExecutor { r -> Thread(r, "bd-api-tick").apply { isDaemon = true } }.also {
             it.scheduleWithFixedDelay({ runCatching { service.tick() }.onFailure { e -> log("tick failed", e) } }, 0, 100, TimeUnit.MILLISECONDS)
         }
