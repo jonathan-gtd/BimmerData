@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Vehicle detection and fault memory (Faults tab). -->
+<resources>
+    <string name="veh_title">Vehicle</string>
+    <string name="veh_none_title">No vehicle yet</string>
+    <string name="veh_none_text">Plug the K+DCAN cable, switch the ignition on, then scan: every ECU of the car is found and its fault memory is read. Simulation shows a demo E90.</string>
+    <string name="veh_scan">Scan vehicle</string>
+    <string name="veh_rescan">Scan again</string>
+    <string name="veh_read_faults">Read faults</string>
+    <string name="veh_clear_all">Clear all</string>
+    <string name="veh_share">Share</string>
+    <string name="veh_cancel">Cancel</string>
+    <string name="veh_mode_usb">Cable</string>
+    <string name="veh_mode_sim">Simulation</string>
+    <string name="veh_menu">Vehicle menu</string>
+    <string name="veh_back">Back</string>
+
+    <string name="veh_vin">VIN %1$s</string>
+    <string name="veh_scanned_at">Scanned %1$s</string>
+    <string name="veh_faults_read_at">Faults read %1$s</string>
+    <string name="veh_faults_not_read">Fault memory not read yet</string>
+    <string name="veh_stat_ecus">ECUs</string>
+    <string name="veh_stat_faults">With faults</string>
+    <string name="veh_stat_silent">No answer</string>
+    <string name="veh_by_function">By function</string>
+    <string name="veh_by_bus">By bus</string>
+    <string name="veh_sequential_note">Found one by one: this car did not answer the functional identification.</string>
+
+    <!-- tree groups -->
+    <string name="veh_cat_gateway">Gateway &amp; network</string>
+    <string name="veh_cat_powertrain">Powertrain</string>
+    <string name="veh_cat_chassis">Chassis</string>
+    <string name="veh_cat_body">Body</string>
+    <string name="veh_cat_climate">Climate</string>
+    <string name="veh_cat_infotainment">Information &amp; entertainment</string>
+    <string name="veh_cat_safety">Passive safety</string>
+    <string name="veh_cat_other">Other</string>
+    <string name="veh_bus_none">Gateway / no bus answer</string>
+    <string name="veh_bus_ptcan">PT-CAN · powertrain</string>
+    <string name="veh_bus_kcan">K-CAN · body</string>
+    <string name="veh_bus_most">MOST · infotainment</string>
+    <string name="veh_bus_si">SI bus · passive safety</string>
+
+    <!-- status pills -->
+    <string name="veh_status_ok">OK</string>
+    <string name="veh_status_silent">No answer</string>
+    <string name="veh_status_error">Error</string>
+    <string name="veh_status_unknown">Not read</string>
+    <plurals name="veh_status_faults">
+        <item quantity="one">%d fault</item>
+        <item quantity="other">%d faults</item>
+    </plurals>
+
+    <!-- running operation -->
+    <string name="veh_task_connecting">Connecting…</string>
+    <string name="veh_task_identifying">Identifying the ECUs (%1$s, attempt %2$d)…</string>
+    <string name="veh_task_vin">Reading the VIN…</string>
+    <string name="veh_task_variants">Identifying variants %1$d/%2$d · %3$s</string>
+    <string name="veh_task_buses">Mapping the buses · %1$s</string>
+    <string name="veh_task_sequential">Trying %1$s (%2$d/%3$d)</string>
+    <string name="veh_task_faults">Reading fault memories %1$d/%2$d</string>
+    <string name="veh_task_faults_ecu">Reading fault memories %1$d/%2$d · %3$s</string>
+    <string name="veh_task_ecu">Reading the fault memory…</string>
+    <string name="veh_task_clearing">Clearing the fault memory…</string>
+    <string name="veh_task_detail">Reading the fault details…</string>
+
+    <!-- messages -->
+    <string name="veh_msg_no_ecu_files">Import your EDIABAS Ecu folder first (Tool32 tab).</string>
+    <string name="veh_msg_no_cable">No K+DCAN cable found. Plug it in via USB-C OTG.</string>
+    <string name="veh_msg_usb_denied">USB permission denied.</string>
+    <string name="veh_msg_cable_busy">The mini Tool32 is using the cable: disconnect it first.</string>
+    <string name="veh_msg_connect_failed">Connection failed: %1$s</string>
+    <string name="veh_msg_scan_failed">No ECU answered (%1$s). Ignition on? Right cable or simulation?</string>
+    <string name="veh_msg_scan_cancelled">Scan cancelled.</string>
+    <string name="veh_msg_failed">Failed: %1$s</string>
+    <string name="veh_msg_cleared">Fault memories cleared and read again.</string>
+    <string name="veh_msg_cleared_ecu">%1$s: fault memory cleared and read again.</string>
+    <string name="veh_msg_clear_failed">%1$s: clearing failed, see the fault memory.</string>
+    <string name="veh_msg_new_vehicle">Another car: %1$s added to your vehicles.</string>
+    <string name="veh_msg_cancelled">Cancelled.</string>
+    <string name="veh_dismiss">Dismiss</string>
+
+    <!-- ECU detail -->
+    <string name="veh_ecu_address">Address</string>
+    <string name="veh_ecu_variant">Variant</string>
+    <string name="veh_ecu_group">Group file</string>
+    <string name="veh_ecu_bus">Bus</string>
+    <string name="veh_ecu_info">ECU</string>
+    <string name="veh_ecu_ident">Identification</string>
+    <string name="veh_ecu_faults">Fault memory</string>
+    <string name="veh_ecu_no_faults">No fault stored.</string>
+    <string name="veh_ecu_not_read">Not read yet.</string>
+    <string name="veh_ecu_read_again">Read again</string>
+    <string name="veh_ecu_clear">Clear faults</string>
+    <string name="veh_ecu_unknown_variant">not identified</string>
+    <string name="veh_ecu_missing_sgbd">%1$s is not in your Ecu folder: fault codes only, no texts, no clearing.</string>
+
+    <string name="veh_id_part">BMW part number</string>
+    <string name="veh_id_hw">Hardware</string>
+    <string name="veh_id_sw_fsv">Software (FSV)</string>
+    <string name="veh_id_sw_osv">Software (OSV)</string>
+    <string name="veh_id_sw_mcv">Software (MCV)</string>
+    <string name="veh_id_sw_res">Software (reserved)</string>
+    <string name="veh_id_coding">Coding index</string>
+    <string name="veh_id_diag">Diagnosis index</string>
+    <string name="veh_id_variant">Variant index</string>
+    <string name="veh_id_date">Production date</string>
+    <string name="veh_id_supplier_nr">Supplier number</string>
+    <string name="veh_id_supplier">Supplier</string>
+    <string name="veh_id_serial">Serial number</string>
+
+    <!-- fault -->
+    <string name="veh_fault_unknown">Unknown fault (no text in the SGBD)</string>
+    <string name="veh_fault_details">Show details</string>
+    <string name="veh_fault_hide">Hide details</string>
+    <string name="veh_fault_frequency">Frequency</string>
+    <string name="veh_fault_logistic">Logistic counter</string>
+    <string name="veh_fault_obd">OBD code</string>
+    <string name="veh_fault_occurrence">Occurrence %1$d</string>
+    <string name="veh_fault_mileage">%1$s km</string>
+    <string name="veh_fault_detail_failed">Details not available: %1$s</string>
+
+    <!-- dialogs -->
+    <string name="veh_clear_ecu_title">Clear this fault memory?</string>
+    <string name="veh_clear_ecu_text">The faults stored in %1$s (%2$s) are deleted from the ECU. Note or share them first. The fault memory is read again right after.</string>
+    <string name="veh_clear_all_title">Clear every fault memory?</string>
+    <string name="veh_clear_all_text">One functional request deletes the faults of all %1$d ECUs of %2$s. Note or share them first. Everything is read again right after.</string>
+    <string name="veh_clear_confirm">Clear</string>
+    <string name="veh_rename">Rename</string>
+    <string name="veh_rename_title">Vehicle name</string>
+    <string name="veh_save">Save</string>
+    <string name="veh_series">Series SGBD</string>
+    <string name="veh_series_auto">%1$s (detected)</string>
+    <string name="veh_forget">Forget this vehicle</string>
+    <string name="veh_forget_title">Forget %1$s?</string>
+    <string name="veh_forget_text">Its ECU list and last fault read are removed from this phone. Nothing is sent to the car.</string>
+    <string name="veh_forget_confirm">Forget</string>
+    <string name="veh_switch">Your vehicles</string>
+
+    <!-- share report -->
+    <string name="veh_report_title">BimmerData fault report · %1$s</string>
+    <string name="veh_report_no_faults">no fault</string>
+</resources>

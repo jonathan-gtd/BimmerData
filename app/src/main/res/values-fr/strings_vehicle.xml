@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Détection du véhicule et mémoire de défauts (onglet Défauts). -->
+<resources>
+    <string name="veh_title">Véhicule</string>
+    <string name="veh_none_title">Aucun véhicule</string>
+    <string name="veh_none_text">Branchez le câble K+DCAN, mettez le contact puis lancez la détection : tous les calculateurs de la voiture sont trouvés et leur mémoire de défauts est lue. La simulation montre une E90 de démonstration.</string>
+    <string name="veh_scan">Détecter le véhicule</string>
+    <string name="veh_rescan">Détecter à nouveau</string>
+    <string name="veh_read_faults">Lire les défauts</string>
+    <string name="veh_clear_all">Tout effacer</string>
+    <string name="veh_share">Partager</string>
+    <string name="veh_cancel">Annuler</string>
+    <string name="veh_mode_usb">Câble</string>
+    <string name="veh_mode_sim">Simulation</string>
+    <string name="veh_menu">Menu du véhicule</string>
+    <string name="veh_back">Retour</string>
+
+    <string name="veh_vin">VIN %1$s</string>
+    <string name="veh_scanned_at">Détecté le %1$s</string>
+    <string name="veh_faults_read_at">Défauts lus le %1$s</string>
+    <string name="veh_faults_not_read">Mémoire de défauts pas encore lue</string>
+    <string name="veh_stat_ecus">Calculateurs</string>
+    <string name="veh_stat_faults">Avec défauts</string>
+    <string name="veh_stat_silent">Sans réponse</string>
+    <string name="veh_by_function">Par fonction</string>
+    <string name="veh_by_bus">Par bus</string>
+    <string name="veh_sequential_note">Trouvés un par un : cette voiture n’a pas répondu à l’identification fonctionnelle.</string>
+
+    <string name="veh_cat_gateway">Passerelle et réseau</string>
+    <string name="veh_cat_powertrain">Groupe motopropulseur</string>
+    <string name="veh_cat_chassis">Châssis</string>
+    <string name="veh_cat_body">Carrosserie</string>
+    <string name="veh_cat_climate">Climatisation</string>
+    <string name="veh_cat_infotainment">Information et divertissement</string>
+    <string name="veh_cat_safety">Sécurité passive</string>
+    <string name="veh_cat_other">Autres</string>
+    <string name="veh_bus_none">Passerelle / sans réponse de bus</string>
+    <string name="veh_bus_ptcan">PT-CAN · motorisation</string>
+    <string name="veh_bus_kcan">K-CAN · carrosserie</string>
+    <string name="veh_bus_most">MOST · multimédia</string>
+    <string name="veh_bus_si">Bus SI · sécurité passive</string>
+
+    <string name="veh_status_ok">OK</string>
+    <string name="veh_status_silent">Sans réponse</string>
+    <string name="veh_status_error">Erreur</string>
+    <string name="veh_status_unknown">Non lu</string>
+    <plurals name="veh_status_faults">
+        <item quantity="one">%d défaut</item>
+        <item quantity="many">%d défauts</item>
+        <item quantity="other">%d défauts</item>
+    </plurals>
+
+    <string name="veh_task_connecting">Connexion…</string>
+    <string name="veh_task_identifying">Identification des calculateurs (%1$s, essai %2$d)…</string>
+    <string name="veh_task_vin">Lecture du VIN…</string>
+    <string name="veh_task_variants">Identification des variantes %1$d/%2$d · %3$s</string>
+    <string name="veh_task_buses">Cartographie des bus · %1$s</string>
+    <string name="veh_task_sequential">Essai de %1$s (%2$d/%3$d)</string>
+    <string name="veh_task_faults">Lecture des mémoires de défauts %1$d/%2$d</string>
+    <string name="veh_task_faults_ecu">Lecture des mémoires de défauts %1$d/%2$d · %3$s</string>
+    <string name="veh_task_ecu">Lecture de la mémoire de défauts…</string>
+    <string name="veh_task_clearing">Effacement de la mémoire de défauts…</string>
+    <string name="veh_task_detail">Lecture du détail du défaut…</string>
+
+    <string name="veh_msg_no_ecu_files">Importez d’abord votre dossier EDIABAS Ecu (onglet Tool32).</string>
+    <string name="veh_msg_no_cable">Aucun câble K+DCAN trouvé. Branchez-le en USB-C OTG.</string>
+    <string name="veh_msg_usb_denied">Accès USB refusé.</string>
+    <string name="veh_msg_cable_busy">Le mini Tool32 utilise le câble : déconnectez-le d’abord.</string>
+    <string name="veh_msg_connect_failed">Échec de la connexion : %1$s</string>
+    <string name="veh_msg_scan_failed">Aucun calculateur n’a répondu (%1$s). Contact mis ? Bon mode (câble ou simulation) ?</string>
+    <string name="veh_msg_scan_cancelled">Détection annulée.</string>
+    <string name="veh_msg_failed">Échec : %1$s</string>
+    <string name="veh_msg_cleared">Mémoires de défauts effacées et relues.</string>
+    <string name="veh_msg_cleared_ecu">%1$s : mémoire de défauts effacée et relue.</string>
+    <string name="veh_msg_clear_failed">%1$s : l’effacement a échoué, voir la mémoire de défauts.</string>
+    <string name="veh_msg_new_vehicle">Autre voiture : %1$s ajoutée à vos véhicules.</string>
+    <string name="veh_msg_cancelled">Annulé.</string>
+    <string name="veh_dismiss">Fermer</string>
+
+    <string name="veh_ecu_address">Adresse</string>
+    <string name="veh_ecu_variant">Variante</string>
+    <string name="veh_ecu_group">Fichier de groupe</string>
+    <string name="veh_ecu_bus">Bus</string>
+    <string name="veh_ecu_info">Calculateur</string>
+    <string name="veh_ecu_ident">Identification</string>
+    <string name="veh_ecu_faults">Mémoire de défauts</string>
+    <string name="veh_ecu_no_faults">Aucun défaut enregistré.</string>
+    <string name="veh_ecu_not_read">Pas encore lue.</string>
+    <string name="veh_ecu_read_again">Relire</string>
+    <string name="veh_ecu_clear">Effacer les défauts</string>
+    <string name="veh_ecu_unknown_variant">non identifiée</string>
+    <string name="veh_ecu_missing_sgbd">%1$s n’est pas dans votre dossier Ecu : codes seuls, sans textes ni effacement.</string>
+
+    <string name="veh_id_part">Référence BMW</string>
+    <string name="veh_id_hw">Matériel</string>
+    <string name="veh_id_sw_fsv">Logiciel (FSV)</string>
+    <string name="veh_id_sw_osv">Logiciel (OSV)</string>
+    <string name="veh_id_sw_mcv">Logiciel (MCV)</string>
+    <string name="veh_id_sw_res">Logiciel (réservé)</string>
+    <string name="veh_id_coding">Indice de codage</string>
+    <string name="veh_id_diag">Indice de diagnostic</string>
+    <string name="veh_id_variant">Indice de variante</string>
+    <string name="veh_id_date">Date de fabrication</string>
+    <string name="veh_id_supplier_nr">Numéro de fournisseur</string>
+    <string name="veh_id_supplier">Fournisseur</string>
+    <string name="veh_id_serial">Numéro de série</string>
+
+    <string name="veh_fault_unknown">Défaut inconnu (pas de texte dans la SGBD)</string>
+    <string name="veh_fault_details">Voir le détail</string>
+    <string name="veh_fault_hide">Masquer le détail</string>
+    <string name="veh_fault_frequency">Fréquence</string>
+    <string name="veh_fault_logistic">Compteur logistique</string>
+    <string name="veh_fault_obd">Code OBD</string>
+    <string name="veh_fault_occurrence">Occurrence %1$d</string>
+    <string name="veh_fault_mileage">%1$s km</string>
+    <string name="veh_fault_detail_failed">Détail indisponible : %1$s</string>
+
+    <string name="veh_clear_ecu_title">Effacer cette mémoire de défauts ?</string>
+    <string name="veh_clear_ecu_text">Les défauts enregistrés dans %1$s (%2$s) sont supprimés du calculateur. Notez-les ou partagez-les d’abord. La mémoire est relue juste après.</string>
+    <string name="veh_clear_all_title">Effacer toutes les mémoires de défauts ?</string>
+    <string name="veh_clear_all_text">Une requête fonctionnelle supprime les défauts des %1$d calculateurs de %2$s. Notez-les ou partagez-les d’abord. Tout est relu juste après.</string>
+    <string name="veh_clear_confirm">Effacer</string>
+    <string name="veh_rename">Renommer</string>
+    <string name="veh_rename_title">Nom du véhicule</string>
+    <string name="veh_save">Enregistrer</string>
+    <string name="veh_series">SGBD de la série</string>
+    <string name="veh_series_auto">%1$s (détectée)</string>
+    <string name="veh_forget">Oublier ce véhicule</string>
+    <string name="veh_forget_title">Oublier %1$s ?</string>
+    <string name="veh_forget_text">Sa liste de calculateurs et sa dernière lecture des défauts sont supprimées de ce téléphone. Rien n’est envoyé à la voiture.</string>
+    <string name="veh_forget_confirm">Oublier</string>
+    <string name="veh_switch">Vos véhicules</string>
+
+    <string name="veh_report_title">Rapport de défauts BimmerData · %1$s</string>
+    <string name="veh_report_no_faults">aucun défaut</string>
+</resources>

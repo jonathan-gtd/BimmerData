@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -46,11 +45,11 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.jonathangtd.bimmerdata.R
 import io.github.jonathangtd.bimmerdata.dashboard.ui.DashboardScreen
+import io.github.jonathangtd.bimmerdata.faults.FaultsScreen
 
 enum class AppTab(@param:DrawableRes val icon: Int, @param:StringRes val label: Int) {
     Dashboard(R.drawable.ic_dashboard, R.string.nav_dashboard),
@@ -72,7 +71,7 @@ fun AppRoot() {
                 when (tab) {
                     AppTab.Dashboard -> DashboardScreen(onEditingChange = { editing = it })
                     AppTab.Tool32 -> Tool32Screen()
-                    AppTab.Faults -> FaultsPlaceholder()
+                    AppTab.Faults -> FaultsScreen()
                 }
             }
         }
@@ -120,22 +119,6 @@ private fun BottomBar(selected: AppTab, onSelect: (AppTab) -> Unit) {
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun FaultsPlaceholder() {
-    Box(
-        Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(32.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(painterResource(R.drawable.ic_faults), contentDescription = null, tint = Cockpit.Muted, modifier = Modifier.size(40.dp))
-            Spacer(Modifier.height(16.dp))
-            Text(stringResource(R.string.faults_coming_title), color = Cockpit.Text, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, fontFamily = BarlowCondensed)
-            Spacer(Modifier.height(8.dp))
-            Text(stringResource(R.string.faults_coming_text), color = Cockpit.Muted, fontSize = 15.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
         }
     }
 }
