@@ -75,6 +75,8 @@ data class RecordingState(
     val fileName: String? = null,
     val startedAtMs: Long? = null,
     val rows: Long = 0,
+    /** Why the last recording stopped by itself (file could not be created / written), else null. */
+    val error: String? = null,
 )
 
 /** CSV session logger fed by a [LiveDataSource]. */

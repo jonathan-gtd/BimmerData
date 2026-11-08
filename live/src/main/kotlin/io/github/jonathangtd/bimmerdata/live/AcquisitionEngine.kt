@@ -1,0 +1,492 @@
+/*
+ * BimmerData - Copyright (C) 2026 Jonathan GATARD - GPL-3.0-or-later, see LICENSE.
+ */
+package io.github.jonathangtd.bimmerdata.live
+
+import io.github.jonathangtd.bimmerdata.ediabas.EdInterfaceBase
+import io.github.jonathangtd.bimmerdata.ediabas.EdInterfaceObd
+import io.github.jonathangtd.bimmerdata.ediabas.EdiabasNet
+import io.github.jonathangtd.bimmerdata.ediabas.ResultData
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.yield
+import java.util.Locale
+import java.util.concurrent.Executors
+import kotlin.coroutines.coroutineContext
+
+/**
+ * The live acquisition loop: one worker thread owns an [EdiabasNet] interpreter and [iface]
+ * (any [EdInterfaceBase]: USB cable, simulated K-line, [io.github.jonathangtd.bimmerdata.ediabas.FakeInterface]).
+ * Public methods never block: they only post state; the worker picks it up between telegrams.
+ *
+ * Planning (redone when the measurement set changes):
+ * - MESSWERTETAB measurements are grouped per SGBD into blocks of at most [Config.maxIdsPerBlock]
+ *   ids (and [MesswertBlockReader.MaxRecordBytes] record bytes). With one block per SGBD the
+ *   block is defined once and then read with a single `21 F0` telegram per cycle, decoded
+ *   natively. All blocks of an SGBD share the ECU's local identifier F0, so with more blocks
+ *   each read redefines (job path speed): keep one block per ECU for speed.
+ * - [MeasurementSource.JobResult] measurements are grouped by (sgbd, job, args): one job run
+ *   per group and cycle.
+ *
+ * Errors: a read whose answer no longer matches the definition triggers an immediate redefine.
+ * Transport errors put the group in exponential backoff ([Config.retryDelayMinMs]..
+ * [Config.retryDelayMaxMs]); other groups keep running. When every group failed
+ * [Config.reconnectAfterFailedCycles] times in a row, the interface is reconnected. A definition
+ * the ECU refuses is split to find unsupported ids ([unsupported]); if none is found the block
+ * size limit of that SGBD is halved (the ECU may accept fewer values than the SGBD).
+ */
+class AcquisitionEngine(
+    private val iface: EdInterfaceBase,
+    private val catalog: EdiabasMeasurementCatalog,
+    private val config: Config = Config(),
+    private val clock: () -> Long = System::currentTimeMillis,
+) : LiveDataSource, AutoCloseable {
+
+    data class Config(
+        /** 1..42: values per dynamic record (the SGBD refuses more than 42). */
+        val maxIdsPerBlock: Int = MesswertBlockReader.MaxIdsPerDefinition,
+        val retryDelayMinMs: Long = 200,
+        val retryDelayMaxMs: Long = 5000,
+        val reconnectAfterFailedCycles: Int = 5,
+        /** Window for [AcquisitionStatus.cyclesPerSecond]. */
+        val statusWindowMs: Long = 3000,
+        /** Optional pause between cycles (0 = as fast as the ECU answers). */
+        val minCycleMs: Long = 0,
+        /** Extra EdiabasNet configuration ("Key=Value;..."), e.g. "IfhTrace=1". */
+        val ediabasConfig: String = "",
+    )
+
+    private val _samples = MutableStateFlow<Map<String, Sample>>(emptyMap())
+    override val samples: StateFlow<Map<String, Sample>> = _samples.asStateFlow()
+
+    private val _status = MutableStateFlow(AcquisitionStatus())
+    override val status: StateFlow<AcquisitionStatus> = _status.asStateFlow()
+
+    private val _measurements = MutableStateFlow<List<Measurement>>(emptyList())
+
+    /** Measurements requested by [setMeasurements]. */
+    val measurements: StateFlow<List<Measurement>> = _measurements.asStateFlow()
+
+    private val _pinned = MutableStateFlow<List<Measurement>>(emptyList())
+
+    private val _unsupported = MutableStateFlow<Set<String>>(emptySet())
+
+    /** Ids of measurements the ECU refused (not read any more until the set changes). */
+    val unsupported: StateFlow<Set<String>> = _unsupported.asStateFlow()
+
+    /** Measurements actually read: requested + pinned (e.g. by a running recording). */
+    private val effective = combine(_measurements, _pinned) { a, b -> (a + b).distinctBy { it.id } }
+
+    private val executor = Executors.newSingleThreadExecutor { r -> Thread(r, "live-acquisition").apply { isDaemon = true } }
+    private val scope = CoroutineScope(SupervisorJob() + executor.asCoroutineDispatcher())
+
+    @Volatile private var loopJob: Job? = null
+    @Volatile private var abortRequested = false
+    @Volatile private var closed = false
+
+    // ---- worker thread state ----
+    private var ediabas: EdiabasNet? = null
+    private var connected = false
+    private var plan: List<Group> = emptyList()
+    private var plannedFor: List<Measurement>? = null
+    private val blockLimit = HashMap<String, Int>()
+    private val refusedRows = HashMap<String, MutableSet<Int>>()
+    private val cycleTimes = ArrayDeque<Long>()
+    private var failedCycles = 0
+
+    override fun setMeasurements(measurements: List<Measurement>) {
+        _measurements.value = measurements.distinctBy { it.id }
+    }
+
+    /** Extra measurements read whatever [setMeasurements] says (null/empty = none). */
+    fun setPinnedMeasurements(measurements: List<Measurement>?) {
+        _pinned.value = measurements?.distinctBy { it.id } ?: emptyList()
+    }
+
+    val isRunning: Boolean get() = loopJob?.isActive == true
+
+    /** Connects and starts the loop (no-op if running). */
+    fun start() {
+        check(!closed) { "engine closed" }
+        if (loopJob?.isActive == true) return
+        abortRequested = false
+        _status.value = AcquisitionStatus(AcquisitionState.Connecting)
+        val previous = loopJob
+        loopJob = scope.launch {
+            previous?.join()
+            runLoop()
+        }
+    }
+
+    /** Stops the loop and releases the interface, asynchronously. */
+    fun stop() {
+        val job = loopJob ?: return
+        abortRequested = true
+        job.cancel()
+        runCatching { iface.transmitCancel(true) }
+    }
+
+    /** [stop], then waits until the interface is released (e.g. before another user opens the cable). */
+    suspend fun stopAndJoin() {
+        val job = loopJob ?: return
+        stop()
+        job.join()
+    }
+
+    override fun close() {
+        if (closed) return
+        closed = true
+        stop()
+        val job = loopJob
+        scope.launch {
+            job?.join()
+            runCatching { ediabas?.close() }
+            ediabas = null
+        }.invokeOnCompletion { executor.shutdown() }
+    }
+
+    // ---------------------------------------------------------------- loop
+
+    private sealed class Group {
+        var failures = 0
+        var retryAt = 0L
+        abstract val label: String
+    }
+
+    private class BlockGroup(
+        val sgbd: String,
+        val reader: MesswertBlockReader,
+        val byRow: Map<Int, List<Measurement>>,
+        /** Several blocks share F0 on this ECU: every read redefines. */
+        val rotating: Boolean,
+    ) : Group() {
+        override val label: String get() = "$sgbd block of ${reader.rows.size}"
+    }
+
+    private class JobGroup(val sgbd: String, val job: String, val args: String, val members: List<Measurement>) : Group() {
+        override val label: String get() = "$sgbd $job${if (args.isNotEmpty()) "($args)" else ""}"
+    }
+
+    private suspend fun runLoop() {
+        iface.transmitCancel(false)
+        val ed = ediabas ?: EdiabasNet(listOf("EcuPath=${catalog.ecuDir.path}", config.ediabasConfig).filter { it.isNotBlank() }.joinToString(";")).also {
+            it.edInterfaceClass = iface
+            it.abortJobFunc = { abortRequested }
+            ediabas = it
+        }
+        cycleTimes.clear()
+        failedCycles = 0
+        var errorCount = 0
+        var lastError: String? = null
+        var connectFailures = 0
+        try {
+            while (true) {
+                coroutineContext.ensureActive()
+                if (!connected) {
+                    _status.update { it.copy(state = AcquisitionState.Connecting, cyclesPerSecond = 0.0) }
+                    val err = connect()
+                    if (err != null) {
+                        errorCount++
+                        connectFailures++
+                        lastError = err
+                        _status.value = AcquisitionStatus(AcquisitionState.Error, 0.0, errorCount, err)
+                        waitOrChange(backoff(connectFailures))
+                        continue
+                    }
+                    connectFailures = 0
+                }
+                val wanted = effectiveNow()
+                if (wanted != plannedFor) replan(ed, wanted)
+                if (plan.isEmpty()) {
+                    cycleTimes.clear()
+                    _status.value = AcquisitionStatus(AcquisitionState.Running, 0.0, errorCount, idleMessage())
+                    effective.first { it != plannedFor }
+                    continue
+                }
+                val now = clock()
+                val due = plan.filter { it.retryAt <= now }
+                if (due.isEmpty()) {
+                    waitOrChange((plan.minOf { it.retryAt } - now).coerceAtLeast(1))
+                    continue
+                }
+                var successes = 0
+                var failures = 0
+                for (group in due) {
+                    coroutineContext.ensureActive()
+                    if (plannedFor != wanted) break // replanned (refused ids)
+                    val error = readGroup(ed, group)
+                    if (error == null) {
+                        successes++
+                        group.failures = 0
+                        group.retryAt = 0
+                    } else {
+                        failures++
+                        errorCount++
+                        lastError = "${group.label}: $error"
+                        group.failures++
+                        group.retryAt = clock() + backoff(group.failures)
+                        if (group.failures >= 2 && group is BlockGroup) group.reader.invalidate()
+                    }
+                    yield()
+                }
+                if (successes > 0) {
+                    failedCycles = 0
+                    markCycle()
+                    _status.value = AcquisitionStatus(AcquisitionState.Running, cyclesPerSecond(), errorCount, planMessage(lastError.takeIf { failures > 0 }))
+                } else if (failures > 0) {
+                    failedCycles++
+                    _status.value = AcquisitionStatus(AcquisitionState.Error, cyclesPerSecond(), errorCount, lastError)
+                    if (failedCycles >= config.reconnectAfterFailedCycles) {
+                        failedCycles = 0
+                        disconnect()
+                        plan.forEach { if (it is BlockGroup) it.reader.invalidate() }
+                    }
+                }
+                if (config.minCycleMs > 0) delay(config.minCycleMs)
+            }
+        } finally {
+            disconnect()
+            _status.value = AcquisitionStatus(AcquisitionState.Stopped, 0.0, errorCount, null)
+        }
+    }
+
+    /** Reads one group and publishes its samples; returns null on success, else the error text. */
+    private fun readGroup(ed: EdiabasNet, group: Group): String? = try {
+        when (group) {
+            is BlockGroup -> readBlock(group)
+            is JobGroup -> readJob(ed, group)
+        }
+        null
+    } catch (ex: DefineRejectedException) {
+        if (group is BlockGroup) {
+            refused(group, ex)
+            null
+        } else {
+            ex.message
+        }
+    } catch (ex: TransportException) {
+        ex.message ?: "transport error"
+    } catch (ex: DefinitionLostException) {
+        ex.message ?: "definition lost"
+    } catch (ex: kotlinx.coroutines.CancellationException) {
+        throw ex
+    } catch (ex: Exception) {
+        MesswertBlockReader.errorText(ex)
+    }
+
+    private fun readBlock(group: BlockGroup) {
+        val reader = group.reader
+        val values = try {
+            if (group.rotating) reader.defineAndRead() else reader.read()
+        } catch (ex: DefinitionLostException) {
+            reader.defineAndRead() // ECU reset / session lost: define again right away
+        }
+        publish(values.flatMap { (row, sample) -> group.byRow[row.id].orEmpty().map { it.id to sample } })
+    }
+
+    private fun readJob(ed: EdiabasNet, group: JobGroup) {
+        val file = catalog.sgbdFile(group.sgbd)?.name ?: group.sgbd
+        if (!ed.sgbdFileName.equals(file, ignoreCase = true)) ed.sgbdFileName = file
+        val sets: List<Map<String, ResultData>> = try {
+            ed.argString = group.args
+            ed.executeJob(group.job)
+            ed.resultSets ?: emptyList()
+        } catch (ex: Exception) {
+            throw TransportException(MesswertBlockReader.errorText(ex), ex)
+        }
+        val now = clock()
+        val out = ArrayList<Pair<String, Sample>>()
+        var missing: String? = null
+        for (m in group.members) {
+            val src = m.source as MeasurementSource.JobResult
+            val r = sets.getOrNull(src.set)?.get(src.resultName.uppercase(Locale.ROOT))
+            val s = r?.let { MesswertBlockReader.toSample(it, now) }
+            if (s == null) missing = src.resultName else out += m.id to s
+        }
+        publish(out)
+        if (out.isEmpty()) {
+            val status = sets.lastOrNull()?.get("JOB_STATUS")?.opData
+            throw TransportException("$missing missing" + (status?.let { " (JOB_STATUS $it)" } ?: ""))
+        }
+    }
+
+    private fun publish(values: List<Pair<String, Sample>>) {
+        if (values.isEmpty()) return
+        _samples.update { old -> HashMap(old).apply { values.forEach { (id, s) -> put(id, s) } } }
+    }
+
+    /**
+     * The ECU (or the SGBD) refused a block definition: find ids it does not support by defining
+     * them one by one; if all are fine individually, the block is too big for this ECU.
+     */
+    private fun refused(group: BlockGroup, ex: DefineRejectedException) {
+        val rows = group.reader.rows
+        val refusedHere = refusedRows.getOrPut(group.sgbd) { HashSet() }
+        if (rows.size == 1) {
+            refusedHere += rows[0].id
+        } else {
+            val ed = ediabas!!
+            for (row in rows) {
+                val single = MesswertBlockReader(ed, iface, group.reader.sgbdFile, group.reader.tab, listOf(row), clock)
+                try {
+                    val values = single.defineAndRead()
+                    publish(values.flatMap { (r, s) -> group.byRow[r.id].orEmpty().map { it.id to s } })
+                } catch (_: DefineRejectedException) {
+                    refusedHere += row.id
+                }
+            }
+            if (rows.none { it.id in refusedHere }) {
+                val limit = (rows.size / 2).coerceAtLeast(1)
+                blockLimit[group.sgbd] = limit
+            }
+        }
+        _unsupported.update { old -> old + refusedHere.flatMap { id -> group.byRow[id].orEmpty().map { it.id } } }
+        plannedFor = null // replan on the next cycle
+        lastRefusal = "${group.sgbd}: ${ex.jobStatus.ifBlank { ex.message }}"
+    }
+
+    private var lastRefusal: String? = null
+
+    private fun replan(ed: EdiabasNet, wanted: List<Measurement>) {
+        val old = plan
+        val groups = ArrayList<Group>()
+        // ---- MESSWERTETAB blocks per SGBD ----
+        val tableBySgbd = LinkedHashMap<String, MutableList<Measurement>>()
+        val jobs = LinkedHashMap<Triple<String, String, String>, MutableList<Measurement>>()
+        val unknown = HashSet<String>()
+        for (m in wanted) {
+            when (val src = m.source) {
+                is MeasurementSource.MeasurementTable ->
+                    tableBySgbd.getOrPut(EdiabasMeasurementCatalog.normalize(m.sgbd)) { ArrayList() } += m
+                is MeasurementSource.JobResult ->
+                    jobs.getOrPut(Triple(m.sgbd, src.job.uppercase(Locale.ROOT), src.args)) { ArrayList() } += m
+            }
+        }
+        for ((sgbd, members) in tableBySgbd) {
+            val tab = catalog.table(sgbd)
+            val file = catalog.sgbdFile(sgbd)
+            if (tab == null || file == null) {
+                members.forEach { unknown += it.id }
+                continue
+            }
+            val refused = refusedRows[sgbd].orEmpty()
+            val byRow = LinkedHashMap<Int, MutableList<Measurement>>()
+            for (m in members) {
+                val id = (m.source as MeasurementSource.MeasurementTable).id
+                if (tab.row(id) == null || id in refused) unknown += m.id else byRow.getOrPut(id) { ArrayList() } += m
+            }
+            val rows = byRow.keys.map { tab.row(it)!! }
+            val limit = (blockLimit[sgbd] ?: config.maxIdsPerBlock).coerceIn(1, MesswertBlockReader.MaxIdsPerDefinition)
+            val chunks = ArrayList<List<MesswertRow>>()
+            var current = ArrayList<MesswertRow>()
+            var bytes = 0
+            for (row in rows) {
+                if (current.size >= limit || bytes + row.dataType.size > MesswertBlockReader.MaxRecordBytes) {
+                    chunks += current
+                    current = ArrayList()
+                    bytes = 0
+                }
+                current += row
+                bytes += row.dataType.size
+            }
+            if (current.isNotEmpty()) chunks += current
+            for (chunk in chunks) {
+                // keep the reader (and the ECU definition) when the block did not change
+                val reuse = old.firstOrNull { it is BlockGroup && it.sgbd == sgbd && it.reader.rows == chunk } as BlockGroup?
+                val reader = reuse?.reader ?: MesswertBlockReader(ed, iface, file.name, tab, chunk, clock)
+                groups += BlockGroup(sgbd, reader, chunk.associate { r -> r.id to byRow[r.id]!!.toList() }, rotating = chunks.size > 1)
+            }
+        }
+        for ((key, members) in jobs) groups += JobGroup(key.first, key.second, key.third, members)
+        plan = groups
+        plannedFor = wanted
+        val wantedIds = wanted.map { it.id }.toSet()
+        _unsupported.update { (it + unknown).intersect(wantedIds) }
+    }
+
+    private fun connect(): String? {
+        return try {
+            if (iface.interfaceConnect()) {
+                connected = true
+                // a (re)connected interface has no communication parameters: make the interpreter
+                // run INITIALISIERUNG again before the next job, and redefine every block
+                ediabas?.closeSgbd()
+                plan.forEach { if (it is BlockGroup) it.reader.invalidate() }
+                null
+            } else {
+                connectError() ?: "interface connect failed"
+            }
+        } catch (ex: Exception) {
+            listOfNotNull(MesswertBlockReader.errorText(ex), connectError()).distinct().joinToString(" - ")
+        }
+    }
+
+    private fun connectError(): String? = (iface as? EdInterfaceObd)?.lastConnectError
+
+    private fun disconnect() {
+        if (!connected) return
+        connected = false
+        runCatching { iface.interfaceDisconnect() }
+    }
+
+    private fun effectiveNow(): List<Measurement> = (_measurements.value + _pinned.value).distinctBy { it.id }
+
+    private fun backoff(failures: Int): Long =
+        (config.retryDelayMinMs shl (failures - 1).coerceIn(0, 16)).coerceAtMost(config.retryDelayMaxMs)
+
+    /** Waits [ms] or until the measurement set changes. */
+    private suspend fun waitOrChange(ms: Long) {
+        withTimeoutOrNull(ms) { effective.drop(1).first() }
+    }
+
+    private fun markCycle() {
+        val now = clock()
+        cycleTimes.addLast(now)
+        while (cycleTimes.size > 2 && now - cycleTimes.first() > config.statusWindowMs) cycleTimes.removeFirst()
+        while (cycleTimes.size > 500) cycleTimes.removeFirst()
+    }
+
+    private fun cyclesPerSecond(): Double {
+        val now = clock()
+        while (cycleTimes.isNotEmpty() && now - cycleTimes.first() > config.statusWindowMs) cycleTimes.removeFirst()
+        if (cycleTimes.size < 2) return 0.0
+        val span = cycleTimes.last() - cycleTimes.first()
+        return if (span <= 0) 0.0 else (cycleTimes.size - 1) * 1000.0 / span
+    }
+
+    private fun idleMessage(): String? =
+        if (_unsupported.value.isNotEmpty()) "Not supported: ${_unsupported.value.joinToString()}" else null
+
+    private fun planMessage(error: String?): String {
+        val parts = plan.map { g ->
+            when (g) {
+                is BlockGroup -> "${g.label} (" + when {
+                    g.rotating -> "redefined each read"
+                    g.reader.mode == MesswertBlockReader.Mode.Native -> "native"
+                    g.reader.mode == MesswertBlockReader.Mode.Interpreted -> "read-only job"
+                    else -> "defining"
+                } + ")"
+                is JobGroup -> g.label
+            }
+        }
+        val extra = listOfNotNull(
+            error,
+            lastRefusal,
+            _unsupported.value.takeIf { it.isNotEmpty() }?.let { "not supported: ${it.joinToString()}" },
+        )
+        return (parts + extra).joinToString("; ")
+    }
+}
