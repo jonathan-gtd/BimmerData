@@ -42,8 +42,10 @@ import java.util.concurrent.atomic.AtomicReference
  *
  * The columns are fixed at [start] (from [columns]); [pin] is called with them so the source
  * keeps reading them while recording, even if the dashboard shows another page.
- * The file is written through [output] (Android: a MediaStore stream), flushed about every
- * [flushIntervalMs], closed by [stop]. [start]/[stop]/[mark] never block.
+ * The file is written through [output] (Android: a MediaStore or user-chosen folder stream),
+ * flushed about every [flushIntervalMs], closed by [stop]. [start]/[stop]/[mark] never block.
+ * [fileNamer] names the file from the start time; [minRowIntervalMs] (read at every row, 0 = one
+ * row per sample batch) thins the rows out, markers always get their row.
  */
 class CsvSessionRecorder(
     private val source: LiveDataSource,
@@ -56,6 +58,8 @@ class CsvSessionRecorder(
     private val zone: ZoneId = ZoneId.systemDefault(),
     private val flushIntervalMs: Long = 1000,
     private val staleAfterMs: Long = 5000,
+    private val fileNamer: (startMs: Long) -> String = { fileName(it, zone) },
+    private val minRowIntervalMs: () -> Long = { 0 },
 ) : SessionRecorder {
 
     private val _state = MutableStateFlow(RecordingState())
@@ -72,7 +76,7 @@ class CsvSessionRecorder(
             if (job?.isActive == true) return
             val cols = columns().distinctBy { it.id }
             val startedAt = clock()
-            val fileName = fileName(startedAt, zone)
+            val fileName = fileNamer(startedAt)
             markCount = 0
             pendingMarker.set(null)
             pin(cols)
@@ -119,6 +123,7 @@ class CsvSessionRecorder(
                 val newest = cols.maxOfOrNull { samples[it.id]?.timestampMs ?: Long.MIN_VALUE } ?: Long.MIN_VALUE
                 val fresh = newest >= startedAt && newest > lastRowTime
                 if (!fresh && marker == null) return@collect
+                if (marker == null && lastRowTime != Long.MIN_VALUE && newest - lastRowTime < minRowIntervalMs()) return@collect
                 val rowTime = if (fresh) newest else maxOf(clock(), lastRowTime)
                 writer.write(row(cols, samples, rowTime, startedAt, marker))
                 writer.write("\r\n")
@@ -176,9 +181,15 @@ class CsvSessionRecorder(
 
         const val MimeType = "text/csv"
 
-        /** bimmerdata_YYYYMMDD_HHMMSS.csv (local time). */
-        fun fileName(timeMs: Long, zone: ZoneId = ZoneId.systemDefault()): String =
-            "bimmerdata_" + FileTime.format(Instant.ofEpochMilli(timeMs).atZone(zone)) + ".csv"
+        const val DefaultPrefix = "bimmerdata"
+
+        /** `<prefix>_YYYYMMDD_HHMMSS.csv` (local time), default prefix "bimmerdata". */
+        fun fileName(timeMs: Long, zone: ZoneId = ZoneId.systemDefault(), prefix: String = DefaultPrefix): String =
+            safePrefix(prefix) + "_" + FileTime.format(Instant.ofEpochMilli(timeMs).atZone(zone)) + ".csv"
+
+        /** Keeps letters, digits, `-` and `_` (at most 40); falls back to [DefaultPrefix]. */
+        fun safePrefix(prefix: String): String =
+            prefix.trim().filter { it.isLetterOrDigit() || it == '-' || it == '_' }.take(40).ifEmpty { DefaultPrefix }
 
         /** Up to 6 decimals, no exponent, "." as decimal point, no trailing zeros. */
         fun number(v: Double): String {
