@@ -4,7 +4,6 @@
     <string name="settings2_save">Enregistrer</string>
 
     <!-- Tools -->
-    <string name="settings2_section_tools">Outils</string>
     <string name="settings2_tool32_hint">Exécute n\'importe quel job EDIABAS d\'un fichier calculateur, avec ses résultats, ses trames brutes et ses temps.</string>
     <string name="settings2_ecu_jobs">Jobs (Tool32)</string>
 
@@ -22,7 +21,6 @@
     <string name="settings2_rec_prefix_hint">Lettres, chiffres, - et _. Exemple : %1$s</string>
 
     <!-- Telegraf export -->
-    <string name="settings2_section_telegraf">Export Telegraf</string>
     <string name="settings2_tg_enable">Exporter vers Telegraf</string>
     <string name="settings2_tg_enable_hint">Envoie les valeurs en direct à un serveur Telegraf, qui les range dans TimescaleDB pour Grafana. Mise en place : docs/TELEGRAF.md dans le dépôt BimmerData.</string>
     <string name="settings2_tg_url">URL de Telegraf</string>
@@ -54,8 +52,6 @@
     <string name="settings2_tg_test_ok">Telegraf a répondu : OK.</string>
     <string name="settings2_tg_test_auth">Telegraf refuse le jeton ou le mot de passe (%1$s).</string>
     <string name="settings2_tg_test_failed">Échec : %1$s</string>
-    <string name="settings2_tg_queue">%1$s points en attente (%2$s) · %3$s envoyés</string>
-    <string name="settings2_tg_dropped">%1$s points perdus (file pleine ou refusés)</string>
     <string name="settings2_tg_last_ok">Dernier envoi : %1$s</string>
     <string name="settings2_tg_last_error">Dernière erreur : %1$s</string>
     <string name="settings2_tg_phase_off">Désactivé</string>

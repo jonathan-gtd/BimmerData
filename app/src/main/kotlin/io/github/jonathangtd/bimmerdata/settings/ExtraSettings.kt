@@ -6,6 +6,7 @@ package io.github.jonathangtd.bimmerdata.settings
 import android.content.SharedPreferences
 import io.github.jonathangtd.bimmerdata.export.ExportConfig
 import io.github.jonathangtd.bimmerdata.export.ExportMode
+import io.github.jonathangtd.bimmerdata.export.QueueEstimate
 import io.github.jonathangtd.bimmerdata.live.CsvSessionRecorder
 
 /** CSV recording settings (Settings › Recording). */
@@ -40,9 +41,26 @@ data class TelegrafSettings(
     val car: String = "",
     val pointsPerSecond: Int = 1,
     val mode: ExportMode = ExportMode.AfterTrip,
+    /**
+     * Free space kept on the phone, in MB (one of [QueueEstimate.RESERVES_MB]). The queue never
+     * deletes points: when the phone reaches this reserve, new points are not queued.
+     */
+    val reserveMb: Int = 500,
 ) {
     init {
         require(pointsPerSecond in ExportConfig.RATES) { "pointsPerSecond must be in ${ExportConfig.RATES}" }
+    }
+}
+
+/** Phone GPS position recorded with the ECU values (Settings › GPS position). */
+data class GpsSettings(
+    /** Off by default: the location permission is only asked when the user switches it on. */
+    val enabled: Boolean = false,
+    /** Time between two fixes asked from the GPS, in ms. */
+    val intervalMs: Long = 1000,
+) {
+    companion object {
+        val INTERVALS = listOf(1000L, 2000L, 5000L, 10_000L)
     }
 }
 
@@ -59,6 +77,9 @@ private const val K_TG_USER = "tg_user"
 private const val K_TG_CAR = "tg_car"
 private const val K_TG_RATE = "tg_rate"
 private const val K_TG_MODE = "tg_mode"
+private const val K_TG_RESERVE_MB = "tg_reserve_mb"
+private const val K_GPS_ON = "gps_enabled"
+private const val K_GPS_INTERVAL = "gps_interval_ms"
 
 internal fun loadRecording(p: SharedPreferences) = RecordingConfig(
     folderUri = p.getString(K_REC_FOLDER, null),
@@ -75,6 +96,12 @@ internal fun loadTelegraf(p: SharedPreferences) = TelegrafSettings(
     car = p.getString(K_TG_CAR, null).orEmpty(),
     pointsPerSecond = p.getInt(K_TG_RATE, 1).coerceIn(ExportConfig.RATES),
     mode = runCatching { ExportMode.valueOf(p.getString(K_TG_MODE, null) ?: "") }.getOrDefault(ExportMode.AfterTrip),
+    reserveMb = p.getInt(K_TG_RESERVE_MB, 500).takeIf { it in QueueEstimate.RESERVES_MB } ?: 500,
+)
+
+internal fun loadGps(p: SharedPreferences) = GpsSettings(
+    enabled = p.getBoolean(K_GPS_ON, false),
+    intervalMs = p.getLong(K_GPS_INTERVAL, 1000L).takeIf { it in GpsSettings.INTERVALS } ?: 1000L,
 )
 
 internal fun SharedPreferences.Editor.saveExtras(s: Settings) {
@@ -89,4 +116,7 @@ internal fun SharedPreferences.Editor.saveExtras(s: Settings) {
     putString(K_TG_CAR, s.telegraf.car)
     putInt(K_TG_RATE, s.telegraf.pointsPerSecond)
     putString(K_TG_MODE, s.telegraf.mode.name)
+    putInt(K_TG_RESERVE_MB, s.telegraf.reserveMb)
+    putBoolean(K_GPS_ON, s.gps.enabled)
+    putLong(K_GPS_INTERVAL, s.gps.intervalMs)
 }

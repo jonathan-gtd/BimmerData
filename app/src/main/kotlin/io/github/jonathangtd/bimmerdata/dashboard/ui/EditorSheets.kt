@@ -497,6 +497,7 @@ private fun sourceLine(m: Measurement): String {
     return when (val src = m.source) {
         is MeasurementSource.MeasurementTable -> listOfNotNull(unit, m.id.substringAfter('/'), src.resultName)
         is MeasurementSource.JobResult -> listOfNotNull(unit, src.job + if (src.args.isNotEmpty()) " " + src.args.substringAfter(';') else "", src.resultName)
+        is MeasurementSource.Sensor -> listOfNotNull(unit, src.sensor.uppercase(java.util.Locale.ROOT), src.field)
     }.joinToString("  ·  ")
 }
 

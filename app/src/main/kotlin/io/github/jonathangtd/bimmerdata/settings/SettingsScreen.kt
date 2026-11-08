@@ -11,6 +11,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.PersistableBundle
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -75,34 +76,40 @@ import io.github.jonathangtd.bimmerdata.ui.BarlowCondensed
 import io.github.jonathangtd.bimmerdata.ui.Cockpit
 import java.util.Locale
 
-/** Settings: connection, tools (Tool32), recording, Telegraf export, local REST API and about. */
+/**
+ * Settings: a list of categories ([SettingsHome]), each opening its own page with a back button
+ * (and the system back gesture): connection, recording, GPS position, Telegraf export, local
+ * REST API, translations, tools (Tool32) and about.
+ */
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(initialPage: SettingsPage? = null) {
+    var page by rememberSaveable { mutableStateOf(initialPage) }
+    BackHandler(enabled = page != null) { page = null }
+    val current = page
+    if (current == null) {
+        SettingsHome(onOpen = { page = it })
+    } else {
+        SettingsPageScaffold(current, onBack = { page = null }) { SettingsPageContent(current) }
+    }
+}
+
+/** The content of one settings page (the sections below, in one or more cards). */
+@Composable
+internal fun SettingsPageContent(page: SettingsPage) {
     val context = LocalContext.current
     val store = remember { AppSettings.get(context) }
     val runtime = remember { ApiRuntime.get(context) }
     val settings by store.state.collectAsStateWithLifecycle()
     val api by runtime.state.collectAsStateWithLifecycle()
-    val insets = WindowInsets.safeDrawing.asPaddingValues()
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().background(Cockpit.Background).padding(top = insets.calculateTopPadding()),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = insets.calculateBottomPadding() + 24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        item {
-            Text(
-                stringResource(R.string.settings_title), color = Cockpit.Text, fontSize = 28.sp, fontWeight = FontWeight.SemiBold,
-                fontFamily = BarlowCondensed, modifier = Modifier.padding(top = 4.dp, bottom = 4.dp),
-            )
-        }
-        item { ConnectionSection(settings, store) }
-        item { ToolsSection() }
-        item { RecordingSection(settings.recording, store) }
-        item { TelegrafSection(settings.telegraf, store) }
-        item { ApiSection(settings.api, api, store, runtime) }
-        item { io.github.jonathangtd.bimmerdata.i18n.TranslationsSettingsSection() }
-        item { AboutSection() }
+    when (page) {
+        SettingsPage.Connection -> ConnectionSection(settings, store)
+        SettingsPage.Recording -> RecordingSection(settings.recording, store)
+        SettingsPage.Gps -> GpsSection(settings.gps, store)
+        SettingsPage.Telegraf -> TelegrafSection(settings.telegraf, store)
+        SettingsPage.Api -> ApiSection(settings.api, api, store, runtime)
+        SettingsPage.Translations -> io.github.jonathangtd.bimmerdata.i18n.TranslationsSettingsSection()
+        SettingsPage.Tools -> ToolsSection()
+        SettingsPage.About -> AboutSection()
     }
 }
 
@@ -140,7 +147,6 @@ private fun ApiSection(config: ApiConfig, state: ApiRuntimeState, store: AppSett
     val portValid = portValue != null && portValue in ApiConfig.PORT_RANGE
 
     SettingsCard {
-        SectionLabel(stringResource(R.string.settings_section_api))
         SwitchRow(
             title = stringResource(R.string.settings_api_enable),
             hint = stringResource(R.string.settings_api_enable_hint),
@@ -267,7 +273,6 @@ private fun AboutSection() {
         runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "?"
     }
     SettingsCard {
-        SectionLabel(stringResource(R.string.settings_section_about))
         Text("BimmerData", color = Cockpit.Text, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, fontFamily = BarlowCondensed)
         Text(stringResource(R.string.settings_version, version), color = Cockpit.Muted, fontSize = 14.sp)
         Hint(stringResource(R.string.settings_license))

@@ -91,13 +91,18 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
 
     private val edCatalog = EdiabasMeasurementCatalog(importer.ecuDir, File(app.cacheDir, "measurement_catalog.tsv"))
 
-    /** Measurements of the imported ECU folder (call off the main thread: file I/O). */
-    val catalog: MeasurementCatalog get() = edCatalog
+    private val sensorCatalog = SensorCatalog(edCatalog, { io.github.jonathangtd.bimmerdata.gps.PhoneSensorTexts.gpsMeasurements(app) }, app.getString(io.github.jonathangtd.bimmerdata.R.string.s3_gps_catalog))
+
+    /** Measurements of the imported ECU folder plus the phone's GPS (call off the main thread: file I/O). */
+    val catalog: MeasurementCatalog get() = sensorCatalog
 
     private val proxy = LiveDataProxy(scope)
 
     /** Samples and status of the current acquisition; [LiveDataSource.setMeasurements] survives reconnects. */
     val liveDataSource: LiveDataSource get() = proxy
+
+    /** Where the phone's own sensors (GPS) put their samples, next to the ECU ones. */
+    val phoneSensors: PhoneSensorInput get() = proxy
 
     /** What the phone dashboard and Android Auto want read; the engine reads their merge. */
     val requests = MeasurementRequests(proxy::setMeasurements)
@@ -244,11 +249,21 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
     }
 }
 
+/** Input of the phone's own sensors (GPS) into the live samples. */
+interface PhoneSensorInput {
+    /** Sensor measurements that are live right now: recorded in the CSV even when no card shows them. */
+    fun setSensorMeasurements(measurements: List<Measurement>)
+
+    fun putSensorSamples(fresh: Map<String, Sample>)
+}
+
 /**
  * Stable [LiveDataSource] in front of the engine of the current connection: keeps the requested
- * measurements across reconnects and the last samples while disconnected.
+ * measurements across reconnects and the last samples while disconnected. Phone sensor
+ * measurements ([PhoneSensors]) never reach the engine: their samples come through
+ * [PhoneSensorInput].
  */
-internal class LiveDataProxy(private val scope: CoroutineScope) : LiveDataSource {
+internal class LiveDataProxy(private val scope: CoroutineScope) : LiveDataSource, PhoneSensorInput {
     private val _samples = MutableStateFlow<Map<String, Sample>>(emptyMap())
     override val samples: StateFlow<Map<String, Sample>> = _samples.asStateFlow()
 
@@ -258,27 +273,40 @@ internal class LiveDataProxy(private val scope: CoroutineScope) : LiveDataSource
     private val _pauses = MutableSharedFlow<AcquisitionPause>(extraBufferCapacity = 16, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     override val pauses: SharedFlow<AcquisitionPause> = _pauses.asSharedFlow()
 
-    @Volatile var requested: List<Measurement> = emptyList()
-        private set
+    @Volatile private var wanted: List<Measurement> = emptyList()
+    @Volatile private var sensors: List<Measurement> = emptyList()
+
+    /** What the dashboard / Android Auto asked for, plus the live phone sensors (CSV columns). */
+    val requested: List<Measurement> get() = (wanted + sensors).distinctBy { it.id }
     @Volatile private var pinned: List<Measurement>? = null
     @Volatile private var engine: AcquisitionEngine? = null
     private var collectors: Job? = null
 
     override fun setMeasurements(measurements: List<Measurement>) {
-        requested = measurements
-        engine?.setMeasurements(measurements)
+        wanted = measurements
+        engine?.setMeasurements(ecuOnly(measurements))
     }
 
     fun setPinned(measurements: List<Measurement>?) {
         pinned = measurements
-        engine?.setPinnedMeasurements(measurements)
+        engine?.setPinnedMeasurements(measurements?.let(::ecuOnly))
     }
+
+    override fun setSensorMeasurements(measurements: List<Measurement>) {
+        sensors = measurements
+    }
+
+    override fun putSensorSamples(fresh: Map<String, Sample>) {
+        if (fresh.isNotEmpty()) _samples.update { it + fresh }
+    }
+
+    private fun ecuOnly(list: List<Measurement>) = list.filterNot(PhoneSensors::isSensor)
 
     fun attach(e: AcquisitionEngine) {
         collectors?.cancel()
         engine = e
-        e.setMeasurements(requested)
-        e.setPinnedMeasurements(pinned)
+        e.setMeasurements(ecuOnly(wanted))
+        e.setPinnedMeasurements(pinned?.let(::ecuOnly))
         collectors = scope.launch {
             launch { e.samples.collect { fresh -> if (fresh.isNotEmpty()) _samples.update { it + fresh } } }
             launch { e.status.collect { _status.value = it } }

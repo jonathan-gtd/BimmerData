@@ -25,6 +25,8 @@ data class Settings(
     val lastMode: LiveMode? = null,
     val recording: RecordingConfig = RecordingConfig(),
     val telegraf: TelegrafSettings = TelegrafSettings(),
+    /** Phone GPS position as measurements (Settings › GPS position); off by default. */
+    val gps: GpsSettings = GpsSettings(),
 )
 
 data class ApiConfig(
@@ -72,6 +74,7 @@ class AppSettings private constructor(context: Context) {
             lastMode = prefs.getString(K_LAST_MODE, null)?.let { m -> LiveMode.entries.firstOrNull { it.name == m } },
             recording = loadRecording(prefs),
             telegraf = loadTelegraf(prefs),
+            gps = loadGps(prefs),
         )
     }
 
@@ -97,6 +100,8 @@ class AppSettings private constructor(context: Context) {
     fun updateRecording(transform: (RecordingConfig) -> RecordingConfig) = update { it.copy(recording = transform(it.recording)) }
 
     fun updateTelegraf(transform: (TelegrafSettings) -> TelegrafSettings) = update { it.copy(telegraf = transform(it.telegraf)) }
+
+    fun updateGps(transform: (GpsSettings) -> GpsSettings) = update { it.copy(gps = transform(it.gps)) }
 
     /** New random token: every client using the old one gets 401 from now on. */
     fun regenerateToken() = updateApi { it.copy(token = ApiTokens.generate()) }

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings split into pages, GPS position, Telegraf queue that never loses data. -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- categories -->
+    <string name="s3_group_car">Car</string>
+    <string name="s3_group_data">Data out of the phone</string>
+    <string name="s3_group_app">App</string>
+    <string name="s3_cat_connection">Connection</string>
+    <string name="s3_cat_recording">Recording</string>
+    <string name="s3_cat_gps">GPS position</string>
+    <string name="s3_cat_telegraf">Telegraf export</string>
+    <string name="s3_cat_api">Local API</string>
+    <string name="s3_cat_translations">Translations</string>
+    <string name="s3_cat_tools">Tools</string>
+    <string name="s3_cat_about">About</string>
+
+    <!-- one-line summaries -->
+    <string name="s3_sum_connected">Connected · %1$s</string>
+    <string name="s3_sum_connecting">Connecting…</string>
+    <string name="s3_sum_failed">Error: %1$s</string>
+    <string name="s3_sum_disconnected">Not connected</string>
+    <string name="s3_sum_disconnected_auto">Not connected · connects when the cable is plugged in</string>
+    <string name="s3_sum_rows_all">every read</string>
+    <string name="s3_sum_off">Off</string>
+    <string name="s3_sum_gps_idle">On · every %1$s · waits for the connection to the car</string>
+    <string name="s3_sum_gps_fix">Position found · ±%1$d m</string>
+    <string name="s3_sum_gps_fix_noacc">Position found</string>
+    <string name="s3_sum_tg_blocked">Phone almost full: points no longer queued</string>
+    <string name="s3_sum_tg">%1$s · %2$s points waiting</string>
+    <plurals name="s3_sum_tg_rejected">
+        <item quantity="one">%1$d batch refused</item>
+        <item quantity="other">%1$d batches refused</item>
+    </plurals>
+    <string name="s3_sum_api_on">On · port %1$d</string>
+    <string name="s3_sum_tr_phone">%1$s (phone language)</string>
+    <string name="s3_sum_tr_original">Original texts (German)</string>
+    <string name="s3_sum_tools">Tool32: run any EDIABAS job</string>
+    <string name="s3_sum_about">Version %1$s · GPL-3.0</string>
+    <string name="s3_seconds">%1$d s</string>
+
+    <!-- recording -->
+    <string name="s3_rec_content">Content of the files</string>
+    <string name="s3_rec_content_hint">One column per value shown on the dashboard when the recording starts (phone and Android Auto pages), plus the GPS position when it is on. These values keep being read during the recording, even if you change page.</string>
+    <string name="s3_rec_time_hint" tools:ignore="TypographyDashes">Time: time_ms from the start of the recording, and iso_time in local time with its offset from UTC, e.g. 2026-11-08T21:45:00.123+01:00 (+02:00 in summer in Paris), so a daylight saving change never mixes up the rows.</string>
+
+    <!-- GPS -->
+    <string name="s3_gps_enable">Record the GPS position</string>
+    <string name="s3_gps_enable_hint">Latitude, longitude, altitude, speed, heading and accuracy, next to the ECU values. Android asks for the precise location when you switch it on.</string>
+    <string name="s3_gps_denied">Location refused. Allow \"Precise location\" for BimmerData in the app settings to record the position.</string>
+    <string name="s3_open_app_settings">App settings</string>
+    <string name="s3_gps_open_location">Turn on location</string>
+    <string name="s3_gps_state_idle">Waits for the connection to the car</string>
+    <string name="s3_gps_state_no_permission">Location permission missing</string>
+    <string name="s3_gps_state_location_off">Location is off on the phone</string>
+    <string name="s3_gps_state_searching">Searching for satellites…</string>
+    <string name="s3_gps_rate">Position every</string>
+    <string name="s3_gps_rate_hint">A position per second is enough for a map of the trip. Longer intervals save a little battery.</string>
+    <string name="s3_gps_where">Where the position goes</string>
+    <string name="s3_gps_values">CSV recording: one column per value. Telegraf export: the points have the tag ecu=gps (ids latitude, longitude…); the example Grafana dashboard draws the trip on a map.</string>
+    <string name="s3_gps_cards">Cards: in the card editor, pick \"GPS\" in the list of ECUs (for example the GPS speed next to the speed read by the car).</string>
+    <string name="s3_gps_background">With the cable, the position keeps coming with the screen off. In simulation, only while the app is open.</string>
+    <string name="s3_gps_privacy">The position stays on the phone (CSV). It only leaves it to your own Telegraf server, if the export is on.</string>
+    <string name="s3_gps_latitude">GPS latitude</string>
+    <string name="s3_gps_longitude">GPS longitude</string>
+    <string name="s3_gps_altitude">GPS altitude</string>
+    <string name="s3_gps_speed">GPS speed</string>
+    <string name="s3_gps_bearing">GPS heading</string>
+    <string name="s3_gps_accuracy">GPS accuracy</string>
+    <string name="s3_gps_measurement_hint">Phone GPS (Settings › GPS position)</string>
+    <string name="s3_gps_catalog">Phone GPS</string>
+
+    <!-- durations -->
+    <string name="s3_duration_days">%1$d d %2$d h</string>
+    <string name="s3_duration_hours">%1$d h %2$02d min</string>
+    <string name="s3_duration_minutes">%1$d min</string>
+
+    <!-- Telegraf -->
+    <string name="s3_tg_sending">Sending</string>
+    <string name="s3_tg_queue">Queue on the phone</string>
+    <string name="s3_tg_blocked">The phone reached the free-space reserve (%1$s): new points are no longer queued (%2$s so far). Nothing already queued is deleted, and the CSV recording keeps everything. Free some space or send the queue.</string>
+    <string name="s3_tg_growing">The queue takes %1$s: send it on Wi-Fi when you can.</string>
+    <string name="s3_tg_points">Points waiting</string>
+    <string name="s3_tg_disk">Size on the phone</string>
+    <string name="s3_tg_disk_value">%1$s (%2$s uncompressed)</string>
+    <string name="s3_tg_free">Free space</string>
+    <string name="s3_tg_free_value">%1$s (reserve %2$s)</string>
+    <string name="s3_tg_autonomy_none">Reserve reached</string>
+    <string name="s3_tg_autonomy">Room left</string>
+    <string name="s3_tg_autonomy_measured">At the current rate, before the reserve is reached.</string>
+    <plurals name="s3_tg_autonomy_estimated">
+        <item quantity="one">Estimate for %2$d value at %1$d points per second, before the reserve is reached.</item>
+        <item quantity="other">Estimate for %2$d values at %1$d points per second, before the reserve is reached.</item>
+    </plurals>
+    <string name="s3_tg_sent">%1$s points sent since the app started.</string>
+    <string name="s3_tg_refused">%1$s points were not queued because the phone was full (they are in the CSV).</string>
+    <string name="s3_tg_reserve">Free space to keep</string>
+    <string name="s3_tg_reserve_hint">The queue never deletes points by itself. It may use all the free space except this reserve; when it is reached, new points are no longer queued.</string>
+    <string name="s3_tg_where">Stored compressed (gzip, about 10 times smaller) in the app\'s private storage. A point is deleted only once Telegraf confirmed it (HTTP 2xx).</string>
+    <string name="s3_tg_rejected_title">Refused by the server</string>
+    <plurals name="s3_tg_rejected_text">
+        <item quantity="one">Telegraf refused %1$d batch (%2$s points) as invalid (HTTP 400). It is kept on the phone: retry once the server is fixed, or export it.</item>
+        <item quantity="other">Telegraf refused %1$d batches (%2$s points) as invalid (HTTP 400). They are kept on the phone: retry once the server is fixed, or export them.</item>
+    </plurals>
+    <string name="s3_tg_rejected_retry">Retry</string>
+    <string name="s3_tg_rejected_export">Export</string>
+    <string name="s3_tg_rejected_delete">Delete</string>
+    <string name="s3_tg_rejected_delete_text">Delete the %1$s refused points for good? They are still in the CSV recordings.</string>
+    <string name="s3_tg_rejected_exported">Exported (gzip line protocol: zcat to read it).</string>
+
+    <!-- notifications -->
+    <string name="s3_notif_channel">Telegraf export</string>
+    <string name="s3_notif_growth_title">Telegraf: %1$s waiting on the phone</string>
+    <string name="s3_notif_growth_text">%1$s points wait to be sent. Room left before the reserve: %2$s.</string>
+    <string name="s3_notif_blocked_title">Telegraf: the phone is almost full</string>
+    <string name="s3_notif_blocked_text">The free-space reserve (%1$s) is reached: new points are no longer queued for Telegraf. Nothing is deleted and the CSV recording goes on.</string>
+</resources>

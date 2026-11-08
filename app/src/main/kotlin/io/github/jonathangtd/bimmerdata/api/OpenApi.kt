@@ -280,12 +280,18 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
             "min" to S.num("Plausible minimum, when known (gauge scales)."),
             "max" to S.num("Plausible maximum, when known."),
             "source" to S.obj("How it is read.", listOf("kind"), false, null,
-                "kind" to S.str("`table`: fast path (MESSWERTETAB row, read in blocks); `job`: generic EDIABAS job result (slower).", enum = listOf("table", "job")),
+                "kind" to S.str(
+                    "`table`: fast path (MESSWERTETAB row, read in blocks); `job`: generic EDIABAS job result (slower); " +
+                        "`sensor`: a sensor of the phone (`gps/...`, Settings › GPS position), not read on the cable.",
+                    enum = listOf("table", "job", "sensor"),
+                ),
                 "tableId" to S.str("table: row id", "0x4402"),
                 "resultName" to S.str(example = "STAT_OELTEMPERATUR_WERT"),
                 "job" to S.str("job: job name"),
                 "args" to S.str("job: arguments"),
                 "set" to S.int("job: result set"),
+                "sensor" to S.str("sensor: phone sensor", "gps"),
+                "field" to S.str("sensor: value of the sensor", "speed"),
             ),
         ))
         put("Value", S.obj(
@@ -383,9 +389,15 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
             "auth" to S.str("Authentication (phone only).", enum = listOf("none", "token", "basic")), "username" to S.str("User for basic auth."),
             "secretSet" to S.bool("A token / password is stored, encrypted, on the phone."), "car" to S.str("Value of the `car` tag."),
             "pointsPerSecond" to S.int("At most this many points per measurement and second.", 1, 5), "mode" to S.str(enum = listOf("live", "afterTrip")),
-            "state" to S.obj("Queue on the phone.", listOf("phase", "queuedPoints", "queuedBytes", "droppedPoints", "sentPoints"), false, null,
+            "state" to S.obj(
+                "Queue on the phone. A point is deleted only after Telegraf answered 2xx; nothing is deleted automatically.",
+                listOf("phase", "queuedPoints", "queuedBytes", "refusedPoints", "rejectedPoints", "blocked", "freeBytes", "reserveBytes", "sentPoints"), false, null,
                 "phase" to S.str(enum = listOf("off", "idle", "waitingForNetwork", "waitingForUnmetered", "sending", "retrying", "authFailed")),
-                "queuedPoints" to S.int(), "queuedBytes" to S.int(), "droppedPoints" to S.int("Lost because the queue was full or refused by Telegraf."),
+                "queuedPoints" to S.int(), "queuedBytes" to S.int("Size on disk (gzip)."),
+                "refusedPoints" to S.int("Not queued because the phone reached its free-space reserve (the CSV recording still has them)."),
+                "rejectedPoints" to S.int("In batches Telegraf refused for good (HTTP 400), kept aside on the phone (retry or export there)."),
+                "blocked" to S.bool("The phone reached its free-space reserve: new points are not queued."),
+                "freeBytes" to S.int("Free space on the phone."), "reserveBytes" to S.int("Free space kept; queuing stops below it."),
                 "sentPoints" to S.int("Since the app started."), "lastSuccessMs" to S.int(format = "int64"), "lastError" to S.str()),
         ))
         put("Settings", S.obj(

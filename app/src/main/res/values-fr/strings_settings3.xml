@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- catégories -->
+    <string name="s3_group_car">Voiture</string>
+    <string name="s3_group_data">Données hors du téléphone</string>
+    <string name="s3_group_app">Application</string>
+    <string name="s3_cat_connection">Connexion</string>
+    <string name="s3_cat_recording">Enregistrement</string>
+    <string name="s3_cat_gps">Position GPS</string>
+    <string name="s3_cat_telegraf">Export Telegraf</string>
+    <string name="s3_cat_api">API locale</string>
+    <string name="s3_cat_translations">Traductions</string>
+    <string name="s3_cat_tools">Outils</string>
+    <string name="s3_cat_about">À propos</string>
+
+    <!-- résumés d\'une ligne -->
+    <string name="s3_sum_connected">Connecté · %1$s</string>
+    <string name="s3_sum_connecting">Connexion…</string>
+    <string name="s3_sum_failed">Erreur : %1$s</string>
+    <string name="s3_sum_disconnected">Non connecté</string>
+    <string name="s3_sum_disconnected_auto">Non connecté · se connecte au branchement du câble</string>
+    <string name="s3_sum_rows_all">à chaque lecture</string>
+    <string name="s3_sum_off">Désactivé</string>
+    <string name="s3_sum_gps_idle">Activé · toutes les %1$s · attend la connexion à la voiture</string>
+    <string name="s3_sum_gps_fix">Position trouvée · ±%1$d m</string>
+    <string name="s3_sum_gps_fix_noacc">Position trouvée</string>
+    <string name="s3_sum_tg_blocked">Téléphone presque plein : les points ne sont plus mis en file</string>
+    <string name="s3_sum_tg">%1$s · %2$s points en attente</string>
+    <plurals name="s3_sum_tg_rejected">
+        <item quantity="one">%1$d lot refusé</item>
+        <item quantity="many">%1$d lots refusés</item>
+        <item quantity="other">%1$d lots refusés</item>
+    </plurals>
+    <string name="s3_sum_api_on">Activée · port %1$d</string>
+    <string name="s3_sum_tr_phone">%1$s (langue du téléphone)</string>
+    <string name="s3_sum_tr_original">Textes d\'origine (allemand)</string>
+    <string name="s3_sum_tools">Tool32 : exécuter n\'importe quel job EDIABAS</string>
+    <string name="s3_sum_about">Version %1$s · GPL-3.0</string>
+    <string name="s3_seconds">%1$d s</string>
+
+    <!-- enregistrement -->
+    <string name="s3_rec_content">Contenu des fichiers</string>
+    <string name="s3_rec_content_hint">Une colonne par valeur affichée sur le tableau de bord au début de l\'enregistrement (pages du téléphone et d\'Android Auto), plus la position GPS si elle est activée. Ces valeurs continuent d\'être lues pendant l\'enregistrement, même si vous changez de page.</string>
+    <string name="s3_rec_time_hint" tools:ignore="TypographyDashes">Heure : time_ms depuis le début de l\'enregistrement, et iso_time en heure locale avec son décalage par rapport à UTC, par exemple 2026-11-08T21:45:00.123+01:00 (+02:00 l\'été à Paris) : un changement d\'heure ne mélange jamais les lignes.</string>
+
+    <!-- GPS -->
+    <string name="s3_gps_enable">Enregistrer la position GPS</string>
+    <string name="s3_gps_enable_hint">Latitude, longitude, altitude, vitesse, cap et précision, à côté des valeurs des calculateurs. Android demande la position exacte à l\'activation.</string>
+    <string name="s3_gps_denied">Position refusée. Autorisez « Position exacte » pour BimmerData dans les réglages de l\'appli pour enregistrer la position.</string>
+    <string name="s3_open_app_settings">Réglages de l\'appli</string>
+    <string name="s3_gps_open_location">Activer la localisation</string>
+    <string name="s3_gps_state_idle">Attend la connexion à la voiture</string>
+    <string name="s3_gps_state_no_permission">Autorisation de localisation manquante</string>
+    <string name="s3_gps_state_location_off">La localisation est désactivée sur le téléphone</string>
+    <string name="s3_gps_state_searching">Recherche des satellites…</string>
+    <string name="s3_gps_rate">Une position toutes les</string>
+    <string name="s3_gps_rate_hint">Une position par seconde suffit pour tracer le trajet sur une carte. Un intervalle plus long économise un peu de batterie.</string>
+    <string name="s3_gps_where">Où va la position</string>
+    <string name="s3_gps_values">Enregistrement CSV : une colonne par valeur. Export Telegraf : les points ont l\'étiquette ecu=gps (id latitude, longitude…) ; le tableau de bord Grafana d\'exemple trace le trajet sur une carte.</string>
+    <string name="s3_gps_cards">Cartes : dans l\'éditeur de carte, choisissez « GPS » dans la liste des calculateurs (par exemple la vitesse GPS à côté de la vitesse lue par la voiture).</string>
+    <string name="s3_gps_background">Avec le câble, la position continue d\'arriver écran éteint. En simulation, seulement quand l\'appli est ouverte.</string>
+    <string name="s3_gps_privacy">La position reste sur le téléphone (CSV). Elle n\'en sort que vers votre propre serveur Telegraf, si l\'export est activé.</string>
+    <string name="s3_gps_latitude">Latitude GPS</string>
+    <string name="s3_gps_longitude">Longitude GPS</string>
+    <string name="s3_gps_altitude">Altitude GPS</string>
+    <string name="s3_gps_speed">Vitesse GPS</string>
+    <string name="s3_gps_bearing">Cap GPS</string>
+    <string name="s3_gps_accuracy">Précision GPS</string>
+    <string name="s3_gps_measurement_hint">GPS du téléphone (Réglages › Position GPS)</string>
+    <string name="s3_gps_catalog">GPS du téléphone</string>
+
+    <!-- durées -->
+    <string name="s3_duration_days">%1$d j %2$d h</string>
+    <string name="s3_duration_hours">%1$d h %2$02d min</string>
+    <string name="s3_duration_minutes">%1$d min</string>
+
+    <!-- Telegraf -->
+    <string name="s3_tg_sending">Envoi</string>
+    <string name="s3_tg_queue">File d\'attente sur le téléphone</string>
+    <string name="s3_tg_blocked">Le téléphone a atteint la réserve d\'espace libre (%1$s) : les nouveaux points ne sont plus mis en file (%2$s pour l\'instant). Rien de ce qui est déjà en file n\'est supprimé, et l\'enregistrement CSV garde tout. Libérez de la place ou envoyez la file.</string>
+    <string name="s3_tg_growing">La file occupe %1$s : envoyez-la en Wi-Fi dès que possible.</string>
+    <string name="s3_tg_points">Points en attente</string>
+    <string name="s3_tg_disk">Taille sur le téléphone</string>
+    <string name="s3_tg_disk_value">%1$s (%2$s non compressés)</string>
+    <string name="s3_tg_free">Espace libre</string>
+    <string name="s3_tg_free_value">%1$s (réserve %2$s)</string>
+    <string name="s3_tg_autonomy_none">Réserve atteinte</string>
+    <string name="s3_tg_autonomy">Autonomie</string>
+    <string name="s3_tg_autonomy_measured">À la cadence actuelle, avant d\'atteindre la réserve.</string>
+    <plurals name="s3_tg_autonomy_estimated">
+        <item quantity="one">Estimation pour %2$d valeur à %1$d points par seconde, avant d\'atteindre la réserve.</item>
+        <item quantity="many">Estimation pour %2$d valeurs à %1$d points par seconde, avant d\'atteindre la réserve.</item>
+        <item quantity="other">Estimation pour %2$d valeurs à %1$d points par seconde, avant d\'atteindre la réserve.</item>
+    </plurals>
+    <string name="s3_tg_sent">%1$s points envoyés depuis le lancement de l\'appli.</string>
+    <string name="s3_tg_refused">%1$s points n\'ont pas été mis en file car le téléphone était plein (ils sont dans le CSV).</string>
+    <string name="s3_tg_reserve">Espace libre à garder</string>
+    <string name="s3_tg_reserve_hint">La file ne supprime jamais de points d\'elle-même. Elle peut utiliser tout l\'espace libre sauf cette réserve ; une fois la réserve atteinte, les nouveaux points ne sont plus mis en file.</string>
+    <string name="s3_tg_where">Stockée compressée (gzip, environ 10 fois plus petite) dans le stockage privé de l\'appli. Un point n\'est supprimé qu\'une fois confirmé par Telegraf (HTTP 2xx).</string>
+    <string name="s3_tg_rejected_title">Refusés par le serveur</string>
+    <plurals name="s3_tg_rejected_text">
+        <item quantity="one">Telegraf a refusé %1$d lot (%2$s points) comme invalide (HTTP 400). Il est gardé sur le téléphone : réessayez une fois le serveur corrigé, ou exportez-le.</item>
+        <item quantity="many">Telegraf a refusé %1$d lots (%2$s points) comme invalides (HTTP 400). Ils sont gardés sur le téléphone : réessayez une fois le serveur corrigé, ou exportez-les.</item>
+        <item quantity="other">Telegraf a refusé %1$d lots (%2$s points) comme invalides (HTTP 400). Ils sont gardés sur le téléphone : réessayez une fois le serveur corrigé, ou exportez-les.</item>
+    </plurals>
+    <string name="s3_tg_rejected_retry">Réessayer</string>
+    <string name="s3_tg_rejected_export">Exporter</string>
+    <string name="s3_tg_rejected_delete">Supprimer</string>
+    <string name="s3_tg_rejected_delete_text">Supprimer définitivement les %1$s points refusés ? Ils restent dans les enregistrements CSV.</string>
+    <string name="s3_tg_rejected_exported">Exporté (line protocol gzip : zcat pour le lire).</string>
+
+    <!-- notifications -->
+    <string name="s3_notif_channel">Export Telegraf</string>
+    <string name="s3_notif_growth_title">Telegraf : %1$s en attente sur le téléphone</string>
+    <string name="s3_notif_growth_text">%1$s points attendent d\'être envoyés. Place restante avant la réserve : %2$s.</string>
+    <string name="s3_notif_blocked_title">Telegraf : le téléphone est presque plein</string>
+    <string name="s3_notif_blocked_text">La réserve d\'espace libre (%1$s) est atteinte : les nouveaux points ne sont plus mis en file pour Telegraf. Rien n\'est supprimé et l\'enregistrement CSV continue.</string>
+</resources>

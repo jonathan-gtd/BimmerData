@@ -227,6 +227,96 @@
           "rawSql": "SELECT count(*) AS points FROM bimmerdata WHERE $__timeFilter(time) AND car IN ($car)"
         }
       ]
+    },
+    {
+      "id": 5,
+      "type": "geomap",
+      "title": "Trip (phone GPS, coloured by GPS speed)",
+      "description": "Needs BimmerData › Settings › GPS position. Points with tag ecu=gps.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_BIMMERDATA}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 24,
+        "h": 14
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "velocitykmh",
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "view": {
+          "id": "fit",
+          "lat": 0,
+          "lon": 0,
+          "zoom": 15,
+          "allLayers": true
+        },
+        "controls": {
+          "showZoom": true,
+          "mouseWheelZoom": true,
+          "showAttribution": true
+        },
+        "basemap": {
+          "type": "default",
+          "name": "Basemap"
+        },
+        "layers": [
+          {
+            "type": "markers",
+            "name": "Trip",
+            "location": {
+              "mode": "coords",
+              "latitude": "latitude",
+              "longitude": "longitude"
+            },
+            "config": {
+              "showLegend": true,
+              "style": {
+                "size": {
+                  "fixed": 4
+                },
+                "color": {
+                  "field": "speed",
+                  "fixed": "green"
+                },
+                "opacity": 0.8,
+                "symbol": {
+                  "mode": "fixed",
+                  "fixed": "img/icons/marker/circle.svg"
+                }
+              }
+            },
+            "tooltip": true
+          }
+        ],
+        "tooltip": {
+          "mode": "details"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_BIMMERDATA}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT time_bucket('$__interval', time) AS time,\n  avg(value) FILTER (WHERE id = 'latitude') AS latitude,\n  avg(value) FILTER (WHERE id = 'longitude') AS longitude,\n  avg(value) FILTER (WHERE id = 'speed') AS speed\nFROM bimmerdata\nWHERE $__timeFilter(time) AND car IN ($car) AND ecu = 'gps' AND id IN ('latitude', 'longitude', 'speed')\nGROUP BY 1\nHAVING count(*) FILTER (WHERE id = 'latitude') > 0 AND count(*) FILTER (WHERE id = 'longitude') > 0\nORDER BY 1"
+        }
+      ]
     }
-  ]
+  ],
+  "timezone": "browser"
 }

@@ -156,6 +156,9 @@ class ApiService(
             is MeasurementSource.JobResult -> buildJsonObject {
                 put("kind", "job"); put("job", s.job); put("args", s.args); put("resultName", s.resultName); put("set", s.set)
             }
+            is MeasurementSource.Sensor -> buildJsonObject {
+                put("kind", "sensor"); put("sensor", s.sensor); put("field", s.field)
+            }
         })
     }
 
@@ -965,6 +968,7 @@ class ApiService(
             val src = when (val s = m.source) {
                 is MeasurementSource.MeasurementTable -> s.resultName
                 is MeasurementSource.JobResult -> s.job + " " + s.resultName
+                is MeasurementSource.Sensor -> s.sensor + " " + s.field
             }
             m.id.lowercase().contains(needle) || m.label.lowercase().contains(needle) || m.unit.lowercase() == needle || src.lowercase().contains(needle)
         }
