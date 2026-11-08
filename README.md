@@ -10,6 +10,24 @@ each user imports their own `EDIABAS\Ecu` folder.
 > Status: early development. A "mini Tool32" screen runs any job of any imported SGBD over a
 > K+DCAN cable (BMW-FAST on K-line) or against a built-in simulated ECU.
 
+## Install
+
+Download `BimmerData-<version>.apk` from the
+[GitHub releases](https://github.com/jonathan-gtd/BimmerData/releases) and open it on the phone
+(allow installing from your browser or file manager when Android asks). Android 10 or later.
+A new release installs over the previous one and keeps your settings, layouts and imported files.
+
+Every release is signed with the same key. You can check an APK before installing it:
+
+```sh
+apksigner verify --print-certs BimmerData-<version>.apk
+# Signer #1 certificate SHA-256 digest: f261fe6cc0acba09ffbb5caf9b96f6da947bce7bf5dc8c6568973dd3de8cd12c
+```
+
+The SHA-256 of each APK is published next to it in the release.
+
+Then: **Settings › Tools › Tool32 › Import** to import your own `EDIABAS\Ecu` folder (copied from a PC).
+
 ## Hardware
 
 - K+DCAN USB cable (FTDI) over USB-C OTG — first target (E-series, K-line, BMW-FAST).
@@ -78,6 +96,17 @@ Requirements: JDK 21 and the Android SDK (`ANDROID_HOME` set).
 
 Tests that need real ECU files read them from `BIMMERDATA_ECU_DIR` (your own `EDIABAS\Ecu`
 folder) and are skipped when it is not set.
+
+Release APK (signed when `~/.config/bimmerdata/release.properties` exists, with `storeFile`,
+`storePassword`, `keyAlias`, `keyPassword`; or the `BIMMERDATA_KEYSTORE`,
+`BIMMERDATA_STORE_PASSWORD`, `BIMMERDATA_KEY_ALIAS`, `BIMMERDATA_KEY_PASSWORD` variables;
+otherwise it is built unsigned):
+
+```sh
+./gradlew :app:assembleRelease
+```
+
+R8 shrinks and optimizes the release build but does not obfuscate it (`app/proguard-rules.pro`).
 
 Inspect an ECU file from the command line:
 
