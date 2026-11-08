@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="https_title">HTTPS</string>
+    <string name="https_hint">Chiffre les échanges avec l\'API grâce au certificat du téléphone. Les clients en http:// ne fonctionnent plus : donnez-leur l\'empreinte ci-dessous.</string>
+    <string name="https_preparing">Préparation du certificat…</string>
+    <string name="https_error">Certificat indisponible : %1$s. L\'API reste arrêtée plutôt que de tourner sans chiffrement.</string>
+    <string name="https_fingerprint">Empreinte du certificat (SHA-256)</string>
+    <string name="https_pin">Empreinte de la clé publique (curl --pinnedpubkey)</string>
+    <string name="https_copy">Copier</string>
+    <string name="https_trust_hint">Le certificat vient du téléphone, pas d\'une autorité publique. Un client lui fait confiance une fois (Exporter, puis curl --cacert ou verify= en Python) ou épingle la clé publique. Les deux restent valables quand l\'adresse du téléphone change. Vérifiez que l\'empreinte correspond avant de faire confiance à un fichier.</string>
+    <string name="https_export">Exporter le certificat</string>
+    <string name="https_share">Partager</string>
+    <string name="https_regenerate">Régénérer le certificat</string>
+    <string name="https_regenerate_title">Régénérer le certificat ?</string>
+    <string name="https_regenerate_text">L\'empreinte et la clé publique changent. Les scripts et agents IA qui font confiance au certificat actuel ou l\'épinglent sont refusés jusqu\'à ce que vous leur donniez le nouveau.</string>
+    <string name="https_exported">Certificat exporté</string>
+    <string name="https_export_failed">Impossible d\'exporter le certificat</string>
+    <string name="https_examples">Exemples de clients</string>
+    <string name="https_examples_hint">Le jeton est lu dans la variable d\'environnement BIMMERDATA_TOKEN.</string>
+    <string name="https_instruction_suffix">HTTPS avec un certificat auto-signé : épinglez la clé publique %1$s (curl --pinnedpubkey) ou faites confiance au certificat dont le SHA-256 est %2$s.</string>
+</resources>

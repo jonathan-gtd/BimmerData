@@ -187,7 +187,7 @@ private fun ApiSection(config: ApiConfig, state: ApiRuntimeState, store: AppSett
                 Hint(stringResource(R.string.settings_api_no_network))
             } else {
                 for (a in state.addresses) {
-                    val url = "http://${a.host}:$port/api/v1"
+                    val url = "${config.scheme}://${a.host}:$port/api/v1"
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Mono(url)
@@ -198,6 +198,7 @@ private fun ApiSection(config: ApiConfig, state: ApiRuntimeState, store: AppSett
                 }
             }
         }
+        ApiTlsSection(config, state, store, runtime)
 
         Divider()
         Text(stringResource(R.string.settings_api_token), color = Cockpit.Muted, fontSize = 13.sp)
@@ -226,8 +227,9 @@ private fun ApiSection(config: ApiConfig, state: ApiRuntimeState, store: AppSett
         Text(stringResource(R.string.settings_api_instruction), color = Cockpit.Text, fontSize = 16.sp)
         Hint(stringResource(R.string.settings_api_instruction_hint))
         val host = state.addresses.firstOrNull()?.host ?: "127.0.0.1"
-        val base = "http://$host:${if (state.running) state.port else config.port}/api/v1"
-        val line = stringResource(R.string.settings_api_instruction_line, base, config.token, "$base/openapi.json")
+        val base = "${config.scheme}://$host:${if (state.running) state.port else config.port}/api/v1"
+        val line = stringResource(R.string.settings_api_instruction_line, base, config.token, "$base/openapi.json") +
+            (state.tls?.takeIf { config.https }?.let { "\n" + stringResource(R.string.https_instruction_suffix, it.publicKeyPin, it.certificateSha256) } ?: "")
         Surface(color = Cockpit.Background, shape = RoundedCornerShape(10.dp), border = BorderStroke(1.dp, Cockpit.Border), modifier = Modifier.fillMaxWidth()) {
             Text(
                 if (showToken) line else line.replace(config.token, ApiTokens.redact(config.token)),
