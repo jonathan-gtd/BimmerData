@@ -1,11 +1,15 @@
 /*
  * BimmerData - Copyright (C) 2026 Jonathan GATARD - GPL-3.0-or-later, see LICENSE.
  */
-package io.github.jonathangtd.bimmerdata.ediabas
+package io.github.jonathangtd.bimmerdata.ediabas.sim
+
+import io.github.jonathangtd.bimmerdata.ediabas.BmwFast
 
 /**
- * Plausible KWP2000 / BMW-FAST ECU for [FakeInterface]: answers the services used by the MSV70
- * jobs under test with positive responses of a realistic shape. Values are invented.
+ * Plausible KWP2000 / BMW-FAST ECU for [io.github.jonathangtd.bimmerdata.ediabas.FakeInterface]
+ * and [SimulatedKLine] (tests and the app's simulation mode): answers the services used by the
+ * MSV70 jobs with positive responses of a realistic shape, whatever the ECU address. Values are
+ * invented.
  */
 class EcuSimulator(
     /** Extra per-service overrides: return null to fall back to the defaults. */

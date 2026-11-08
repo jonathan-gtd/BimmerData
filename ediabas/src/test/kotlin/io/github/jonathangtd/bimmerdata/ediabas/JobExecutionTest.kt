@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import io.github.jonathangtd.bimmerdata.ediabas.sim.EcuSimulator
 
 /**
  * Real MSV70 jobs executed by the interpreter against [FakeInterface] + [EcuSimulator].
