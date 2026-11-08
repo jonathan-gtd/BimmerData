@@ -193,5 +193,12 @@ class SimulatedKLine(
         /** Line with one ECU answering through a single-telegram responder (null = silent), e.g. [EcuSimulator.respond]. */
         fun withEcu(realisticTiming: Boolean = true, p2Ms: Int = DefaultP2Ms, respond: (ByteArray) -> ByteArray?): SimulatedKLine =
             SimulatedKLine({ request -> respond(request)?.let { listOf(Reply(it, p2Ms)) } ?: emptyList() }, realisticTiming)
+
+        /** Line with [simulator] answering after its per-service [EcuSimulator.responseDelayMs] (MSV70-like timing). */
+        fun withSimulator(simulator: EcuSimulator, realisticTiming: Boolean = true): SimulatedKLine =
+            SimulatedKLine(
+                { request -> simulator.respond(request)?.let { listOf(Reply(it, simulator.responseDelayMs(request))) } ?: emptyList() },
+                realisticTiming,
+            )
     }
 }
