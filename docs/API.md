@@ -64,8 +64,10 @@ A typical agent session:
 
 1. `GET /api/v1` – check the token, see the granted scopes.
 2. `GET /api/v1/status` – connected? If not, `POST /api/v1/connect` (`{"mode":"simulation"}` needs no car).
+   `GET /api/v1/profiles` – which profile (car, main ECUs, pages) is active; a fresh install has
+   none: `POST /api/v1/profiles` creates one. The dashboard routes act on the active profile.
 3. `GET /api/v1/ecus`, `GET /api/v1/ecus/msv70/measurements?q=temp` – find measurement ids.
-4. `GET /api/v1/card-types`, `GET /api/v1/presets?target=car` – what a card / page can be.
+4. `GET /api/v1/card-types` – what a card can be (a page is a `columns × rows` grid).
 5. `POST /api/v1/dashboard/car/pages`, `POST …/pages/{page}/cards` – build.
 6. `GET /api/v1/dashboard/car/pages/{page}/render.png` – look at the result, adjust with `PATCH`.
 
@@ -101,7 +103,7 @@ curl -N -H "$H" "$BD/stream?ids=msv70/0x4402,msv70/0x4300&intervalMs=250"
 
 # Layout: whole dashboard, a new car page, a card, a change, a picture (scope layout for writes)
 curl -s -H "$H" "$BD/dashboard" > dashboard-backup.json
-curl -s -H "$H" -X POST "$BD/dashboard/car/pages" -d '{"name":"Temps","presetId":"car_four"}'
+curl -s -H "$H" -X POST "$BD/dashboard/car/pages" -d '{"name":"Temps","columns":4,"rows":1}'
 curl -s -H "$H" -X POST "$BD/dashboard/car/pages/1/cards" \
      -d '{"type":"Dial","measurementIds":["msv70/0x4402"],"title":"Oil","warnAbove":120}'
 curl -s -H "$H" -X PATCH "$BD/dashboard/car/pages/1/cards/<cardId>" -d '{"warnAbove":125}'
@@ -140,16 +142,18 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 | GET | `/api/v1/dashboard` | read | Whole layout |
 | PUT | `/api/v1/dashboard[?dryRun=true]` | layout | Replace the layout (strict validation) |
 | POST | `/api/v1/dashboard/validate` | read | Validate a layout without saving |
-| POST | `/api/v1/dashboard/reset` | layout | Restore the default layout |
+| POST | `/api/v1/dashboard/reset`, `/api/v1/dashboard/{target}/reset` | layout | Empty both sides / one side |
 | GET / POST | `/api/v1/dashboard/{target}/pages` | read / layout | List / add pages |
 | GET / PATCH / DELETE | `/api/v1/dashboard/{target}/pages/{page}` | read / layout | One page: get, rename / resize / move, delete |
 | POST | `/api/v1/dashboard/{target}/pages/{page}/cards` | layout | Add a card (exact cell or first free slot) |
 | PATCH / DELETE | `/api/v1/dashboard/{target}/pages/{page}/cards/{card}` | layout | Change (JSON merge patch) / delete a card |
-| POST | `/api/v1/dashboard/{target}/pages/{page}/preset` | layout | Re-lay a page out with a preset |
 | GET | `/api/v1/dashboard/{target}/pages/{page}/render.png` | read | PNG of a saved page |
 | POST | `/api/v1/dashboard/{target}/render` | read | PNG of a draft page (body = page) |
-| GET | `/api/v1/presets?target=` | read | Preset arrangements |
 | GET | `/api/v1/card-types` | read | Card types and measurement counts |
+| GET / POST | `/api/v1/profiles` | read / layout | Profiles and the active one / create a profile (optionally copying another's pages) |
+| GET / PUT / DELETE | `/api/v1/profiles/{profile}` | read / layout | One profile with its layout / change name, car, ECUs or layout / delete |
+| POST | `/api/v1/profiles/{profile}/activate` | layout | Show this profile on the phone and in Android Auto |
+| GET | `/api/v1/profiles/{profile}/export` | read | The shareable profile file (never the VIN link) |
 | POST | `/api/v1/connect` | config | Connect (`usb` / `simulation`) |
 | POST | `/api/v1/disconnect` | config | Disconnect |
 | GET | `/api/v1/recording` | read | Recording state |
@@ -302,7 +306,8 @@ Fault memory and other diagnostic jobs will be added as extension routes under `
   are written by a few lines of DER code (`app/.../api/tls/`), without any extra library.
 - `openapi.json` is generated from the same route table that dispatches requests, so the spec
   and the behaviour cannot drift apart.
-- Layout changes go through `DashboardStore`: Android Auto follows them live.
-- Known limitation: the phone dashboard screen loads the layout once and does not yet follow
-  changes saved by the API (Android Auto does); reopen the app to see them, and avoid editing the
-  same layout on the phone and through the API at the same time.
+- Layouts belong to profiles (`files/profiles.json`, `ProfileStore`); the dashboard routes go
+  through `DashboardStore`, i.e. the active profile. The phone and Android Auto follow every
+  change live; a change made while the phone editor is open is offered to the user, not forced.
+- Before profiles the layout was `files/dashboard.json`: on the first start of a version with
+  profiles it becomes the first profile (the old file is left in place, unused).

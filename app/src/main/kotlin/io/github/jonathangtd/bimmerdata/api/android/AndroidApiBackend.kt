@@ -27,6 +27,8 @@ import io.github.jonathangtd.bimmerdata.export.TelegrafRuntime
 import io.github.jonathangtd.bimmerdata.export.WriteResult
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.DashboardStore
+import io.github.jonathangtd.bimmerdata.profiles.ProfileSet
+import io.github.jonathangtd.bimmerdata.profiles.ProfileStore
 import io.github.jonathangtd.bimmerdata.live.LiveConnection
 import io.github.jonathangtd.bimmerdata.live.LiveMode
 import io.github.jonathangtd.bimmerdata.live.LiveRepository
@@ -117,6 +119,16 @@ class AndroidApiBackend(
     }
 
     override fun defaultDashboard(): Dashboard = DashboardStore.defaultDashboard(app)
+
+    override fun profiles(): ProfileSet = ProfileStore.get(app).load()
+
+    /** Read, edit and write under the profile store's process-wide lock (the phone and Android Auto follow). */
+    override fun <T> editProfiles(op: (ProfileSet) -> Pair<ProfileSet, T>): T {
+        var result: Result<T>? = null
+        val written = ProfileStore.get(app).update { current -> op(current).also { result = Result.success(it.second) }.first }
+        checkNotNull(written) { "the profiles could not be written" }
+        return result!!.getOrThrow()
+    }
 
     override fun renderPage(request: RenderRequest): ByteArray = renderer.render(request)
 

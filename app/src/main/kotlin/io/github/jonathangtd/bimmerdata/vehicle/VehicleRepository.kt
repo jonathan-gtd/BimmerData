@@ -38,6 +38,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.Locale
+
+/** Short VIN: the last 7 characters of the VIN (FG_NR). */
+private val ShortVinPattern = Regex("^[A-Z0-9]{7}$")
 
 /** What the Faults tab is doing with the car right now. */
 sealed interface VehicleTask {
@@ -246,6 +250,59 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
         storeFaults(vehicle.id, after)
         dropDetails(vehicle.id, null)
         message(VehicleMessage.Kind.Cleared, null)
+    }
+
+    // ---- light checks at connection (profiles) ----
+
+    /**
+     * Short VIN of the connected car, from one read-only functional job (C_FG_LESEN_FUNKTIONAL of
+     * the vehicle SGBDs of the known cars, or of the ECU folder). Never connects by itself and
+     * gives up (null) while another vehicle operation runs or when nothing answers.
+     */
+    suspend fun readShortVin(): String? {
+        val live = LiveRepository.get(app)
+        if (!live.isConnected || importer.importedFiles().isEmpty()) return null
+        if (!mutex.tryLock()) return null
+        try {
+            val tables = withContext(Dispatchers.IO) { tables() }
+            val known = _state.value.garage.let { g -> listOfNotNull(g.current?.seriesSgbd) + g.vehicles.mapNotNull { it.seriesSgbd } }
+            val candidates = (known + tables.vehicleSgbds).distinct().filter { tables.hasJob(it, "C_FG_LESEN_FUNKTIONAL") }.take(3)
+            val runner = live.jobRunner("Profiles")
+            for (sgbd in candidates) {
+                val out = runCatching { runner.run(sgbd, "C_FG_LESEN_FUNKTIONAL") }.getOrNull() ?: continue
+                val vin = out.sets.mapNotNull { set -> (set["FG_NR"]?.opData as? String)?.trim()?.uppercase(Locale.ROOT)?.takeIf { ShortVinPattern.matches(it) } }
+                    .groupingBy { it }.eachCount().maxByOrNull { it.value }?.key
+                if (vin != null) return vin
+            }
+            return null
+        } finally {
+            mutex.unlock()
+        }
+    }
+
+    /** Id of the known car with short VIN [vin] (see [Vehicle.id]), or null. */
+    fun vehicleIdForVin(vin: String): String? = _state.value.garage.vehicles.firstOrNull { v ->
+        v.id.equals(vin, ignoreCase = true) || v.vinShort.equals(vin, ignoreCase = true) || v.vin?.endsWith(vin, ignoreCase = true) == true
+    }?.id
+
+    /**
+     * Which of [sgbds] give no answer to IDENT (read-only) on the connected car. SGBDs without an
+     * IDENT job or missing from the ECU folder are not probed. Empty when it could not check.
+     */
+    suspend fun probeEcus(sgbds: List<String>): List<String> {
+        val live = LiveRepository.get(app)
+        if (!live.isConnected || sgbds.isEmpty() || importer.importedFiles().isEmpty()) return emptyList()
+        if (!mutex.tryLock()) return emptyList()
+        try {
+            val tables = withContext(Dispatchers.IO) { tables() }
+            val runner = live.jobRunner("Profiles")
+            return sgbds.filter { sgbd ->
+                tables.prgExists(sgbd) && tables.hasJob(sgbd, "IDENT") &&
+                    runCatching { runner.run(sgbd, "IDENT").noResponse }.getOrDefault(false)
+            }
+        } finally {
+            mutex.unlock()
+        }
     }
 
     /** Stops the running operation (the job on the cable is aborted between telegrams). */

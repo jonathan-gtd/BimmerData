@@ -35,6 +35,8 @@ object AppServices {
         ApiRuntime.get(app).start()
         TelegrafRuntime.get(app).start()
         io.github.jonathangtd.bimmerdata.gps.GpsRuntime.get(app).start()
+        // profile of the identified car, check of the profile's ECUs, at each connection
+        io.github.jonathangtd.bimmerdata.profiles.ProfileRuntime.start(app)
         AutoConnect.register(app)
     }
 }

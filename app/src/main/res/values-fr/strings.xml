@@ -31,14 +31,12 @@
     <!-- Editor -->
     <string name="target_phone">Téléphone</string>
     <string name="target_car">Android Auto</string>
-    <string name="layout">Modèle</string>
     <string name="grid_size">%1$d × %2$d</string>
     <string name="grid">Grille</string>
     <string name="pages">Pages</string>
     <string name="more">Plus</string>
     <string name="columns">Colonnes</string>
     <string name="rows">Lignes</string>
-    <string name="apply">Appliquer</string>
     <string name="cancel">Annuler</string>
     <string name="delete">Supprimer</string>
     <string name="undo">Annuler</string>
@@ -59,23 +57,9 @@
     <string name="add_card_short">Carte</string>
     <string name="add_page">Ajouter une page</string>
     <string name="page_name">Nom de la page</string>
+    <string name="page_settings">Réglages de la page</string>
     <string name="new_page">Page %1$d</string>
     <string name="delete_page_confirm">Supprimer la page « %1$s » et ses cartes ?</string>
-    <plurals name="preset_drops">
-        <item quantity="one">%d carte sera retirée.</item>
-        <item quantity="many">%d cartes seront retirées.</item>
-        <item quantity="other">%d cartes seront retirées.</item>
-    </plurals>
-    <string name="preset_phone_mockup">Classique : 2 cadrans, richesse, 4 tuiles</string>
-    <string name="preset_grid_2x2">Grille 2 × 2</string>
-    <string name="preset_big_left">1 grande à gauche + 2 petites</string>
-    <string name="preset_big_top">1 grande en haut + 2 petites</string>
-    <string name="preset_grid_2x4">Grille 2 × 4</string>
-    <string name="preset_grid_3x4">Grille 3 × 4</string>
-    <string name="preset_stack_3">3 empilées</string>
-    <string name="preset_hero">Une seule grande carte</string>
-    <string name="preset_car_four">4 cartes en ligne</string>
-    <string name="preset_three_columns">3 colonnes</string>
 
     <!-- Card types -->
     <string name="type_dial">Cadran</string>

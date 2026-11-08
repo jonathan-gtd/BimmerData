@@ -31,14 +31,12 @@
     <!-- Editor -->
     <string name="target_phone">Phone</string>
     <string name="target_car">Android Auto</string>
-    <string name="layout">Layout</string>
     <string name="grid_size">%1$d × %2$d</string>
     <string name="grid">Grid</string>
     <string name="pages">Pages</string>
     <string name="more">More</string>
     <string name="columns">Columns</string>
     <string name="rows">Rows</string>
-    <string name="apply">Apply</string>
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="undo">Undo</string>
@@ -59,22 +57,9 @@
     <string name="add_card_short">Card</string>
     <string name="add_page">Add page</string>
     <string name="page_name">Page name</string>
+    <string name="page_settings">Page settings</string>
     <string name="new_page">Page %1$d</string>
     <string name="delete_page_confirm">Delete the page “%1$s” and its cards?</string>
-    <plurals name="preset_drops">
-        <item quantity="one">%d card will be removed.</item>
-        <item quantity="other">%d cards will be removed.</item>
-    </plurals>
-    <string name="preset_phone_mockup">Classic: 2 dials, trims, 4 tiles</string>
-    <string name="preset_grid_2x2">2 × 2 grid</string>
-    <string name="preset_big_left">1 big left + 2 small</string>
-    <string name="preset_big_top">1 big on top + 2 small</string>
-    <string name="preset_grid_2x4">2 × 4 grid</string>
-    <string name="preset_grid_3x4">3 × 4 grid</string>
-    <string name="preset_stack_3">3 stacked</string>
-    <string name="preset_hero">Single hero card</string>
-    <string name="preset_car_four">4 cards in a row</string>
-    <string name="preset_three_columns">3 columns</string>
 
     <!-- Card types -->
     <string name="type_dial">Dial</string>

@@ -8,9 +8,14 @@ import io.github.jonathangtd.bimmerdata.api.http.HttpResponse
 import io.github.jonathangtd.bimmerdata.api.http.HttpServer
 import io.github.jonathangtd.bimmerdata.dashboard.Card
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
+import io.github.jonathangtd.bimmerdata.profiles.Profile
+import io.github.jonathangtd.bimmerdata.profiles.ProfileExport
+import io.github.jonathangtd.bimmerdata.profiles.ProfileJson
+import io.github.jonathangtd.bimmerdata.profiles.ProfileSet
+import io.github.jonathangtd.bimmerdata.profiles.ProfileVehicle
+import io.github.jonathangtd.bimmerdata.profiles.Profiles
 import io.github.jonathangtd.bimmerdata.dashboard.GridLimits
 import io.github.jonathangtd.bimmerdata.dashboard.DashboardReset
-import io.github.jonathangtd.bimmerdata.dashboard.LayoutPresets
 import io.github.jonathangtd.bimmerdata.dashboard.Page
 import io.github.jonathangtd.bimmerdata.dashboard.Target
 import io.github.jonathangtd.bimmerdata.gauges.GaugeType
@@ -228,6 +233,51 @@ class ApiService(
     }
     private fun cardJson(c: Card) = ApiJson.encodeToJsonElement(Card.serializer(), c)
 
+    // ---- profiles ----
+
+    private fun profileJson(p: Profile) = ApiJson.encodeToJsonElement(Profile.serializer(), p)
+
+    private fun profileSummaryJson(p: Profile, active: Boolean): JsonObject = buildJsonObject {
+        put("id", p.id)
+        put("name", p.name)
+        put("active", active)
+        put("vehicle", buildJsonObject {
+            p.vehicle.series?.let { put("series", it) }
+            p.vehicle.model?.let { put("model", it) }
+            p.vehicle.vehicleId?.let { put("vehicleId", it) }
+            put("label", p.vehicle.label)
+        })
+        put("ecus", JsonArray(p.ecus.map(::JsonPrimitive)))
+        put("phonePages", p.dashboard.phonePages.size)
+        put("carPages", p.dashboard.carPages.size)
+        put("lastUsedMs", p.lastUsedMs)
+    }
+
+    private fun invalidProfile(message: String) = ApiException(422, "invalid_profile", message)
+
+    private fun requireProfile(set: ProfileSet, id: String): Profile =
+        set.profile(id) ?: throw notFound("profile_not_found", "No profile '$id'; see GET /api/v1/profiles")
+
+    /** series / model / vehicleId of [b] over [base] (a field given as "" is removed). */
+    private fun profileVehicle(b: JsonObject, base: ProfileVehicle?): ProfileVehicle {
+        fun field(key: String, current: String?): String? = if (key in b) b.string(key)?.trim()?.takeIf { it.isNotEmpty() } else current
+        val series = field("series", base?.series)
+        val model = field("model", base?.model)
+        if (listOfNotNull(series, model).any { it.length > Profiles.MAX_FIELD_LENGTH }) {
+            throw invalidProfile("'series' and 'model' have at most ${Profiles.MAX_FIELD_LENGTH} characters")
+        }
+        return ProfileVehicle(series, model, field("vehicleId", base?.vehicleId))
+    }
+
+    /** `ecus` of [b], normalized; null when absent. */
+    private fun profileEcus(b: JsonObject): List<String>? {
+        val list = b.stringList("ecus") ?: return null
+        if (list.size > Profiles.MAX_ECUS) throw invalidProfile("At most ${Profiles.MAX_ECUS} ECUs")
+        val bad = list.filter { Profiles.normalizeEcus(listOf(it)).isEmpty() }
+        if (bad.isNotEmpty()) throw invalidProfile("Invalid ECU name(s): ${bad.joinToString()} (SGBD names such as 'msv70', see GET /api/v1/ecus)")
+        return Profiles.normalizeEcus(list)
+    }
+
     /** Load → edit → save under one lock, so concurrent API edits never lose each other. */
     private fun <T> editLayout(op: (Dashboard) -> Pair<Dashboard, T>): T = synchronized(layoutLock) {
         backend.editDashboard(op)
@@ -280,9 +330,10 @@ class ApiService(
     private fun buildRoutes(): List<Route> {
         val targetParam = Param("target", "path", "`phone` (portrait phone dashboard) or `car` (Android Auto).", S.str(enum = listOf("phone", "car")), example = JsonPrimitive("phone"))
         val pageParam = Param("page", "path", "Page id, or its 0-based index in the page list.", S.str(), example = JsonPrimitive("0"))
+        val profileParam = Param("profile", "path", "Profile id (see GET /api/v1/profiles).", S.str(), example = JsonPrimitive("a1b2c3d4e5"))
         val cardParam = Param("card", "path", "Card id (see the page's `cards`).", S.str(), example = JsonPrimitive("k3j4h5g6f7"))
         val idsBody = "ids" to S.arr(S.str(example = "msv70/0x4402"), "Measurement ids (`<sgbd>/<key>`), at most 64.", 1, 64)
-        val layoutErrors = mapOf(404 to "Unknown page, card or preset.", 409 to "Conflict: overlapping cards, page full, duplicate id.", 422 to "Invalid card or grid (details list each problem).", 400 to "Malformed body.")
+        val layoutErrors = mapOf(404 to "Unknown page or card.", 409 to "Conflict: overlapping cards, page full, duplicate id.", 422 to "Invalid card or grid (details list each problem).", 400 to "Malformed body.")
 
         return listOf(
             // ------------------------------------------------------------ general
@@ -597,12 +648,11 @@ class ApiService(
             Route(
                 "POST", "/api/v1/dashboard/{target}/pages", RouteAccess.Needs(Scope.Layout), "Dashboard", "addPage",
                 "Add an empty page",
-                "Creates an empty page. Give a grid size, or `presetId` to take the grid of a preset (then add cards in reading order to fill its slots, or apply the preset after adding them). Defaults: phone 2×6, car 4×1.",
+                "Creates an empty page with a `columns × rows` grid (defaults: phone 2×6, car 4×1); then add cards, which fill the first free cells unless given a position.",
                 params = listOf(targetParam),
                 body = Body(S.obj(null, listOf("name"), false, null,
                     "name" to S.str("Page title.", "Temperatures"),
                     "columns" to S.int(min = 1, max = 4), "rows" to S.int(min = 1, max = 8),
-                    "presetId" to S.str("Take columns / rows from this preset (GET /api/v1/presets)."),
                     "position" to S.int("Insert at this index (default: last).", min = 0)),
                     example = buildJsonObject { put("name", "Temperatures"); put("columns", 2); put("rows", 3) }),
                 reply = Reply(201, "The new page", S.ref("Page")),
@@ -610,9 +660,9 @@ class ApiService(
             ) { call ->
                 val t = target(call)
                 val b = call.bodyObject()
-                b.allowOnly("name", "columns", "rows", "presetId", "position")
+                b.allowOnly("name", "columns", "rows", "position")
                 val page = editLayout { d ->
-                    LayoutOps.addPage(d, t, b.string("name") ?: throw badRequest("'name' is required"), b.int("columns"), b.int("rows"), b.string("presetId"), b.int("position"))
+                    LayoutOps.addPage(d, t, b.string("name") ?: throw badRequest("'name' is required"), b.int("columns"), b.int("rows"), b.int("position"))
                 }
                 ok(pageJson(page, backend.loadDashboard().pages(t).indexOfFirst { it.id == page.id }), 201)
             },
@@ -712,25 +762,6 @@ class ApiService(
                 HttpResponse.Bytes(204, HttpServer.JSON, ByteArray(0))
             },
             Route(
-                "POST", "/api/v1/dashboard/{target}/pages/{page}/preset", RouteAccess.Needs(Scope.Layout), "Dashboard", "applyPreset",
-                "Re-lay a page out with a preset",
-                "Sets the page grid to the preset's and moves the cards, in reading order (top to bottom, left to right), into its slots. Cards beyond the number of slots are dropped (`droppedCards` says how many) — check GET /api/v1/presets first.",
-                params = listOf(targetParam, pageParam),
-                body = Body(S.obj(null, listOf("presetId"), false, null, "presetId" to S.str(example = "big_left")), example = buildJsonObject { put("presetId", "big_left") }),
-                reply = Reply(description = "The page after the preset", schema = S.obj(null, listOf("page", "droppedCards"), false, null, "page" to S.ref("Page"), "droppedCards" to S.int())),
-                errors = layoutErrors,
-            ) { call ->
-                val t = target(call)
-                val b = call.bodyObject()
-                b.allowOnly("presetId")
-                val presetId = b.string("presetId") ?: throw badRequest("'presetId' is required")
-                val (page, dropped) = editLayout { d ->
-                    val (nd, p, dropped) = LayoutOps.applyPreset(d, t, call.path("page"), presetId)
-                    nd to (p to dropped)
-                }
-                ok(buildJsonObject { put("page", pageJson(page)); put("droppedCards", dropped) })
-            },
-            Route(
                 "GET", "/api/v1/dashboard/{target}/pages/{page}/render.png", RouteAccess.Needs(Scope.Read), "Dashboard", "renderPage",
                 "Picture of a page (PNG)",
                 "Draws the page with the app's own renderer and the latest live values: the phone page as on a portrait phone (default 1080×1920), the car page as on a 1280×480 Android Auto head unit (with a stand-in for the system rail). Use it to check a layout you built. Values not being read show as \"--\".",
@@ -767,22 +798,136 @@ class ApiService(
                 val h = call.query("height")?.let { call.queryInt("height", 0, 200..2560) }
                 render(t, page, 0, 1, w, h)
             },
+            // ------------------------------------------------------------ profiles
             Route(
-                "GET", "/api/v1/presets", RouteAccess.Needs(Scope.Read), "Dashboard", "listPresets",
-                "Ready-made page arrangements",
-                "Presets per target with their grid and slots (cell rectangles in reading order).",
-                params = listOf(Param("target", "query", "`phone` or `car`; omitted = both.", S.str(enum = listOf("phone", "car")), required = false)),
-                reply = Reply(description = "Presets", schema = S.obj(null, listOf("presets"), false, null, "presets" to S.arr(S.ref("Preset")))),
-            ) { call ->
-                val targets = call.query("target")?.let { listOf(LayoutOps.parseTarget(it)) } ?: Target.entries
+                "GET", "/api/v1/profiles", RouteAccess.Needs(Scope.Read), "Profiles", "listProfiles",
+                "Profiles and the active one",
+                "Every profile (a car, its main ECUs and its own phone and Android Auto pages) with `active` set on the one shown. The /api/v1/dashboard routes read and write the active profile's layout. `profiles` is empty on a fresh install.",
+                reply = Reply(description = "Profiles", schema = S.obj(null, listOf("profiles"), false, null,
+                    "activeId" to S.str("Id of the active profile; absent when there is none."),
+                    "profiles" to S.arr(S.ref("ProfileSummary")))),
+            ) {
+                val set = backend.profiles()
                 ok(buildJsonObject {
-                    put("presets", buildJsonArray {
-                        for (t in targets) for (p in LayoutPresets.of(t)) addJsonObject {
-                            put("id", p.id); put("target", LayoutOps.targetName(t)); put("columns", p.columns); put("rows", p.rows)
-                            putJsonArray("slots") { for (s in p.slots) addJsonObject { put("col", s.col); put("row", s.row); put("colSpan", s.colSpan); put("rowSpan", s.rowSpan) } }
-                        }
-                    })
+                    set.activeId?.let { put("activeId", it) }
+                    put("profiles", JsonArray(set.profiles.map { profileSummaryJson(it, it.id == set.activeId) }))
                 })
+            },
+            Route(
+                "POST", "/api/v1/profiles", RouteAccess.Needs(Scope.Layout), "Profiles", "createProfile",
+                "Create a profile",
+                "Creates a profile and (unless `activate` is false) makes it the active one, so the phone and Android Auto show it at once. It starts with no page; give `copyFrom` to copy the pages of another profile. A name already used gets a \" (2)\" suffix.",
+                body = Body(S.obj(null, listOf("name"), false, null,
+                    "name" to S.str("Profile name (≤ ${Profiles.MAX_NAME_LENGTH}).", "E90 330i · Knock"),
+                    "series" to S.str("Car series (free text).", "E90"),
+                    "model" to S.str("Car model (free text).", "330i"),
+                    "vehicleId" to S.str("Link to a car of the Faults tab (its short VIN): the app picks this profile when it reads that car's VIN at connection."),
+                    "ecus" to S.arr(S.str(example = "msv70"), "Main ECUs (SGBD names); the card picker opens on them.", 0, Profiles.MAX_ECUS),
+                    "copyFrom" to S.str("Id of a profile whose pages are copied."),
+                    "activate" to S.bool("Make it the active profile (default true).")),
+                    example = buildJsonObject { put("name", "E90 330i · Knock"); put("series", "E90"); put("model", "330i"); putJsonArray("ecus") { add("msv70") } }),
+                reply = Reply(201, "The new profile", S.ref("Profile")),
+                errors = mapOf(400 to "Malformed body.", 404 to "Unknown copyFrom profile.", 422 to "Invalid name, car or ECU list, or too many profiles."),
+            ) { call ->
+                val b = call.bodyObject()
+                b.allowOnly("name", "series", "model", "vehicleId", "ecus", "copyFrom", "activate")
+                val name = b.string("name")?.takeIf { it.isNotBlank() } ?: throw invalidProfile("'name' is required")
+                val vehicle = profileVehicle(b, null)
+                val ecus = profileEcus(b) ?: emptyList()
+                val activate = b.bool("activate") ?: true
+                val created = backend.editProfiles { set ->
+                    if (set.profiles.size >= Profiles.MAX_PROFILES) throw invalidProfile("At most ${Profiles.MAX_PROFILES} profiles")
+                    val pages = b.string("copyFrom")?.let { id -> requireProfile(set, id).dashboard } ?: Dashboard()
+                    val (withNew, p) = Profiles.create(set, name, vehicle, ecus, clock(), pages)
+                    val result = if (activate) withNew else withNew.copy(activeId = set.activeId)
+                    result to p
+                }
+                ok(profileJson(created), 201)
+            },
+            Route(
+                "GET", "/api/v1/profiles/{profile}", RouteAccess.Needs(Scope.Read), "Profiles", "getProfile",
+                "One profile, with its layout",
+                "The profile with its `dashboard` (phone and Android Auto pages, same format as GET /api/v1/dashboard).",
+                params = listOf(profileParam),
+                reply = Reply(description = "Profile", schema = S.ref("Profile")),
+                errors = mapOf(404 to "Unknown profile."),
+            ) { call -> ok(profileJson(requireProfile(backend.profiles(), call.path("profile")))) },
+            Route(
+                "PUT", "/api/v1/profiles/{profile}", RouteAccess.Needs(Scope.Layout), "Profiles", "updateProfile",
+                "Change a profile",
+                "Changes the fields given (others are kept): name, car, ECUs, and / or the whole `dashboard` (validated like PUT /api/v1/dashboard; nothing is changed on error). Works on any profile, active or not.",
+                params = listOf(profileParam),
+                body = Body(S.obj(null, emptyList(), false, null,
+                    "name" to S.str("New name."),
+                    "series" to S.str(), "model" to S.str(),
+                    "vehicleId" to S.str("Link to a car of the Faults tab; empty string removes the link."),
+                    "ecus" to S.arr(S.str(), "Main ECUs (replaces the list).", 0, Profiles.MAX_ECUS),
+                    "dashboard" to S.ref("Dashboard")),
+                    example = buildJsonObject { putJsonArray("ecus") { add("msv70"); add("egs") } }),
+                reply = Reply(description = "The profile", schema = S.ref("Profile")),
+                errors = mapOf(400 to "Malformed body.", 404 to "Unknown profile.", 422 to "Invalid field or layout (details: LayoutIssue[])."),
+            ) { call ->
+                val id = call.path("profile")
+                val b = call.bodyObject()
+                b.allowOnly("name", "series", "model", "vehicleId", "ecus", "dashboard")
+                val dashboard = b["dashboard"]?.let { el -> call.decode(Dashboard.serializer(), el, what = "dashboard").also { LayoutOps.requireValid(it) } }
+                val updated = backend.editProfiles { set ->
+                    val current = requireProfile(set, id)
+                    val name = b.string("name")?.also { if (it.isBlank()) throw invalidProfile("'name' may not be empty") }
+                    val vehicle = if (listOf("series", "model", "vehicleId").any { it in b }) profileVehicle(b, current.vehicle) else null
+                    var next = Profiles.edit(set, id, name, vehicle, profileEcus(b))
+                    if (dashboard != null) next = Profiles.writeDashboard(next, id, dashboard.copy(name = null))
+                    next to next.profile(id)!!
+                }
+                ok(profileJson(updated))
+            },
+            Route(
+                "DELETE", "/api/v1/profiles/{profile}", RouteAccess.Needs(Scope.Layout), "Profiles", "deleteProfile",
+                "Delete a profile and its layout",
+                "Removes the profile with its pages. If it was active, the profile used most recently becomes active (none when it was the last). Consider GET /api/v1/profiles/{profile} first to keep a copy.",
+                params = listOf(profileParam),
+                reply = Reply(description = "Deleted", schema = S.obj(null, listOf("deleted"), false, null,
+                    "deleted" to S.bool(), "activeId" to S.str("The active profile now; absent when there is none."))),
+                errors = mapOf(404 to "Unknown profile."),
+            ) { call ->
+                val id = call.path("profile")
+                val after = backend.editProfiles { set ->
+                    requireProfile(set, id)
+                    Profiles.delete(set, id).let { it to it }
+                }
+                ok(buildJsonObject {
+                    put("deleted", true)
+                    after.activeId?.let { put("activeId", it) }
+                })
+            },
+            Route(
+                "POST", "/api/v1/profiles/{profile}/activate", RouteAccess.Needs(Scope.Layout), "Profiles", "activateProfile",
+                "Show a profile",
+                "Makes the profile the active one: the phone dashboard and Android Auto switch to its pages at once, and the /api/v1/dashboard routes then act on it.",
+                params = listOf(profileParam),
+                reply = Reply(description = "The active profile", schema = S.ref("ProfileSummary")),
+                errors = mapOf(404 to "Unknown profile."),
+            ) { call ->
+                val id = call.path("profile")
+                val p = backend.editProfiles { set ->
+                    requireProfile(set, id)
+                    val next = Profiles.activate(set, id, clock())
+                    next to next.profile(id)!!
+                }
+                ok(profileSummaryJson(p, true))
+            },
+            Route(
+                "GET", "/api/v1/profiles/{profile}/export", RouteAccess.Needs(Scope.Read), "Profiles", "exportProfile",
+                "Profile file to share",
+                "The profile as the app exports it to share with other users (name, series, model, ECUs and pages): never the VIN nor the link to one of the user's cars. The phone imports it with Profiles › Import.",
+                params = listOf(profileParam),
+                reply = Reply(description = "Profile file", schema = S.obj("BimmerData profile file", listOf("kind", "name", "dashboard"), true, null,
+                    "kind" to S.str(enum = listOf(ProfileExport.KIND)), "name" to S.str(), "series" to S.str(), "model" to S.str(),
+                    "ecus" to S.arr(S.str()), "dashboard" to S.ref("Dashboard"))),
+                errors = mapOf(404 to "Unknown profile."),
+            ) { call ->
+                val p = requireProfile(backend.profiles(), call.path("profile"))
+                ok(ApiJson.parseToJsonElement(ProfileJson.export(p)))
             },
             Route(
                 "GET", "/api/v1/card-types", RouteAccess.Needs(Scope.Read), "Dashboard", "listCardTypes",

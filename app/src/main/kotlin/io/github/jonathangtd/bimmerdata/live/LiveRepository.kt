@@ -123,7 +123,12 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
         output = { name -> RecordingStorage.create(app, name) { uri -> _lastRecording.value = uri } },
         scope = scope,
         pin = proxy::setPinned,
-        fileNamer = { t -> CsvSessionRecorder.fileName(t, prefix = AppSettings.get(app).state.value.recording.filePrefix) },
+        fileNamer = { t ->
+            CsvSessionRecorder.fileName(
+                t, prefix = AppSettings.get(app).state.value.recording.filePrefix,
+                profile = io.github.jonathangtd.bimmerdata.profiles.ProfileStore.get(app).load().active?.name,
+            )
+        },
         minRowIntervalMs = { AppSettings.get(app).state.value.recording.rowIntervalMs },
     )
 

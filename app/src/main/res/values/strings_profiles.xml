@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Profiles: a car, its ECUs and its own pages. -->
+<resources>
+    <string name="profile_default_name">My profile</string>
+    <string name="profiles_title">Profiles</string>
+    <string name="profile_new">New profile</string>
+    <string name="profile_create">Create a profile</string>
+    <string name="profile_create_button">Create</string>
+    <string name="profile_create_hint">A profile is a car, its ECUs and its own pages, for example “E90 330i · Lambda” or “120d · Turbo”. Cards are then picked straight from the profile’s ECUs.</string>
+    <string name="profile_import">Import a profile</string>
+    <string name="profile_edit">Edit profile</string>
+    <string name="profile_duplicate">Duplicate</string>
+    <string name="profile_duplicated">Copy created: %1$s</string>
+    <string name="profile_export">Export</string>
+    <string name="profile_exported">Profile exported</string>
+    <string name="profile_imported">Profile “%1$s” imported</string>
+    <string name="profile_delete">Delete</string>
+    <string name="profile_delete_confirm">Delete the profile “%1$s” and its pages?</string>
+    <string name="profile_deleted">Profile “%1$s” deleted</string>
+    <string name="profile_actions">Actions for %1$s</string>
+    <string name="profile_name">Name</string>
+    <string name="profile_name_placeholder">E90 330i · Lambda</string>
+    <string name="profile_name_required">Give the profile a name</string>
+    <string name="profile_series">Series</string>
+    <string name="profile_model">Model</string>
+    <string name="profile_car_link">Car of the Faults tab</string>
+    <string name="profile_car_link_none">None</string>
+    <string name="profile_car_link_hint">When the app reads this car’s VIN at connection, it switches to the profile used last for it.</string>
+    <string name="profile_ecus">ECUs of the profile</string>
+    <string name="profile_ecus_none">None yet: pick one or more below.</string>
+    <string name="profile_ecus_hint">The card picker opens on these ECUs. Tap one to remove it.</string>
+    <string name="profile_ecu_remove">Remove %1$s</string>
+    <string name="profile_no_details">No car or ECU yet</string>
+    <string name="profile_pages">Pages: %1$d phone · %2$d Android Auto</string>
+    <string name="profile_switched">Profile “%1$s”</string>
+    <string name="profile_suggest">This car has the profile “%1$s”</string>
+    <string name="profile_suggest_action">Switch</string>
+    <string name="profile_ecus_not_responding">No answer from %1$s: check the ECU, or its protocol is not supported yet (DS2, D-CAN).</string>
+    <string name="profile_ok">OK</string>
+    <string name="profile_other_ecu">Other ECU…</string>
+    <string name="car_no_profile">No profile: create one on the phone</string>
+    <string name="car_profile_active">Active</string>
+</resources>

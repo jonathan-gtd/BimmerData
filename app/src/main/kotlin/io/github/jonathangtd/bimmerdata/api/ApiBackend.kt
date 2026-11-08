@@ -9,6 +9,7 @@ import io.github.jonathangtd.bimmerdata.dashboard.Target
 import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.RecordingState
 import io.github.jonathangtd.bimmerdata.live.Sample
+import io.github.jonathangtd.bimmerdata.profiles.ProfileSet
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -55,6 +56,15 @@ interface ApiBackend {
         saveDashboard(d)
         return result
     }
+
+    /** Every profile (car, ECUs, layout) and which one is active; the layout routes act on it. */
+    fun profiles(): ProfileSet
+
+    /**
+     * Read-modify-write of the profiles with no other writer in between (the phone may save at the
+     * same moment). [op] returns the new set and the result of the call.
+     */
+    fun <T> editProfiles(op: (ProfileSet) -> Pair<ProfileSet, T>): T
 
     /** PNG of [RenderRequest.page] as the phone or the Android Auto screen would draw it. */
     fun renderPage(request: RenderRequest): ByteArray

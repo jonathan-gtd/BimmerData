@@ -358,8 +358,8 @@ class ApiServerTest {
     }
 
     @Test
-    fun `pages and presets`() {
-        val p = call("POST", "/api/v1/dashboard/car/pages", """{"name":"Temps","presetId":"big_left"}""")
+    fun `pages with their grid`() {
+        val p = call("POST", "/api/v1/dashboard/car/pages", """{"name":"Temps","columns":3,"rows":2}""")
         assertEquals(201, p.status, p.text)
         val page = p.json()
         assertEquals(3, page["columns"]!!.jsonPrimitive.int)
@@ -368,10 +368,13 @@ class ApiServerTest {
         val tooBig = call("POST", "/api/v1/dashboard/car/pages", """{"name":"X","rows":3}""")
         assertEquals(422, tooBig.status)
         repeat(3) { call("POST", "/api/v1/dashboard/car/pages/$pid/cards", """{"type":"Dial","measurementIds":["msv70/0x4402"]}""") }
-        val applied = call("POST", "/api/v1/dashboard/car/pages/$pid/preset", """{"presetId":"hero"}""").json()
-        assertEquals(2, applied["droppedCards"]!!.jsonPrimitive.int)
-        val presets = call("GET", "/api/v1/presets?target=car").json()["presets"]!!.jsonArray
-        assertTrue(presets.any { it.jsonObject["id"]!!.jsonPrimitive.content == "car_four" })
+        // the 3 cards do not fit a 1×1 grid; a 3×1 grid takes them
+        assertEquals(409, call("PATCH", "/api/v1/dashboard/car/pages/$pid", """{"columns":1,"rows":1}""").status)
+        assertEquals(200, call("PATCH", "/api/v1/dashboard/car/pages/$pid", """{"columns":3,"rows":1}""").status)
+        assertEquals(3 to 1, backend.dashboard.carPages[1].let { it.columns to it.rows })
+        // ready-made arrangements no longer exist
+        assertEquals(404, call("GET", "/api/v1/presets?target=car").status)
+        assertEquals(400, call("POST", "/api/v1/dashboard/car/pages", """{"name":"X","presetId":"hero"}""").status, "unknown field")
         assertEquals(200, call("PATCH", "/api/v1/dashboard/car/pages/$pid", """{"name":"Renamed","position":0}""").status)
         assertEquals("Renamed", backend.dashboard.carPages[0].name)
         assertEquals(204, call("DELETE", "/api/v1/dashboard/car/pages/c1").status)

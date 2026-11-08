@@ -77,6 +77,15 @@ class FakeApiBackend : ApiBackend {
     override fun saveDashboard(dashboard: Dashboard) { this.dashboard = dashboard; saves++ }
     override fun defaultDashboard() = Dashboard(phonePages = listOf(Page(name = "Default", columns = 2, rows = 6)), carPages = listOf(Page(name = "Default", columns = 4, rows = 1)))
 
+    @Volatile var profileSet = io.github.jonathangtd.bimmerdata.profiles.ProfileSet()
+    override fun profiles() = profileSet
+    @Synchronized
+    override fun <T> editProfiles(op: (io.github.jonathangtd.bimmerdata.profiles.ProfileSet) -> Pair<io.github.jonathangtd.bimmerdata.profiles.ProfileSet, T>): T {
+        val (set, result) = op(profileSet)
+        profileSet = set
+        return result
+    }
+
     override fun renderPage(request: RenderRequest): ByteArray {
         lastRender = request
         return PNG_SIGNATURE + ByteArray(8)

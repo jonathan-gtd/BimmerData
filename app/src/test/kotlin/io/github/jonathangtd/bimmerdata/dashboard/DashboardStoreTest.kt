@@ -3,8 +3,9 @@
  */
 package io.github.jonathangtd.bimmerdata.dashboard
 
+import io.github.jonathangtd.bimmerdata.profiles.ProfileStore
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -14,37 +15,65 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-/** Layout file: atomic writes, one process-wide lock, read-modify-write, the [DashboardStore.saved] feed. */
+/**
+ * Layout of the active profile: atomic writes, one process-wide lock, read-modify-write, the
+ * [DashboardStore.saved] feed, the migration of the old layout file.
+ */
 class DashboardStoreTest {
     private val warnings = Collections.synchronizedList(ArrayList<String>())
 
-    private fun store(dir: File) = DashboardStore(File(dir, DashboardStore.FILE_NAME), { DefaultDashboard.create() }, { msg, _ -> warnings += msg })
+    private fun profiles(dir: File) = ProfileStore(dir, { "My profile" }, { msg, _ -> warnings += msg }, info = {})
+    private fun store(dir: File) = DashboardStore(profiles(dir))
 
     @Test
-    fun `first launch gives the empty default, a save is read back and published`(@TempDir dir: File) {
+    fun `first launch has no profile and an empty layout, a save creates the profile`(@TempDir dir: File) {
         val s = store(dir)
-        assertEquals(DefaultDashboard.create(), s.load())
-        assertTrue(s.save(Dashboard(name = "Empty")), "an empty layout is stored")
-        assertEquals(Dashboard(name = "Empty"), store(dir).load(), "and read back, name kept, no page added")
+        assertEquals(Dashboard(), s.load())
+        assertTrue(s.save(Dashboard()), "an empty layout without profile changes nothing")
+        assertTrue(profiles(dir).load().profiles.isEmpty())
+        assertTrue(s.save(Dashboard(name = "Empty")))
+        assertEquals(Dashboard(name = "Empty"), store(dir).load(), "a profile named after the layout, no page added")
         val d = Msv70Example.create().copy(name = "330i")
         assertTrue(s.save(d))
-        assertEquals(d, store(dir).load())
+        assertEquals(d, store(dir).load(), "the same profile, renamed, with the pages")
+        assertEquals(1, profiles(dir).load().profiles.size)
         assertEquals(d, DashboardStore.saved.value)
-        assertEquals(listOf(DashboardStore.FILE_NAME), dir.list()!!.toList(), "no temporary file left")
+        assertEquals(listOf(ProfileStore.FILE_NAME), dir.list()!!.toList(), "no temporary file left")
         assertTrue(warnings.isEmpty())
     }
 
     @Test
-    fun `an unreadable file gives the default layout, an interrupted legacy write its backup`(@TempDir dir: File) {
-        File(dir, DashboardStore.FILE_NAME).writeText("{ not json")
+    fun `the old layout file becomes the first profile, an empty one gives none`(@TempDir dir: File) {
+        val old = Msv70Example.create().copy(name = "Ma 330i")
+        File(dir, DashboardStore.FILE_NAME).writeText(DashboardJson.encode(old))
+        assertEquals(old, store(dir).load())
+        val set = profiles(dir).load()
+        assertEquals(listOf("Ma 330i"), set.profiles.map { it.name })
+        assertEquals(set.profiles[0].id, set.activeId)
+        assertTrue(File(dir, ProfileStore.FILE_NAME).isFile, "profiles.json written at once")
+        assertTrue(File(dir, DashboardStore.FILE_NAME).isFile, "the old file is kept as it was")
+        // later edits go to profiles.json; the old file is never read again
+        assertTrue(store(dir).save(old.copy(name = "330i")))
+        assertEquals("330i", store(dir).load().name)
+
+        val empty = File(dir, "empty").apply { mkdirs() }
+        File(empty, DashboardStore.FILE_NAME).writeText(DashboardJson.encode(Dashboard()))
+        assertNull(profiles(empty).load().active, "an empty old layout: first launch stays empty")
+        assertTrue(warnings.isEmpty(), "$warnings")
+    }
+
+    @Test
+    fun `an unreadable file is kept aside, an interrupted legacy write migrates its backup`(@TempDir dir: File) {
+        File(dir, ProfileStore.FILE_NAME).writeText("{ not json")
         assertTrue(store(dir).load().measurementIds().isEmpty())
         assertEquals(1, warnings.size)
-        // androidx AtomicFile (previous versions): base half written, .bak = last good layout
+        assertTrue(dir.list()!!.any { it.startsWith(ProfileStore.FILE_NAME + ".unreadable-") }, "the user's file is not lost")
+        // androidx AtomicFile (old versions): base half written, .bak = last good layout
+        val legacy = File(dir, "legacy").apply { mkdirs() }
         val good = Msv70Example.create()
-        File(dir, DashboardStore.FILE_NAME + ".bak").writeText(DashboardJson.encode(good))
-        assertEquals(good, store(dir).load())
-        assertTrue(store(dir).save(good.copy(name = "x")))
-        assertFalse(File(dir, DashboardStore.FILE_NAME + ".bak").exists(), "backup dropped after a good write")
+        File(legacy, DashboardStore.FILE_NAME).writeText("{ half")
+        File(legacy, DashboardStore.FILE_NAME + ".bak").writeText(DashboardJson.encode(good))
+        assertEquals(good.copy(name = "My profile"), store(legacy).load())
     }
 
     @Test

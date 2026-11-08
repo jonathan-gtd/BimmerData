@@ -4,113 +4,50 @@
 package io.github.jonathangtd.bimmerdata.dashboard
 
 import android.content.Context
-import android.util.Log
-import io.github.jonathangtd.bimmerdata.R
-import kotlinx.coroutines.flow.MutableStateFlow
+import io.github.jonathangtd.bimmerdata.profiles.ProfileStore
+import io.github.jonathangtd.bimmerdata.profiles.Profiles
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import java.io.File
-import java.io.FileOutputStream
-import java.nio.file.AtomicMoveNotSupportedException
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 /**
- * The layout as JSON in app storage. Several writers may use it at the same time (the phone
- * editor, the REST API, Android Auto reads): every read and write goes through one process-wide
- * lock, and a write goes to a temporary file that is synced and then renamed over the layout, so
- * a reader or a crash never sees a half-written file.
+ * The layout of the **active profile** ([ProfileStore]): what the dashboard screens, Android Auto
+ * and the REST API layout routes read and write. The [Dashboard.name] they see is the profile's
+ * name; writing a layout with a new name renames the profile.
  *
- * Writers that change the layout based on its current content should use [update] (read, change
- * and write under the lock), not [load] then [save]. Every successful write is published in
- * [saved]; the phone dashboard and Android Auto follow it.
+ * With no profile (first launch), [load] gives an empty layout; a write of a layout that has pages
+ * or a name (REST API) creates a profile for it, an empty one changes nothing.
+ *
+ * Every access goes through the profile store's process-wide lock; writers that change the layout
+ * based on its current content use [update] (read, change and write under the lock).
  */
-class DashboardStore(
-    private val file: File,
-    private val defaultLayout: () -> Dashboard,
-    private val warn: (String, Throwable) -> Unit = { msg, e -> Log.w(TAG, msg, e) },
-) {
-    constructor(context: Context) : this(File(context.filesDir, FILE_NAME), { defaultDashboard(context) })
+class DashboardStore(private val profiles: ProfileStore) {
+    constructor(context: Context) : this(ProfileStore.get(context))
 
-    private val tmp = File(file.path + ".tmp")
+    /** Layout of the active profile; empty when there is no profile. */
+    fun load(): Dashboard = profiles.load().activeDashboard()
 
-    /** Written by the previous androidx AtomicFile implementation while a save was in progress. */
-    private val legacyBackup = File(file.path + ".bak")
+    /** Writes [dashboard] into the active profile; returns false (and logs) if it could not be written. */
+    fun save(dashboard: Dashboard): Boolean = update { dashboard } != null
 
     /**
-     * The saved dashboard (an existing layout is never changed), or on first launch (or if the
-     * file is unreadable) the default one: an empty page on the phone and one in Android Auto.
-     */
-    fun load(): Dashboard = lock.withLock { read() ?: defaultLayout() }
-
-    /** Writes [dashboard]; returns false (and logs) if it could not be written. */
-    fun save(dashboard: Dashboard): Boolean = lock.withLock { write(dashboard) }
-
-    /**
-     * Reads the current layout, applies [transform] and writes the result, with no other write in
+     * Reads the active layout, applies [transform] and writes the result, with no other write in
      * between (e.g. the API adding a card while the editor saves). Returns the written layout, or
      * null if it could not be written.
      */
-    fun update(transform: (Dashboard) -> Dashboard): Dashboard? = lock.withLock {
-        val next = transform(read() ?: defaultLayout())
-        if (write(next)) next else null
-    }
-
-    private fun read(): Dashboard? {
-        val source = when {
-            // an AtomicFile write was interrupted (old app version): the backup is the last good file
-            legacyBackup.isFile -> legacyBackup
-            file.isFile -> file
-            else -> return null
-        }
-        return try {
-            DashboardJson.decode(source.readText(Charsets.UTF_8), requirePages = false)
-        } catch (e: Exception) {
-            warn("Unreadable ${source.name}, using the default layout", e)
-            null
-        }
-    }
-
-    private fun write(dashboard: Dashboard): Boolean = try {
-        file.parentFile?.mkdirs()
-        FileOutputStream(tmp).use { out ->
-            out.write(DashboardJson.encode(dashboard).toByteArray(Charsets.UTF_8))
-            out.fd.sync()
-        }
-        try {
-            Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
-        } catch (_: AtomicMoveNotSupportedException) {
-            Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
-        }
-        legacyBackup.delete()
-        _saved.value = dashboard
-        true
-    } catch (e: Exception) {
-        tmp.delete()
-        warn("Could not save the dashboard", e)
-        false
-    }
+    fun update(transform: (Dashboard) -> Dashboard): Dashboard? = profiles.update { set ->
+        Profiles.writeActiveDashboard(set, transform(set.activeDashboard()), profiles.defaultProfileName(), profiles.now())
+    }?.activeDashboard()
 
     companion object {
-        private const val TAG = "DashboardStore"
-        const val FILE_NAME = "dashboard.json"
-
-        /** One lock for every store instance of the process: there is a single layout file. */
-        private val lock = ReentrantLock()
-
-        private val _saved = MutableStateFlow<Dashboard?>(null)
+        /** File of the layout before profiles existed (migrated by [ProfileStore]). */
+        const val FILE_NAME = ProfileStore.LEGACY_FILE_NAME
 
         /**
-         * Last layout written in this process, by any writer (phone editor, REST API...). Android
-         * Auto and the phone dashboard follow it.
+         * Layout of the active profile after the last read or write in this process, by any writer
+         * (phone editor, REST API, profile switch...). Android Auto follows it.
          */
-        val saved: StateFlow<Dashboard?> = _saved.asStateFlow()
-
+        val saved: StateFlow<Dashboard?> get() = ProfileStore.activeDashboard
 
         @Suppress("UNUSED_PARAMETER")
         fun defaultDashboard(context: Context): Dashboard = DefaultDashboard.create()
-
     }
 }
