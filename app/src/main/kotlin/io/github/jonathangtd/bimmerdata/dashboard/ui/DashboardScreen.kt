@@ -266,7 +266,14 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
             }
             Spacer(Modifier.height(12.dp))
         }
-        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 72.dp)) { data ->
+        val snackbarBottom = if (rec.recording && !ui.editing) 84.dp else 16.dp
+        SnackbarHost(
+            snackbar,
+            Modifier
+                .align(Alignment.BottomCenter)
+                .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
+                .padding(bottom = snackbarBottom),
+        ) { data ->
             Snackbar(
                 data, containerColor = Track, contentColor = Cockpit.Text, actionColor = Cockpit.Accent,
                 shape = RoundedCornerShape(14.dp), modifier = Modifier.padding(horizontal = 16.dp),

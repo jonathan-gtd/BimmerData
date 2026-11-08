@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -63,8 +64,10 @@ fun AppRoot() {
     var tab by rememberSaveable { mutableStateOf(AppTab.Dashboard) }
     var editing by rememberSaveable { mutableStateOf(false) }
     val holder = rememberSaveableStateHolder()
+    val barVisible = !(editing && tab == AppTab.Dashboard)
     Column(Modifier.fillMaxSize().background(Cockpit.Background)) {
-        Box(Modifier.fillMaxWidth().weight(1f)) {
+        // While the bottom bar is shown it owns the navigation bar inset.
+        Box(Modifier.fillMaxWidth().weight(1f).then(if (barVisible) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
             holder.SaveableStateProvider(tab.name) {
                 when (tab) {
                     AppTab.Dashboard -> DashboardScreen(onEditingChange = { editing = it })
@@ -73,7 +76,7 @@ fun AppRoot() {
                 }
             }
         }
-        AnimatedVisibility(visible = !(editing && tab == AppTab.Dashboard), enter = expandVertically(), exit = shrinkVertically()) {
+        AnimatedVisibility(visible = barVisible, enter = expandVertically(), exit = shrinkVertically()) {
             BottomBar(tab) { tab = it }
         }
     }
