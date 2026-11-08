@@ -131,30 +131,35 @@ internal object PrgTableDirectory {
     private const val TableEntrySize = 0x50
 
     /** Names of the tables of [file], upper case; empty if not an object file. */
-    fun tableNames(file: File): List<String> = try {
+    fun tableNames(file: File): List<String> = tables(file).keys.toList()
+
+    /** Tables of [file]: upper-case name -> row count; empty if not an object file. */
+    fun tables(file: File): Map<String, Int> = try {
         RandomAccessFile(file, "r").use { raf ->
-            if (raf.length() < 0x8C) return emptyList()
+            if (raf.length() < 0x8C) return emptyMap()
             val sig = ByteArray(16)
             raf.readFully(sig)
-            if (!String(sig, Charsets.ISO_8859_1).startsWith("@EDIABAS OBJECT")) return emptyList()
+            if (!String(sig, Charsets.ISO_8859_1).startsWith("@EDIABAS OBJECT")) return emptyMap()
             raf.seek(0x84)
             val listOffset = leInt(ByteArray(4).also { raf.readFully(it) }, 0, false)
-            if (listOffset <= 0 || listOffset + 4 > raf.length()) return emptyList()
+            if (listOffset <= 0 || listOffset + 4 > raf.length()) return emptyMap()
             raf.seek(listOffset.toLong())
             val count = leInt(ByteArray(4).also { raf.readFully(it) }, 0, true)
-            if (count <= 0 || count > 10000 || listOffset + 4L + count.toLong() * TableEntrySize > raf.length()) return emptyList()
+            if (count <= 0 || count > 10000 || listOffset + 4L + count.toLong() * TableEntrySize > raf.length()) return emptyMap()
             val buf = ByteArray(count * TableEntrySize)
             raf.readFully(buf)
-            List(count) { i ->
+            val out = LinkedHashMap<String, Int>()
+            for (i in 0 until count) {
                 val o = i * TableEntrySize
                 var end = o
                 while (end < o + 0x40 && (buf[end].toInt() xor XorKey) and 0xFF != 0) end++
                 val name = ByteArray(end - o) { (buf[o + it].toInt() xor XorKey).toByte() }
-                String(name, PrgFile.ENCODING).uppercase(Locale.ROOT)
+                out[String(name, PrgFile.ENCODING).uppercase(Locale.ROOT)] = leInt(buf, o + 0x4C, true)
             }
+            out
         }
     } catch (_: Exception) {
-        emptyList()
+        emptyMap()
     }
 
     private fun leInt(b: ByteArray, o: Int, decrypt: Boolean): Int {

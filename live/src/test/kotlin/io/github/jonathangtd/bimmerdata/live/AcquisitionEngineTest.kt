@@ -214,7 +214,7 @@ class AcquisitionEngineTest {
         val fake = FakeInterface(sim::respond)
         val engine = AcquisitionEngine(fake, catalog, AcquisitionEngine.Config(maxIdsPerBlock = 10))
         try {
-            val table = catalog.measurements("msv70").filter {
+            val table = catalog.measurements("msv70").filter { it.source is MeasurementSource.MeasurementTable }.filter {
                 val row = catalog.table("msv70")!!.row((it.source as MeasurementSource.MeasurementTable).id)!!
                 row.conversionTable == null
             }.take(25)

@@ -16,7 +16,7 @@ class EdiabasMeasurementCatalogTest {
     @Test
     fun `MSV70 measurement table`() {
         val catalog = EdiabasMeasurementCatalog(LiveTestData.ecuDir())
-        val list = catalog.measurements("MSV70")
+        val list = catalog.measurements("MSV70").filter { it.source is MeasurementSource.MeasurementTable }
         assertEquals(465, list.size)
         assertEquals(list.size, list.map { it.id }.toSet().size, "ids are unique")
 

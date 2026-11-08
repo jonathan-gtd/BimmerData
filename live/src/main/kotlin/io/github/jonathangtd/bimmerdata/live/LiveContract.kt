@@ -24,7 +24,14 @@ data class Measurement(
     /** Optional plausible range, for gauge scales; null = unknown (the UI picks one). */
     val min: Double? = null,
     val max: Double? = null,
+    /** Number (gauges) or text / state (status cards). */
+    val kind: ValueKind = ValueKind.Number,
+    /** Optional longer text for pickers: what the job does, what the values mean. */
+    val description: String = "",
 )
+
+/** What a [Measurement] returns. */
+enum class ValueKind { Number, Text }
 
 sealed interface MeasurementSource {
     /**
@@ -61,13 +68,38 @@ interface LiveDataSource {
     fun setMeasurements(measurements: List<Measurement>)
 }
 
+/** An SGBD (ECU description file) of the imported ECU folder, as listed by the picker. */
+data class SgbdInfo(
+    /** File name without extension, lower case, e.g. "msv70". */
+    val name: String,
+    /** ECU text of the SGBD, e.g. "MSV70 fuer N52" or "KOMBI E85"; may be empty. */
+    val description: String = "",
+    /** About how many measurements [MeasurementCatalog.measurements] returns (0 = unknown). */
+    val measurementCount: Int = 0,
+)
+
 /** Lists what can be measured on an ECU, for the card editor's picker. */
 interface MeasurementCatalog {
-    /** SGBDs available in the imported ECU folder that have a measurement table. */
+    /** SGBDs (.prg) of the imported ECU folder that have at least one measurement. */
     fun sgbdsWithMeasurements(): List<String>
 
     /** All measurements of [sgbd] (fast-path ones from MESSWERTETAB first). */
     fun measurements(sgbd: String): List<Measurement>
+
+    /** [sgbdsWithMeasurements] with their ECU descriptions (default: names only). */
+    fun sgbdInfos(): List<SgbdInfo> = sgbdsWithMeasurements().map { SgbdInfo(it) }
+}
+
+/**
+ * SGBDs found in the connected car (vehicle identification), lower case without extension. The
+ * picker lists them first; [None] until a vehicle detection provides them.
+ */
+fun interface DetectedEcus {
+    fun sgbds(): List<String>
+
+    companion object {
+        val None = DetectedEcus { emptyList() }
+    }
 }
 
 data class RecordingState(
