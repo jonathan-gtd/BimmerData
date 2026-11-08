@@ -3,7 +3,7 @@
 <resources>
     <string name="veh_title">Vehicle</string>
     <string name="veh_none_title">No vehicle yet</string>
-    <string name="veh_none_text">Plug the K+DCAN cable, switch the ignition on, then scan: every ECU of the car is found and its fault memory is read. Simulation shows a demo E90.</string>
+    <string name="veh_none_text">Then scan: every ECU of the car is found and its fault memory is read.</string>
     <string name="veh_scan">Scan vehicle</string>
     <string name="veh_rescan">Scan again</string>
     <string name="veh_read_faults">Read faults</string>
@@ -67,7 +67,7 @@
     <string name="veh_msg_no_cable">No K+DCAN cable found. Plug it in via USB-C OTG.</string>
     <string name="veh_msg_usb_denied">USB permission denied.</string>
     <string name="veh_msg_connect_failed">Connection failed: %1$s</string>
-    <string name="veh_msg_scan_failed">No ECU answered (%1$s). Ignition on? Right cable or simulation?</string>
+    <string name="veh_msg_scan_failed">No ECU answered (%1$s). Is the ignition on?</string>
     <string name="veh_msg_scan_cancelled">Scan cancelled.</string>
     <string name="veh_msg_failed">Failed: %1$s</string>
     <string name="veh_msg_cleared">Fault memories cleared and read again.</string>

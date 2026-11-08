@@ -102,6 +102,10 @@ class AcquisitionEngine(
     private val _samples = MutableStateFlow<Map<String, Sample>>(emptyMap())
     override val samples: StateFlow<Map<String, Sample>> = _samples.asStateFlow()
 
+    /** Every published group, in order; a large buffer so a slow consumer (export) misses nothing. */
+    private val _readings = MutableSharedFlow<List<Pair<String, Sample>>>(extraBufferCapacity = READINGS_BUFFER, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    override val readings: SharedFlow<List<Pair<String, Sample>>> = _readings.asSharedFlow()
+
     private val _status = MutableStateFlow(AcquisitionStatus())
     override val status: StateFlow<AcquisitionStatus> = _status.asStateFlow()
 
@@ -465,6 +469,7 @@ class AcquisitionEngine(
     private fun publish(values: List<Pair<String, Sample>>) {
         if (values.isEmpty()) return
         _samples.update { old -> HashMap(old).apply { values.forEach { (id, s) -> put(id, s) } } }
+        _readings.tryEmit(values)
     }
 
     /**
@@ -641,3 +646,6 @@ class AcquisitionEngine(
         return (parts + extra).joinToString("; ")
     }
 }
+
+/** Read groups buffered for [LiveDataSource.readings] (about 6 min at 22 groups/s before the oldest would be dropped). */
+private const val READINGS_BUFFER = 8192

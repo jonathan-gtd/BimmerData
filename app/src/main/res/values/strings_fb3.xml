@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Interface instructions per connection mode (ConnectHints), Telegraf export, diagnostic API. -->
+<resources>
+    <!-- What to prepare before connecting / scanning, for the mode in use -->
+    <string name="fb3_prepare_any">Connect your diagnostic interface to the car and switch the ignition on.</string>
+    <string name="fb3_prepare_usb">Plug the USB cable into the car and the phone, and switch the ignition on.</string>
+    <string name="fb3_prepare_bt">Plug the Bluetooth adapter %1$s into the car and switch the ignition on.</string>
+    <string name="fb3_prepare_bt_unnamed">Plug your Bluetooth adapter into the car and switch the ignition on.</string>
+    <string name="fb3_veh_none_sim">The simulation shows a demo car: scan it to see its ECUs and their fault memory.</string>
+    <!-- What to check when no ECU answers -->
+    <string name="fb3_check_any">Is the diagnostic interface connected to the car?</string>
+    <string name="fb3_check_usb">Is the USB cable plugged into the car?</string>
+    <string name="fb3_check_bt">Is the adapter %1$s plugged in and powered?</string>
+    <string name="fb3_check_bt_unnamed">Is the Bluetooth adapter plugged in and powered?</string>
+
+    <!-- Telegraf export -->
+    <string name="fb3_tg_every_reading">Every value read is sent with its own time, at the read rate: Grafana gets the same data as the CSV.</string>
+    <string name="fb3_tg_reserve_fixed">The queue never deletes points by itself. It may use all the free space except %1$s kept for the phone; when that is reached, new points are no longer queued (the CSV recording still has them).</string>
+    <plurals name="fb3_tg_autonomy_estimated">
+        <item quantity="one">Estimate for %1$d value read %2$s times per second, before the reserve is reached.</item>
+        <item quantity="other">Estimate for %1$d values read %2$s times per second, before the reserve is reached.</item>
+    </plurals>
+
+</resources>

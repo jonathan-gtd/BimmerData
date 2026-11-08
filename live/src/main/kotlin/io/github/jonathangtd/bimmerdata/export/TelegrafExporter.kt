@@ -6,6 +6,7 @@ package io.github.jonathangtd.bimmerdata.export
 import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.MeasurementSource
 import io.github.jonathangtd.bimmerdata.live.Sample
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -47,17 +48,11 @@ data class ExportConfig(
     val auth: TelegrafAuth = TelegrafAuth.None,
     /** Value of the `car` tag. */
     val car: String = "",
-    /** At most this many points per measurement and second (independent of the read rate). */
-    val pointsPerSecond: Int = 1,
     val mode: ExportMode = ExportMode.AfterTrip,
-    /** Free space kept on the phone: the queue stops growing (never deletes) below it. */
+    /** Free space kept on the phone (fixed 100 MB): the queue stops growing (never deletes) below it. */
     val reserveBytes: Long = LineQueue.DEFAULT_RESERVE_BYTES,
 ) {
     val usable: Boolean get() = enabled && TelegrafClient.isValidUrl(url)
-
-    companion object {
-        val RATES = 1..5
-    }
 }
 
 enum class ExportPhase { Off, Idle, WaitingForNetwork, WaitingForUnmetered, Sending, Retrying, AuthFailed }
@@ -83,7 +78,7 @@ data class ExportState(
     val reserveBytes: Long = LineQueue.DEFAULT_RESERVE_BYTES,
     /** Uncompressed bytes queued per second over the last minute (0 when nothing is queued). */
     val queueBytesPerSecond: Double = 0.0,
-    /** Measurements in the last exported batch of samples. */
+    /** Measurements exported since the export (re)started. */
     val measurementCount: Int = 0,
 ) {
     /** Space the queue may still use before reaching the reserve. */
@@ -91,7 +86,7 @@ data class ExportState(
 }
 
 /**
- * Exports live samples to Telegraf: samples → [ExportSampler] (rate limit) → [LineEncoder] →
+ * Exports every live reading to Telegraf, at the read rate: [readings] → [ExportDedup] → [LineEncoder] →
  * [LineQueue] on disk (gzip) → [TelegrafClient] in batches, when [ExportConfig.mode] and the
  * [network] allow it. Times are the original sample times, so an upload after the trip lands
  * at the right place in Grafana.
@@ -104,7 +99,8 @@ data class ExportState(
  */
 class TelegrafExporter(
     private val scope: CoroutineScope,
-    private val samples: StateFlow<Map<String, Sample>>,
+    /** Every reading, in order ([io.github.jonathangtd.bimmerdata.live.LiveDataSource.readings]). */
+    private val readings: Flow<List<Pair<String, Sample>>>,
     private val metadata: (String) -> Measurement?,
     private val queue: LineQueue,
     private val config: StateFlow<ExportConfig>,
@@ -120,7 +116,7 @@ class TelegrafExporter(
     private val _state = MutableStateFlow(ExportState())
     val state: StateFlow<ExportState> = _state.asStateFlow()
 
-    private val sampler = ExportSampler(1, clock())
+    private val dedup = ExportDedup(clock())
     private val rate = QueueEstimate.Rate()
     private val wake = Channel<Unit>(Channel.CONFLATED)
     private val sendLock = Mutex()
@@ -208,7 +204,7 @@ class TelegrafExporter(
 
     private suspend fun collectSamples() {
         var wasUsable = false
-        samples.collect { snapshot ->
+        readings.collect { batch ->
             val cfg = config.value
             if (!cfg.usable) {
                 wasUsable = false
@@ -216,16 +212,15 @@ class TelegrafExporter(
             }
             if (!wasUsable) {
                 // values already on screen before the export was switched on are not sent
-                sampler.reset(clock())
+                dedup.reset(clock())
                 wasUsable = true
             }
-            sampler.pointsPerSecond = cfg.pointsPerSecond.coerceIn(ExportConfig.RATES)
             queue.reserveBytes = cfg.reserveBytes
             val enc = encoderFor(cfg.car)
-            val lines = sampler.select(snapshot).mapNotNull { (id, s) -> enc.encode(metadata(id) ?: unknown(id), s) }
+            val lines = dedup.select(batch).mapNotNull { (id, s) -> enc.encode(metadata(id) ?: unknown(id), s) }
             if (lines.isEmpty()) return@collect
             if (queue.append(lines)) rate.add(clock(), lines.sumOf { it.length + 1L })
-            _state.update { it.copy(measurementCount = snapshot.size) }
+            _state.update { it.copy(measurementCount = dedup.measurementCount) }
             refreshQueueState()
             wake.trySend(Unit)
         }

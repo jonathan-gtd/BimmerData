@@ -172,7 +172,6 @@ class AndroidApiBackend(
                 TelegrafAuthMode.Basic -> secrets.has(SecretStore.TELEGRAF_PASSWORD)
             },
             car = t.car,
-            pointsPerSecond = t.pointsPerSecond,
             mode = if (t.mode == ExportMode.Live) "live" else "afterTrip",
             state = TelegrafStateView(
                 phase = st.phase.name.replaceFirstChar { it.lowercase(Locale.ROOT) },
@@ -189,7 +188,6 @@ class AndroidApiBackend(
                 enabled = patch.enabled ?: t.enabled,
                 url = patch.url ?: t.url,
                 car = patch.car ?: t.car,
-                pointsPerSecond = patch.pointsPerSecond ?: t.pointsPerSecond,
                 mode = when (patch.mode) { null -> t.mode; "live" -> ExportMode.Live; else -> ExportMode.AfterTrip },
             )
         }

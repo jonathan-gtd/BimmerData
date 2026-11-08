@@ -169,7 +169,7 @@ internal fun messageText(m: VehicleMessage): String {
         VehicleMessage.Kind.NoCable -> stringResource(R.string.veh_msg_no_cable)
         VehicleMessage.Kind.UsbDenied -> stringResource(R.string.veh_msg_usb_denied)
         VehicleMessage.Kind.ConnectFailed -> stringResource(R.string.veh_msg_connect_failed, d)
-        VehicleMessage.Kind.ScanFailed -> stringResource(R.string.veh_msg_scan_failed, d)
+        VehicleMessage.Kind.ScanFailed -> (stringResource(R.string.veh_msg_scan_failed, d) + " " + io.github.jonathangtd.bimmerdata.ui.ConnectHints.check()).trimEnd()
         VehicleMessage.Kind.ScanCancelled -> stringResource(R.string.veh_msg_scan_cancelled)
         VehicleMessage.Kind.ReadFailed -> stringResource(R.string.veh_msg_failed, d)
         VehicleMessage.Kind.Cleared -> if (m.detail != null) stringResource(R.string.veh_msg_cleared_ecu, d) else stringResource(R.string.veh_msg_cleared)

@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.jonathangtd.bimmerdata.R
 import io.github.jonathangtd.bimmerdata.api.android.ApiRuntimeState
-import io.github.jonathangtd.bimmerdata.export.ExportConfig
 import io.github.jonathangtd.bimmerdata.export.ExportMode
 import io.github.jonathangtd.bimmerdata.export.ExportPhase
 import io.github.jonathangtd.bimmerdata.export.LineQueue
@@ -288,13 +287,7 @@ internal fun TelegrafSection(t: TelegrafSettings, store: AppSettings) {
         )
         Hint(stringResource(if (t.mode == ExportMode.AfterTrip) R.string.settings2_tg_mode_after_hint else R.string.settings2_tg_mode_live_hint))
         Divider()
-        Text(stringResource(R.string.settings2_tg_rate), color = Cockpit.Text, fontSize = 16.sp)
-        Segmented(
-            options = ExportConfig.RATES.map { it to it.toString() },
-            selected = t.pointsPerSecond,
-            onSelect = { r -> store.updateTelegraf { it.copy(pointsPerSecond = r) } },
-        )
-        Hint(stringResource(R.string.settings2_tg_rate_hint))
+        Hint(stringResource(R.string.fb3_tg_every_reading))
     }
 
     // ---- queue on the phone
@@ -326,7 +319,11 @@ internal fun TelegrafSection(t: TelegrafSettings, store: AppSettings) {
         )
         Figure(stringResource(R.string.s3_tg_free), stringResource(R.string.s3_tg_free_value, size(context, state.freeBytes), size(context, state.reserveBytes)))
         val measurements = state.measurementCount.coerceAtLeast(10)
-        val rate = QueueEstimate.rawBytesPerSecond(state.queueBytesPerSecond, t.pointsPerSecond, measurements)
+        val live = remember { io.github.jonathangtd.bimmerdata.live.LiveRepository.get(context) }
+        val acquisition by live.liveDataSource.status.collectAsStateWithLifecycle()
+        // read cycles per second right now, else a typical cable rate for the estimate
+        val readsPerSecond = acquisition.cyclesPerSecond.takeIf { it > 0.5 } ?: TYPICAL_READS_PER_SECOND
+        val rate = QueueEstimate.rawBytesPerSecond(state.queueBytesPerSecond, readsPerSecond, measurements)
         val autonomy = QueueEstimate.autonomySeconds(state.roomBytes, rate, QueueEstimate.gzipRatio(state.queuedBytes, state.queuedRawBytes))
         Figure(
             stringResource(R.string.s3_tg_autonomy),
@@ -338,18 +335,12 @@ internal fun TelegrafSection(t: TelegrafSettings, store: AppSettings) {
         )
         Hint(
             if (state.queueBytesPerSecond > 0) stringResource(R.string.s3_tg_autonomy_measured)
-            else pluralStringResource(R.plurals.s3_tg_autonomy_estimated, measurements, t.pointsPerSecond, measurements),
+            else pluralStringResource(R.plurals.fb3_tg_autonomy_estimated, measurements, measurements, numbers.format(Math.round(readsPerSecond))),
         )
         if (state.sentLines > 0) Hint(stringResource(R.string.s3_tg_sent, numbers.format(state.sentLines)))
         if (state.refusedLines > 0 && !state.blocked) Hint(stringResource(R.string.s3_tg_refused, numbers.format(state.refusedLines)))
         Divider()
-        Text(stringResource(R.string.s3_tg_reserve), color = Cockpit.Text, fontSize = 16.sp)
-        Segmented(
-            options = QueueEstimate.RESERVES_MB.map { mb -> mb to size(context, mb * LineQueue.MB) },
-            selected = t.reserveMb,
-            onSelect = { mb -> store.updateTelegraf { it.copy(reserveMb = mb) } },
-        )
-        Hint(stringResource(R.string.s3_tg_reserve_hint))
+        Hint(stringResource(R.string.fb3_tg_reserve_fixed, size(context, LineQueue.DEFAULT_RESERVE_BYTES)))
         Hint(stringResource(R.string.s3_tg_where))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SmallButton(stringResource(R.string.settings2_tg_send), enabled = t.enabled && state.queuedLines > 0) { runtime.sendNow() }
@@ -451,3 +442,6 @@ internal fun LicensesBlock() {
         }
     }
 }
+
+/** Read cycles per second assumed for the queue estimate while nothing is being read (cable, fast path). */
+private const val TYPICAL_READS_PER_SECOND = 20.0

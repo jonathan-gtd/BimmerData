@@ -935,10 +935,10 @@ class ApiService(
             Route(
                 "PATCH", "/api/v1/export/telegraf", RouteAccess.Needs(Scope.Config), "Export", "updateTelegrafExport",
                 "Change the Telegraf export",
-                "Changes `enabled`, `url`, `car`, `pointsPerSecond` (1–5 points per measurement and second) and / or `mode` (`live`: upload on any network; `afterTrip`: keep the points on the phone until an unmetered network such as home Wi-Fi). Authentication (`auth`, `username`, token, password) can only be changed on the phone: sending it answers 403.",
+                "Changes `enabled`, `url`, `car` and / or `mode` (`live`: upload on any network; `afterTrip`: keep the points on the phone until an unmetered network such as home Wi-Fi). Authentication (`auth`, `username`, token, password) can only be changed on the phone: sending it answers 403.",
                 body = Body(S.obj(null, emptyList(), false, null,
                     "enabled" to S.bool(), "url" to S.str(example = "http://192.168.1.10:8186/api/v2/write"), "car" to S.str(example = "E90 330i"),
-                    "pointsPerSecond" to S.int(min = 1, max = 5), "mode" to S.str(enum = listOf("live", "afterTrip"))),
+                    "mode" to S.str(enum = listOf("live", "afterTrip"))),
                     example = buildJsonObject { put("enabled", true); put("mode", "afterTrip") }),
                 reply = Reply(description = "Telegraf export after the change", schema = S.ref("TelegrafExport")),
                 errors = mapOf(400 to "Unknown field or wrong value.", 403 to "Tried to change the authentication (phone only) or the config scope is not enabled.", 501 to "Not available."),
@@ -947,13 +947,13 @@ class ApiService(
                 listOf("auth", "username", "token", "password").firstOrNull { it in b }?.let {
                     throw ApiException(403, "phone_only", "The Telegraf authentication can only be changed on the phone, in Settings › Telegraf export")
                 }
-                b.allowOnly("enabled", "url", "car", "pointsPerSecond", "mode")
-                val rate = b.int("pointsPerSecond")?.also { if (it !in 1..5) throw badRequest("'pointsPerSecond' must be 1..5") }
+                if ("pointsPerSecond" in b) throw badRequest("'pointsPerSecond' no longer exists: every reading is exported, at the read rate")
+                b.allowOnly("enabled", "url", "car", "mode")
                 val mode = b.string("mode")?.also { if (it != "live" && it != "afterTrip") throw badRequest("'mode' must be live or afterTrip") }
                 val url = b.string("url")?.trim()?.also { u ->
                     if (u.isNotEmpty() && !(u.startsWith("http://") || u.startsWith("https://"))) throw badRequest("'url' must start with http:// or https://")
                 }
-                ok(ApiJson.encodeToJsonElement(backend.updateTelegraf(TelegrafPatch(b.bool("enabled"), url, b.string("car"), rate, mode))))
+                ok(ApiJson.encodeToJsonElement(backend.updateTelegraf(TelegrafPatch(b.bool("enabled"), url, b.string("car"), mode))))
             },
             Route(
                 "POST", "/api/v1/export/telegraf/test", RouteAccess.Needs(Scope.Config), "Export", "testTelegrafExport",

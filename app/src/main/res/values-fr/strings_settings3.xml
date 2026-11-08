@@ -58,7 +58,7 @@
     <string name="s3_gps_where">Où va la position</string>
     <string name="s3_gps_values">Enregistrement CSV : une colonne par valeur. Export Telegraf : les points ont l\'étiquette ecu=gps (id latitude, longitude…) ; le tableau de bord Grafana d\'exemple trace le trajet sur une carte.</string>
     <string name="s3_gps_cards">Cartes : dans l\'éditeur de carte, choisissez « GPS » dans la liste des calculateurs (par exemple la vitesse GPS à côté de la vitesse lue par la voiture).</string>
-    <string name="s3_gps_background">Avec le câble, la position continue d\'arriver écran éteint. En simulation, seulement quand l\'appli est ouverte.</string>
+    <string name="s3_gps_background">Une fois connecté à la voiture (câble ou Bluetooth), la position continue d’arriver écran éteint. En simulation, seulement quand l’appli est ouverte.</string>
     <string name="s3_gps_privacy">La position reste sur le téléphone (CSV). Elle n\'en sort que vers votre propre serveur Telegraf, si l\'export est activé.</string>
     <string name="s3_gps_latitude">Latitude GPS</string>
     <string name="s3_gps_longitude">Longitude GPS</string>
@@ -87,15 +87,8 @@
     <string name="s3_tg_autonomy_none">Réserve atteinte</string>
     <string name="s3_tg_autonomy">Autonomie</string>
     <string name="s3_tg_autonomy_measured">À la cadence actuelle, avant d\'atteindre la réserve.</string>
-    <plurals name="s3_tg_autonomy_estimated">
-        <item quantity="one">Estimation pour %2$d valeur à %1$d points par seconde, avant d\'atteindre la réserve.</item>
-        <item quantity="many">Estimation pour %2$d valeurs à %1$d points par seconde, avant d\'atteindre la réserve.</item>
-        <item quantity="other">Estimation pour %2$d valeurs à %1$d points par seconde, avant d\'atteindre la réserve.</item>
-    </plurals>
     <string name="s3_tg_sent">%1$s points envoyés depuis le lancement de l\'appli.</string>
     <string name="s3_tg_refused">%1$s points n\'ont pas été mis en file car le téléphone était plein (ils sont dans le CSV).</string>
-    <string name="s3_tg_reserve">Espace libre à garder</string>
-    <string name="s3_tg_reserve_hint">La file ne supprime jamais de points d\'elle-même. Elle peut utiliser tout l\'espace libre sauf cette réserve ; une fois la réserve atteinte, les nouveaux points ne sont plus mis en file.</string>
     <string name="s3_tg_where">Stockée compressée (gzip, environ 10 fois plus petite) dans le stockage privé de l\'appli. Un point n\'est supprimé qu\'une fois confirmé par Telegraf (HTTP 2xx).</string>
     <string name="s3_tg_rejected_title">Refusés par le serveur</string>
     <plurals name="s3_tg_rejected_text">

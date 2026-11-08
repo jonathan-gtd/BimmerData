@@ -15,9 +15,6 @@ object QueueEstimate {
     /** Typical gzip ratio of line protocol (compressed / raw), until the queue measured its own. */
     const val TYPICAL_GZIP_RATIO = 0.1
 
-    /** Free-space reserves offered in Settings › Telegraf export, in MB. */
-    val RESERVES_MB = listOf(200, 500, 1000, 2000)
-
     /** Queue sizes on disk from which the user is told the queue grows (one notification each). */
     val GROWTH_STEPS_BYTES = listOf(100L, 500L, 1000L, 2000L, 5000L, 10000L).map { it * LineQueue.MB }
 
@@ -30,11 +27,11 @@ object QueueEstimate {
 
     /**
      * Raw bytes per second the queue grows by: the measured rate while points are being queued,
-     * else an estimate from the settings ([pointsPerSecond] per measurement, [measurements]
-     * measurements, [TYPICAL_LINE_BYTES] per point).
+     * else an estimate: every reading is exported, so [readsPerSecond] (read cycles per second)
+     * × [measurements] points per second, [TYPICAL_LINE_BYTES] each.
      */
-    fun rawBytesPerSecond(measuredRawBytesPerSecond: Double, pointsPerSecond: Int, measurements: Int): Double =
-        if (measuredRawBytesPerSecond > 0) measuredRawBytesPerSecond else pointsPerSecond.toDouble() * measurements.coerceAtLeast(0) * TYPICAL_LINE_BYTES
+    fun rawBytesPerSecond(measuredRawBytesPerSecond: Double, readsPerSecond: Double, measurements: Int): Double =
+        if (measuredRawBytesPerSecond > 0) measuredRawBytesPerSecond else readsPerSecond.coerceAtLeast(0.0) * measurements.coerceAtLeast(0) * TYPICAL_LINE_BYTES
 
     /**
      * Seconds of recording that still fit before the reserve: [roomBytes] on disk, growing by

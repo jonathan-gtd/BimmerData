@@ -127,13 +127,13 @@ class QueueSafetyTest {
         override fun close() = server.stop(0)
     }
 
-    private fun exporterTest(dir: File, block: suspend (TelegrafExporter, MutableStateFlow<Map<String, Sample>>, MutableStateFlow<ExportConfig>, MutableStateFlow<NetworkKind>) -> Unit) {
+    private fun exporterTest(dir: File, block: suspend (TelegrafExporter, TestReadings, MutableStateFlow<ExportConfig>, MutableStateFlow<NetworkKind>) -> Unit) {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        val samples = MutableStateFlow<Map<String, Sample>>(emptyMap())
+        val samples = TestReadings()
         val config = MutableStateFlow(ExportConfig())
         val net = MutableStateFlow(NetworkKind.None)
         val exporter = TelegrafExporter(
-            scope, samples, { id -> if (id == oil.id) oil else null }, LineQueue(dir, freeSpace = { Long.MAX_VALUE }), config, net,
+            scope, samples.flow, { id -> if (id == oil.id) oil else null }, LineQueue(dir, freeSpace = { Long.MAX_VALUE }), config, net,
             batchPauseMs = 50, minBackoffMs = 50, maxBackoffMs = 200, clock = { 1_000 },
         )
         exporter.start()
@@ -195,7 +195,7 @@ class QueueSafetyTest {
         // nothing listens on this port: connection refused
         exporterTest(dir) { exporter, samples, config, net ->
             net.value = NetworkKind.Metered
-            config.value = ExportConfig(enabled = true, url = "http://127.0.0.1:9/api/v2/write", car = "E90", mode = ExportMode.Live, pointsPerSecond = 5)
+            config.value = ExportConfig(enabled = true, url = "http://127.0.0.1:9/api/v2/write", car = "E90", mode = ExportMode.Live)
             delay(50)
             for (t in 0 until 5) {
                 samples.value = mapOf(oil.id to Sample(80.0 + t, null, 2_000L + t * 200))
@@ -214,7 +214,7 @@ class QueueSafetyTest {
     @Test
     fun `autonomy before the reserve`() {
         // 10 measurements × 2 points/s × 110 bytes = 2200 B/s raw, gzip 10 % → 220 B/s on disk
-        val raw = QueueEstimate.rawBytesPerSecond(0.0, 2, 10)
+        val raw = QueueEstimate.rawBytesPerSecond(0.0, 2.0, 10)
         assertEquals(2200.0, raw, 0.001)
         val secs = QueueEstimate.autonomySeconds(roomBytes = 792_000, rawBytesPerSecond = raw, gzipRatio = 0.1)
         assertEquals(3600L, secs)

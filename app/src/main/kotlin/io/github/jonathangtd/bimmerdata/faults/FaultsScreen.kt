@@ -391,7 +391,9 @@ private fun EmptyVehicle() {
         Spacer(Modifier.height(16.dp))
         Text(stringResource(R.string.veh_none_title), color = Cockpit.Text, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, fontFamily = BarlowCondensed)
         Spacer(Modifier.height(8.dp))
-        Text(stringResource(R.string.veh_none_text), color = Cockpit.Muted, fontSize = 15.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
+        val prepare = io.github.jonathangtd.bimmerdata.ui.ConnectHints.prepare()
+        val text = if (prepare == null) stringResource(R.string.fb3_veh_none_sim) else prepare + " " + stringResource(R.string.veh_none_text)
+        Text(text, color = Cockpit.Muted, fontSize = 15.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
     }
 }
 

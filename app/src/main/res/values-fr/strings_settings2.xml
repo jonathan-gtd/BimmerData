@@ -36,8 +36,6 @@
     <string name="settings2_tg_secret_missing">Pas encore renseigné.</string>
     <string name="settings2_tg_car">Nom de la voiture</string>
     <string name="settings2_tg_car_hint">Étiquette « car » de chaque point, pour distinguer vos voitures dans Grafana.</string>
-    <string name="settings2_tg_rate">Points par seconde</string>
-    <string name="settings2_tg_rate_hint">Par mesure, indépendamment de la cadence de lecture.</string>
     <string name="settings2_tg_mode">Quand envoyer</string>
     <string name="settings2_tg_mode_after">Après le trajet</string>
     <string name="settings2_tg_mode_live">En direct</string>

@@ -21,7 +21,7 @@ class ApiDocsTelegrafTest {
 
     private class TelegrafBackend(val inner: FakeApiBackend = FakeApiBackend()) : ApiBackend by inner {
         var view = TelegrafView(
-            false, "", "token", "", true, "", 1, "afterTrip",
+            false, "", "token", "", true, "", "afterTrip",
             TelegrafStateView("off", 12, 1200, 0, 0, false, 5_000_000_000, 524_288_000, 0),
         )
         var sent = 0
@@ -30,7 +30,7 @@ class ApiDocsTelegrafTest {
         override fun updateTelegraf(patch: TelegrafPatch): TelegrafView {
             view = view.copy(
                 enabled = patch.enabled ?: view.enabled, url = patch.url ?: view.url, car = patch.car ?: view.car,
-                pointsPerSecond = patch.pointsPerSecond ?: view.pointsPerSecond, mode = patch.mode ?: view.mode,
+                mode = patch.mode ?: view.mode,
             )
             return view
         }
@@ -90,13 +90,15 @@ class ApiDocsTelegrafTest {
         assertEquals("afterTrip", doc["mode"]!!.jsonPrimitive.content)
         assertFalse(get.body.toString(Charsets.UTF_8).contains("password"))
 
-        val patched = call("PATCH", "/api/v1/export/telegraf", """{"enabled":true,"url":"http://10.0.0.2:8186/api/v2/write","pointsPerSecond":3,"mode":"live"}""")
+        val patched = call("PATCH", "/api/v1/export/telegraf", """{"enabled":true,"url":"http://10.0.0.2:8186/api/v2/write","mode":"live"}""")
         assertEquals(200, patched.status, patched.body.toString(Charsets.UTF_8))
-        assertEquals(3, backend.view.pointsPerSecond)
         assertEquals("live", backend.view.mode)
 
         assertEquals(403, call("PATCH", "/api/v1/export/telegraf", """{"token":"x"}""").status)
-        assertEquals(400, call("PATCH", "/api/v1/export/telegraf", """{"pointsPerSecond":9}""").status)
+        // every reading is exported: the old rate field is refused with a clear message
+        val rate = call("PATCH", "/api/v1/export/telegraf", """{"pointsPerSecond":2}""")
+        assertEquals(400, rate.status)
+        assertTrue(rate.body.toString(Charsets.UTF_8).contains("every reading"))
         assertEquals(400, call("PATCH", "/api/v1/export/telegraf", """{"url":"ftp://x"}""").status)
         assertEquals(400, call("PATCH", "/api/v1/export/telegraf", """{"bucket":"x"}""").status)
         assertEquals(200, call("POST", "/api/v1/export/telegraf/test").status)
