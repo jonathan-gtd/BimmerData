@@ -60,6 +60,7 @@ object DashboardJson {
             formatVersion = Dashboard.FORMAT_VERSION,
             phonePages = fixPages(d.phonePages, Target.Phone, "1"),
             carPages = fixPages(d.carPages, Target.Car, "1"),
+            name = d.name?.trim()?.take(Dashboard.MAX_NAME_LENGTH)?.takeIf { it.isNotEmpty() },
         )
     }
 }

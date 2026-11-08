@@ -10,7 +10,6 @@
     <string name="faults_coming_text">Reading and clearing the fault memory of every ECU is coming in a next version.</string>
 
     <!-- Dashboard header -->
-    <string name="dash_title_live">%1$s Live</string>
     <string name="status_live">Live</string>
     <string name="status_running">%1$s · %2$s reads/s</string>
     <string name="status_connecting">Connecting…</string>
@@ -31,7 +30,6 @@
     <string name="rec_marker_added">Marker added</string>
     <string name="edit">Edit</string>
     <string name="done">Done</string>
-    <string name="empty_page">This page is empty. Tap Edit to add cards.</string>
     <string name="edit_hint">Drag to move · corner to resize · tap to edit</string>
 
     <!-- Editor -->
@@ -101,7 +99,7 @@
     <string name="choose_type">Card type</string>
     <string name="choose_sgbd">ECU (SGBD)</string>
     <string name="search">Search</string>
-    <string name="no_sgbd">No ECU with a measurement table yet. Import your EDIABAS Ecu folder in Tool32.</string>
+    <string name="no_sgbd">No ECU file yet. Import your EDIABAS Ecu folder in Tool32.</string>
     <string name="no_match">No measurement matches.</string>
     <string name="selected_count">Selected: %1$d / %2$d</string>
     <plurals name="measurements_count">
@@ -136,7 +134,7 @@
     <string name="export_file">Save to file</string>
     <string name="import_file">Import from file</string>
     <string name="reset_default">Reset to default</string>
-    <string name="reset_confirm">Replace your layout with the default one?</string>
+    <string name="reset_confirm">Replace your layout with an empty dashboard (one empty page on the phone and one in Android Auto)?</string>
     <string name="import_ok">Layout imported</string>
     <string name="import_failed">Import failed: %1$s</string>
     <string name="export_ok">Layout saved</string>
@@ -177,4 +175,28 @@
     <string name="car_usb_hint">K+DCAN cable plugged into the phone</string>
     <string name="car_sim_hint">Built-in simulated engine, moving values</string>
     <string name="car_no_pages">No Android Auto page yet: add one in the dashboard editor on the phone.</string>
+
+    <!-- Generic dashboard: empty state, name, example, ECU picker -->
+    <string name="empty_title">Add your first card</string>
+    <string name="empty_hint">Show any live value of any ECU of your car: engine, gearbox, climate, instrument cluster, body modules…</string>
+    <string name="dashboard_name">Dashboard name</string>
+    <string name="dashboard_rename">Rename dashboard</string>
+    <string name="dashboard_name_hint">Shown at the top, e.g. your car (“330i”). Leave empty to show BimmerData.</string>
+    <string name="example_msv70">Example: MSV70 (N52 engine)</string>
+    <string name="example_confirm">Replace your pages with the MSV70 example layout? Its cards are made for the MSV70 engine ECU (N52 six-cylinder, E60 / E9x) and stay empty with other engines.</string>
+    <string name="example_apply">Apply</string>
+    <string name="example_applied">MSV70 example applied</string>
+    <string name="sgbd_search">Search an ECU: name or description</string>
+    <string name="sgbd_detected">Detected in your car</string>
+    <string name="sgbd_loading">Reading the ECU folder…</string>
+    <string name="no_sgbd_match">No ECU matches.</string>
+    <plurals name="sgbd_all">
+        <item quantity="one">All ECUs (%d)</item>
+        <item quantity="other">All ECUs (%d)</item>
+    </plurals>
+    <plurals name="values_count">
+        <item quantity="one">%d value</item>
+        <item quantity="other">%d values</item>
+    </plurals>
+    <string name="car_empty_page">No cards on this page yet. Add them on the phone: Edit › Android Auto.</string>
 </resources>

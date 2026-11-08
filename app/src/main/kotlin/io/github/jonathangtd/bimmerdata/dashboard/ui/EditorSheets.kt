@@ -90,6 +90,7 @@ import io.github.jonathangtd.bimmerdata.dashboard.GridRules
 import io.github.jonathangtd.bimmerdata.dashboard.LayoutPreset
 import io.github.jonathangtd.bimmerdata.dashboard.LayoutPresets
 import io.github.jonathangtd.bimmerdata.dashboard.Page
+import io.github.jonathangtd.bimmerdata.dashboard.SgbdChoices
 import io.github.jonathangtd.bimmerdata.dashboard.Target
 import io.github.jonathangtd.bimmerdata.dashboard.car.CarPageRenderer
 import io.github.jonathangtd.bimmerdata.dashboard.car.CarScreen
@@ -107,6 +108,7 @@ import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.MeasurementSource
 import io.github.jonathangtd.bimmerdata.live.RecordingState
 import io.github.jonathangtd.bimmerdata.live.Sample
+import io.github.jonathangtd.bimmerdata.live.SgbdInfo
 import io.github.jonathangtd.bimmerdata.ui.BarlowCondensed
 import io.github.jonathangtd.bimmerdata.ui.Cockpit
 import kotlin.math.sin
@@ -208,6 +210,35 @@ internal fun ConfirmDialog(text: String, confirm: String, onConfirm: () -> Unit,
     )
 }
 
+/** One-line text dialog (dashboard name); an empty text is allowed (= [placeholder] is shown instead). */
+@Composable
+internal fun TextInputDialog(
+    title: String, initial: String, placeholder: String, maxLength: Int, hint: String?,
+    onConfirm: (String) -> Unit, onDismiss: () -> Unit,
+) {
+    var text by remember { mutableStateOf(initial) }
+    AlertDialog(
+        onDismissRequest = onDismiss, containerColor = Cockpit.Card,
+        title = { Text(title, color = Cockpit.Text, fontFamily = BarlowCondensed, fontWeight = FontWeight.SemiBold, fontSize = 22.sp) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = text, onValueChange = { text = it.take(maxLength) }, singleLine = true,
+                    placeholder = { Text(placeholder, color = Cockpit.Muted) },
+                    modifier = Modifier.fillMaxWidth(), colors = fieldColors(),
+                )
+                if (hint != null) Text(hint, color = Cockpit.Muted, fontSize = 13.sp, lineHeight = 18.sp, modifier = Modifier.padding(top = 8.dp))
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(text) }, modifier = Modifier.heightIn(min = MinTouch)) { Text(stringResource(R.string.save), color = Cockpit.Accent) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = MinTouch)) { Text(stringResource(R.string.cancel), color = Cockpit.Muted) }
+        },
+    )
+}
+
 // ------------------------------------------------------------------ demo data for type previews
 
 private class DemoFeed : GaugeFeed {
@@ -250,13 +281,13 @@ internal fun MeasurementPickerSheet(
 ) {
     var type by remember { mutableStateOf(fixedType) }
     var sgbd by remember { mutableStateOf(initialIds.firstOrNull()?.substringBefore('/')) }
-    val sgbds by produceState<List<String>?>(null) { value = vm.sgbds() }
+    val choices by produceState<SgbdChoices?>(null) { value = vm.sgbdChoices() }
     val selected = remember { mutableStateListOf<String>().apply { addAll(initialIds) } }
     var autoSkipped by remember { mutableStateOf(false) }
-    LaunchedEffect(sgbds, type) {
-        val list = sgbds
+    LaunchedEffect(choices, type) {
+        val list = choices?.all
         if (type != null && sgbd == null && list != null && list.size == 1 && !autoSkipped) {
-            sgbd = list[0]
+            sgbd = list[0].name
             autoSkipped = true
         }
     }
@@ -272,13 +303,13 @@ internal fun MeasurementPickerSheet(
                 }
                 s == null -> {
                     SheetHeader(stringResource(R.string.choose_sgbd), onBack = if (fixedType == null) ({ type = null }) else null)
-                    SgbdStep(sgbds) { sgbd = it }
+                    SgbdStep(choices) { sgbd = it }
                 }
                 else -> {
                     SheetHeader(
                         s.uppercase(),
                         onBack = {
-                            if (autoSkipped || (sgbds?.size ?: 0) <= 1) {
+                            if (autoSkipped || (choices?.all?.size ?: 0) <= 1) {
                                 if (fixedType == null) type = null
                                 sgbd = null
                                 autoSkipped = true
@@ -323,24 +354,72 @@ private fun TypeStep(renderer: GaugeRenderer, onPick: (GaugeType) -> Unit) {
     }
 }
 
+/** ECU list: search by SGBD name or ECU description, ECUs detected in the car first. */
 @Composable
-private fun SgbdStep(sgbds: List<String>?, onPick: (String) -> Unit) {
-    if (sgbds != null && sgbds.isEmpty()) {
-        Text(stringResource(R.string.no_sgbd), color = Cockpit.Muted, fontSize = 15.sp, modifier = Modifier.padding(24.dp))
+internal fun SgbdStep(choices: SgbdChoices?, onPick: (String) -> Unit) {
+    if (choices == null) {
+        Column(Modifier.fillMaxWidth().padding(24.dp)) {
+            Text(stringResource(R.string.sgbd_loading), color = Cockpit.Muted, fontSize = 15.sp)
+        }
         return
     }
-    LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-        items(sgbds.orEmpty()) { name ->
-            Row(
-                Modifier.fillMaxWidth().heightIn(min = 56.dp).clip(RoundedCornerShape(12.dp)).clickable { onPick(name) }.padding(horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(name.uppercase(), color = Cockpit.Text, fontSize = 17.sp, fontFamily = BarlowCondensed, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = Cockpit.Muted)
+    if (choices.isEmpty) {
+        Text(stringResource(R.string.no_sgbd), color = Cockpit.Muted, fontSize = 15.sp, lineHeight = 21.sp, modifier = Modifier.padding(24.dp))
+        return
+    }
+    var query by remember { mutableStateOf("") }
+    val detected = remember(choices, query) { SgbdChoices.filter(choices.detected, query) }
+    val all = remember(choices, query) { SgbdChoices.filter(choices.all, query) }
+    Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+        OutlinedTextField(
+            value = query, onValueChange = { query = it }, singleLine = true, label = { Text(stringResource(R.string.sgbd_search)) },
+            modifier = Modifier.fillMaxWidth(), colors = fieldColors(),
+        )
+        Spacer(Modifier.height(8.dp))
+        if (detected.isEmpty() && all.isEmpty()) Text(stringResource(R.string.no_sgbd_match), color = Cockpit.Muted, fontSize = 15.sp)
+        LazyColumn(Modifier.weight(1f)) {
+            if (detected.isNotEmpty()) {
+                item(key = "h_detected") { SectionLabel(stringResource(R.string.sgbd_detected)) }
+                items(detected, key = { "d_" + it.name }) { SgbdRow(it, onPick) }
+                item(key = "h_all") { SectionLabel(pluralStringResource(R.plurals.sgbd_all, all.size, all.size)) }
+            } else {
+                item(key = "h_count") { SectionLabel(pluralStringResource(R.plurals.sgbd_all, all.size, all.size)) }
             }
-            HorizontalDivider(color = Cockpit.Border)
+            items(all, key = { it.name }) { SgbdRow(it, onPick) }
         }
     }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text.uppercase(), color = Cockpit.Muted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.8.sp,
+        modifier = Modifier.padding(start = 12.dp, top = 12.dp, bottom = 6.dp),
+    )
+}
+
+@Composable
+private fun SgbdRow(info: SgbdInfo, onPick: (String) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 60.dp).clip(RoundedCornerShape(12.dp)).clickable { onPick(info.name) }
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(info.name.uppercase(), color = Cockpit.Text, fontSize = 17.sp, fontFamily = BarlowCondensed, fontWeight = FontWeight.SemiBold)
+            if (info.description.isNotBlank()) {
+                Text(info.description, color = Cockpit.Muted, fontSize = 13.sp, lineHeight = 17.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
+        }
+        if (info.measurementCount > 0) {
+            Text(
+                pluralStringResource(R.plurals.values_count, info.measurementCount, info.measurementCount),
+                color = Cockpit.Muted, fontSize = 12.sp, modifier = Modifier.padding(start = 8.dp),
+            )
+        }
+        Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = Cockpit.Muted)
+    }
+    HorizontalDivider(color = Cockpit.Border)
 }
 
 @Composable
@@ -355,7 +434,7 @@ private fun MeasurementStep(
         val q = query.trim()
         all.orEmpty().filter { m ->
             q.isEmpty() || m.label.contains(q, ignoreCase = true) || m.id.contains(q, ignoreCase = true) ||
-                (m.source as? MeasurementSource.MeasurementTable)?.resultName?.contains(q, ignoreCase = true) == true
+                m.description.contains(q, ignoreCase = true) || m.unit.equals(q, ignoreCase = true)
         }
     }
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
@@ -393,9 +472,8 @@ private fun MeasurementStep(
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text(m.label, color = Cockpit.Text, fontSize = 16.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        val source = (m.source as? MeasurementSource.MeasurementTable)?.resultName
                         Text(
-                            listOfNotNull(m.unit.takeIf { it.isNotBlank() && it != "-" }, m.id.substringAfter('/'), source).joinToString("  ·  "),
+                            sourceLine(m),
                             color = Cockpit.Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         )
                     }
@@ -411,6 +489,15 @@ private fun MeasurementStep(
             )
         }
     }
+}
+
+/** "°C  ·  0x4402  ·  STAT_OELTEMPERATUR_WERT" or "°C  ·  STATUS_GETRIEBETEMPERATUR  ·  STAT_…_WERT". */
+private fun sourceLine(m: Measurement): String {
+    val unit = m.unit.takeIf { it.isNotBlank() && it != "-" }
+    return when (val src = m.source) {
+        is MeasurementSource.MeasurementTable -> listOfNotNull(unit, m.id.substringAfter('/'), src.resultName)
+        is MeasurementSource.JobResult -> listOfNotNull(unit, src.job + if (src.args.isNotEmpty()) " " + src.args.substringAfter(';') else "", src.resultName)
+    }.joinToString("  ·  ")
 }
 
 // ------------------------------------------------------------------ card editor

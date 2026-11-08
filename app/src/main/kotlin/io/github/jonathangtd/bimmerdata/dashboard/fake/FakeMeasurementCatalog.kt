@@ -6,11 +6,14 @@ package io.github.jonathangtd.bimmerdata.dashboard.fake
 import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.MeasurementCatalog
 import io.github.jonathangtd.bimmerdata.live.MeasurementSource
+import io.github.jonathangtd.bimmerdata.live.SgbdInfo
 import java.util.Locale
 
 /** A slice of the MSV70 MESSWERTETAB (INFO labels and EINHEIT units as in the SGBD). */
 class FakeMeasurementCatalog : MeasurementCatalog {
     override fun sgbdsWithMeasurements(): List<String> = listOf("msv70")
+
+    override fun sgbdInfos(): List<SgbdInfo> = listOf(SgbdInfo("msv70", "MSV70 fuer N52 (fake data)", MSV70.size))
 
     override fun measurements(sgbd: String): List<Measurement> = if (sgbd.equals("msv70", ignoreCase = true)) MSV70 else emptyList()
 

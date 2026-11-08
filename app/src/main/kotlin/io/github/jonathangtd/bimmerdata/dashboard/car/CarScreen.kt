@@ -68,6 +68,7 @@ object CarScreen {
         statusColor = StatusLine.color(status),
         recordText = if (rec.recording) context.getString(R.string.rec_short) + " " + StatusLine.elapsed(nowMs - (rec.startedAtMs ?: nowMs)) else null,
         showArrows = pageCount > 1,
+        emptyText = if (page.cards.isEmpty()) context.getString(R.string.car_empty_page) else null,
     )
 
     /**

@@ -5,7 +5,22 @@ package io.github.jonathangtd.bimmerdata.dashboard
 
 import io.github.jonathangtd.bimmerdata.gauges.GaugeType
 
-/** MSV70 (E60/E90 N52 DME) MESSWERTETAB ids used by the default dashboard. */
+/**
+ * First-launch layout: one empty page on the phone and one in Android Auto, nothing bound to a
+ * particular ECU (the app works with any SGBD of any car; the user adds cards from the picker).
+ */
+object DefaultDashboard {
+    /** Grid of a new phone page (portrait) and of a new Android Auto page (landscape, 4 big cards). */
+    fun phonePage(name: String) = Page(name = name, columns = 2, rows = 6)
+
+    fun carPage(name: String) = Page(name = name, columns = 4, rows = 1)
+
+    /** [pageName] names both first pages ("Page 1"). */
+    fun create(pageName: String = "Page 1"): Dashboard =
+        Dashboard(phonePages = listOf(phonePage(pageName)), carPages = listOf(carPage(pageName)))
+}
+
+/** MSV70 (E60/E90 N52 DME) MESSWERTETAB ids used by the [Msv70Example] layout. */
 object Msv70 {
     const val OIL_TEMP = "msv70/0x4402"
     const val COOLANT_TEMP = "msv70/0x4300"
@@ -21,8 +36,8 @@ object Msv70 {
     const val SPEED = "msv70/0x580D"
 }
 
-/** Localized names used when building the first-launch dashboard. */
-data class DefaultLabels(
+/** Localized names used when building the [Msv70Example] layout. */
+data class ExampleLabels(
     val pageEngine: String = "Engine",
     val pageMixture: String = "Mixture",
     val pageTemperatures: String = "Temperatures",
@@ -45,9 +60,15 @@ data class DefaultLabels(
     val trimB2: String = "STFT B2",
 )
 
-/** First-launch layout: mockup "A" on the phone, the four-card mockup in Android Auto. */
-object DefaultDashboard {
-    fun create(l: DefaultLabels = DefaultLabels()): Dashboard {
+/**
+ * Optional example layout for an MSV70 engine ECU (N52 six-cylinder of E60 / E9x, e.g. 330i),
+ * the original mockups: "A" on the phone, the four-card mockup in Android Auto. Offered in the
+ * editor's menu ("Example: MSV70 (N52)"); never applied by itself.
+ */
+object Msv70Example {
+    const val SGBD = "msv70"
+
+    fun create(l: ExampleLabels = ExampleLabels()): Dashboard {
         fun oilDial(col: Int, row: Int, cs: Int, rs: Int) = Card(
             type = GaugeType.Dial, measurementIds = listOf(Msv70.OIL_TEMP), title = l.oil,
             min = 40.0, max = 140.0, warnBelow = 80.0, warnAbove = 130.0, col = col, row = row, colSpan = cs, rowSpan = rs,

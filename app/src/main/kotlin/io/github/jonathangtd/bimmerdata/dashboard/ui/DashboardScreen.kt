@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -83,6 +84,7 @@ import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.jonathangtd.bimmerdata.R
+import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.DashboardViewModel
 import io.github.jonathangtd.bimmerdata.dashboard.GridLimits
 import io.github.jonathangtd.bimmerdata.dashboard.GridRules
@@ -110,6 +112,8 @@ internal sealed interface Sheet {
     data class Pages(val target: Target) : Sheet
     data object CarFullscreen : Sheet
     data object ConfirmReset : Sheet
+    data object ConfirmExample : Sheet
+    data object RenameDashboard : Sheet
 }
 
 @Composable
@@ -203,7 +207,8 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                 EditorHeader(target = ui.target, onTarget = vm::setTarget, onDone = { vm.setEditing(false) })
             } else {
                 DashboardHeader(
-                    title = currentPage?.let { headerTitle(it) } ?: stringResource(R.string.app_name),
+                    title = dashboard.title(stringResource(R.string.app_name)),
+                    onRename = { sheet = Sheet.RenameDashboard },
                     status = status, rec = rec, format = renderer.format,
                     onRecord = vm::toggleRecording, onEdit = { vm.setEditing(true) },
                     connection = connection, onConnect = vm::connect, onDisconnect = vm::disconnect,
@@ -234,6 +239,8 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                     onSaveFile = { saveFile.launch("bimmerdata-layout.json") },
                     onImport = { openFile.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
                     onReset = { sheet = Sheet.ConfirmReset },
+                    onRename = { sheet = Sheet.RenameDashboard },
+                    onExample = { sheet = Sheet.ConfirmExample },
                 )
                 Text(
                     stringResource(R.string.edit_hint), color = Cockpit.Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -248,7 +255,10 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                         onPageSettled = { vm.selectPage(Target.Phone, it) },
                     ) { page ->
                         if (page.cards.isEmpty() && !ui.editing) {
-                            EmptyPage()
+                            EmptyPage(onAdd = {
+                                vm.setEditing(true)
+                                sheet = addSheetOrMessage(res, Target.Phone, page, null, null) { message(it) } ?: sheet
+                            })
                         } else {
                             CardGrid(
                                 page = page, renderer = renderer, feed = vm.feed, frameClock = frame, index = index,
@@ -372,6 +382,25 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
             },
             onDismiss = { sheet = null },
         )
+        Sheet.ConfirmExample -> ConfirmDialog(
+            text = stringResource(R.string.example_confirm), confirm = stringResource(R.string.example_apply),
+            onConfirm = {
+                vm.applyMsv70Example()
+                sheet = null
+                message(res.getString(R.string.example_applied), withUndo = true)
+            },
+            onDismiss = { sheet = null },
+        )
+        Sheet.RenameDashboard -> TextInputDialog(
+            title = stringResource(R.string.dashboard_name), initial = dashboard.name.orEmpty(),
+            placeholder = stringResource(R.string.app_name), maxLength = Dashboard.MAX_NAME_LENGTH,
+            hint = stringResource(R.string.dashboard_name_hint),
+            onConfirm = {
+                vm.renameDashboard(it)
+                sheet = null
+            },
+            onDismiss = { sheet = null },
+        )
     }
 }
 
@@ -388,15 +417,9 @@ private fun addSheetOrMessage(res: Resources, t: Target, page: Page, col: Int?, 
     return Sheet.AddCard(t, page.id, col, row)
 }
 
-/** "MSV70 Live" from the SGBDs on the page. */
-private fun headerTitle(page: Page): String? {
-    val sgbds = page.measurementIds().map { it.substringBefore('/').uppercase() }.distinct()
-    return sgbds.takeIf { it.isNotEmpty() }?.joinToString(" · ")
-}
-
 @Composable
-private fun DashboardHeader(
-    title: String, status: AcquisitionStatus, rec: RecordingState, format: GaugeFormat,
+internal fun DashboardHeader(
+    title: String, onRename: () -> Unit, status: AcquisitionStatus, rec: RecordingState, format: GaugeFormat,
     onRecord: () -> Unit, onEdit: () -> Unit,
     connection: LiveConnection, onConnect: (LiveMode) -> Unit, onDisconnect: () -> Unit,
 ) {
@@ -425,9 +448,11 @@ private fun DashboardHeader(
     }
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            val renameLabel = stringResource(R.string.dashboard_rename)
             Text(
-                stringResource(R.string.dash_title_live, title), color = Cockpit.Text, fontFamily = BarlowCondensed,
+                title, color = Cockpit.Text, fontFamily = BarlowCondensed,
                 fontWeight = FontWeight.SemiBold, fontSize = 22.sp, letterSpacing = 0.5.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(role = Role.Button, onClickLabel = renameLabel, onClick = onRename),
             )
             Box {
                 Row(
@@ -524,6 +549,7 @@ private fun EditorHeader(target: Target, onTarget: (Target) -> Unit, onDone: () 
 private fun EditorToolbar(
     onLayout: () -> Unit, onPages: () -> Unit, onAddCard: () -> Unit,
     onShare: () -> Unit, onSaveFile: () -> Unit, onImport: () -> Unit, onReset: () -> Unit,
+    onRename: () -> Unit, onExample: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -533,9 +559,11 @@ private fun EditorToolbar(
         Box {
             RoundIconButton(R.drawable.ic_more, stringResource(R.string.more), onClick = { menu = true }, background = Track)
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Cockpit.Card) {
+                MenuItem(R.drawable.ic_edit, stringResource(R.string.dashboard_rename)) { menu = false; onRename() }
                 MenuItem(R.drawable.ic_share, stringResource(R.string.share_layout)) { menu = false; onShare() }
                 MenuItem(R.drawable.ic_download, stringResource(R.string.export_file)) { menu = false; onSaveFile() }
                 MenuItem(R.drawable.ic_upload, stringResource(R.string.import_file)) { menu = false; onImport() }
+                MenuItem(R.drawable.ic_dashboard, stringResource(R.string.example_msv70)) { menu = false; onExample() }
                 MenuItem(R.drawable.ic_reset, stringResource(R.string.reset_default)) { menu = false; onReset() }
             }
         }
@@ -552,10 +580,44 @@ private fun MenuItem(icon: Int, text: String, onClick: () -> Unit) {
     )
 }
 
+/** A page without cards: one big "+" that opens the card picker, and what can be shown. */
 @Composable
-private fun EmptyPage() {
+internal fun EmptyPage(onAdd: () -> Unit) {
+    val addLabel = stringResource(R.string.empty_title)
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(stringResource(R.string.empty_page), color = Cockpit.Muted, fontSize = 15.sp, lineHeight = 21.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(32.dp))
+        Column(
+            Modifier.padding(horizontal = 32.dp).widthIn(max = 360.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                Modifier
+                    .size(112.dp)
+                    .border(1.5.dp, Cockpit.Accent.copy(alpha = 0.35f), CircleShape)
+                    .padding(10.dp)
+                    .clip(CircleShape)
+                    .background(Cockpit.Accent.copy(alpha = 0.14f))
+                    .clickable(role = Role.Button, onClickLabel = addLabel, onClick = onAdd)
+                    .semantics { contentDescription = addLabel },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(painterResource(R.drawable.ic_add), contentDescription = null, tint = Cockpit.Accent, modifier = Modifier.size(44.dp))
+            }
+            Spacer(Modifier.height(24.dp))
+            Text(
+                addLabel, color = Cockpit.Text, fontFamily = BarlowCondensed, fontWeight = FontWeight.SemiBold,
+                fontSize = 26.sp, textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(R.string.empty_hint), color = Cockpit.Muted, fontSize = 15.sp, lineHeight = 21.sp,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(24.dp))
+            PillButton(
+                stringResource(R.string.add_card), onClick = onAdd, icon = R.drawable.ic_add,
+                color = Cockpit.OnAccent, background = Cockpit.Accent,
+            )
+        }
     }
 }
 

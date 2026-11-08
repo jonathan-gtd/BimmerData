@@ -7,6 +7,7 @@ import android.content.Context
 import io.github.jonathangtd.bimmerdata.dashboard.fake.FakeLiveDataSource
 import io.github.jonathangtd.bimmerdata.dashboard.fake.FakeMeasurementCatalog
 import io.github.jonathangtd.bimmerdata.dashboard.fake.FakeSessionRecorder
+import io.github.jonathangtd.bimmerdata.live.DetectedEcus
 import io.github.jonathangtd.bimmerdata.live.LiveConnection
 import io.github.jonathangtd.bimmerdata.live.LiveDataSource
 import io.github.jonathangtd.bimmerdata.live.LiveMode
@@ -34,6 +35,19 @@ interface DashboardDependencies {
     /** Measurements [client] shows (see [MeasurementRequests] for how phone and car share the engine). */
     fun requestMeasurements(client: MeasurementClient, measurements: List<Measurement>, foreground: Boolean)
     fun clearMeasurements(client: MeasurementClient)
+}
+
+/**
+ * Hooks other features plug into the dashboard, process-wide (set them once, e.g. at startup or
+ * when a vehicle has been identified).
+ */
+object DashboardHooks {
+    /**
+     * SGBDs found in the connected car by the vehicle identification (lower case, without
+     * extension, e.g. "msv70", "kombi87"). The card picker lists them first under "Detected in
+     * your car". Called off the main thread each time the picker opens; default: none.
+     */
+    @Volatile var detectedEcus: DetectedEcus = DetectedEcus.None
 }
 
 /** The single place that decides where live data comes from: the real acquisition engine. */

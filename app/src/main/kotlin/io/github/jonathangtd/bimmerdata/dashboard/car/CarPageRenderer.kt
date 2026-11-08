@@ -8,7 +8,10 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import android.text.Layout
+import android.text.StaticLayout
 import android.text.TextPaint
+import androidx.core.graphics.withTranslation
 import io.github.jonathangtd.bimmerdata.dashboard.Page
 import io.github.jonathangtd.bimmerdata.gauges.GaugeFeed
 import io.github.jonathangtd.bimmerdata.gauges.GaugeFormat
@@ -31,6 +34,8 @@ data class CarChrome(
     /** "REC 12:34", or null when not recording. */
     val recordText: String?,
     val showArrows: Boolean = true,
+    /** Shown in the card area when the page has no card ("add them on the phone"); null = nothing. */
+    val emptyText: String? = null,
 )
 
 /**
@@ -159,6 +164,7 @@ class CarPageRenderer(context: Context, locale: Locale, night: Boolean = false) 
         this.grid.set(grid)
         drawHeaderLine(canvas, header, chrome, reserveRight)
         if (page == null) return false
+        if (page.cards.isEmpty()) drawEmpty(canvas, grid, chrome.emptyText)
         var animating = false
         page.cards.forEachIndexed { i, card ->
             cardRect(page, card.col, card.row, card.colSpan, card.rowSpan, rect)
@@ -211,12 +217,42 @@ class CarPageRenderer(context: Context, locale: Locale, night: Boolean = false) 
         page: Page, specs: List<GaugeSpec>, states: List<GaugeState>, feed: GaugeFeed, frameNanos: Long, chrome: CarChrome,
     ): Boolean {
         drawChrome(canvas, left, top, width, height, chrome)
+        if (page.cards.isEmpty()) drawEmpty(canvas, grid, chrome.emptyText)
         var animating = false
         page.cards.forEachIndexed { i, card ->
             cardRect(page, card.col, card.row, card.colSpan, card.rowSpan, rect)
             if (gauges.draw(canvas, rect, specs[i], states[i], feed, frameNanos)) animating = true
         }
         return animating
+    }
+
+    private val emptyPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = baseTheme.fonts.regular }
+    private var emptyLayout: StaticLayout? = null
+    private var emptyKey: Triple<String, Int, Float>? = null
+
+    /** Empty page: a dashed frame over the card area with [text] centered in it. */
+    private fun drawEmpty(canvas: Canvas, area: RectF, text: String?) {
+        if (text == null || area.width() <= 0f || area.height() <= 0f) return
+        val u = unit
+        stroke.color = baseTheme.muted
+        stroke.alpha = 90
+        stroke.strokeWidth = 2f * u
+        stroke.pathEffect = android.graphics.DashPathEffect(floatArrayOf(10f * u, 8f * u), 0f)
+        rect.set(area)
+        rect.inset(stroke.strokeWidth, stroke.strokeWidth)
+        canvas.drawRoundRect(rect, 26f * u, 26f * u, stroke)
+        stroke.pathEffect = null
+        stroke.alpha = 255
+        emptyPaint.textSize = 24f * u
+        emptyPaint.color = baseTheme.muted
+        val width = (area.width() * 0.7f).toInt().coerceAtLeast(1)
+        val key = Triple(text, width, emptyPaint.textSize)
+        val layout = emptyLayout.takeIf { emptyKey == key } ?: StaticLayout.Builder.obtain(text, 0, text.length, emptyPaint, width)
+            .setAlignment(Layout.Alignment.ALIGN_CENTER).setMaxLines(3).build().also {
+                emptyLayout = it
+                emptyKey = key
+            }
+        canvas.withTranslation(area.centerX() - width / 2f, area.centerY() - layout.height / 2f) { layout.draw(this) }
     }
 
     companion object {

@@ -21,8 +21,25 @@ class DashboardModelTest {
     // ---- default layout ----
 
     @Test
-    fun `default dashboard is valid and follows mockup A`() {
-        val d = DefaultDashboard.create()
+    fun `first launch - one empty page on the phone and one in Android Auto, bound to no ECU`() {
+        val d = DefaultDashboard.create("Page 1")
+        assertEquals(1, d.phonePages.size)
+        assertEquals(1, d.carPages.size)
+        assertTrue(d.phonePages[0].cards.isEmpty() && d.carPages[0].cards.isEmpty())
+        assertTrue(d.measurementIds().isEmpty())
+        assertEquals("Page 1", d.phonePages[0].name)
+        assertEquals(2 to 6, d.phonePages[0].let { it.columns to it.rows })
+        assertEquals(4 to 1, d.carPages[0].let { it.columns to it.rows })
+        assertNull(d.name)
+        assertEquals("BimmerData", d.title("BimmerData"))
+        assertEquals("330i", d.copy(name = " 330i ").title("BimmerData"))
+        // survives storage (an empty page is a valid dashboard)
+        assertEquals(d, DashboardJson.decode(DashboardJson.encode(d)))
+    }
+
+    @Test
+    fun `MSV70 example is valid and follows mockup A`() {
+        val d = Msv70Example.create()
         assertEquals(3, d.phonePages.size)
         assertEquals(3, d.carPages.size)
         (d.phonePages + d.carPages).forEach { assertTrue(GridRules.isValid(it), "invalid page ${it.name}") }
@@ -39,11 +56,13 @@ class DashboardModelTest {
 
     @Test
     fun `json round trip keeps everything`() {
-        val d = DefaultDashboard.create(DefaultLabels(oil = "Huile", pageEngine = "Moteur"))
+        val d = Msv70Example.create(ExampleLabels(oil = "Huile", pageEngine = "Moteur")).copy(name = "Ma 330i")
         val text = DashboardJson.encode(d)
         val back = DashboardJson.decode(text)
         assertEquals(d, back)
         assertTrue(text.contains("\"Huile\""))
+        assertTrue(text.contains("\"Ma 330i\""))
+        assertNull(DashboardJson.decode(DashboardJson.encode(d.copy(name = "  "))).name, "blank name = app name")
     }
 
     @Test
@@ -175,7 +194,7 @@ class DashboardModelTest {
 
     @Test
     fun `applying a preset keeps reading order and drops extra cards`() {
-        val p = DefaultDashboard.create().phonePages[0]
+        val p = Msv70Example.create().phonePages[0]
         val bigLeft = LayoutPresets.phone.first { it.id == "big_left" }
         assertEquals(p.cards.size - 3, GridRules.droppedByPreset(p, bigLeft))
         val applied = GridRules.applyPreset(p, bigLeft)
@@ -189,7 +208,7 @@ class DashboardModelTest {
 
     @Test
     fun `dashboard page helpers`() {
-        val d = DefaultDashboard.create()
+        val d = Msv70Example.create()
         val id = d.carPages[1].id
         val renamed = d.updatePage(Target.Car, id) { it.copy(name = "X") }
         assertEquals("X", renamed.pages(Target.Car)[1].name)

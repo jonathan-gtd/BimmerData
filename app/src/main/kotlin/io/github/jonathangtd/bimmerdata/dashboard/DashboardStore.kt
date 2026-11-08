@@ -16,7 +16,10 @@ import java.io.File
 class DashboardStore(private val context: Context) {
     private val file = AtomicFile(File(context.filesDir, "dashboard.json"))
 
-    /** The saved dashboard, or the default one on first launch (or if the file is unreadable). */
+    /**
+     * The saved dashboard (an existing layout is never changed), or on first launch (or if the
+     * file is unreadable) the default one: an empty page on the phone and one in Android Auto.
+     */
     fun load(): Dashboard {
         val text = runCatching { file.readFully().toString(Charsets.UTF_8) }.getOrNull()
         if (text != null) {
@@ -46,8 +49,8 @@ class DashboardStore(private val context: Context) {
         /** Last layout saved in this process (the Android Auto screen follows phone edits with it). */
         val saved: StateFlow<Dashboard?> = _saved.asStateFlow()
 
-        fun defaultLabels(context: Context) = with(context) {
-            DefaultLabels(
+        fun exampleLabels(context: Context) = with(context) {
+            ExampleLabels(
                 pageEngine = getString(R.string.default_page_engine),
                 pageMixture = getString(R.string.default_page_mixture),
                 pageTemperatures = getString(R.string.default_page_temperatures),
@@ -71,6 +74,9 @@ class DashboardStore(private val context: Context) {
             )
         }
 
-        fun defaultDashboard(context: Context): Dashboard = DefaultDashboard.create(defaultLabels(context))
+        fun defaultDashboard(context: Context): Dashboard = DefaultDashboard.create(context.getString(R.string.new_page, 1))
+
+        /** The optional MSV70 (N52) example layout, localized. */
+        fun msv70Example(context: Context): Dashboard = Msv70Example.create(exampleLabels(context))
     }
 }

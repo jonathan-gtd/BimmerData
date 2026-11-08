@@ -220,6 +220,8 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
         if (images.isEmpty()) {
             if (page == null && c != null) {
                 builder.setSingleList(ItemList.Builder().setNoItemsMessage(carContext.getString(R.string.car_no_pages)).build())
+            } else if (page != null && page.cards.isEmpty()) {
+                builder.setSingleList(ItemList.Builder().setNoItemsMessage(carContext.getString(R.string.car_empty_page)).build())
             } else {
                 builder.setLoading(true)
             }

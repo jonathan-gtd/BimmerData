@@ -10,7 +10,6 @@
     <string name="faults_coming_text">La lecture et l’effacement de la mémoire de défauts de chaque calculateur arrivent dans une prochaine version.</string>
 
     <!-- Dashboard header -->
-    <string name="dash_title_live">%1$s Live</string>
     <string name="status_live">En direct</string>
     <string name="status_running">%1$s · %2$s lect/s</string>
     <string name="status_connecting">Connexion…</string>
@@ -31,7 +30,6 @@
     <string name="rec_marker_added">Repère ajouté</string>
     <string name="edit">Modifier</string>
     <string name="done">Terminé</string>
-    <string name="empty_page">Cette page est vide. Touchez Modifier pour ajouter des cartes.</string>
     <string name="edit_hint">Glisser : déplacer · coin : taille · toucher : régler</string>
 
     <!-- Editor -->
@@ -102,7 +100,7 @@
     <string name="choose_type">Type de carte</string>
     <string name="choose_sgbd">Calculateur (SGBD)</string>
     <string name="search">Rechercher</string>
-    <string name="no_sgbd">Aucun calculateur avec table de mesures pour l’instant. Importez votre dossier EDIABAS Ecu dans Tool32.</string>
+    <string name="no_sgbd">Aucun fichier calculateur pour l’instant. Importez votre dossier EDIABAS Ecu dans Tool32.</string>
     <string name="no_match">Aucune mesure ne correspond.</string>
     <string name="selected_count">Sélection : %1$d / %2$d</string>
     <plurals name="measurements_count">
@@ -138,7 +136,7 @@
     <string name="export_file">Enregistrer dans un fichier</string>
     <string name="import_file">Importer un fichier</string>
     <string name="reset_default">Rétablir par défaut</string>
-    <string name="reset_confirm">Remplacer votre disposition par celle par défaut ?</string>
+    <string name="reset_confirm">Remplacer votre disposition par un tableau de bord vide (une page vide sur le téléphone et une dans Android Auto) ?</string>
     <string name="import_ok">Disposition importée</string>
     <string name="import_failed">Échec de l’import : %1$s</string>
     <string name="export_ok">Disposition enregistrée</string>
@@ -179,4 +177,30 @@
     <string name="car_usb_hint">Câble K+DCAN branché sur le téléphone</string>
     <string name="car_sim_hint">Moteur simulé intégré, valeurs en mouvement</string>
     <string name="car_no_pages">Aucune page Android Auto : ajoutez-en une dans l’éditeur du tableau de bord sur le téléphone.</string>
+
+    <!-- Tableau de bord générique : état vide, nom, exemple, choix du calculateur -->
+    <string name="empty_title">Ajoutez votre première carte</string>
+    <string name="empty_hint">Affichez n’importe quelle valeur en direct de n’importe quel calculateur de la voiture : moteur, boîte, climatisation, combiné, modules de carrosserie…</string>
+    <string name="dashboard_name">Nom du tableau de bord</string>
+    <string name="dashboard_rename">Renommer le tableau de bord</string>
+    <string name="dashboard_name_hint">Affiché en haut, par exemple votre voiture (« 330i »). Laissez vide pour afficher BimmerData.</string>
+    <string name="example_msv70">Exemple : MSV70 (moteur N52)</string>
+    <string name="example_confirm">Remplacer vos pages par l’exemple MSV70 ? Ses cartes sont faites pour le calculateur moteur MSV70 (six-cylindres N52, E60 / E9x) et restent vides avec un autre moteur.</string>
+    <string name="example_apply">Appliquer</string>
+    <string name="example_applied">Exemple MSV70 appliqué</string>
+    <string name="sgbd_search">Chercher un calculateur : nom ou description</string>
+    <string name="sgbd_detected">Détectés dans la voiture</string>
+    <string name="sgbd_loading">Lecture du dossier Ecu…</string>
+    <string name="no_sgbd_match">Aucun calculateur ne correspond.</string>
+    <plurals name="sgbd_all">
+        <item quantity="one">Tous les calculateurs (%d)</item>
+        <item quantity="many">Tous les calculateurs (%d)</item>
+        <item quantity="other">Tous les calculateurs (%d)</item>
+    </plurals>
+    <plurals name="values_count">
+        <item quantity="one">%d valeur</item>
+        <item quantity="many">%d valeurs</item>
+        <item quantity="other">%d valeurs</item>
+    </plurals>
+    <string name="car_empty_page">Aucune carte sur cette page. Ajoutez-en sur le téléphone : Modifier › Android Auto.</string>
 </resources>

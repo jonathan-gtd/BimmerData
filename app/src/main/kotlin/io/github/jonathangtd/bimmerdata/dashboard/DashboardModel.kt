@@ -26,6 +26,8 @@ data class Dashboard(
     val formatVersion: Int = FORMAT_VERSION,
     val phonePages: List<Page> = emptyList(),
     val carPages: List<Page> = emptyList(),
+    /** Name shown in the header (e.g. the car: "330i"); null = the app name. */
+    val name: String? = null,
 ) {
     fun pages(target: Target): List<Page> = if (target == Target.Phone) phonePages else carPages
 
@@ -39,8 +41,12 @@ data class Dashboard(
     fun measurementIds(): Set<String> =
         (phonePages + carPages).flatMapTo(LinkedHashSet()) { p -> p.cards.flatMap { it.measurementIds } }
 
+    /** [name] if set, else [fallback]. */
+    fun title(fallback: String): String = name?.trim()?.takeIf { it.isNotEmpty() } ?: fallback
+
     companion object {
         const val FORMAT_VERSION = 1
+        const val MAX_NAME_LENGTH = 40
     }
 }
 

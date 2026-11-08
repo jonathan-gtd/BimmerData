@@ -7,9 +7,11 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.jonathangtd.bimmerdata.live.AcquisitionStatus
+import io.github.jonathangtd.bimmerdata.live.EdiabasMeasurementCatalog
 import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.MeasurementClient
 import io.github.jonathangtd.bimmerdata.live.RecordingState
+import io.github.jonathangtd.bimmerdata.live.SgbdInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +39,37 @@ data class DashboardUi(
 ) {
     fun pageIndex(t: Target) = if (t == Target.Phone) phonePage else carPage
     fun currentPage(t: Target): Page? = dashboard?.pages(t)?.let { pages -> pages.getOrNull(pageIndex(t).coerceIn(0, (pages.size - 1).coerceAtLeast(0))) }
+}
+
+/** What the card picker lists: SGBDs detected in the car first, then every SGBD of the ECU folder. */
+data class SgbdChoices(val detected: List<SgbdInfo>, val all: List<SgbdInfo>) {
+    val isEmpty: Boolean get() = all.isEmpty()
+
+    companion object {
+        /** [detectedNames] that exist in [all], in detection order. */
+        fun of(all: List<SgbdInfo>, detectedNames: List<String>): SgbdChoices {
+            val byName = all.associateBy { it.name }
+            val detected = detectedNames.map { EdiabasMeasurementCatalog.normalize(it) }.distinct().mapNotNull { byName[it] }
+            return SgbdChoices(detected, all)
+        }
+
+        /**
+         * [list] filtered by [query]: every word must appear in the name or the description,
+         * ignoring case and accents ("kombi e90", "getriebe", "n52"). Name matches first.
+         */
+        fun filter(list: List<SgbdInfo>, query: String): List<SgbdInfo> {
+            val words = fold(query).split(' ').filter { it.isNotBlank() }
+            if (words.isEmpty()) return list
+            return list.mapNotNull { info ->
+                val name = fold(info.name)
+                val text = name + " " + fold(info.description)
+                if (words.all { it in text }) info to (if (name.startsWith(words[0])) 0 else if (words[0] in name) 1 else 2) else null
+            }.sortedBy { it.second }.map { it.first }
+        }
+
+        private fun fold(s: String): String = java.text.Normalizer.normalize(s.lowercase(), java.text.Normalizer.Form.NFD)
+            .replace(Regex("\\p{M}+"), "").replace("ß", "ss").replace("_", " ")
+    }
 }
 
 @OptIn(FlowPreview::class)
@@ -111,8 +144,11 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---- catalog for the card picker ----
 
-    suspend fun sgbds(): List<String> = withContext(Dispatchers.IO) {
-        runCatching { deps.catalog.sgbdsWithMeasurements() }.getOrDefault(emptyList())
+    /** SGBDs for the picker; the first call may scan the ECU folder (about a second, then cached on disk). */
+    suspend fun sgbdChoices(): SgbdChoices = withContext(Dispatchers.IO) {
+        val all = runCatching { deps.catalog.sgbdInfos() }.getOrDefault(emptyList())
+        val detected = runCatching { DashboardHooks.detectedEcus.sgbds() }.getOrDefault(emptyList())
+        SgbdChoices.of(all, detected)
     }
 
     suspend fun measurements(sgbd: String): List<Measurement> {
@@ -212,9 +248,22 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
         e.message ?: "Invalid file"
     }
 
+    /** Back to the first-launch layout (one empty page each); the dashboard name is kept. */
     fun resetToDefault() {
         val d = DashboardStore.defaultDashboard(getApplication())
-        _ui.update { it.copy(dashboard = d, phonePage = 0, carPage = 0, undo = it.dashboard) }
+        _ui.update { it.copy(dashboard = d.copy(name = it.dashboard?.name), phonePage = 0, carPage = 0, undo = it.dashboard) }
+    }
+
+    /** Replaces the pages with the MSV70 (N52 engine) example layout; the name is kept, undo restores. */
+    fun applyMsv70Example() {
+        val d = DashboardStore.msv70Example(getApplication())
+        _ui.update { it.copy(dashboard = d.copy(name = it.dashboard?.name), phonePage = 0, carPage = 0, undo = it.dashboard) }
+    }
+
+    /** Header name (blank = the app name). */
+    fun renameDashboard(name: String) = _ui.update { ui ->
+        val d = ui.dashboard ?: return@update ui
+        ui.copy(dashboard = d.copy(name = name.trim().take(Dashboard.MAX_NAME_LENGTH).takeIf { it.isNotEmpty() }))
     }
 
     // ---- recording ----
