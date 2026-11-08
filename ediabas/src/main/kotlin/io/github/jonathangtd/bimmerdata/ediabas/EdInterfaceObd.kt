@@ -78,6 +78,12 @@ class EdInterfaceObd(
     private var cancelRequested = false
 
     private var connectedProtected = false
+
+    /** Transport error of the last failed [interfaceConnect] (EDIABAS only reports IFH-0018). */
+    @Volatile
+    var lastConnectError: String? = null
+        private set
+
     private var protocol = Protocol.None
     private var currentBaudRate = 9600
     private var currentParity = SerialParity.None
@@ -250,12 +256,14 @@ class EdInterfaceObd(
             port.purgeInput()
         } catch (ex: IOException) {
             logFormat("*** Connect failed: {0}", ex.toString())
+            lastConnectError = ex.message ?: ex.toString()
             connectedProtected = false
             port.close()
             setError(ErrorCodes.EDIABAS_IFH_0018)
             return false
         }
         connectedProtected = true
+        lastConnectError = null
         ediabasProtected?.logString(EdLogLevel.Ifh, "Connected: ${port.name}")
         return true
     }
