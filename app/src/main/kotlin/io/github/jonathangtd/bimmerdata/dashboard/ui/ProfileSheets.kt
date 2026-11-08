@@ -106,55 +106,54 @@ internal fun NoProfile(onCreate: () -> Unit, onImport: () -> Unit) {
     }
 }
 
-/** The profile list: tap to switch; per-profile actions; new and import at the bottom. */
+/** What can be done to one profile (Profiles tab): the "⋮" menu of its row. */
+internal class ProfileActions(
+    val onEdit: (String) -> Unit,
+    val onDuplicate: (String) -> Unit,
+    val onExport: (String) -> Unit,
+    val onDelete: (String) -> Unit,
+)
+
+/**
+ * Quick switch from the dashboard header: tap a profile to make it active, or create one; the
+ * full management (edit, duplicate, export, import, delete) is the Profiles tab ([onManage]).
+ */
 @Composable
-internal fun ProfilesSheet(
+internal fun ProfileSwitchSheet(
     set: ProfileSet,
     onDismiss: () -> Unit,
     onActivate: (String) -> Unit,
     onNew: () -> Unit,
-    onImport: () -> Unit,
-    onEdit: (String) -> Unit,
-    onDuplicate: (String) -> Unit,
-    onExport: (String) -> Unit,
-    onDelete: (String) -> Unit,
+    onManage: () -> Unit,
 ) {
     CockpitSheet(onDismiss) {
-        ProfilesSheetContent(set, onActivate, onNew, onImport, onEdit, onDuplicate, onExport, onDelete)
+        ProfileSwitchContent(set, onActivate, onNew, onManage)
     }
 }
 
 @Composable
-internal fun ProfilesSheetContent(
-    set: ProfileSet,
-    onActivate: (String) -> Unit,
-    onNew: () -> Unit,
-    onImport: () -> Unit,
-    onEdit: (String) -> Unit,
-    onDuplicate: (String) -> Unit,
-    onExport: (String) -> Unit,
-    onDelete: (String) -> Unit,
-) {
+internal fun ProfileSwitchContent(set: ProfileSet, onActivate: (String) -> Unit, onNew: () -> Unit, onManage: () -> Unit) {
     Column(Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-        SheetHeader(stringResource(R.string.profiles_title))
-        LazyColumn(Modifier.fillMaxWidth().heightIn(max = 520.dp).padding(horizontal = 16.dp)) {
+        SheetHeader(stringResource(R.string.ptab_switch_title))
+        LazyColumn(Modifier.fillMaxWidth().heightIn(max = 480.dp).padding(horizontal = 16.dp)) {
             items(set.profiles, key = { it.id }) { p ->
-                ProfileRow(p, active = p.id == set.activeId, onActivate, onEdit, onDuplicate, onExport, onDelete)
+                ProfileRow(p, active = p.id == set.activeId, onActivate = onActivate, actions = null)
+                HorizontalDivider(color = Cockpit.Border)
             }
         }
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             PillButton(stringResource(R.string.profile_new), onClick = onNew, icon = R.drawable.ic_add, color = Cockpit.Accent, modifier = Modifier.weight(1f))
-            PillButton(stringResource(R.string.profile_import), onClick = onImport, icon = R.drawable.ic_upload, modifier = Modifier.weight(1f))
+            PillButton(stringResource(R.string.ptab_manage), onClick = onManage, icon = R.drawable.ic_profile, modifier = Modifier.weight(1f))
         }
     }
 }
 
+/**
+ * One profile: active marker, name (+ "Active" badge), car and ECUs, page counts. Tapping the row
+ * activates it; with [actions] a "⋮" menu offers edit, duplicate, export and delete.
+ */
 @Composable
-private fun ProfileRow(
-    p: Profile, active: Boolean,
-    onActivate: (String) -> Unit, onEdit: (String) -> Unit, onDuplicate: (String) -> Unit,
-    onExport: (String) -> Unit, onDelete: (String) -> Unit,
-) {
+internal fun ProfileRow(p: Profile, active: Boolean, onActivate: (String) -> Unit, actions: ProfileActions?) {
     var menu by remember { mutableStateOf(false) }
     Row(
         Modifier
@@ -164,33 +163,42 @@ private fun ProfileRow(
             .background(if (active) Cockpit.Accent.copy(alpha = 0.10f) else Color.Transparent)
             .clickable(role = Role.Button) { onActivate(p.id) }
             .semantics { selected = active }
-            .padding(start = 12.dp, top = 8.dp, bottom = 8.dp),
+            .padding(start = 12.dp, top = 8.dp, bottom = 8.dp, end = if (actions == null) 12.dp else 0.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(10.dp).background(if (active) Cockpit.Accent else Cockpit.Border, CircleShape))
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(
-                p.name, color = Cockpit.Text, fontSize = 17.sp, fontFamily = BarlowCondensed, fontWeight = FontWeight.SemiBold,
-                maxLines = 1, overflow = TextOverflow.Ellipsis,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    p.name, color = Cockpit.Text, fontSize = 17.sp, fontFamily = BarlowCondensed, fontWeight = FontWeight.SemiBold,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false),
+                )
+                if (active) {
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        stringResource(R.string.ptab_active), color = Cockpit.Accent, fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Cockpit.Accent.copy(alpha = 0.16f)).padding(horizontal = 8.dp, vertical = 2.dp),
+                    )
+                }
+            }
             Text(profileSummary(p), color = Cockpit.Muted, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(
                 stringResource(R.string.profile_pages, p.dashboard.phonePages.size, p.dashboard.carPages.size),
                 color = Cockpit.Muted, fontSize = 12.sp,
             )
         }
-        Box {
+        if (actions != null) Box {
             RoundIconButton(R.drawable.ic_more, stringResource(R.string.profile_actions, p.name), onClick = { menu = true }, background = Color.Transparent)
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Cockpit.Card) {
-                ProfileMenuItem(R.drawable.ic_edit, stringResource(R.string.profile_edit)) { menu = false; onEdit(p.id) }
-                ProfileMenuItem(R.drawable.ic_pages, stringResource(R.string.profile_duplicate)) { menu = false; onDuplicate(p.id) }
-                ProfileMenuItem(R.drawable.ic_download, stringResource(R.string.profile_export)) { menu = false; onExport(p.id) }
-                ProfileMenuItem(R.drawable.ic_delete, stringResource(R.string.profile_delete)) { menu = false; onDelete(p.id) }
+                if (!active) ProfileMenuItem(R.drawable.ic_check, stringResource(R.string.ptab_activate)) { menu = false; onActivate(p.id) }
+                ProfileMenuItem(R.drawable.ic_edit, stringResource(R.string.profile_edit)) { menu = false; actions.onEdit(p.id) }
+                ProfileMenuItem(R.drawable.ic_pages, stringResource(R.string.profile_duplicate)) { menu = false; actions.onDuplicate(p.id) }
+                ProfileMenuItem(R.drawable.ic_download, stringResource(R.string.profile_export)) { menu = false; actions.onExport(p.id) }
+                ProfileMenuItem(R.drawable.ic_delete, stringResource(R.string.profile_delete)) { menu = false; actions.onDelete(p.id) }
             }
         }
     }
-    HorizontalDivider(color = Cockpit.Border)
 }
 
 @Composable
