@@ -19,4 +19,15 @@
         <item quantity="other">Estimation pour %1$d valeurs lues %2$s fois par seconde, avant d’atteindre la réserve.</item>
     </plurals>
 
+    <!-- API de diagnostic : confirmation sur le téléphone -->
+    <string name="fb3_confirm_channel">Demandes de l’API à confirmer</string>
+    <string name="fb3_confirm_title">Autoriser cette demande de l’API ?</string>
+    <string name="fb3_confirm_clear_all">Un client de l’API locale veut effacer la mémoire de défauts de tous les calculateurs de la voiture.</string>
+    <string name="fb3_confirm_clear_ecu">Un client de l’API locale veut effacer la mémoire de défauts de %1$s.</string>
+    <string name="fb3_confirm_job">Un client de l’API locale veut lancer le job %1$s de %2$s.</string>
+    <string name="fb3_confirm_job_args">Un client de l’API locale veut lancer le job %1$s de %2$s avec les arguments « %3$s ».</string>
+    <string name="fb3_confirm_note">Cela peut écrire dans la voiture. Le flash et le codage restent bloqués quelle que soit la demande. N’autorisez que ce que vous avez demandé.</string>
+    <string name="fb3_confirm_countdown">Refusé automatiquement dans %1$d s.</string>
+    <string name="fb3_confirm_allow">Autoriser</string>
+    <string name="fb3_confirm_refuse">Refuser</string>
 </resources>

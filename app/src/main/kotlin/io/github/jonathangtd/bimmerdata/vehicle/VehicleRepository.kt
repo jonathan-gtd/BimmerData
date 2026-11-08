@@ -248,6 +248,49 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
         message(VehicleMessage.Kind.Cleared, null)
     }
 
+    // ---- for the REST API (scope diag): run now, return the result, throw on error ----
+
+    /**
+     * Reads the fault memory of every ECU ([address] null) or of one, under the same lock as the
+     * screen's operations, and stores it like a read from the Faults tab. Throws
+     * [IllegalStateException] (no ECU files, no vehicle, no such ECU) or [CableUnavailableException].
+     */
+    suspend fun readFaultsForApi(address: Int?): List<EcuFaults> = forApi { runner, tables, vehicle ->
+        val service = FaultService(runner, tables)
+        if (address == null) {
+            task(VehicleTask.ReadingFaults(0, vehicle.ecus.size, null))
+            service.readAll(vehicle) { p -> task(VehicleTask.ReadingFaults(p.done, p.total, p.ecuName)) }.also { storeFaults(vehicle.id, it) }
+        } else {
+            val ecu = vehicle.ecu(address) ?: throw IllegalStateException("No ECU at address 0x%02X".format(address))
+            task(VehicleTask.ReadingEcu(address))
+            listOf(service.readEcu(ecu).also { mergeFaults(vehicle.id, it) })
+        }
+    }
+
+    /** Clears one ECU ([address]) or all (null) after the user's [confirmation] on the phone, then reads again. */
+    suspend fun clearForApi(address: Int?, confirmation: UserConfirmation): List<EcuFaults> = forApi { runner, tables, vehicle ->
+        val service = FaultService(runner, tables)
+        task(VehicleTask.Clearing(address))
+        if (address == null) {
+            service.clearAll(vehicle, confirmation) { p -> task(VehicleTask.ReadingFaults(p.done, p.total, p.ecuName)) }
+                .also { storeFaults(vehicle.id, it); dropDetails(vehicle.id, null) }
+        } else {
+            val ecu = vehicle.ecu(address) ?: throw IllegalStateException("No ECU at address 0x%02X".format(address))
+            listOf(service.clearEcu(ecu, confirmation).also { mergeFaults(vehicle.id, it); dropDetails(vehicle.id, address) })
+        }
+    }
+
+    private suspend fun <T> forApi(block: suspend (JobRunner, VehicleTables, Vehicle) -> T): T = mutex.withLock {
+        check(importer.importedFiles().isNotEmpty()) { "No ECU files imported" }
+        val vehicle = _state.value.current ?: throw IllegalStateException("No vehicle detected yet: scan the car in the Faults tab first")
+        val tables = withContext(Dispatchers.IO) { tables().also { it.vehicleSgbds } }
+        try {
+            block(LiveRepository.get(app).jobRunner("API"), tables, vehicle)
+        } finally {
+            task(VehicleTask.Idle)
+        }
+    }
+
     /** Stops the running operation (the job on the cable is aborted between telegrams). */
     fun cancel() {
         job?.cancel()

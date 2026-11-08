@@ -46,8 +46,8 @@ data class ApiConfig(
         const val DEFAULT_PORT = 8765
         val PORT_RANGE = 1024..65535
 
-        /** Scopes the user can grant today (diag comes with the fault memory feature). */
-        val GRANTABLE = listOf(Scope.Read, Scope.Layout, Scope.Config)
+        /** Scopes the user can grant (diag: every car write is confirmed on the phone, see DiagApi). */
+        val GRANTABLE = listOf(Scope.Read, Scope.Layout, Scope.Config, Scope.Diag)
     }
 }
 

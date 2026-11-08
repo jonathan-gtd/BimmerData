@@ -11,6 +11,7 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.util.Log
+import io.github.jonathangtd.bimmerdata.api.DiagApi
 import io.github.jonathangtd.bimmerdata.api.ApiAccess
 import io.github.jonathangtd.bimmerdata.api.ApiDocs
 import io.github.jonathangtd.bimmerdata.api.ApiJson
@@ -152,7 +153,8 @@ class ApiRuntime private constructor(context: Context) {
             return@withLock
         }
         stopServer()
-        val s = ApiServer(backend, ::currentAccess, docsAssets = ::docsAsset, log = { msg, e -> Log.w(TAG, msg, e) })
+        val diag = DiagApi(AndroidDiagBackend(app), PhoneConfirmGuard(app))
+        val s = ApiServer(backend, ::currentAccess, listOf(diag), docsAssets = ::docsAsset, log = { msg, e -> Log.w(TAG, msg, e) })
         try {
             s.start(addresses, api.port, identity?.sslContext())
             server = s

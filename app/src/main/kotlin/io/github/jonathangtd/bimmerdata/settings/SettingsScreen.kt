@@ -200,12 +200,12 @@ private fun ApiSection(config: ApiConfig, state: ApiRuntimeState, store: AppSett
             Triple(Scope.Read, R.string.settings_scope_read, R.string.settings_scope_read_hint),
             Triple(Scope.Layout, R.string.settings_scope_layout, R.string.settings_scope_layout_hint),
             Triple(Scope.Config, R.string.settings_scope_config, R.string.settings_scope_config_hint),
+            Triple(Scope.Diag, R.string.settings_scope_diag, R.string.settings_scope_diag_hint),
         )) {
             SwitchRow(stringResource(title), stringResource(hint), scope in config.scopes, onChange = { on ->
                 store.updateApi { it.copy(scopes = if (on) it.scopes + scope else it.scopes - scope) }
             })
         }
-        SwitchRow(stringResource(R.string.settings_scope_diag), stringResource(R.string.settings_scope_diag_hint), checked = false, enabled = false, onChange = {})
 
         Divider()
         Text(stringResource(R.string.settings_api_instruction), color = Cockpit.Text, fontSize = 16.sp)

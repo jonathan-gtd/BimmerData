@@ -25,7 +25,11 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
         )
         setContent {
-            BimmerDataTheme { AppRoot() }
+            BimmerDataTheme {
+                AppRoot()
+                // REST API requests that write to the car wait for the user's answer here
+                io.github.jonathangtd.bimmerdata.ui.ApiConfirmHost()
+            }
         }
         handleDebugIntent(intent)
     }

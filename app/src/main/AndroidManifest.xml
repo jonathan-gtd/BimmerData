@@ -74,6 +74,11 @@
             android:exported="false"
             android:foregroundServiceType="connectedDevice|location" />
 
+        <!-- Allow / Refuse buttons of the notification that confirms an API write to the car -->
+        <receiver
+            android:name=".api.android.ApiConfirmReceiver"
+            android:exported="false" />
+
         <!-- Telegraf export: uploads the waiting points once a suitable network is there -->
         <service
             android:name=".export.TelegrafUploadJob"

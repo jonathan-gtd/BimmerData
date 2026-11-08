@@ -39,7 +39,7 @@
     <string name="settings_scope_config">Contrôle</string>
     <string name="settings_scope_config_hint">Connexion et déconnexion, enregistrements, réglages de connexion.</string>
     <string name="settings_scope_diag">Diagnostic</string>
-    <string name="settings_scope_diag_hint">Arrivera avec la mémoire de défauts. Chaque écriture dans la voiture demandera votre confirmation ici et sera refusée en roulant.</string>
+    <string name="settings_scope_diag_hint">Lire la mémoire de défauts de tous les calculateurs. Effacer des défauts et lancer des jobs EDIABAS demandent votre confirmation ici, à chaque appel (sans réponse sous 60 s = refusé), et sont refusés quand la voiture roule.</string>
     <string name="settings_api_instruction">Pour un agent IA ou un script</string>
     <string name="settings_api_instruction_hint">Donnez cette ligne à votre agent IA : il lit la spécification et fait le reste.</string>
     <string name="settings_api_instruction_line">API REST BimmerData : %1$s, jeton : %2$s (envoyer l’en-tête \"Authorization: Bearer &lt;jeton&gt;\"), spécification OpenAPI : %3$s</string>

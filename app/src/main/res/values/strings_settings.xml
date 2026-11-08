@@ -39,7 +39,7 @@
     <string name="settings_scope_config">Control</string>
     <string name="settings_scope_config_hint">Connect and disconnect, recordings, connection settings.</string>
     <string name="settings_scope_diag">Diagnostics</string>
-    <string name="settings_scope_diag_hint">Comes with the fault memory. Every write to the car will need your confirmation here and is refused while driving.</string>
+    <string name="settings_scope_diag_hint">Read the fault memory of every ECU. Clearing faults and running EDIABAS jobs ask for your confirmation here, for every single call (nobody answering within 60 s = refused), and are refused while the car is moving.</string>
     <string name="settings_api_instruction">For an AI agent or a script</string>
     <string name="settings_api_instruction_hint">Give this line to your AI agent: it reads the specification and does the rest.</string>
     <string name="settings_api_instruction_line">BimmerData REST API: %1$s, token: %2$s (send the header \"Authorization: Bearer &lt;token&gt;\"), OpenAPI spec: %3$s</string>
