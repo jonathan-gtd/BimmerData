@@ -7,6 +7,9 @@ the configuration. It is **off by default**.
 - Base URL: `http://<phone-ip>:<port>/api/v1` (default port 8765)
 - Authentication: `Authorization: Bearer <token>` on every request
 - Machine-readable spec: `GET /api/v1/openapi.json` (OpenAPI 3.1, no token needed)
+- Interactive documentation: `GET /api/v1/docs` in a browser (Swagger UI embedded in the app, no
+  token needed to read it; **Authorize** with the token to try the operations). The same page,
+  read-only, is in the app: **Settings › Local API › View the API documentation**.
 
 The OpenAPI document is the reference: every operation has a description, its parameters, the
 request / response schemas, examples and its error codes. This page is the human overview.
@@ -122,6 +125,7 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 | Method | Path | Scope | What |
 |---|---|---|---|
 | GET | `/api/v1/openapi.json` | none | OpenAPI 3.1 document |
+| GET | `/api/v1/docs`, `/api/v1/docs/{file}` | none | Swagger UI (embedded, Apache-2.0) |
 | GET | `/api/v1` | any token | Version and granted scopes |
 | GET | `/api/v1/status` | read | Connection, reads/s, what is read, recording |
 | GET | `/api/v1/ecus` | read | SGBDs with measurements (detected ECUs first, once available) |
@@ -151,6 +155,8 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 | POST | `/api/v1/recording/start`, `/stop`, `/markers` | config | Control the CSV recording |
 | GET | `/api/v1/recordings`, `/api/v1/recordings/{name}` | read | List / download CSV files |
 | GET / PATCH | `/api/v1/settings` | read / config | App settings (API settings are read-only) |
+| GET / PATCH | `/api/v1/export/telegraf` | config | Telegraf export settings and queue (token / password never returned, changed on the phone only) |
+| POST | `/api/v1/export/telegraf/test`, `/send` | config | Test the listener / upload the waiting points now |
 
 ### Layout rules
 
