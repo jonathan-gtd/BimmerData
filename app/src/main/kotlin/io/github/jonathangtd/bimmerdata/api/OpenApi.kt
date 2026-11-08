@@ -87,7 +87,7 @@ internal object OpenApi {
         put("servers", buildJsonArray {
             add(buildJsonObject {
                 put("url", serverUrl ?: "http://{host}:{port}")
-                put("description", if (serverUrl != null) "The phone that served this document" else "The phone running BimmerData (address and port are shown in Settings › API)")
+                put("description", if (serverUrl != null) "The phone that served this document" else "The phone running BimmerData (address and port are shown in Settings › Local API)")
                 if (serverUrl == null) put("variables", buildJsonObject {
                     put("host", buildJsonObject { put("default", "192.168.1.20") })
                     put("port", buildJsonObject { put("default", "8765") })
@@ -104,7 +104,7 @@ internal object OpenApi {
                 put("bearerAuth", buildJsonObject {
                     put("type", "http")
                     put("scheme", "bearer")
-                    put("description", "The token shown in BimmerData › Settings › API, sent as `Authorization: Bearer <token>`. Each operation also needs one scope (read, layout or config) that the user enables in Settings; see `x-required-scope`.")
+                    put("description", "The token shown in BimmerData › Settings › Local API, sent as `Authorization: Bearer <token>`. Each operation also needs one scope (read, layout or config) that the user enables in Settings; see `x-required-scope`.")
                 })
             })
             put("schemas", schemas())
@@ -175,7 +175,7 @@ internal object OpenApi {
             if (r.access != RouteAccess.Public) {
                 errors.putIfAbsent(401, "Missing or wrong token (`Authorization: Bearer <token>`).")
                 val needs = r.access
-                if (needs is RouteAccess.Needs) errors.putIfAbsent(403, "The token is valid but the scope `${needs.scope.id}` is not enabled in Settings › API.")
+                if (needs is RouteAccess.Needs) errors.putIfAbsent(403, "The token is valid but the scope `${needs.scope.id}` is not enabled in Settings › Local API.")
             }
             errors.putIfAbsent(429, "Too many requests (about 20/s per client) or too many wrong tokens; wait `Retry-After` seconds.")
             for ((status, desc) in errors.toSortedMap()) put(status.toString(), buildJsonObject {
@@ -199,7 +199,7 @@ internal object OpenApi {
 BimmerData reads live data from BMW ECUs (E-series, K+DCAN cable) and shows it on card dashboards on the phone and in Android Auto. This API lets scripts and AI agents read values, build dashboard layouts and manage the configuration over the local network.
 
 ## Getting started
-1. On the phone: Settings › API › enable, pick the scopes, copy the base URL and the token.
+1. On the phone: Settings › Local API › enable, pick the scopes, copy the base URL and the token.
 2. Send `Authorization: Bearer <token>` with every request (except this document).
 3. `GET /api/v1/status` — is the app connected? If not, `POST /api/v1/connect` with `{"mode":"simulation"}` (no car needed) or `{"mode":"usb"}` (needs scope `config`).
 4. Discover data: `GET /api/v1/ecus`, then `GET /api/v1/ecus/{sgbd}/measurements?q=temp`. A measurement id looks like `msv70/0x4402` (`<sgbd>/<key>`).

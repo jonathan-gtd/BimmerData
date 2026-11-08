@@ -103,6 +103,15 @@ class ApiServerTest {
             assertTrue(it in schemas, "schema $it referenced but not defined")
         }
         assertFalse(r.text.contains(token), "the token must never appear in the spec")
+        // Kept as a build artifact for manual inspection / external validators.
+        java.io.File("build/openapi.json").writeText(r.text)
+        val opIds = paths.values.flatMap { it.jsonObject.values.map { op -> op.jsonObject["operationId"]!!.jsonPrimitive.content } }
+        assertEquals(opIds.size, opIds.toSet().size, "operationIds must be unique")
+        for ((path, item) in paths) for ((_, op) in item.jsonObject) {
+            val declared = op.jsonObject["parameters"]?.jsonArray?.filter { it.jsonObject["in"]!!.jsonPrimitive.content == "path" }
+                ?.map { it.jsonObject["name"]!!.jsonPrimitive.content }.orEmpty().toSet()
+            assertEquals(Regex("""\{(\w+)}""").findAll(path).map { it.groupValues[1] }.toSet(), declared, "path parameters of $path")
+        }
     }
 
     @Test

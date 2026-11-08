@@ -19,7 +19,7 @@
     <uses-permission android:name="androidx.car.app.NAVIGATION_TEMPLATES" />
     <uses-permission android:name="androidx.car.app.ACCESS_SURFACE" />
 
-    <!-- Local REST API (off by default, Settings › API): a server socket on the Wi-Fi / hotspot
+    <!-- Local REST API (off by default, Settings › Local API): a server socket on the Wi-Fi / hotspot
          addresses, and network callbacks to rebind when they change -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />

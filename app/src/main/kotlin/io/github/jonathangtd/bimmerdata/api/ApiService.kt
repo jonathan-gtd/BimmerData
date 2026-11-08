@@ -100,13 +100,13 @@ class ApiService(
             if (header != null) limiter.authFailed(req.remote)
             throw ApiException(
                 401, "unauthorized",
-                if (header == null) "Missing token: send 'Authorization: Bearer <token>' (token in BimmerData › Settings › API)" else "Wrong token (it may have been regenerated on the phone)",
+                if (header == null) "Missing token: send 'Authorization: Bearer <token>' (token in BimmerData › Settings › Local API)" else "Wrong token (it may have been regenerated on the phone)",
                 headers = mapOf("WWW-Authenticate" to "Bearer realm=\"BimmerData\""),
             )
         }
         val needs = route.access
         if (needs is RouteAccess.Needs && needs.scope !in current.scopes) {
-            throw ApiException(403, "insufficient_scope", "This operation needs the '${needs.scope.id}' scope; enable it on the phone in Settings › API (enabled: ${current.scopes.joinToString { it.id }.ifEmpty { "none" }})")
+            throw ApiException(403, "insufficient_scope", "This operation needs the '${needs.scope.id}' scope; enable it on the phone in Settings › Local API (enabled: ${current.scopes.joinToString { it.id }.ifEmpty { "none" }})")
         }
         return current
     }
@@ -880,7 +880,7 @@ class ApiService(
                 errors = mapOf(400 to "Unknown field or wrong value.", 403 to "Tried to change API settings (phone only) or the config scope is not enabled."),
             ) { call ->
                 val b = call.bodyObject()
-                if ("api" in b) throw ApiException(403, "phone_only", "API settings (enable, port, token, scopes) can only be changed on the phone, in Settings › API")
+                if ("api" in b) throw ApiException(403, "phone_only", "API settings (enable, port, token, scopes) can only be changed on the phone, in Settings › Local API")
                 b.allowOnly("defaultMode", "autoConnectOnCable")
                 val mode = b.string("defaultMode")?.let { m -> ConnectMode.entries.firstOrNull { it.name.equals(m, ignoreCase = true) } ?: throw badRequest("'defaultMode' must be usb or simulation") }
                 ok(ApiJson.encodeToJsonElement(backend.updateSettings(SettingsPatch(mode, b.bool("autoConnectOnCable")))))
@@ -906,11 +906,12 @@ class ApiService(
         val ids = call.queryList("ids")
         val interval = call.queryInt("intervalMs", 250, 50..10000).toLong()
         val ms = ids?.let { resolve(it) }
-        if (streams.incrementAndGet() > MAX_STREAMS) {
-            streams.decrementAndGet()
+        if (streams.get() >= MAX_STREAMS) {
             throw ApiException(429, "too_many_streams", "At most $MAX_STREAMS event streams at once; close one first", headers = mapOf("Retry-After" to "5"))
         }
+        // Counted only once the stream really runs (the header write may still fail before).
         return HttpResponse.Stream(200, "text/event-stream; charset=utf-8", mapOf("X-Accel-Buffering" to "no")) { out ->
+            streams.incrementAndGet()
             val lease = ms?.let { reads.acquire(it) }
             try {
                 fun send(text: String) {
