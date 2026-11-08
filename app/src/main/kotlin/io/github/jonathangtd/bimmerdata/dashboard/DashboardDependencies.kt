@@ -55,6 +55,8 @@ fun dashboardDependencies(context: Context): DashboardDependencies {
     // The card picker lists the ECUs found by the vehicle scan first ("Detected in your car").
     val vehicles = io.github.jonathangtd.bimmerdata.vehicle.VehicleRepository.get(context)
     DashboardHooks.detectedEcus = io.github.jonathangtd.bimmerdata.live.DetectedEcus { vehicles.sgbds() }
+    // ECU texts are shown translated (labels of cards, picker, Android Auto): load the cached files first.
+    io.github.jonathangtd.bimmerdata.i18n.TranslationRepository.get(context)
     return LiveDashboardDependencies(LiveRepository.get(context))
 }
 
@@ -62,7 +64,8 @@ fun dashboardDependencies(context: Context): DashboardDependencies {
 class LiveDashboardDependencies(private val repo: LiveRepository) : DashboardDependencies {
     override val liveDataSource: LiveDataSource get() = repo.liveDataSource
     override val recorder: SessionRecorder get() = repo.recorder
-    override val catalog: MeasurementCatalog get() = repo.catalog
+    private val translatedCatalog by lazy { io.github.jonathangtd.bimmerdata.live.i18n.TranslatingCatalog(repo.catalog) }
+    override val catalog: MeasurementCatalog get() = translatedCatalog
     override val connection: StateFlow<LiveConnection> get() = repo.connection
     override fun connect(mode: LiveMode) = repo.connect(mode)
     override fun disconnect() = repo.disconnect()

@@ -5,7 +5,10 @@ package io.github.jonathangtd.bimmerdata.faults
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import io.github.jonathangtd.bimmerdata.i18n.ecuDescription
+import io.github.jonathangtd.bimmerdata.i18n.rememberTranslator
+import io.github.jonathangtd.bimmerdata.i18n.translationVersion
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -75,6 +78,9 @@ internal fun EcuDetailScreen(
     var confirmClear by remember { mutableStateOf(false) }
     var expanded by rememberSaveable { mutableStateOf(initiallyExpanded) }
     val canClear = ecu.sgbdAvailable && faults?.status == EcuFaultStatus.Faults
+    val translator = rememberTranslator()
+    val tv = translationVersion()
+    val ecuText = remember(ecu, tv) { translator.ecuDescription(ecu, vehicle.seriesSgbd) }
 
     LazyColumn(
         Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)),
@@ -130,6 +136,7 @@ internal fun EcuDetailScreen(
                         val key = VehicleState.detailKey(vehicle.id, ecu.address, fault.code)
                         val open = expanded == fault.code
                         FaultCard(
+                            sgbd = ecu.sgbd,
                             fault = fault,
                             open = open,
                             detail = state.details[key],
@@ -152,9 +159,12 @@ internal fun EcuDetailScreen(
                     stringResource(R.string.veh_ecu_variant) to (ecu.sgbd?.uppercase() ?: stringResource(R.string.veh_ecu_unknown_variant)),
                     ecu.group?.let { stringResource(R.string.veh_ecu_group) to it.uppercase() },
                     ecu.bus?.let { stringResource(R.string.veh_ecu_bus) to it },
-                    ecu.description?.let { "" to it },
+                    ecuText?.let { "" to it },
                 ),
             )
+        }
+        ecu.sgbd?.takeIf { ecu.sgbdAvailable }?.let { sgbd ->
+            item(key = "translate") { io.github.jonathangtd.bimmerdata.i18n.TranslationExportButton(sgbd) }
         }
         if (ecu.ident.isNotEmpty()) {
             item(key = "ident-title") { SectionTitle(stringResource(R.string.veh_ecu_ident)) }
@@ -174,11 +184,20 @@ internal fun EcuDetailScreen(
 }
 
 @Composable
-private fun FaultCard(fault: Fault, open: Boolean, detail: DetailState?, canDetail: Boolean, onToggle: () -> Unit) {
+private fun FaultCard(sgbd: String?, fault: Fault, open: Boolean, detail: DetailState?, canDetail: Boolean, onToggle: () -> Unit) {
+    // Translated texts; a long press shows the original ones of the ECU file.
+    val translator = rememberTranslator()
+    val tv = translationVersion()
+    var showOriginal by rememberSaveable(fault.code) { mutableStateOf(false) }
+    val translated = remember(fault, tv) { translator.fault(sgbd, fault) }
+    @Suppress("NAME_SHADOWING") val fault = if (showOriginal) fault else translated
     Surface(color = Cockpit.Card, shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, Cockpit.Border)) {
         Column(
             Modifier.fillMaxWidth()
-                .clickable(enabled = canDetail, role = Role.Button, onClickLabel = stringResource(if (open) R.string.veh_fault_hide else R.string.veh_fault_details), onClick = onToggle)
+                .combinedClickable(
+                    role = Role.Button, onClickLabel = stringResource(if (open) R.string.veh_fault_hide else R.string.veh_fault_details),
+                    onLongClick = { showOriginal = !showOriginal }, onClick = { if (canDetail) onToggle() },
+                )
                 .padding(14.dp),
         ) {
             Row(verticalAlignment = Alignment.Top) {
@@ -201,7 +220,9 @@ private fun FaultCard(fault: Fault, open: Boolean, detail: DetailState?, canDeta
                     when (detail) {
                         null, DetailState.Loading -> CircularProgressIndicator(color = Cockpit.Accent, strokeWidth = 2.dp, modifier = Modifier.padding(4.dp).width(22.dp).height(22.dp))
                         is DetailState.Failed -> Text(stringResource(R.string.veh_fault_detail_failed, detail.message), color = Cockpit.Warning, fontSize = 13.sp)
-                        is DetailState.Loaded -> DetailContent(detail.detail)
+                        is DetailState.Loaded -> DetailContent(
+                            if (showOriginal) detail.detail else remember(detail.detail, tv) { translator.faultDetail(sgbd, detail.detail) },
+                        )
                     }
                     fault.hex?.let { Text(it, color = Cockpit.Muted, fontSize = 11.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(top = 8.dp)) }
                 }

@@ -100,6 +100,7 @@ fun SettingsScreen() {
         item { ConnectionSection(settings, store) }
         item { RecordingSection() }
         item { ApiSection(settings.api, api, store, runtime) }
+        item { io.github.jonathangtd.bimmerdata.i18n.TranslationsSettingsSection() }
         item { AboutSection() }
     }
 }
