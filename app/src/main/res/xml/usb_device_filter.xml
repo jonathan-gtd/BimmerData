@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- FTDI (VID 0x0403): K+DCAN cables use an FT232R (PID 0x6001) or FT-X (PID 0x6015) -->
+    <usb-device vendor-id="1027" product-id="24577" />
+    <usb-device vendor-id="1027" product-id="24597" />
+</resources>
