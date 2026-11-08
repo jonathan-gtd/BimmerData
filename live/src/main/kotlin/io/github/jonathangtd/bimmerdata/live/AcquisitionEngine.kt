@@ -121,6 +121,11 @@ class AcquisitionEngine(
     /** Ids of measurements the ECU refused (not read any more until the set changes). */
     val unsupported: StateFlow<Set<String>> = _unsupported.asStateFlow()
 
+    private val _unavailable = MutableStateFlow<Map<String, String>>(emptyMap())
+
+    /** See [LiveDataSource.unavailable]: job values the car did not give (plus [unsupported] ids). */
+    override val unavailable: StateFlow<Map<String, String>> = _unavailable.asStateFlow()
+
     /** Measurements actually read: requested + pinned (e.g. by a running recording). */
     private val effective = combine(_measurements, _pinned) { a, b -> (a + b).distinctBy { it.id } }
 
@@ -365,13 +370,19 @@ class AcquisitionEngine(
                 }
                 var successes = 0
                 var failures = 0
+                var linkFailures = 0
                 for (group in due) {
                     coroutineContext.ensureActive()
                     if (plannedFor != wanted) break // replanned (refused ids)
                     val started = clock()
-                    val error = readGroup(ed, group)
+                    val failure = readGroup(ed, group)
+                    val error = failure?.text
+                    if (failure?.link == true) linkFailures++
                     if (error == null) {
                         successes++
+                        if (group is JobGroup && group.members.any { it.id in _unavailable.value }) {
+                            _unavailable.update { it - group.members.map { m -> m.id }.toSet() }
+                        }
                         group.failures = 0
                         group.retryAt = if (group is JobGroup && plan.size > 1) started + jobPeriod(clock() - started) else 0
                     } else {
@@ -380,6 +391,11 @@ class AcquisitionEngine(
                         lastError = "${group.label}: $error"
                         group.failures++
                         group.retryAt = clock() + backoff(group.failures)
+                        if (failure?.link == false && group is JobGroup) {
+                            // the ECU answers: no hurry to ask again, and never at the cost of the other cards
+                            group.retryAt = clock() + unavailableRetryMs(group.failures, error)
+                            _unavailable.update { old -> old + group.members.associate { it.id to (error ?: "not available") } }
+                        }
                         if (group.failures >= 2 && group is BlockGroup) group.reader.invalidate()
                     }
                     yield()
@@ -388,6 +404,12 @@ class AcquisitionEngine(
                     failedCycles = 0
                     markCycle()
                     _status.value = AcquisitionStatus(AcquisitionState.Running, cyclesPerSecond(), errorCount, planMessage(lastError.takeIf { failures > 0 }))
+                } else if (failures > 0 && linkFailures == 0) {
+                    // The link works: the ECUs answered but refused these measurements (unsupported
+                    // service, missing result, protocol of that SGBD not implemented). Not a reason to
+                    // show the connection as dead or to reconnect; the groups retry with their backoff.
+                    failedCycles = 0
+                    _status.value = AcquisitionStatus(AcquisitionState.Running, 0.0, errorCount, planMessage(lastError))
                 } else if (failures > 0) {
                     failedCycles++
                     _status.value = AcquisitionStatus(AcquisitionState.Error, cyclesPerSecond(), errorCount, lastError)
@@ -406,8 +428,15 @@ class AcquisitionEngine(
         }
     }
 
-    /** Reads one group and publishes its samples; returns null on success, else the error text. */
-    private fun readGroup(ed: EdiabasNet, group: Group): String? = try {
+    /**
+     * Why a group could not be read. [link] = the car did not answer or the transmission failed
+     * (counts towards a reconnection); otherwise the ECU answered but these values are not
+     * available (refused service, missing result, SGBD concept not implemented...).
+     */
+    private class GroupFailure(val text: String, val link: Boolean)
+
+    /** Reads one group and publishes its samples; returns null on success. */
+    private fun readGroup(ed: EdiabasNet, group: Group): GroupFailure? = try {
         when (group) {
             is BlockGroup -> readBlock(group)
             is JobGroup -> readJob(ed, group)
@@ -418,16 +447,18 @@ class AcquisitionEngine(
             refused(group, ex)
             null
         } else {
-            ex.message
+            GroupFailure(ex.message ?: "refused", link = false)
         }
+    } catch (ex: MeasurementUnavailableException) {
+        GroupFailure(ex.message ?: "not available", link = false)
     } catch (ex: TransportException) {
-        ex.message ?: "transport error"
+        GroupFailure(ex.message ?: "transport error", link = true)
     } catch (ex: DefinitionLostException) {
-        ex.message ?: "definition lost"
+        GroupFailure(ex.message ?: "definition lost", link = true)
     } catch (ex: kotlinx.coroutines.CancellationException) {
         throw ex
     } catch (ex: Exception) {
-        MesswertBlockReader.errorText(ex)
+        GroupFailure(MesswertBlockReader.errorText(ex), link = true)
     }
 
     private fun readBlock(group: BlockGroup) {
@@ -448,7 +479,8 @@ class AcquisitionEngine(
             ed.executeJob(group.job)
             ed.resultSets ?: emptyList()
         } catch (ex: Exception) {
-            throw TransportException(MesswertBlockReader.errorText(ex), ex)
+            if (isLinkFailure(ex)) throw TransportException(MesswertBlockReader.errorText(ex), ex)
+            throw MeasurementUnavailableException(MesswertBlockReader.errorText(ex), ex)
         }
         val now = clock()
         val out = ArrayList<Pair<String, Sample>>()
@@ -462,7 +494,8 @@ class AcquisitionEngine(
         publish(out)
         if (out.isEmpty()) {
             val status = sets.lastOrNull()?.get("JOB_STATUS")?.opData
-            throw TransportException("$missing missing" + (status?.let { " (JOB_STATUS $it)" } ?: ""))
+            // the job ran: the ECU answered, it just did not give these results
+            throw MeasurementUnavailableException("$missing missing" + (status?.let { " (JOB_STATUS $it)" } ?: ""))
         }
     }
 
@@ -498,6 +531,7 @@ class AcquisitionEngine(
             }
         }
         _unsupported.update { old -> old + refusedHere.flatMap { id -> group.byRow[id].orEmpty().map { it.id } } }
+        _unavailable.update { old -> old + _unsupported.value.associateWith { "not supported by the ECU" } }
         plannedFor = null // replan on the next cycle
         lastRefusal = "${group.sgbd}: ${ex.jobStatus.ifBlank { ex.message }}"
     }
@@ -564,6 +598,7 @@ class AcquisitionEngine(
         plannedFor = wanted
         val wantedIds = wanted.map { it.id }.toSet()
         _unsupported.update { (it + unknown).intersect(wantedIds) }
+        _unavailable.update { old -> old.filterKeys { it in wantedIds } + _unsupported.value.associateWith { "not supported by the ECU" } }
     }
 
     private fun connect(): String? {
@@ -597,6 +632,15 @@ class AcquisitionEngine(
     internal fun jobPeriod(durationMs: Long): Long =
         maxOf(config.jobMinIntervalMs, (durationMs.coerceAtLeast(0) * (1.0 + config.jobIntervalFactor)).toLong())
             .coerceAtMost(maxOf(config.jobMaxIntervalMs, config.jobMinIntervalMs))
+
+    /**
+     * Next try of a job the car answered but did not give: 5 s, then up to 60 s; a protocol this
+     * app does not implement (IFH-0014) will not change during the session: every 5 min.
+     */
+    private fun unavailableRetryMs(failures: Int, error: String?): Long = when {
+        error?.contains("IFH-0014") == true -> 300_000
+        else -> (5_000L shl (failures - 1).coerceIn(0, 4)).coerceAtMost(60_000)
+    }
 
     private fun backoff(failures: Int): Long =
         (config.retryDelayMinMs shl (failures - 1).coerceIn(0, 16)).coerceAtMost(config.retryDelayMaxMs)
@@ -649,3 +693,27 @@ class AcquisitionEngine(
 
 /** Read groups buffered for [LiveDataSource.readings] (about 6 min at 22 groups/s before the oldest would be dropped). */
 private const val READINGS_BUFFER = 8192
+
+/** A job measurement is not available although the car answered (see [AcquisitionEngine]). */
+class MeasurementUnavailableException(message: String, cause: Throwable? = null) : Exception(message, cause)
+
+/**
+ * True when [ex] means the car did not answer or the transmission failed (EDIABAS IFH-0002
+ * interface, IFH-0003 transmission, IFH-0009 no ECU response, IFH-0010 data error), as opposed to
+ * an ECU or SGBD level refusal.
+ */
+internal fun isLinkFailure(ex: Throwable): Boolean {
+    var e: Throwable? = ex
+    while (e != null) {
+        if (e is io.github.jonathangtd.bimmerdata.ediabas.EdiabasNetException) {
+            val c = e.errorCode
+            return c == io.github.jonathangtd.bimmerdata.ediabas.ErrorCodes.EDIABAS_IFH_0002 ||
+                c == io.github.jonathangtd.bimmerdata.ediabas.ErrorCodes.EDIABAS_IFH_0003 ||
+                c == io.github.jonathangtd.bimmerdata.ediabas.ErrorCodes.EDIABAS_IFH_0009 ||
+                c == io.github.jonathangtd.bimmerdata.ediabas.ErrorCodes.EDIABAS_IFH_0010
+        }
+        if (e is java.io.IOException) return true
+        e = e.cause
+    }
+    return false
+}

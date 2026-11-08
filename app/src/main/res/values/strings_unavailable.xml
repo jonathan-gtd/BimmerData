@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Card value the car cannot give (refused by the ECU, protocol not implemented); keep it very short -->
+    <string name="card_unavailable">n/a</string>
+</resources>

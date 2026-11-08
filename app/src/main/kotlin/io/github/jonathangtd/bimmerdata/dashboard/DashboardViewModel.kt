@@ -130,8 +130,12 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             ProfileStore.state.filterNotNull().collect { applyProfiles(it) }
         }
+        feed.unavailableLabel = getApplication<android.app.Application>().getString(io.github.jonathangtd.bimmerdata.R.string.card_unavailable)
         viewModelScope.launch {
             deps.liveDataSource.samples.collect { feed.update(it) }
+        }
+        viewModelScope.launch {
+            deps.liveDataSource.unavailable.collect { feed.unavailable = it.keys }
         }
         // Histories keep min / max buckets as far back as the longest trend window (phone or car).
         viewModelScope.launch {

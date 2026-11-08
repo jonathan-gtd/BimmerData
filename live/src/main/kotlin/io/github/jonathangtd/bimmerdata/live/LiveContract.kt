@@ -91,6 +91,13 @@ interface LiveDataSource {
     /** Gaps in the reading caused by one-off operations on the shared cable (default: none). */
     val pauses: Flow<AcquisitionPause> get() = emptyFlow()
 
+    /**
+     * Requested measurements the car cannot give although it answers: the ECU refuses the job or
+     * the value, a result is missing, the protocol of that SGBD is not implemented... Id -> reason.
+     * They are retried now and then; cards show them as "not available" instead of "no data".
+     */
+    val unavailable: StateFlow<Map<String, String>> get() = NoUnavailableMeasurements
+
     /** Replaces the set of measurements to read (e.g. those visible on the current page). */
     fun setMeasurements(measurements: List<Measurement>)
 }
@@ -147,3 +154,6 @@ interface SessionRecorder {
     /** Adds a marker in the current recording (button "Repère"). */
     fun mark(label: String = "")
 }
+
+/** Default of [LiveDataSource.unavailable]: nothing. */
+val NoUnavailableMeasurements: StateFlow<Map<String, String>> = kotlinx.coroutines.flow.MutableStateFlow(emptyMap())
