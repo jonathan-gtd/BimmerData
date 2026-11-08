@@ -159,7 +159,8 @@ class AndroidApiBackend(
             mode = if (t.mode == ExportMode.Live) "live" else "afterTrip",
             state = TelegrafStateView(
                 phase = st.phase.name.replaceFirstChar { it.lowercase(Locale.ROOT) },
-                queuedPoints = st.queuedLines, queuedBytes = st.queuedBytes, droppedPoints = st.droppedLines, sentPoints = st.sentLines,
+                queuedPoints = st.queuedLines, queuedBytes = st.queuedBytes, refusedPoints = st.refusedLines, rejectedPoints = st.rejectedLines,
+                blocked = st.blocked, freeBytes = st.freeBytes, reserveBytes = st.reserveBytes, sentPoints = st.sentLines,
                 lastSuccessMs = st.lastSuccessMs, lastError = st.lastError,
             ),
         )

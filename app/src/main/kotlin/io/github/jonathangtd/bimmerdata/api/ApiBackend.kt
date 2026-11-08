@@ -113,8 +113,16 @@ data class TelegrafStateView(
     /** off, idle, waitingForNetwork, waitingForUnmetered, sending, retrying, authFailed */
     val phase: String,
     val queuedPoints: Long,
+    /** Size of the queue on disk (gzip). */
     val queuedBytes: Long,
-    val droppedPoints: Long,
+    /** Points not queued because the phone reached its free-space reserve (the CSV has them). */
+    val refusedPoints: Long,
+    /** Points of the batches Telegraf refused for good (HTTP 400), kept on the phone. */
+    val rejectedPoints: Long,
+    /** The phone reached its free-space reserve: new points are not queued. */
+    val blocked: Boolean,
+    val freeBytes: Long,
+    val reserveBytes: Long,
     val sentPoints: Long,
     val lastSuccessMs: Long? = null,
     val lastError: String? = null,

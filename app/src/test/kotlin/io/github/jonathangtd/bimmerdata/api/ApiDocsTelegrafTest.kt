@@ -22,7 +22,7 @@ class ApiDocsTelegrafTest {
     private class TelegrafBackend(val inner: FakeApiBackend = FakeApiBackend()) : ApiBackend by inner {
         var view = TelegrafView(
             false, "", "token", "", true, "", 1, "afterTrip",
-            TelegrafStateView("off", 12, 1200, 0, 0),
+            TelegrafStateView("off", 12, 1200, 0, 0, false, 5_000_000_000, 524_288_000, 0),
         )
         var sent = 0
 
