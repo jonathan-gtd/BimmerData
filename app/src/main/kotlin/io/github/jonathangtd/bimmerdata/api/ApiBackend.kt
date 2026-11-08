@@ -46,6 +46,16 @@ interface ApiBackend {
     fun saveDashboard(dashboard: Dashboard)
     fun defaultDashboard(): Dashboard
 
+    /**
+     * Read-modify-write of the layout with no other writer in between (the phone editor may save
+     * at the same moment). The default is load + save; the Android backend uses the store's lock.
+     */
+    fun <T> editDashboard(op: (Dashboard) -> Pair<Dashboard, T>): T {
+        val (d, result) = op(loadDashboard())
+        saveDashboard(d)
+        return result
+    }
+
     /** PNG of [RenderRequest.page] as the phone or the Android Auto screen would draw it. */
     fun renderPage(request: RenderRequest): ByteArray
 

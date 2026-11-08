@@ -224,9 +224,7 @@ class ApiService(
 
     /** Load → edit → save under one lock, so concurrent API edits never lose each other. */
     private fun <T> editLayout(op: (Dashboard) -> Pair<Dashboard, T>): T = synchronized(layoutLock) {
-        val (d, result) = op(backend.loadDashboard())
-        backend.saveDashboard(d)
-        result
+        backend.editDashboard(op)
     }
 
     /** Warnings about measurement ids that the ECU catalog does not know (the layout is still accepted). */

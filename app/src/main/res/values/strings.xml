@@ -14,7 +14,7 @@
     <string name="status_running">%1$s · %2$s reads/s</string>
     <string name="status_connecting">Connecting…</string>
     <string name="status_stopped">Not connected</string>
-    <string name="conn_disconnected">Not connected · tap to connect</string>
+    <string name="conn_disconnected">Not connected</string>
     <string name="conn_paused">Paused · Tool32 is using the cable</string>
     <string name="conn_failed">Failed · %1$s</string>
     <string name="conn_usb">USB cable (K+DCAN)</string>

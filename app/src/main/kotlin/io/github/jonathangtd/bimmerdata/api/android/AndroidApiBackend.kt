@@ -85,7 +85,17 @@ class AndroidApiBackend(
     override fun loadDashboard(): Dashboard = DashboardStore.saved.value ?: store.load()
 
     /** Saves through [DashboardStore], so Android Auto follows at once (it observes [DashboardStore.saved]). */
-    override fun saveDashboard(dashboard: Dashboard) = store.save(dashboard)
+    override fun saveDashboard(dashboard: Dashboard) {
+        check(store.save(dashboard)) { "the layout could not be written" }
+    }
+
+    /** Uses [DashboardStore.update]: read, edit and write under the store's process-wide lock. */
+    override fun <T> editDashboard(op: (Dashboard) -> Pair<Dashboard, T>): T {
+        var result: Result<T>? = null
+        val written = store.update { current -> op(current).also { result = Result.success(it.second) }.first }
+        checkNotNull(written) { "the layout could not be written" }
+        return result!!.getOrThrow()
+    }
 
     override fun defaultDashboard(): Dashboard = DashboardStore.defaultDashboard(app)
 
