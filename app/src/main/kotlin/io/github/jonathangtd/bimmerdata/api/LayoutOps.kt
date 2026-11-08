@@ -4,6 +4,7 @@
 package io.github.jonathangtd.bimmerdata.api
 
 import io.github.jonathangtd.bimmerdata.dashboard.Card
+import io.github.jonathangtd.bimmerdata.gauges.TrendWindow
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.GridLimits
 import io.github.jonathangtd.bimmerdata.dashboard.GridRules
@@ -93,6 +94,9 @@ object LayoutOps {
         }
         if (card.colSpan < 1 || card.rowSpan < 1) issues += LayoutIssue(path, "invalid_span", "colSpan and rowSpan must be ≥ 1")
         if (card.col < 0 || card.row < 0) issues += LayoutIssue(path, "out_of_grid", "col and row must be ≥ 0")
+        card.windowSeconds?.let {
+            if (!TrendWindow.isValid(it)) issues += LayoutIssue("$path.windowSeconds", "invalid_window", "windowSeconds must be ${TrendWindow.MIN_SECONDS}..${TrendWindow.MAX_SECONDS} (got $it)")
+        }
         card.decimals?.let { if (it !in 0..4) issues += LayoutIssue("$path.decimals", "invalid_decimals", "decimals must be 0..4 (got $it)") }
         if (card.min != null && card.max != null && card.max <= card.min) issues += LayoutIssue("$path.max", "invalid_range", "max (${card.max}) must be greater than min (${card.min})")
         card.channelLabels?.let { if (it.size > card.measurementIds.size) issues += LayoutIssue("$path.channelLabels", "invalid_labels", "More channel labels (${it.size}) than measurements (${card.measurementIds.size})") }

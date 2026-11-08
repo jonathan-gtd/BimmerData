@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="trend_window">Time window</string>
+    <string name="trend_window_other">Other</string>
+    <string name="trend_window_seconds">Seconds</string>
+    <string name="trend_window_range">Between %1$d s and %2$d min</string>
+    <string name="trend_window_hint">How far back the curve goes. Tip: double-tap the card on the dashboard to switch.</string>
+    <string name="trend_window_now">Curve: last %1$s</string>
+</resources>

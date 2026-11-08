@@ -205,6 +205,7 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
         onCardTap = { id -> sheet = Sheet.EditCard(t, page.id, id) },
         onEmptyTap = { c, r -> sheet = addSheetOrMessage(res, t, page, c, r) { message(it) } ?: sheet },
         onLongPress = { vm.setEditing(true) },
+        onCardDoubleTap = { id -> vm.cycleTrendWindow(t, page.id, id)?.let { message(res.getString(R.string.trend_window_now, it)) } },
     )
 
     Box(Modifier.fillMaxSize().background(Cockpit.Background)) {

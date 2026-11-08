@@ -18,6 +18,7 @@ import android.util.Log
 import android.view.Surface
 import androidx.core.graphics.createBitmap
 import io.github.jonathangtd.bimmerdata.R
+import io.github.jonathangtd.bimmerdata.dashboard.longestTrendWindowMs
 import io.github.jonathangtd.bimmerdata.dashboard.CardSpecs
 import io.github.jonathangtd.bimmerdata.dashboard.car.CarChrome
 import io.github.jonathangtd.bimmerdata.dashboard.car.StatusLine
@@ -273,6 +274,7 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
         val c = content
         val page = c?.page
         specs = page?.cards?.map { CardSpecs.build(it, c.index, renderer.gauges.format) }.orEmpty()
+        feed.retainMs = longestTrendWindowMs(listOfNotNull(page))
         val ids = page?.cards?.mapTo(HashSet()) { it.id }.orEmpty()
         states.keys.retainAll(ids)
         imageStates.keys.retainAll(ids)

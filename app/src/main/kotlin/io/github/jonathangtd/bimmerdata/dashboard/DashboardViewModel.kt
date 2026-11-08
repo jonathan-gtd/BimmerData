@@ -7,6 +7,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.jonathangtd.bimmerdata.live.AcquisitionStatus
+import io.github.jonathangtd.bimmerdata.gauges.TrendWindow
+import io.github.jonathangtd.bimmerdata.gauges.GaugeType
 import io.github.jonathangtd.bimmerdata.live.EdiabasMeasurementCatalog
 import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.MeasurementClient
@@ -122,6 +124,11 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             deps.liveDataSource.samples.collect { feed.update(it) }
         }
+        // Histories keep min / max buckets as far back as the longest trend window (phone or car).
+        viewModelScope.launch {
+            _ui.map { it.dashboard }.filterNotNull().map { longestTrendWindowMs(it.phonePages + it.carPages) }
+                .distinctUntilChanged().collect { feed.retainMs = it }
+        }
         // Persist (debounced) after every own change; adopted external layouts are already on disk.
         viewModelScope.launch {
             _ui.map { it.dashboard }.filterNotNull().distinctUntilChanged().debounce(400).filter { it != lastPersisted }.collect { d ->
@@ -223,6 +230,15 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
     /** Replaces a card's settings (and span, if it still fits). */
     fun updateCard(t: Target, pageId: String, card: Card) = editPage(t, pageId) { page ->
         if (GridRules.canPlace(page, card)) page.replace(card) else null
+    }
+
+    /** Trend card: next quick time window ([TrendWindow.next]); returns its label, null if not a trend card. */
+    fun cycleTrendWindow(t: Target, pageId: String, cardId: String): String? {
+        val card = _ui.value.dashboard?.pages(t)?.firstOrNull { it.id == pageId }?.card(cardId) ?: return null
+        if (card.type != GaugeType.Trend) return null
+        val next = TrendWindow.next(card.windowSeconds)
+        updateCard(t, pageId, card.copy(windowSeconds = next))
+        return TrendWindow.duration(next)
     }
 
     fun deleteCard(t: Target, pageId: String, cardId: String) {

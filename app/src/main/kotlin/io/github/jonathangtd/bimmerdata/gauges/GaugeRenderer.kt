@@ -35,6 +35,8 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
         style = Paint.Style.STROKE; strokeJoin = Paint.Join.ROUND; strokeCap = Paint.Cap.ROUND
     }
     private val areaPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val gridPaint = Paint().apply { style = Paint.Style.STROKE }
+    private val tickPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { fontFeatureSettings = "tnum"; alpha = 200 }
     private val numberPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { fontFeatureSettings = "tnum" }
     private val labelPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { fontFeatureSettings = "tnum" }
     private val mutedPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { fontFeatureSettings = "tnum" }
@@ -356,7 +358,18 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
         mutedPaint.color = theme.muted
         mutedPaint.textSize = 13f * ls
         var y = r.top + padV + 13f * ls * 0.82f
-        c.drawText(st.ellipsized(0, spec.title, mutedPaint, right - left), left, y, mutedPaint)
+        // Title on the left, the time window ("5 min") discreetly on the right.
+        val windowText = TrendWindow.durationLabel(spec.windowMs)
+        val windowW = mutedPaint.measureText(windowText)
+        val titleW = right - left - windowW - 8f * ls
+        if (titleW > 24f * ls) {
+            c.drawText(st.ellipsized(0, spec.title, mutedPaint, titleW), left, y, mutedPaint)
+            mutedPaint.alpha = 150
+            c.drawText(windowText, right - windowW, y, mutedPaint)
+            mutedPaint.alpha = 255
+        } else {
+            c.drawText(st.ellipsized(0, spec.title, mutedPaint, right - left), left, y, mutedPaint)
+        }
 
         val valueSize = 26f * s
         y += 9f * ls + valueSize * CAP
@@ -393,15 +406,23 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
             c.drawRect(left, bottom - strokeWidth / 2f, right, bottom + strokeWidth / 2f, fillPaint)
             return
         }
-        val from = nowMs - TREND_WINDOW_MS
-        var first = history.firstIndexSince(from)
-        if (first > 0) first-- // keep the line entering from the left edge
-        val last = history.size - 1
-        if (last - first < 1) return
+        val window = spec.windowMs.coerceAtLeast(1000L)
+        val from = nowMs - window
+        val w = right - left
+        // At most a min / max pair per pixel column, whatever the window and the read rate.
+        val dec = st.trend
+        dec.begin(from, window, w.toInt().coerceAtLeast(1))
+        history.forEachPoint(from, dec)
+        dec.end()
+        val n = dec.count
+        drawTimeGrid(c, left, top, right, bottom, window)
+        if (n < 2) return
+        val xs = dec.xs
+        val vs = dec.vs
         var lo = Float.MAX_VALUE
         var hi = -Float.MAX_VALUE
-        for (i in first..last) {
-            val v = history.valueAt(i)
+        for (i in 0 until n) {
+            val v = vs[i]
             if (v < lo) lo = v
             if (v > hi) hi = v
         }
@@ -414,16 +435,15 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
         }
         val inset = strokeWidth
         val h = bottom - top - 2 * inset
-        val w = right - left
         val path = st.path
         val fill = st.fillPath
         path.rewind()
         fill.rewind()
         var lastX = left
-        for (i in first..last) {
-            val x = (left + w * ((history.timeAt(i) - from).toFloat() / TREND_WINDOW_MS)).coerceIn(left, right)
-            val y = top + inset + h * (1f - (history.valueAt(i) - lo) / (hi - lo))
-            if (i == first) {
+        for (i in 0 until n) {
+            val x = left + w * xs[i]
+            val y = top + inset + h * (1f - (vs[i] - lo) / (hi - lo))
+            if (i == 0) {
                 path.moveTo(x, y)
                 fill.moveTo(x, bottom)
                 fill.lineTo(x, y)
@@ -449,6 +469,28 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
         linePaint.color = color
         linePaint.strokeWidth = strokeWidth
         c.drawPath(path, linePaint)
+    }
+
+    /** Faint vertical lines every "nice" step back from now, labelled ("−30 s") when there is room. */
+    private fun drawTimeGrid(c: Canvas, left: Float, top: Float, right: Float, bottom: Float, windowMs: Long) {
+        val u = theme.unit
+        val w = right - left
+        val maxLines = (w / (64f * u)).toInt().coerceIn(1, 5)
+        val step = TrendWindow.gridStepMs(windowMs, maxLines)
+        gridPaint.color = theme.track
+        gridPaint.strokeWidth = max(1f, 0.8f * u)
+        val labels = bottom - top >= 34f * u && w >= 150f * u
+        if (labels) {
+            tickPaint.color = theme.muted
+            tickPaint.textSize = 10f * u * if (theme.car) 1.3f else 1f
+        }
+        var ago = step
+        while (ago < windowMs) {
+            val x = right - w * (ago.toFloat() / windowMs)
+            c.drawLine(x, top, x, bottom, gridPaint)
+            if (labels) c.drawText(TrendWindow.tickLabel(ago), x + 3f * u, bottom - 3f * u, tickPaint)
+            ago += step
+        }
     }
 
     // ---------------------------------------------------------------- Multi value
@@ -563,7 +605,6 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
     companion object {
         /** Cap height of Barlow / Barlow Semi Condensed digits, relative to the font size. */
         const val CAP = 0.70f
-        const val TREND_WINDOW_MS = 45_000L
 
         /** Same word in English and French. */
         private const val MIN_LABEL = "min"

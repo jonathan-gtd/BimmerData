@@ -82,6 +82,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import io.github.jonathangtd.bimmerdata.R
+import io.github.jonathangtd.bimmerdata.gauges.TrendWindow
 import io.github.jonathangtd.bimmerdata.dashboard.Card
 import io.github.jonathangtd.bimmerdata.dashboard.CardSpecs
 import io.github.jonathangtd.bimmerdata.dashboard.DashboardViewModel
@@ -526,6 +527,7 @@ internal fun CardEditorSheet(
     var warnBelow by remember(card.id) { mutableStateOf(editNumber(card.warnBelow, locale)) }
     var warnAbove by remember(card.id) { mutableStateOf(editNumber(card.warnAbove, locale)) }
     var decimals by remember(card.id) { mutableIntStateOf(card.decimals ?: -1) }
+    var windowSeconds by remember(card.id) { mutableStateOf(card.windowSeconds) }
     var colSpan by remember(card.id) { mutableIntStateOf(card.colSpan) }
     var rowSpan by remember(card.id) { mutableIntStateOf(card.rowSpan) }
     var picking by remember { mutableStateOf(false) }
@@ -535,6 +537,7 @@ internal fun CardEditorSheet(
         channelLabels = labels.toList().takeIf { l -> l.any { it.isNotBlank() } }?.let { l -> List(ids.size) { l.getOrNull(it).orEmpty() } },
         min = parseNumber(min), max = parseNumber(max), warnBelow = parseNumber(warnBelow), warnAbove = parseNumber(warnAbove),
         decimals = decimals.takeIf { it >= 0 }, colSpan = colSpan, rowSpan = rowSpan,
+        windowSeconds = windowSeconds.takeIf { type == GaugeType.Trend },
     )
     val auto = remember(card.id, ids, type, index) { CardSpecs.build(card.copy(type = type, measurementIds = ids, title = null, min = null, max = null, channelLabels = null, decimals = null), index, renderer.format) }
     val spec = remember(draft, index) { CardSpecs.build(draft, index, renderer.format) }
@@ -618,6 +621,10 @@ internal fun CardEditorSheet(
                     )
                 }
 
+                if (type == GaugeType.Trend) {
+                    TrendWindowSection(windowSeconds) { windowSeconds = it }
+                }
+
                 SectionTitle(stringResource(R.string.size))
                 Stepper(
                     stringResource(R.string.width), colSpan.toString(), onDecrease = { colSpan-- }, onIncrease = { colSpan++ },
@@ -635,7 +642,8 @@ internal fun CardEditorSheet(
             Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 PillButton(stringResource(R.string.cancel), onClick = onDismiss, modifier = Modifier.weight(1f))
                 PillButton(
-                    stringResource(R.string.save), onClick = { onSave(draft) }, enabled = fits && !minError,
+                    stringResource(R.string.save), onClick = { onSave(draft) },
+                    enabled = fits && !minError && draft.windowSeconds?.let { TrendWindow.isValid(it) } != false,
                     color = Cockpit.OnAccent, background = Cockpit.Accent, modifier = Modifier.weight(1f),
                 )
             }
@@ -850,4 +858,47 @@ internal fun CarFullscreenPreview(
             )
         }
     }
+}
+
+/**
+ * Time window of a trend card: quick choices plus a free value in seconds. null = the default
+ * window ([TrendWindow.DEFAULT_SECONDS]), shown as the "Other" value.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun TrendWindowSection(windowSeconds: Int?, onChange: (Int?) -> Unit) {
+    val current = TrendWindow.seconds(windowSeconds)
+    val quick = windowSeconds != null && windowSeconds in TrendWindow.QUICK
+    var custom by remember { mutableStateOf(!quick) }
+    var text by remember { mutableStateOf(if (quick) "" else current.toString()) }
+    SectionTitle(stringResource(R.string.trend_window))
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        TrendWindow.QUICK.forEach { sec ->
+            val sel = !custom && windowSeconds == sec
+            PillButton(
+                TrendWindow.duration(sec), onClick = { custom = false; onChange(sec) },
+                color = if (sel) Cockpit.OnAccent else Cockpit.Text, background = if (sel) Cockpit.Accent else Track, bold = sel,
+            )
+        }
+        PillButton(
+            stringResource(R.string.trend_window_other), onClick = { custom = true; text = current.toString(); onChange(current) },
+            color = if (custom) Cockpit.OnAccent else Cockpit.Text, background = if (custom) Cockpit.Accent else Track, bold = custom,
+        )
+    }
+    if (custom) {
+        val parsed = text.toIntOrNull()
+        val error = parsed == null || !TrendWindow.isValid(parsed)
+        Spacer(Modifier.height(10.dp))
+        NumberField(
+            stringResource(R.string.trend_window_seconds), text,
+            { v -> text = v.filter { it.isDigit() }.take(4); onChange(text.toIntOrNull() ?: -1) },
+            TrendWindow.DEFAULT_SECONDS.toString(), Modifier.fillMaxWidth(), isError = error,
+        )
+        Text(
+            if (error || parsed == null) stringResource(R.string.trend_window_range, TrendWindow.MIN_SECONDS, TrendWindow.MAX_SECONDS / 60)
+            else TrendWindow.duration(parsed),
+            color = if (error) Cockpit.Warning else Cockpit.Muted, fontSize = 13.sp,
+        )
+    }
+    Text(stringResource(R.string.trend_window_hint), color = Cockpit.Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp))
 }
