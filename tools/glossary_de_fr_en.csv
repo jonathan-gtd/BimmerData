@@ -1,0 +1,119 @@
+de;fr;en;note
+Abgasklappe;volet d'échappement;exhaust flap;
+Abgleich;étalonnage;calibration;
+Abweichung;écart;deviation;
+Adaption;adaptation;adaptation;
+Adaptionswert;valeur d'adaptation;adaptation value;
+Anforderung;demande;request;
+Ansauglufttemperatur;température d'air d'admission;intake air temperature;TIA
+Ansteuerung;commande;activation;actuator drive
+ansteuern;commander;activate;
+Anschlag;butée;stop;mechanical end stop
+Auslass;échappement;exhaust;VANOS exhaust side
+auslesen;lire;read;
+Batteriesensor;capteur de batterie;battery sensor;IBS
+Batteriespannung;tension batterie;battery voltage;
+Bandende;fin de chaîne;end of line;factory end-of-line
+Bank;banc;bank;Bank 1 = cyl. 1-3, Bank 2 = cyl. 4-6
+Betriebsstundenzaehler;compteur d'heures de fonctionnement;operating hours counter;
+Botschaft;message;message;CAN message
+Datenschnittstelle;interface de données;data interface;
+Diagnose;diagnostic;diagnosis;
+Diagnosemodul Tankleckage;module de diagnostic de fuite réservoir;tank leak diagnosis module;DMTL
+Drehzahl;régime;engine speed;
+Drosselklappe;papillon des gaz;throttle valve;DK
+Einlass;admission;intake;VANOS intake side
+Einspritzventil;injecteur;injector;
+Einspritzzeit;temps d'injection;injection time;TI
+Elektrische Kraftstoffpumpe;pompe à carburant électrique;electric fuel pump;EKP
+Elektrische Wasserpumpe;pompe à eau électrique;electric water pump;EWP
+Entlastungsrelais;relais de délestage;relief relay;
+Exzenterwelle;arbre excentrique;eccentric shaft;Valvetronic
+Exzenterwellensensor;capteur d'arbre excentrique;eccentric shaft sensor;
+Fahrerwunsch;demande conducteur;driver demand;
+Fahrpedalmodul;module de pédale d'accélérateur;accelerator pedal module;
+Fehler;défaut;fault;
+Fehlerspeicher;mémoire de défauts;fault memory;
+Funkenbrenndauer;durée d'étincelle;spark burn time;
+Füllstand;niveau;level;
+Gemischadaption;adaptation de richesse;mixture adaptation;
+Gemischkorrektur;correction de richesse;mixture correction;
+Generator;alternateur;alternator;GEN
+Grobleck;grosse fuite;large leak;
+Heizung;chauffage;heater;
+Istwert;valeur réelle;actual value;
+Kennfeldthermostat;thermostat piloté;map-controlled thermostat;KFT
+Klopfen;cliquetis;knock;KNK
+Klopfsensor;capteur de cliquetis;knock sensor;
+Klopfwerte;valeurs de cliquetis;knock values;
+Kraftstoffdruck;pression carburant;fuel pressure;
+Kraftstoffpumpe;pompe à carburant;fuel pump;
+Kühlerausgang;sortie radiateur;radiator outlet;
+Kühlerauslasstemperatur;température de sortie radiateur;radiator outlet temperature;
+Kühlmitteltemperatur;température de liquide de refroidissement;coolant temperature;TCO
+Kupplungsschalter;contacteur d'embrayage;clutch switch;
+Lambdaregelung;régulation lambda;lambda control;
+Lambdasonde;sonde lambda;lambda sensor;
+Lambdasondenheizung;chauffage de sonde lambda;lambda sensor heater;
+Länderfaktor;facteur pays;country factor;
+Last;charge;load;
+Laufunruhe;irrégularité de fonctionnement;engine roughness;ENRD
+Leckage;fuite;leak;
+Leerlauf;ralenti;idle;LL
+Leerlaufregelung;régulation de ralenti;idle control;
+Luftmasse;masse d'air;air mass;
+Luftmassenmesser;débitmètre d'air;air mass meter;HFM
+Lüfter;ventilateur;fan;
+Messwert;valeur mesurée;measured value;
+Mittelwert;valeur moyenne;mean value;
+Motordrehzahl;régime moteur;engine speed;
+Motortemperatur;température moteur;engine temperature;
+Nockenwelle;arbre à cames;camshaft;
+Nockenwellensensor;capteur d'arbre à cames;camshaft sensor;
+Notlauf;mode dégradé;limp-home mode;
+Öltemperatur;température d'huile;oil temperature;TOIL
+Oelsensor;capteur d'huile;oil sensor;
+Pedalwertgeber;capteur de pédale;pedal sensor;
+Plausibilität;plausibilité;plausibility;
+Poti;potentiomètre;potentiometer;
+Prüfablauf;procédure de test;test procedure;
+Rohwert;valeur brute;raw value;
+Ruhestrom;courant de repos;quiescent current;
+Saugrohrdruck;pression collecteur d'admission;intake manifold pressure;
+Sauganlage;système d'admission;intake system;DISA
+Schubabschaltung;coupure en décélération;overrun fuel cut-off;
+Sekundärluft;air secondaire;secondary air;SAP
+Sollwert;valeur de consigne;setpoint;
+Spannung;tension;voltage;
+Spannungsversorgung;alimentation;power supply;
+Standverbraucher;consommateurs à l'arrêt;parked-car consumers;
+Startrelais;relais de démarreur;starter relay;
+Steuergerät;calculateur;control unit;
+Stellmotor;servomoteur;actuator motor;
+Strom;courant;current;
+Tankentlüftung;dégazage du réservoir;tank venting;EVAP purge
+Tankentlüftungsventil;électrovanne de purge canister;tank vent valve;
+Überwachung;surveillance;monitoring;
+Umgebungsdruck;pression ambiante;ambient pressure;
+Umgebungstemperatur;température ambiante;ambient temperature;
+unplausibel;non plausible;implausible;
+Valvetronic;Valvetronic;Valvetronic;keep
+VANOS;VANOS;VANOS;keep
+Verbrennungsaussetzer;raté de combustion;misfire;
+Versorgung;alimentation;supply;
+Vorkat;précatalyseur;pre-catalyst;
+Katalysator;catalyseur;catalytic converter;TWC
+Wasserpumpe;pompe à eau;water pump;
+Widerstand;résistance;resistance;
+Zündaussetzer;raté d'allumage;ignition misfire;
+Zündung;allumage;ignition;
+Zündwinkel;angle d'allumage;ignition angle;IGA
+Zylinder;cylindre;cylinder;
+Zylinderselektive;sélective par cylindre;cylinder-selective;
+Kurzschluss nach Masse;court-circuit à la masse;short circuit to ground;
+Kurzschluss nach Plus;court-circuit au plus;short circuit to positive;
+Leitungsunterbrechung;coupure de ligne;open circuit;
+Signal zu hoch;signal trop élevé;signal too high;
+Signal zu niedrig;signal trop faible;signal too low;
+Fehler momentan vorhanden;défaut présent;fault currently present;
+Fehler momentan nicht vorhanden;défaut non présent actuellement;fault not currently present;

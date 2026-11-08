@@ -23,3 +23,6 @@ keystore.properties
 *.GRP
 ecu/
 Ecu/
+
+# machine translation answer caches (tools/translate_ecu.py)
+*.cache.jsonl

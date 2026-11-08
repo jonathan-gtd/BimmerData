@@ -87,3 +87,38 @@ from a template of `MSV70.PRG` and community material: the TestO datalogger tran
 INPA fault memory printout. Everything seeded is marked `auto` and needs a review; job descriptions
 taken from the TestO file come from jobs of the same name, sometimes of other ECUs, and can be
 wrong. Rows with the same German text share the same translation.
+
+## Machine pre-translation
+
+[`tools/translate_ecu.py`](../tools/translate_ecu.py) fills the empty `traduction` cells of a file
+with any OpenAI-compatible chat API (a local llama.cpp, Ollama or vLLM server, or a hosted one).
+It works for any ECU and any language:
+
+```
+python tools/translate_ecu.py --sgbd msv70 --lang fr \
+    --api-url http://127.0.0.1:8080/v1 --model <model> --key-file <file holding the API key>
+```
+
+- Only empty cells are filled (`--overwrite-auto` also redoes `auto` rows); `relu` rows are never
+  touched. Filled rows get the status `auto` and need a review like any other `auto` row.
+- Each distinct German text is translated once per type, so a text always gets the same label.
+- Answers are cached next to the file (`<file>.cache.jsonl`, not committed): an interrupted run
+  resumes where it stopped.
+- At the end the script lists rows to check (numbers that differ, very long labels).
+
+### Glossary
+
+[`tools/glossary_de_fr_en.csv`](../tools/glossary_de_fr_en.csv) (`de;fr;en;note`) holds the usual
+terms of BMW engine diagnosis and their French and English names (for example
+`Ansauglufttemperatur` = température d'air d'admission = intake air temperature, `Laufunruhe` =
+irrégularité de fonctionnement = engine roughness, `Tankentlüftung` = dégazage du réservoir = tank
+venting). The pre-translation script puts it in its prompt; use it too when you review, so that
+the same German term reads the same everywhere. Additions are welcome.
+
+## Updates in the app
+
+The app keeps the downloaded files and works offline. At start, at most once a day, it asks the
+source again for every cached file with the HTTP validators of the last download (`ETag` /
+`Last-Modified`): an unchanged file costs a "304 Not Modified" and nothing is downloaded. Without
+network it tries again at the next start. **Settings › Translations › Update** downloads every
+file at once, whenever you want.
