@@ -7,6 +7,7 @@ import android.content.Context
 import io.github.jonathangtd.bimmerdata.api.AcquisitionInfo
 import io.github.jonathangtd.bimmerdata.api.ApiBackend
 import io.github.jonathangtd.bimmerdata.api.ApiSettingsView
+import io.github.jonathangtd.bimmerdata.api.BluetoothAdapterView
 import io.github.jonathangtd.bimmerdata.api.BackendStatus
 import io.github.jonathangtd.bimmerdata.api.ConnectMode
 import io.github.jonathangtd.bimmerdata.api.ConnectionInfo
@@ -73,7 +74,17 @@ class AndroidApiBackend(
         )
     }
 
-    private fun mode(m: LiveMode) = if (m == LiveMode.Usb) ConnectMode.Usb else ConnectMode.Simulation
+    private fun mode(m: LiveMode) = when (m) {
+        LiveMode.Usb -> ConnectMode.Usb
+        LiveMode.Bluetooth -> ConnectMode.Bluetooth
+        LiveMode.Simulation -> ConnectMode.Simulation
+    }
+
+    private fun live(m: ConnectMode) = when (m) {
+        ConnectMode.Usb -> LiveMode.Usb
+        ConnectMode.Bluetooth -> LiveMode.Bluetooth
+        ConnectMode.Simulation -> LiveMode.Simulation
+    }
 
     override val samples: StateFlow<Map<String, Sample>> get() = repo.liveDataSource.samples
 
@@ -110,8 +121,7 @@ class AndroidApiBackend(
     override fun renderPage(request: RenderRequest): ByteArray = renderer.render(request)
 
     override fun connect(mode: ConnectMode?) {
-        val m = mode ?: if (settingsStore.state.value.defaultMode == LiveMode.Usb) ConnectMode.Usb else ConnectMode.Simulation
-        repo.connect(if (m == ConnectMode.Usb) LiveMode.Usb else LiveMode.Simulation)
+        repo.connect(mode?.let(::live) ?: settingsStore.state.value.defaultMode)
     }
 
     override fun disconnect() = repo.disconnect()
@@ -133,6 +143,8 @@ class AndroidApiBackend(
             autoConnectOnCable = s.autoConnectOnCable,
             recordingFolder = RecordingStorage.describe(app),
             api = ApiSettingsView(s.api.enabled, s.api.port, s.api.scopes.sortedBy { it.ordinal }.map { it.id }),
+            bluetoothAdapter = s.bluetooth.address?.let { BluetoothAdapterView(s.bluetooth.name, it) },
+            bluetoothConnectOnStart = s.bluetooth.connectOnStart,
         )
     }
 
@@ -190,8 +202,9 @@ class AndroidApiBackend(
     override fun updateSettings(patch: SettingsPatch): SettingsView {
         settingsStore.update { s ->
             s.copy(
-                defaultMode = patch.defaultMode?.let { if (it == ConnectMode.Usb) LiveMode.Usb else LiveMode.Simulation } ?: s.defaultMode,
+                defaultMode = patch.defaultMode?.let(::live) ?: s.defaultMode,
                 autoConnectOnCable = patch.autoConnectOnCable ?: s.autoConnectOnCable,
+                bluetooth = s.bluetooth.copy(connectOnStart = patch.bluetoothConnectOnStart ?: s.bluetooth.connectOnStart),
             )
         }
         return settings()

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Deep OBD Bluetooth adapter: connection pill, Settings › Connection, Android Auto. -->
+<resources>
+    <string name="bt_mode">Bluetooth adapter (Deep OBD)</string>
+    <string name="bt_short">Bluetooth</string>
+    <string name="bt_cp_choose_mode">Cable, Bluetooth or simulation</string>
+
+    <string name="bt_section">Bluetooth adapter</string>
+    <string name="bt_adapter_none">No adapter chosen</string>
+    <string name="bt_choose">Choose</string>
+    <string name="bt_change">Change</string>
+    <string name="bt_forget">Forget</string>
+    <string name="bt_pair">Pair a new adapter</string>
+    <string name="bt_pair_hint">Pair the adapter in Android\'s Bluetooth settings first (PIN usually 1234), with the ignition on so that it has power, then choose it here. Only adapters with the Deep OBD firmware work.</string>
+    <string name="bt_permission_needed">BimmerData needs the permission to connect to Bluetooth devices.</string>
+    <string name="bt_allow">Allow</string>
+    <string name="bt_off">Bluetooth is off.</string>
+    <string name="bt_connect_on_start">Connect to the adapter when the app starts</string>
+    <string name="bt_connect_on_start_hint">For an adapter that stays plugged in the car. Without a cable or adapter the app just shows the error.</string>
+    <string name="bt_pick_title">Paired devices</string>
+    <string name="bt_pick_empty">No paired device. Pair the adapter in Android\'s Bluetooth settings.</string>
+    <string name="bt_pick_obd">Looks like an OBD adapter</string>
+    <string name="bt_pick_le">Bluetooth LE only: not supported</string>
+
+    <string name="bt_adapter_info">Adapter</string>
+    <string name="bt_read">Read the adapter</string>
+    <string name="bt_reading">Reading…</string>
+    <string name="bt_info_connect_first">Connect over Bluetooth to see the adapter: firmware, voltage and CAN mode.</string>
+    <string name="bt_type">Type</string>
+    <string name="bt_firmware">Firmware</string>
+    <string name="bt_serial">Id</string>
+    <string name="bt_voltage">Voltage</string>
+    <string name="bt_voltage_value">%1$s V</string>
+    <string name="bt_can_mode">CAN mode</string>
+    <string name="bt_can_auto">Automatic (D-CAN, else K-line)</string>
+    <string name="bt_can_kline">K-line only (CAN off)</string>
+    <string name="bt_can_500">D-CAN 500 kbit/s only</string>
+    <string name="bt_can_100">CAN 100 kbit/s (VAG)</string>
+    <string name="bt_can_unknown">Unknown (0x%1$02X)</string>
+    <string name="bt_can_warning">In this mode the adapter does not use the K-line: an E-series built before 03/2007 cannot be reached. Choose Automatic or K-line only.</string>
+    <string name="bt_change_can">Change the CAN mode</string>
+    <string name="bt_can_confirm_title">Write the CAN mode to the adapter?</string>
+    <string name="bt_can_confirm_text">The adapter stores this setting in its memory and keeps it for every app, Deep OBD included. New mode: %1$s.</string>
+    <string name="bt_write">Write</string>
+    <string name="bt_cancel">Cancel</string>
+    <string name="bt_error">Error: %1$s</string>
+
+    <string name="bt_car_hint">Deep OBD adapter %1$s</string>
+    <string name="bt_car_hint_none">Choose the adapter on the phone first</string>
+</resources>

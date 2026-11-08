@@ -33,9 +33,9 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /**
- * Foreground service (type connectedDevice) that keeps the USB acquisition alive with the screen
- * off: ongoing notification with the state, cycles/s and recording state, and Stop / Record
- * actions. Started by [LiveRepository.connect] in USB mode, stops itself when the repository
+ * Foreground service (type connectedDevice) that keeps the USB or Bluetooth acquisition alive with
+ * the screen off: ongoing notification with the state, cycles/s and recording state, and Stop /
+ * Record actions. Started by [LiveRepository.connect] for a real car, stops itself when the repository
  * disconnects. Holds a partial wake lock while running so the read loop is not suspended.
  */
 class AcquisitionService : Service() {
@@ -49,7 +49,7 @@ class AcquisitionService : Service() {
 
     private val detachReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == UsbManager.ACTION_USB_DEVICE_DETACHED) {
+            if (intent.action == UsbManager.ACTION_USB_DEVICE_DETACHED && repo.connection.value.mode == LiveMode.Usb) {
                 Log.i(Tag, "USB device detached, disconnecting")
                 repo.disconnect()
             }

@@ -104,6 +104,8 @@ class ScreenshotTest {
             ConnectionPillContent(usb, AcquisitionStatus(AcquisitionState.Connecting), LiveMode.Usb, {}, {})
             ConnectionPillContent(usb, AcquisitionStatus(AcquisitionState.Error, 0.0, 3, "msv70 block of 5: no response"), LiveMode.Usb, {}, {})
             ConnectionPillContent(LiveConnection.Connected(LiveMode.Simulation, "Sim"), AcquisitionStatus(AcquisitionState.Running, 23.1), LiveMode.Simulation, {}, {})
+            ConnectionPillContent(LiveConnection.Disconnected, AcquisitionStatus(), LiveMode.Bluetooth, {}, {})
+            ConnectionPillContent(LiveConnection.Connected(LiveMode.Bluetooth, "Deep OBD BMW"), AcquisitionStatus(AcquisitionState.Running, 13.8), LiveMode.Bluetooth, {}, {})
         }
     }
 

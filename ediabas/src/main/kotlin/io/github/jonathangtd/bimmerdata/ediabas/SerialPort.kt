@@ -64,6 +64,9 @@ interface SerialPort : Closeable {
      */
     val extraReceiveTimeoutMs: Int get() = 0
 
+    /** False when [getDsr] does not follow the ignition (Bluetooth adapters: always true). */
+    val hasIgnitionLine: Boolean get() = true
+
     /** Wakes up a blocked [read] (it then returns 0). Optional: [EdInterfaceObd] also polls. */
     fun cancelRead() {}
 }

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bt_mode">Adaptateur Bluetooth (Deep OBD)</string>
+    <string name="bt_short">Bluetooth</string>
+    <string name="bt_cp_choose_mode">Câble, Bluetooth ou simulation</string>
+
+    <string name="bt_section">Adaptateur Bluetooth</string>
+    <string name="bt_adapter_none">Aucun adaptateur choisi</string>
+    <string name="bt_choose">Choisir</string>
+    <string name="bt_change">Changer</string>
+    <string name="bt_forget">Oublier</string>
+    <string name="bt_pair">Appairer un nouvel adaptateur</string>
+    <string name="bt_pair_hint">Appairez d\'abord l\'adaptateur dans les réglages Bluetooth d\'Android (code PIN en général 1234), contact mis pour qu\'il soit alimenté, puis choisissez-le ici. Seuls les adaptateurs avec le firmware Deep OBD fonctionnent.</string>
+    <string name="bt_permission_needed">BimmerData a besoin de l\'autorisation de se connecter aux appareils Bluetooth.</string>
+    <string name="bt_allow">Autoriser</string>
+    <string name="bt_off">Le Bluetooth est désactivé.</string>
+    <string name="bt_connect_on_start">Se connecter à l\'adaptateur au démarrage de l\'appli</string>
+    <string name="bt_connect_on_start_hint">Pour un adaptateur qui reste branché dans la voiture. Sans câble ni adaptateur, l\'appli affiche simplement l\'erreur.</string>
+    <string name="bt_pick_title">Appareils appairés</string>
+    <string name="bt_pick_empty">Aucun appareil appairé. Appairez l\'adaptateur dans les réglages Bluetooth d\'Android.</string>
+    <string name="bt_pick_obd">Ressemble à un adaptateur OBD</string>
+    <string name="bt_pick_le">Bluetooth LE uniquement : non pris en charge</string>
+
+    <string name="bt_adapter_info">Adaptateur</string>
+    <string name="bt_read">Lire l\'adaptateur</string>
+    <string name="bt_reading">Lecture…</string>
+    <string name="bt_info_connect_first">Connectez-vous en Bluetooth pour voir l\'adaptateur : firmware, tension et mode CAN.</string>
+    <string name="bt_type">Type</string>
+    <string name="bt_firmware">Firmware</string>
+    <string name="bt_serial">Identifiant</string>
+    <string name="bt_voltage">Tension</string>
+    <string name="bt_voltage_value">%1$s V</string>
+    <string name="bt_can_mode">Mode CAN</string>
+    <string name="bt_can_auto">Automatique (D-CAN, sinon K-line)</string>
+    <string name="bt_can_kline">K-line seulement (CAN coupé)</string>
+    <string name="bt_can_500">D-CAN 500 kbit/s seulement</string>
+    <string name="bt_can_100">CAN 100 kbit/s (VAG)</string>
+    <string name="bt_can_unknown">Inconnu (0x%1$02X)</string>
+    <string name="bt_can_warning">Dans ce mode, l\'adaptateur n\'utilise pas la K-line : une série E construite avant 03/2007 est inaccessible. Choisissez Automatique ou K-line seulement.</string>
+    <string name="bt_change_can">Changer le mode CAN</string>
+    <string name="bt_can_confirm_title">Écrire le mode CAN dans l\'adaptateur ?</string>
+    <string name="bt_can_confirm_text">L\'adaptateur garde ce réglage en mémoire, pour toutes les applis, Deep OBD comprise. Nouveau mode : %1$s.</string>
+    <string name="bt_write">Écrire</string>
+    <string name="bt_cancel">Annuler</string>
+    <string name="bt_error">Erreur : %1$s</string>
+
+    <string name="bt_car_hint">Adaptateur Deep OBD %1$s</string>
+    <string name="bt_car_hint_none">Choisissez d\'abord l\'adaptateur sur le téléphone</string>
+</resources>

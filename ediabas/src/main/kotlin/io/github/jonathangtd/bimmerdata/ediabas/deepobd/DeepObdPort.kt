@@ -126,6 +126,8 @@ class DeepObdPort(
         return true
     }
 
+    override val hasIgnitionLine: Boolean get() = false
+
     override val extraReceiveTimeoutMs: Int
         get() = if (System.nanoTime() - lastIoNanos < timeouts.recentMs * 1_000_000L) timeouts.shortOffsetMs else timeouts.longOffsetMs
 

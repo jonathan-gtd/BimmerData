@@ -726,6 +726,9 @@ class EdInterfaceObd(
         null
     }
 
+    /** Ignition (KL15) for the UI: the DSR line of a K+DCAN cable, null when unknown (Bluetooth, error). */
+    fun readIgnitionLine(): Boolean? = if (port.hasIgnitionLine) readDsr() else null
+
     private fun getDsrState(): Boolean {
         val dsr = readDsr()
         if (dsr != null) return dsr

@@ -70,7 +70,6 @@ import io.github.jonathangtd.bimmerdata.api.ApiTokens
 import io.github.jonathangtd.bimmerdata.api.Scope
 import io.github.jonathangtd.bimmerdata.api.android.ApiRuntime
 import io.github.jonathangtd.bimmerdata.api.android.ApiRuntimeState
-import io.github.jonathangtd.bimmerdata.live.LiveMode
 import io.github.jonathangtd.bimmerdata.ui.BarlowCondensed
 import io.github.jonathangtd.bimmerdata.ui.Cockpit
 import java.util.Locale
@@ -96,7 +95,7 @@ fun SettingsScreen() {
                 fontFamily = BarlowCondensed, modifier = Modifier.padding(top = 4.dp, bottom = 4.dp),
             )
         }
-        item { ConnectionSection(settings, store) }
+        item { ConnectionSettingsSection() }
         item { ToolsSection() }
         item { RecordingSection(settings.recording, store) }
         item { TelegrafSection(settings.telegraf, store) }
@@ -107,27 +106,6 @@ fun SettingsScreen() {
 }
 
 // ---------------------------------------------------------------- sections
-
-@Composable
-private fun ConnectionSection(settings: Settings, store: AppSettings) {
-    SettingsCard {
-        SectionLabel(stringResource(R.string.settings_section_connection))
-        Text(stringResource(R.string.settings_default_mode), color = Cockpit.Text, fontSize = 16.sp)
-        Segmented(
-            options = listOf(LiveMode.Usb to stringResource(R.string.settings_mode_usb), LiveMode.Simulation to stringResource(R.string.settings_mode_sim)),
-            selected = settings.defaultMode,
-            onSelect = { m -> store.update { it.copy(defaultMode = m) } },
-        )
-        Hint(stringResource(R.string.settings_default_mode_hint))
-        Divider()
-        SwitchRow(
-            title = stringResource(R.string.settings_auto_connect),
-            hint = stringResource(R.string.settings_auto_connect_hint),
-            checked = settings.autoConnectOnCable,
-            onChange = { on -> store.update { it.copy(autoConnectOnCable = on) } },
-        )
-    }
-}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

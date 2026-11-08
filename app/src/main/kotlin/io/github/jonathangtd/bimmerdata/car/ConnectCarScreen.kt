@@ -14,8 +14,9 @@ import io.github.jonathangtd.bimmerdata.R
 import io.github.jonathangtd.bimmerdata.dashboard.DashboardDependencies
 import io.github.jonathangtd.bimmerdata.live.LiveConnection
 import io.github.jonathangtd.bimmerdata.live.LiveMode
+import io.github.jonathangtd.bimmerdata.settings.AppSettings
 
-/** Connection choice from the car: K+DCAN cable, simulated ECU, or disconnect. */
+/** Connection choice from the car: K+DCAN cable, Bluetooth adapter (once chosen), simulated ECU, or disconnect. */
 class ConnectCarScreen(carContext: CarContext, private val deps: DashboardDependencies) : Screen(carContext) {
 
     override fun onGetTemplate(): Template {
@@ -27,6 +28,13 @@ class ConnectCarScreen(carContext: CarContext, private val deps: DashboardDepend
         }
         val list = ItemList.Builder()
         list.addItem(row(R.string.conn_usb, if (current == LiveMode.Usb) R.string.car_connected else R.string.car_usb_hint) { connect(LiveMode.Usb) })
+        // Bluetooth only once an adapter was chosen on the phone (pairing and permission happen there)
+        AppSettings.get(carContext).state.value.bluetooth.label?.let { adapter ->
+            val text = carContext.getString(if (current == LiveMode.Bluetooth) R.string.car_connected else R.string.bt_car_hint, adapter)
+            list.addItem(
+                Row.Builder().setTitle(carContext.getString(R.string.bt_mode)).addText(text).setOnClickListener { connect(LiveMode.Bluetooth) }.build(),
+            )
+        }
         list.addItem(row(R.string.conn_sim, if (current == LiveMode.Simulation) R.string.car_connected else R.string.car_sim_hint) { connect(LiveMode.Simulation) })
         if (current != null) list.addItem(row(R.string.conn_disconnect, null) { deps.disconnect(); screenManager.pop() })
         @Suppress("DEPRECATION")

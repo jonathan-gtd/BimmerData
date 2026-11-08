@@ -38,7 +38,7 @@ class DiagSession(private val cable: CableExecutor, private val label: String = 
     @Volatile private var runningIface: EdInterfaceObd? = null
 
     /** Ignition state (DSR line of the K+DCAN cable); null if the interface cannot tell. */
-    suspend fun readIgnition(): Boolean? = cable.exclusive("$label: ignition") { a -> (a.iface as? EdInterfaceObd)?.readDsr() }
+    suspend fun readIgnition(): Boolean? = cable.exclusive("$label: ignition") { a -> (a.iface as? EdInterfaceObd)?.readIgnitionLine() }
 
     /** Group file (.grp) -> variant file name, identified by talking to the ECU. */
     suspend fun resolveVariant(groupFile: String): String =
@@ -72,7 +72,7 @@ class DiagSession(private val cable: CableExecutor, private val label: String = 
             }
             val elapsed = System.nanoTime() - start
             val cancelled = a.aborted
-            val ignition = if (cancelled) null else runCatching { obd?.readDsr() }.getOrNull()
+            val ignition = if (cancelled) null else runCatching { obd?.readIgnitionLine() }.getOrNull()
             JobRun(sgbd, job, args, sets, elapsed, obd?.stats?.telegrams ?: 0, frames, start, error, cancelled, ignition)
         }
     }

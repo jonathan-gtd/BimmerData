@@ -114,10 +114,16 @@ fun ConnectionPillContent(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val notifPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { onConnect(LiveMode.Usb) }
+    var pendingMode by remember { mutableStateOf<LiveMode?>(null) }
+    val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        pendingMode?.let(onConnect) // connect anyway: a missing permission is reported by the connection
+        pendingMode = null
+    }
     fun connect(mode: LiveMode) {
-        if (mode == LiveMode.Usb && LivePermissions.shouldRequestNotifications(context)) {
-            notifPermission.launch(LivePermissions.Notifications)
+        val missing = LivePermissions.missingFor(context, mode)
+        if (missing.isNotEmpty()) {
+            pendingMode = mode
+            permissions.launch(missing)
         } else {
             onConnect(mode)
         }
@@ -146,6 +152,7 @@ fun ConnectionPillContent(
             val current = (connection as? LiveConnection.Connected)?.mode ?: (connection as? LiveConnection.Connecting)?.mode
             if (current == null) {
                 MenuEntry(stringResource(R.string.cp_mode_usb), R.drawable.ic_plug) { menu = false; connect(LiveMode.Usb) }
+                MenuEntry(stringResource(R.string.bt_mode), R.drawable.ic_bluetooth) { menu = false; connect(LiveMode.Bluetooth) }
                 MenuEntry(stringResource(R.string.cp_mode_sim), R.drawable.ic_dashboard) { menu = false; connect(LiveMode.Simulation) }
             } else {
                 if (current == LiveMode.Usb) {
@@ -169,8 +176,25 @@ private fun MenuEntry(text: String, icon: Int?, color: Color = Cockpit.Text, onC
     )
 }
 
+/** Short name in the status pill: "Cable", "Bluetooth · Deep OBD BMW", "Simulation". */
 @Composable
-private fun modeName(mode: LiveMode): String = stringResource(if (mode == LiveMode.Usb) R.string.cp_short_usb else R.string.cp_short_sim)
+private fun modeName(mode: LiveMode, label: String? = null): String = when (mode) {
+    LiveMode.Usb -> stringResource(R.string.cp_short_usb)
+    LiveMode.Bluetooth -> stringResource(R.string.bt_short) + (label?.let { " · $it" } ?: "")
+    LiveMode.Simulation -> stringResource(R.string.cp_short_sim)
+}
+
+/** Long name under "Connect". */
+@Composable
+private fun modeLongName(mode: LiveMode): String = stringResource(
+    when (mode) {
+        LiveMode.Usb -> R.string.cp_mode_usb
+        LiveMode.Bluetooth -> R.string.bt_mode
+        LiveMode.Simulation -> R.string.cp_mode_sim
+    },
+)
+
+private fun modeIcon(mode: LiveMode?): Int = if (mode == LiveMode.Bluetooth) R.drawable.ic_bluetooth else R.drawable.ic_plug
 
 /** Big accent "Connect" pill; its end opens the mode menu once a mode is known. */
 @Composable
@@ -189,12 +213,12 @@ private fun ConnectButton(lastMode: LiveMode?, onMain: () -> Unit, onMenu: () ->
                 .padding(start = 20.dp, end = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(painterResource(R.drawable.ic_plug), contentDescription = null, tint = Cockpit.OnAccent, modifier = Modifier.size(24.dp))
+            Icon(painterResource(modeIcon(lastMode)), contentDescription = null, tint = Cockpit.OnAccent, modifier = Modifier.size(24.dp))
             Spacer(Modifier.width(12.dp))
             Column {
                 Text(connectLabel, color = Cockpit.OnAccent, fontFamily = BarlowCondensed, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, maxLines = 1)
                 Text(
-                    if (lastMode == null) stringResource(R.string.cp_choose_mode) else stringResource(if (lastMode == LiveMode.Usb) R.string.cp_mode_usb else R.string.cp_mode_sim),
+                    if (lastMode == null) stringResource(R.string.bt_cp_choose_mode) else modeLongName(lastMode),
                     color = Cockpit.OnAccent.copy(alpha = 0.72f), fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
@@ -222,7 +246,7 @@ private fun StatusButton(connection: LiveConnection, status: AcquisitionStatus, 
     val color = toneColor(tone)
     val shape = RoundedCornerShape(22.dp)
     val mode = (connection as? LiveConnection.Connected)?.mode ?: (connection as LiveConnection.Connecting).mode
-    val name = modeName(mode)
+    val name = modeName(mode, (connection as? LiveConnection.Connected)?.label)
     val text = when {
         connection is LiveConnection.Connecting -> stringResource(R.string.cp_connecting, name)
         tone == PillTone.Ok -> stringResource(R.string.cp_reading, name, String.format(currentLocale(), "%.1f", status.cyclesPerSecond))

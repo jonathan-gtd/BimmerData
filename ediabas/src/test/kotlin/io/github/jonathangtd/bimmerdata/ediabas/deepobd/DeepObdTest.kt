@@ -52,7 +52,9 @@ class DeepObdTest {
             sim.internalRequests.map { TestEcu.hex(it) },
             "telegrams of EdCustomAdapterCommon.UpdateAdapterInfo + the CAN mode read of Deep OBD",
         )
-        assertTrue(port.getDsr(), "no ignition line over Bluetooth")
+        assertTrue(port.getDsr(), "EDIABAS sees the battery and ignition on")
+        assertFalse(port.hasIgnitionLine, "but the UI must show the ignition as unknown")
+        assertNull(EdInterfaceObd(port).readIgnitionLine())
         port.close()
         assertFalse(port.isOpen)
     }

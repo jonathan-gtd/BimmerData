@@ -13,7 +13,9 @@ each user imports their own `EDIABAS\Ecu` folder.
 ## Hardware
 
 - K+DCAN USB cable (FTDI) over USB-C OTG — first target (E-series, K-line, BMW-FAST).
-- Bluetooth adapter with the [Deep OBD firmware](https://github.com/uholeschak/ediabaslib) — planned.
+- Bluetooth adapter with the Deep OBD firmware (e.g. an ELM327 with the
+  [replacement firmware](https://github.com/uholeschak/ediabaslib/blob/master/docs/Replacement_firmware_for_ELM327.md)),
+  Bluetooth classic. See [docs/BLUETOOTH.md](docs/BLUETOOTH.md).
 
 Supported EDIABAS concepts so far: BMW-FAST (0x010F). DS2, KWP2000\* and D-CAN are planned.
 
@@ -33,6 +35,9 @@ session before anything is sent to the car. Fault memory clear is allowed.
 
 ## Settings
 
+- **Connection**: auto-connect on the cable, and the **Bluetooth adapter**: pick it among the paired
+  devices, connect at app start, read its firmware, voltage and CAN mode (see
+  [docs/BLUETOOTH.md](docs/BLUETOOTH.md)).
 - **Tools › Tool32**: the mini Tool32 above. It also opens from an ECU's detail (Faults tab,
   **Jobs (Tool32)**) with that ECU's SGBD already selected.
 - **Recording**: CSV files go to `Documents/BimmerData/`, or to a folder you choose (Android
@@ -48,7 +53,8 @@ session before anything is sent to the car. Fault memory clear is allowed.
 The car pages of the dashboard (edited on the phone: **Edit** › **Android Auto**) are shown in
 Android Auto with the same card renderer as the phone, full screen, next to the media card, or as
 a small card next to another app (cards then reflow on two columns). Tap the screen to show the
-buttons: previous / next page and **Connect** (USB cable or Simulation).
+buttons: previous / next page and **Connect** (USB cable, Bluetooth adapter once chosen on the
+phone, or Simulation).
 
 BimmerData uses the Car App Library as a *navigation* app, because that is the only category that
 lets an app draw its own screen; it never starts route guidance. If a head unit refuses to hand

@@ -45,6 +45,12 @@ class DeepObdAdapterSimulator(
     var voltageTenths = 124
     val serial = byteArrayOf(0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x08)
 
+    /**
+     * Bluetooth round trip added to every telegram sent to the car (phone -> adapter -> phone),
+     * to estimate the read rate over Bluetooth. 0 = as fast as the FTDI cable.
+     */
+    @Volatile var roundTripMs: Long = 0
+
     /** Internal telegrams received, in order. */
     val internalRequests: MutableList<ByteArray> = java.util.Collections.synchronizedList(ArrayList())
 
@@ -87,7 +93,10 @@ class DeepObdAdapterSimulator(
                     pending.addAll(bytes.toList())
                     assemble()
                 }
-                for (frame in forward) car.write(frame)
+                for (frame in forward) {
+                    if (roundTripMs > 0) Thread.sleep(roundTripMs)
+                    car.write(frame)
+                }
             }
         }
     }

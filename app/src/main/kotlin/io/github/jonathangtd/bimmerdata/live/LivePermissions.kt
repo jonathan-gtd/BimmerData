@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
+import io.github.jonathangtd.bimmerdata.bluetooth.BluetoothAccess
 
 /**
  * Runtime permissions of the live acquisition. Only the notification permission (Android 13+)
@@ -35,4 +36,14 @@ object LivePermissions {
     /** Permissions to request at runtime before connecting; empty below Android 13. */
     fun runtimePermissions(context: Context): Array<String> =
         if (shouldRequestNotifications(context)) arrayOf(Notifications) else emptyArray()
+
+    /**
+     * Runtime permissions still missing before connecting in [mode]: the notification for the
+     * foreground service (cable, Bluetooth) and BLUETOOTH_CONNECT (Android 12+) for Bluetooth.
+     * Connect anyway once the dialog is answered: without them the connection reports why.
+     */
+    fun missingFor(context: Context, mode: LiveMode): Array<String> = buildList {
+        if (mode != LiveMode.Simulation && shouldRequestNotifications(context)) add(Notifications)
+        if (mode == LiveMode.Bluetooth && !BluetoothAccess.hasConnectPermission(context)) BluetoothAccess.connectPermission?.let(::add)
+    }.toTypedArray()
 }

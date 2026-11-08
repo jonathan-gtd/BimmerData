@@ -9,7 +9,12 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.core.content.ContextCompat
+import io.github.jonathangtd.bimmerdata.bluetooth.BluetoothAccess
+import io.github.jonathangtd.bimmerdata.bluetooth.BluetoothSppPort
 import io.github.jonathangtd.bimmerdata.ediabas.EdInterfaceObd
+import io.github.jonathangtd.bimmerdata.ediabas.deepobd.AdapterInfo
+import io.github.jonathangtd.bimmerdata.ediabas.deepobd.CanMode
+import io.github.jonathangtd.bimmerdata.ediabas.deepobd.DeepObdPort
 import io.github.jonathangtd.bimmerdata.ediabas.sim.EcuSimulator
 import io.github.jonathangtd.bimmerdata.ediabas.sim.VehicleSimulator
 import io.github.jonathangtd.bimmerdata.files.EcuImporter
@@ -36,8 +41,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
 
-/** How the app reaches the car. */
-enum class LiveMode { Usb, Simulation }
+/** How the app reaches the car: K+DCAN cable, Deep OBD Bluetooth adapter, or the simulated car. */
+enum class LiveMode { Usb, Bluetooth, Simulation }
 
 /**
  * The one connection of the app (cable or simulated car). While [Connected], the acquisition
@@ -201,17 +206,70 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
                     val port = UsbFtdiSerialPort(usbManager, device)
                     EdInterfaceObd(port) to port.name
                 }
+                LiveMode.Bluetooth -> {
+                    val bt = settings.state.value.bluetooth
+                    val problem = when {
+                        bt.address == null -> NoAdapterMessage
+                        !BluetoothAccess.hasConnectPermission(app) -> BtPermissionMessage
+                        !BluetoothAccess.isEnabled(app) -> BtOffMessage
+                        else -> null
+                    }
+                    if (problem != null) {
+                        _connection.value = LiveConnection.Failed(mode, problem)
+                        return
+                    }
+                    // RFCOMM connect + adapter detection run in the engine's connect step (with retries)
+                    val port = DeepObdPort(BluetoothSppPort(app, bt.address!!, bt.label!!))
+                    EdInterfaceObd(port) to bt.label!!
+                }
             }
             val e = AcquisitionEngine(iface, edCatalog)
             engine = e
             proxy.attach(e)
             e.start()
             _connection.value = LiveConnection.Connected(mode, name)
-            if (mode == LiveMode.Usb) startService()
+            if (mode != LiveMode.Simulation) startService()
         }
     }
 
+    /**
+     * Reads the Deep OBD adapter again (voltage, CAN mode) between two read cycles; null when not
+     * connected over Bluetooth or when the adapter is not identified yet.
+     */
+    suspend fun readAdapter(): AdapterInfo? {
+        if ((_connection.value as? LiveConnection.Connected)?.mode != LiveMode.Bluetooth) return null
+        val info = exclusive("Bluetooth adapter") { a ->
+            a.deepObdPort()?.let { p ->
+                p.readVoltage()
+                p.readCanMode()
+                p.info
+            }
+        }
+        _adapterInfo.value = info
+        return info
+    }
+
+    /** Stores [mode] in the adapter (after the user's confirmation) and returns the new adapter state. */
+    suspend fun writeCanMode(mode: CanMode): AdapterInfo? {
+        if ((_connection.value as? LiveConnection.Connected)?.mode != LiveMode.Bluetooth) throw CableUnavailableException(NotBluetoothMessage)
+        val info = exclusive("Bluetooth adapter: CAN mode") { a ->
+            val p = a.deepObdPort() ?: throw CableUnavailableException(NotBluetoothMessage)
+            p.writeCanMode(mode)
+            p.info
+        }
+        _adapterInfo.value = info
+        return info
+    }
+
+    private val _adapterInfo = MutableStateFlow<AdapterInfo?>(null)
+
+    /** Last adapter state read with [readAdapter] / [writeCanMode]; null when not on Bluetooth. */
+    val adapterInfo: StateFlow<AdapterInfo?> = _adapterInfo.asStateFlow()
+
+    private fun CableAccess.deepObdPort(): DeepObdPort? = ((iface as? EdInterfaceObd)?.port as? DeepObdPort)?.takeIf { it.isOpen }
+
     private suspend fun shutdownEngine() {
+        _adapterInfo.value = null
         val e = engine ?: return
         engine = null
         if (csvRecorder.state.value.recording) csvRecorder.stop()
@@ -234,6 +292,10 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
         const val SimulationLabel = "Simulation (E90 with MSV70)"
         const val NoCableMessage = "No FTDI cable found (VID 0403). Plug the K+DCAN cable via USB-C OTG."
         const val UsbDeniedMessage = "USB permission denied"
+        const val NoAdapterMessage = "No Bluetooth adapter chosen: pick it in Settings › Connection"
+        const val BtPermissionMessage = "Bluetooth permission not granted"
+        const val BtOffMessage = "Bluetooth is off"
+        const val NotBluetoothMessage = "Not connected over Bluetooth"
 
         // holds only the application context
         @SuppressLint("StaticFieldLeak")

@@ -202,7 +202,7 @@ BimmerData reads live data from BMW ECUs (E-series, K+DCAN cable) and shows it o
 ## Getting started
 1. On the phone: Settings › Local API › enable, pick the scopes, copy the base URL and the token.
 2. Send `Authorization: Bearer <token>` with every request (except this document).
-3. `GET /api/v1/status` — is the app connected? If not, `POST /api/v1/connect` with `{"mode":"simulation"}` (no car needed) or `{"mode":"usb"}` (needs scope `config`).
+3. `GET /api/v1/status` — is the app connected? If not, `POST /api/v1/connect` with `{"mode":"simulation"}` (no car needed) or `{"mode":"usb"}` / `{"mode":"bluetooth"}` (needs scope `config`).
 4. Discover data: `GET /api/v1/ecus`, then `GET /api/v1/ecus/{sgbd}/measurements?q=temp`. A measurement id looks like `msv70/0x4402` (`<sgbd>/<key>`).
 5. Read values: `POST /api/v1/values/read` with `{"ids":["msv70/0x4402"]}` waits for fresh samples; add `"seconds":10` to sample for a while and get min / max / mean.
 
@@ -242,7 +242,7 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
             "Connection, acquisition and recording state.", listOf("connection", "acquisition", "recording"), false, null,
             "connection" to S.obj(null, listOf("state"), false, null,
                 "state" to S.str("disconnected, connecting, connected, failed. One connection for the whole app: Tool32 and fault jobs run on it between two read cycles.", enum = listOf("disconnected", "connecting", "connected", "failed")),
-                "mode" to S.str("usb or simulation", enum = listOf("usb", "simulation")),
+                "mode" to S.str("usb (K+DCAN cable), bluetooth (Deep OBD adapter) or simulation", enum = listOf("usb", "bluetooth", "simulation")),
                 "label" to S.str("Interface name, e.g. \"Simulation (E90 with MSV70)\""),
                 "message" to S.str("Why it failed."),
             ),
@@ -390,9 +390,12 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
         ))
         put("Settings", S.obj(
             "App settings.", listOf("defaultMode", "autoConnectOnCable", "recordingFolder", "api"), false, null,
-            "defaultMode" to S.str("Mode used by `POST /connect` without a mode.", enum = listOf("usb", "simulation")),
+            "defaultMode" to S.str("Mode used by `POST /connect` without a mode.", enum = listOf("usb", "bluetooth", "simulation")),
             "autoConnectOnCable" to S.bool("Connect over USB as soon as the K+DCAN cable is plugged in."),
             "recordingFolder" to S.str("Where CSV recordings go (read-only).", "Documents/BimmerData/"),
+            "bluetoothAdapter" to S.obj("Deep OBD Bluetooth adapter chosen on the phone (read-only); absent when none.", listOf("address"), false, null,
+                "name" to S.str(example = "Deep OBD BMW"), "address" to S.str(example = "00:11:22:33:44:55")),
+            "bluetoothConnectOnStart" to S.bool("Connect to the Bluetooth adapter when the app starts."),
             "api" to S.obj("Read-only here: change them on the phone.", listOf("enabled", "port", "scopes"), false, null,
                 "enabled" to S.bool(), "port" to S.int(), "scopes" to S.arr(S.str(enum = Scope.entries.map { it.id })),
             ),

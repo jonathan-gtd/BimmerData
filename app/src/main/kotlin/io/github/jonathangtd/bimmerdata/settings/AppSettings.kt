@@ -25,6 +25,7 @@ data class Settings(
     val lastMode: LiveMode? = null,
     val recording: RecordingConfig = RecordingConfig(),
     val telegraf: TelegrafSettings = TelegrafSettings(),
+    val bluetooth: BluetoothSettings = BluetoothSettings(),
 )
 
 data class ApiConfig(
@@ -72,6 +73,7 @@ class AppSettings private constructor(context: Context) {
             lastMode = prefs.getString(K_LAST_MODE, null)?.let { m -> LiveMode.entries.firstOrNull { it.name == m } },
             recording = loadRecording(prefs),
             telegraf = loadTelegraf(prefs),
+            bluetooth = loadBluetooth(prefs),
         )
     }
 
@@ -89,12 +91,15 @@ class AppSettings private constructor(context: Context) {
             if (s.lastMode != null) putString(K_LAST_MODE, s.lastMode.name) else remove(K_LAST_MODE)
             remove(K_AUTO_OLD)
             saveExtras(s)
+            saveBluetooth(s)
         }
     }
 
     fun updateApi(transform: (ApiConfig) -> ApiConfig) = update { it.copy(api = transform(it.api)) }
 
     fun updateRecording(transform: (RecordingConfig) -> RecordingConfig) = update { it.copy(recording = transform(it.recording)) }
+
+    fun updateBluetooth(transform: (BluetoothSettings) -> BluetoothSettings) = update { it.copy(bluetooth = transform(it.bluetooth)) }
 
     fun updateTelegraf(transform: (TelegrafSettings) -> TelegrafSettings) = update { it.copy(telegraf = transform(it.telegraf)) }
 
