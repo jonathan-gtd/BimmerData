@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.jonathangtd.bimmerdata.R
 import io.github.jonathangtd.bimmerdata.dashboard.ui.DashboardScreen
+import io.github.jonathangtd.bimmerdata.dashboard.ui.ProfilesScreen
 import io.github.jonathangtd.bimmerdata.faults.FaultsScreen
 import io.github.jonathangtd.bimmerdata.settings.ApiDocsScreen
 import io.github.jonathangtd.bimmerdata.settings.AppServices
@@ -61,6 +62,7 @@ import io.github.jonathangtd.bimmerdata.settings.SettingsScreen
 
 enum class AppTab(@param:DrawableRes val icon: Int, @param:StringRes val label: Int) {
     Dashboard(R.drawable.ic_dashboard, R.string.nav_dashboard),
+    Profiles(R.drawable.ic_profile, R.string.nav_profiles),
     Faults(R.drawable.ic_faults, R.string.nav_faults),
     Settings(R.drawable.ic_settings, R.string.nav_settings),
 }
@@ -81,6 +83,8 @@ fun AppRoot() {
         AppNavigator(
             openTool32 = { sgbd -> tool32Sgbd = sgbd; overlay = AppOverlay.Tool32 },
             openApiDocs = { overlay = AppOverlay.ApiDocs },
+            openProfiles = { overlay = null; tab = AppTab.Profiles },
+            openDashboard = { overlay = null; tab = AppTab.Dashboard },
         )
     }
     BackHandler(enabled = overlay != null) { overlay = null }
@@ -98,6 +102,7 @@ fun AppRoot() {
                     null -> holder.SaveableStateProvider(tab.name) {
                         when (tab) {
                             AppTab.Dashboard -> DashboardScreen(onEditingChange = { editing = it })
+                            AppTab.Profiles -> ProfilesScreen()
                             AppTab.Faults -> FaultsScreen()
                             AppTab.Settings -> SettingsScreen()
                         }

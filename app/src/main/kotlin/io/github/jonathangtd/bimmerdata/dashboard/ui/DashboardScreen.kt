@@ -106,6 +106,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import io.github.jonathangtd.bimmerdata.profiles.ProfileNotice
 import io.github.jonathangtd.bimmerdata.profiles.ProfileRuntime
+import io.github.jonathangtd.bimmerdata.ui.LocalAppNavigator
 
 /** What is open on top of the dashboard. */
 internal sealed interface Sheet {
@@ -119,7 +120,6 @@ internal sealed interface Sheet {
 
     /** New profile ([id] null) or changes of profile [id]. */
     data class EditProfile(val id: String?) : Sheet
-    data class ConfirmDeleteProfile(val id: String, val name: String) : Sheet
 }
 
 @Composable
@@ -138,6 +138,7 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
     val frame = rememberFrameClock()
     val renderer = rememberPhoneRenderer()
     var sheet by remember { mutableStateOf<Sheet?>(null) }
+    val navigator = LocalAppNavigator.current
 
     LaunchedEffect(ui.editing) { onEditingChange(ui.editing) }
     LifecycleStartEffect(vm) {
@@ -182,16 +183,6 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
     }
 
     // ---- profile files ----
-    var exportId by remember { mutableStateOf<String?>(null) }
-    val saveProfile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        val json = exportId?.let { vm.exportProfile(it) }
-        if (uri != null && json != null) {
-            runCatching { context.contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) } }
-                .onSuccess { message(res.getString(R.string.profile_exported)) }
-                .onFailure { message(res.getString(R.string.import_failed, it.message.orEmpty())) }
-        }
-        exportId = null
-    }
     val openProfile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) scope.launch {
             val text = runCatching { context.contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) } }.getOrNull()
@@ -281,6 +272,7 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                 DashboardHeader(
                     title = dashboard.title(stringResource(R.string.app_name)),
                     onRename = { sheet = if (noProfile) Sheet.EditProfile(null) else Sheet.Profiles },
+                    switchable = !noProfile,
                     status = status, rec = rec,
                     onRecord = vm::toggleRecording, onEdit = { if (noProfile) sheet = Sheet.EditProfile(null) else vm.setEditing(true) },
                     connection = connection, lastMode = appSettings.lastMode, onConnect = vm::connect, onDisconnect = vm::disconnect,
@@ -458,28 +450,17 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
             },
             onDismiss = { sheet = null },
         )
-        Sheet.Profiles -> ProfilesSheet(
+        Sheet.Profiles -> ProfileSwitchSheet(
             set = profiles, onDismiss = { sheet = null },
             onActivate = { id ->
                 sheet = null
                 scope.launch { vm.activateProfile(id) }
             },
             onNew = { sheet = Sheet.EditProfile(null) },
-            onImport = {
+            onManage = {
                 sheet = null
-                importProfile()
+                navigator.openProfiles()
             },
-            onEdit = { id -> sheet = Sheet.EditProfile(id) },
-            onDuplicate = { id ->
-                sheet = null
-                scope.launch { vm.duplicateProfile(id)?.let { message(res.getString(R.string.profile_duplicated, it.name)) } }
-            },
-            onExport = { id ->
-                exportId = id
-                val name = profiles.profile(id)?.name ?: "profile"
-                saveProfile.launch(profileFileName(name))
-            },
-            onDelete = { id -> sheet = Sheet.ConfirmDeleteProfile(id, profiles.profile(id)?.name.orEmpty()) },
         )
         is Sheet.EditProfile -> {
             val editing = s.id?.let { profiles.profile(it) }
@@ -494,18 +475,6 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                 },
             )
         }
-        is Sheet.ConfirmDeleteProfile -> ConfirmDialog(
-            text = stringResource(R.string.profile_delete_confirm, s.name),
-            confirm = stringResource(R.string.profile_delete),
-            onConfirm = {
-                sheet = null
-                scope.launch {
-                    vm.deleteProfile(s.id)
-                    message(res.getString(R.string.profile_deleted, s.name), actionLabel = res.getString(R.string.undo), action = { vm.undoDelete() })
-                }
-            },
-            onDismiss = { sheet = null },
-        )
     }
 }
 
@@ -518,7 +487,7 @@ internal fun profileFileName(name: String): String {
 
 /** Cars of the Faults tab, for linking a profile to one. */
 @Composable
-private fun rememberCarChoices(): List<CarChoice> {
+internal fun rememberCarChoices(): List<CarChoice> {
     val context = LocalContext.current
     val repo = remember { io.github.jonathangtd.bimmerdata.vehicle.VehicleRepository.get(context) }
     val state by repo.state.collectAsStateWithLifecycle()
@@ -545,17 +514,28 @@ private fun addSheetOrMessage(res: Resources, t: Target, page: Page, col: Int?, 
 @Composable
 internal fun DashboardHeader(
     title: String, onRename: () -> Unit, status: AcquisitionStatus, rec: RecordingState,
+    switchable: Boolean = true,
     onRecord: () -> Unit, onEdit: () -> Unit,
     connection: LiveConnection, lastMode: LiveMode?, onConnect: (LiveMode) -> Unit, onDisconnect: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            val renameLabel = stringResource(R.string.dashboard_rename)
-            Text(
-                title, color = Cockpit.Text, fontFamily = BarlowCondensed,
-                fontWeight = FontWeight.SemiBold, fontSize = 22.sp, letterSpacing = 0.5.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).clickable(role = Role.Button, onClickLabel = renameLabel, onClick = onRename),
-            )
+            // The profile name: tapping it switches profile (chevron), or creates the first one.
+            val switchLabel = stringResource(if (switchable) R.string.ptab_switch_title else R.string.profile_create)
+            Row(
+                Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).clickable(role = Role.Button, onClickLabel = switchLabel, onClick = onRename),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    title, color = Cockpit.Text, fontFamily = BarlowCondensed,
+                    fontWeight = FontWeight.SemiBold, fontSize = 22.sp, letterSpacing = 0.5.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                if (switchable) {
+                    Spacer(Modifier.width(4.dp))
+                    Icon(painterResource(R.drawable.ic_chevron_down), contentDescription = null, tint = Cockpit.Muted, modifier = Modifier.size(22.dp))
+                }
+            }
             RecordPill(rec, onRecord)
             RoundIconButton(R.drawable.ic_edit, stringResource(R.string.edit), onClick = onEdit)
         }

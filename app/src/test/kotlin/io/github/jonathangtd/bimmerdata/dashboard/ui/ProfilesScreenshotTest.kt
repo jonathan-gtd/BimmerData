@@ -78,8 +78,14 @@ class ProfilesScreenshotTest {
         Surface(color = Cockpit.Card, modifier = Modifier.fillMaxWidth().padding(top = 24.dp)) { content() }
     }
 
-    private fun list() = capture("profiles_list.png") {
-        SheetLike { ProfilesSheetContent(set, {}, {}, {}, {}, {}, {}, {}) }
+    private val noActions = ProfileActions({}, {}, {}, {})
+
+    private fun tab(name: String, profiles: ProfileSet = set) = capture(name) {
+        ProfilesTabContent(profiles, onActivate = {}, onNew = {}, onImport = {}, actions = noActions)
+    }
+
+    private fun switchSheet(name: String) = capture(name, height = 620) {
+        SheetLike { ProfileSwitchContent(set, onActivate = {}, onNew = {}, onManage = {}) }
     }
 
     private fun firstLaunch() = capture("profiles_first_launch.png") { NoProfile(onCreate = {}, onImport = {}) }
@@ -109,10 +115,12 @@ class ProfilesScreenshotTest {
         }
     }
 
-    @Test @Config(qualifiers = "w411dp-h900dp-mdpi") fun profileList() = list()
-    @Test @Config(qualifiers = "fr-w411dp-h900dp-mdpi") fun profileListFrench() = capture("profiles_list_fr.png") {
-        SheetLike { ProfilesSheetContent(set, {}, {}, {}, {}, {}, {}, {}) }
-    }
+    @Test @Config(qualifiers = "w411dp-h900dp-mdpi") fun profilesTab() = tab("profiles_tab.png")
+    @Test @Config(qualifiers = "fr-w411dp-h900dp-mdpi") fun profilesTabFrench() = tab("profiles_tab_fr.png")
+    @Test @Config(qualifiers = "w411dp-h900dp-mdpi") fun profilesTabEmpty() = tab("profiles_tab_empty.png", ProfileSet())
+    @Test @Config(qualifiers = "fr-w411dp-h900dp-mdpi") fun profilesTabEmptyFrench() = tab("profiles_tab_empty_fr.png", ProfileSet())
+    @Test @Config(qualifiers = "w411dp-h900dp-mdpi") fun profileSwitch() = switchSheet("profiles_switch.png")
+    @Test @Config(qualifiers = "fr-w411dp-h900dp-mdpi") fun profileSwitchFrench() = switchSheet("profiles_switch_fr.png")
 
     @Test @Config(qualifiers = "w411dp-h900dp-mdpi") fun profileFirstLaunch() = firstLaunch()
     @Test @Config(qualifiers = "fr-w411dp-h900dp-mdpi") fun profileFirstLaunchFrench() = capture("profiles_first_launch_fr.png") { NoProfile({}, {}) }
