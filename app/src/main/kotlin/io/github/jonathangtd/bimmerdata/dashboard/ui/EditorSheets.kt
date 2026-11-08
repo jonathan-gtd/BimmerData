@@ -429,6 +429,12 @@ private fun MeasurementStep(
     vm: DashboardViewModel, sgbd: String, type: GaugeType, selected: MutableList<String>, onConfirm: () -> Unit,
 ) {
     val all by produceState<List<Measurement>?>(null, sgbd) { value = vm.measurements(sgbd) }
+    MeasurementList(all, type, selected, onConfirm)
+}
+
+/** Searchable list of [all] measurements (null = still loading); [selected] is updated in place. */
+@Composable
+internal fun MeasurementList(all: List<Measurement>?, type: GaugeType, selected: MutableList<String>, onConfirm: () -> Unit) {
     var query by remember { mutableStateOf("") }
     val range = Card.measurementRange(type)
     val single = range.last == 1

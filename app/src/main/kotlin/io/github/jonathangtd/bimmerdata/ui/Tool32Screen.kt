@@ -81,7 +81,13 @@ private val MinTouch = 48.dp
  * secondary screen (Settings › Tools, or an ECU's detail with [initialSgbd] selected).
  */
 @Composable
-fun Tool32Screen(vm: Tool32ViewModel = viewModel(), initialSgbd: String? = null, onBack: (() -> Unit)? = null) {
+fun Tool32Screen(
+    vm: Tool32ViewModel = viewModel(),
+    initialSgbd: String? = null,
+    onBack: (() -> Unit)? = null,
+    /** Replaces the live connection pill (screenshots); null = the app's connection. */
+    connectionBar: (@Composable () -> Unit)? = null,
+) {
     val state by vm.state.collectAsStateWithLifecycle()
     LaunchedEffect(initialSgbd) { initialSgbd?.let(vm::preselectSgbd) }
     val pickFolder = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
@@ -110,7 +116,7 @@ fun Tool32Screen(vm: Tool32ViewModel = viewModel(), initialSgbd: String? = null,
     ) {
         item { Header(state, onBack) }
         state.message?.let { msg -> item { MessageBanner(msg, vm::dismissMessage) } }
-        item { ConnectionCard(state) }
+        item { ConnectionCard(state, connectionBar) }
         item { EcuFilesCard(state, onImport = { pickFolder.launch(null) }, onCancel = vm::cancelImport) }
         item {
             JobCard(
@@ -259,10 +265,10 @@ private fun MessageBanner(message: String, onDismiss: () -> Unit) {
 
 /** The app's single connection (shared with the dashboard and the faults) and the ignition state. */
 @Composable
-private fun ConnectionCard(state: Tool32State) {
+private fun ConnectionCard(state: Tool32State, connectionBar: (@Composable () -> Unit)?) {
     CockpitCard {
         SectionLabel("Connection")
-        ConnectionPill(Modifier.fillMaxWidth())
+        if (connectionBar != null) connectionBar() else ConnectionPill(Modifier.fillMaxWidth())
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.cp_ignition) + "  ", color = Cockpit.Muted, fontSize = 14.sp)
             when (state.ignition) {
