@@ -345,6 +345,9 @@ internal class LiveDataProxy(private val scope: CoroutineScope) : LiveDataSource
     private val _pauses = MutableSharedFlow<AcquisitionPause>(extraBufferCapacity = 16, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     override val pauses: SharedFlow<AcquisitionPause> = _pauses.asSharedFlow()
 
+    private val _unavailable = MutableStateFlow<Map<String, String>>(emptyMap())
+    override val unavailable: StateFlow<Map<String, String>> = _unavailable.asStateFlow()
+
     @Volatile private var wanted: List<Measurement> = emptyList()
     @Volatile private var sensors: List<Measurement> = emptyList()
 
@@ -386,6 +389,7 @@ internal class LiveDataProxy(private val scope: CoroutineScope) : LiveDataSource
             launch { e.readings.collect { _readings.tryEmit(it) } }
             launch { e.status.collect { _status.value = it } }
             launch { e.pauses.collect { _pauses.emit(it) } }
+            launch { e.unavailable.collect { _unavailable.value = it } }
         }
     }
 
@@ -393,6 +397,7 @@ internal class LiveDataProxy(private val scope: CoroutineScope) : LiveDataSource
         collectors?.cancel()
         collectors = null
         engine = null
+        _unavailable.value = emptyMap()
         _status.value = AcquisitionStatus(AcquisitionState.Stopped)
     }
 }

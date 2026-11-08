@@ -152,6 +152,10 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { deps.liveDataSource.samples.collect { renderer.onSamples(it) } }
                 launch {
+                    val label = carContext.getString(io.github.jonathangtd.bimmerdata.R.string.card_unavailable)
+                    deps.liveDataSource.unavailable.collect { renderer.onUnavailable(it.keys, label) }
+                }
+                launch {
                     combine(deps.liveDataSource.status, deps.recorder.state, deps.connection) { s, r, c -> Triple(s, r, c) }
                         .collect { (s, r, c) -> renderer.setStatus(s, r, c) }
                 }

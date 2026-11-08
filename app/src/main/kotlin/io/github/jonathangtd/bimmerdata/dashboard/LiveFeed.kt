@@ -25,6 +25,14 @@ class LiveFeed : GaugeFeed {
             histories.values.forEach { it.retainMs = value }
         }
 
+    /** Ids the car cannot give right now (see LiveDataSource.unavailable). */
+    @Volatile var unavailable: Set<String> = emptySet()
+
+    /** Localized short label of an unavailable value ("n/a"). */
+    @Volatile var unavailableLabel: String = "n/a"
+
+    override fun unavailableText(id: String): String? = if (id in unavailable) unavailableLabel else null
+
     override fun sample(id: String): Sample? = samples[id]
     override fun history(id: String): ValueHistory? = histories[id]
     override val nowMs: Long get() = System.currentTimeMillis()

@@ -67,6 +67,9 @@ interface GaugeFeed {
 
     /** A sample older than this is shown as "no data". */
     val staleAfterMs: Long get() = 5_000
+
+    /** Short text shown instead of a value the car cannot give (see LiveDataSource.unavailable), or null. */
+    fun unavailableText(id: String): String? = null
 }
 
 /**
@@ -106,7 +109,7 @@ class GaugeState {
             val fresh = sample != null && now - sample.timestampMs <= feed.staleAfterMs
             val target = if (fresh) sample.value ?: Double.NaN else Double.NaN
             targets[i] = target
-            texts[i] = if (fresh) sample.text else null
+            texts[i] = if (fresh) sample.text else feed.unavailableText(spec.channels[i].measurementId)
             smoothed[i] = smooth[i].update(target, frameNanos)
             val epsilon = (spec.max - spec.min).let { if (it > 0) it * 0.0005 else 0.001 }
             if (!smooth[i].isSettled(target, epsilon)) moving = true

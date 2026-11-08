@@ -164,6 +164,12 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
         requestFrame()
     }
 
+    fun onUnavailable(ids: Set<String>, label: String) = handler.post {
+        feed.unavailable = ids
+        feed.unavailableLabel = label
+        requestFrame()
+    }
+
     fun setStatus(s: AcquisitionStatus, r: RecordingState, c: LiveConnection) = handler.post {
         status = s
         recording = r
