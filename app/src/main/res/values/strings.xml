@@ -6,8 +6,6 @@
     <string name="nav_dashboard">Dashboard</string>
     <string name="nav_tool32">Tool32</string>
     <string name="nav_faults">Faults</string>
-    <string name="faults_coming_title">Fault memory</string>
-    <string name="faults_coming_text">Reading and clearing the fault memory of every ECU is coming in a next version.</string>
 
     <!-- Dashboard header -->
     <string name="status_live">Live</string>
@@ -15,7 +13,7 @@
     <string name="status_connecting">Connecting…</string>
     <string name="status_stopped">Not connected</string>
     <string name="conn_disconnected">Not connected</string>
-    <string name="conn_paused">Paused · Tool32 is using the cable</string>
+    <string name="conn_paused">Paused · cable in use</string>
     <string name="conn_failed">Failed · %1$s</string>
     <string name="conn_usb">USB cable (K+DCAN)</string>
     <string name="conn_sim">Simulation</string>

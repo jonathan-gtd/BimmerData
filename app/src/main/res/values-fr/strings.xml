@@ -6,8 +6,6 @@
     <string name="nav_dashboard">Tableau de bord</string>
     <string name="nav_tool32">Tool32</string>
     <string name="nav_faults">Défauts</string>
-    <string name="faults_coming_title">Mémoire de défauts</string>
-    <string name="faults_coming_text">La lecture et l’effacement de la mémoire de défauts de chaque calculateur arrivent dans une prochaine version.</string>
 
     <!-- Dashboard header -->
     <string name="status_live">En direct</string>
@@ -15,7 +13,7 @@
     <string name="status_connecting">Connexion…</string>
     <string name="status_stopped">Non connecté</string>
     <string name="conn_disconnected">Non connecté</string>
-    <string name="conn_paused">En pause · Tool32 utilise le câble</string>
+    <string name="conn_paused">En pause · câble occupé</string>
     <string name="conn_failed">Échec · %1$s</string>
     <string name="conn_usb">Câble USB (K+DCAN)</string>
     <string name="conn_sim">Simulation</string>

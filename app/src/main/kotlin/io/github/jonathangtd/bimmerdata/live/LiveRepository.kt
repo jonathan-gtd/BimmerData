@@ -208,7 +208,7 @@ class LiveRepository private constructor(context: Context) : InterfaceArbiter.Ca
 
     companion object {
         private const val Tag = "LiveRepository"
-        const val PausedReason = "Mini Tool32 is using the cable"
+        const val PausedReason = "The cable is in use (Tool32 or fault memory)"
 
         // holds only the application context
         @SuppressLint("StaticFieldLeak")

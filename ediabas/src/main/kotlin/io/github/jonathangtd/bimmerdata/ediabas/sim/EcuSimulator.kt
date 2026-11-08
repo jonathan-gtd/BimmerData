@@ -70,6 +70,7 @@ class EcuSimulator(
     fun respond(request: ByteArray): ByteArray? {
         if (silent) return null
         val tel = BmwFast.parse(request) ?: return null
+        if (tel.functional) return null // one ECU of unknown address: see VehicleSimulator for a whole bus
         val data = custom(tel) ?: synchronized(lock) { defaultResponse(tel.data) } ?: return null
         // answer: target = tester (source of the request), source = ECU address
         return BmwFast.buildTelegram(tel.source, tel.target, data)

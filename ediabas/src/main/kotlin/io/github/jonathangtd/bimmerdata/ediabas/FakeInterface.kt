@@ -17,6 +17,11 @@ package io.github.jonathangtd.bimmerdata.ediabas
  *
  * Responses must be complete telegrams as a real interface returns them (for BMW-FAST: header,
  * target, source, [length], data and checksum; see [BmwFast.buildTelegram]).
+ *
+ * Functional addressing (one request, several ECUs answer): set [multiResponder]. The first answer
+ * is returned to the request, the others to the following receive-only exchanges (the job calls
+ * send_and_receive with an empty request, EdInterfaceObd.cs TransKwp2000 with sendDataLength 0),
+ * then the bus is silent (EDIABAS_IFH_0009), which ends the job's receive loop.
  */
 class FakeInterface(
     var responder: (request: ByteArray) -> ByteArray? = { null },
@@ -26,6 +31,12 @@ class FakeInterface(
     class Exchange(val request: ByteArray, val response: ByteArray?)
 
     val exchanges: MutableList<Exchange> = ArrayList()
+
+    /** Several answers per request (functional addressing); takes precedence over [responder]. */
+    var multiResponder: ((request: ByteArray) -> List<ByteArray>)? = null
+
+    /** Answers of the last request not yet received. */
+    private val pending = ArrayDeque<ByteArray>()
 
     val requests: List<ByteArray> get() = exchanges.map { it.request }
 
@@ -59,7 +70,19 @@ class FakeInterface(
     override fun transmitData(sendData: ByteArray): ByteArray? {
         val request = sendData.copyOf()
         ediabas?.logData(EdLogLevel.Ifh, request, 0, request.size, "Send")
-        val response = responder(request)
+        val multi = multiResponder
+        val response = when {
+            request.isEmpty() && (multi != null || pending.isNotEmpty()) -> pending.removeFirstOrNull()
+            multi != null -> {
+                pending.clear()
+                pending.addAll(multi(request))
+                pending.removeFirstOrNull()
+            }
+            else -> {
+                pending.clear()
+                responder(request)
+            }
+        }
         exchanges.add(Exchange(request, response?.copyOf()))
         if (response == null) {
             ediabas?.logString(EdLogLevel.Ifh, "*** No response")
@@ -113,16 +136,26 @@ class FakeInterface(
 
 /** BMW-FAST (KWP2000 over K-line/D-CAN with BMW header) telegram helpers. */
 object BmwFast {
-    /** Parsed telegram: [data] is the service payload (service id first), checksum excluded. */
-    class Telegram(val target: Int, val source: Int, val data: ByteArray)
+    /**
+     * Parsed telegram: [data] is the service payload (service id first), checksum excluded.
+     * [functional]: format byte 0xC0 | length, [target] is then a functional address (0xEF = all
+     * ECUs, 0xE9 K-CAN, 0xEA PT-CAN... see the FUNKTIONALEADRESSE table of the vehicle SGBDs).
+     */
+    class Telegram(val target: Int, val source: Int, val data: ByteArray, val functional: Boolean = false)
+
+    /** Format byte of a functionally addressed telegram (bit 6 set), physical is 0x80. */
+    const val FunctionalFormat = 0xC0
 
     /** Parses a request as sent by a job (the checksum byte, if present, is ignored). */
     fun parse(telegram: ByteArray): Telegram? {
         if (telegram.size < 4) return null
-        if ((telegram[0].toInt() and 0xC0) != 0x80) return null
+        if ((telegram[0].toInt() and 0x80) != 0x80) return null
         val (length, offset) = EdInterfaceBase.dataLengthBmwFast(telegram)
         if (length < 0) return null
-        return Telegram(telegram[1].toInt() and 0xFF, telegram[2].toInt() and 0xFF, telegram.copyOfRange(offset, offset + length))
+        return Telegram(
+            telegram[1].toInt() and 0xFF, telegram[2].toInt() and 0xFF, telegram.copyOfRange(offset, offset + length),
+            functional = (telegram[0].toInt() and 0xC0) == FunctionalFormat,
+        )
     }
 
     /** Builds a complete telegram with header and checksum, as returned by an interface. */

@@ -51,7 +51,12 @@ object DashboardHooks {
 }
 
 /** The single place that decides where live data comes from: the real acquisition engine. */
-fun dashboardDependencies(context: Context): DashboardDependencies = LiveDashboardDependencies(LiveRepository.get(context))
+fun dashboardDependencies(context: Context): DashboardDependencies {
+    // The card picker lists the ECUs found by the vehicle scan first ("Detected in your car").
+    val vehicles = io.github.jonathangtd.bimmerdata.vehicle.VehicleRepository.get(context)
+    DashboardHooks.detectedEcus = io.github.jonathangtd.bimmerdata.live.DetectedEcus { vehicles.sgbds() }
+    return LiveDashboardDependencies(LiveRepository.get(context))
+}
 
 /** Real data: K+DCAN cable or the built-in simulated ECU, through [LiveRepository]. */
 class LiveDashboardDependencies(private val repo: LiveRepository) : DashboardDependencies {
