@@ -14,8 +14,6 @@
     <string name="cp_no_answer">%1$s · pas de réponse</string>
     <string name="cp_failed">Échec de la connexion : %1$s</string>
     <string name="cp_disconnect">Déconnecter</string>
-    <string name="cp_switch_usb">Passer au câble</string>
-    <string name="cp_switch_sim">Passer en simulation</string>
     <string name="cp_ignition">Contact</string>
     <string name="cp_ignition_on">Mis</string>
     <string name="cp_ignition_off">Coupé</string>

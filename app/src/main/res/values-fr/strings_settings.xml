@@ -5,10 +5,6 @@
 
     <!-- Connexion -->
     <string name="settings_section_connection">Connexion</string>
-    <string name="settings_default_mode">Mode par défaut</string>
-    <string name="settings_default_mode_hint">Utilisé quand une connexion est lancée sans choisir de mode, par exemple depuis l’API.</string>
-    <string name="settings_mode_usb">Câble USB</string>
-    <string name="settings_mode_sim">Simulation</string>
     <string name="settings_auto_connect">Se connecter au branchement du câble</string>
     <string name="settings_auto_connect_hint">Se connecte en USB dès que le câble K+DCAN est détecté, tant que BimmerData tourne.</string>
 

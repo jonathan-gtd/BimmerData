@@ -180,7 +180,13 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
             else -> return chrome
         }
         if (status.state != AcquisitionState.Running) return chrome
-        val label = context.getString(if (mode == LiveMode.Usb) R.string.conn_usb_short else R.string.conn_sim)
+        val label = context.getString(
+            when (mode) {
+                LiveMode.Usb -> R.string.conn_usb_short
+                LiveMode.Bluetooth -> R.string.bt_short
+                LiveMode.Simulation -> R.string.conn_sim
+            },
+        )
         return chrome.copy(statusText = context.getString(R.string.status_running, label, renderer.gauges.format.format(status.cyclesPerSecond, 1)))
     }
 

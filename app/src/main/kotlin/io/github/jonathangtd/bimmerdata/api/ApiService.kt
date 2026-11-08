@@ -802,17 +802,20 @@ class ApiService(
             Route(
                 "POST", "/api/v1/connect", RouteAccess.Needs(Scope.Config), "Connection", "connect",
                 "Connect to the car or to the simulation",
-                "`usb`: K+DCAN cable plugged into the phone (the phone may ask the user for USB permission once). `simulation`: built-in simulated E90 (MSV70 engine ECU with moving values, 14 ECUs with a few faults), no car needed — ideal to try layouts. Waits up to `waitMs` for the connection to settle and returns the status.",
+                "`usb`: K+DCAN cable plugged into the phone (the phone may ask the user for USB permission once). `bluetooth`: the Deep OBD Bluetooth adapter chosen in the phone's settings (paired on the phone). `simulation`: built-in simulated E90 (MSV70 engine ECU with moving values, 14 ECUs with a few faults), no car needed — ideal to try layouts. Waits up to `waitMs` for the connection to settle and returns the status.",
                 body = Body(S.obj(null, emptyList(), false, null,
-                    "mode" to S.str("Default: the default mode of the settings.", enum = listOf("usb", "simulation")),
+                    "mode" to S.str("Default: the last mode used (`lastMode` of the settings, what the phone's Connect button uses); 409 when no mode was ever chosen.", enum = listOf("usb", "bluetooth", "simulation")),
                     "waitMs" to S.int(min = 0, max = 20000, default = 6000)), required = false,
                     example = buildJsonObject { put("mode", "simulation") }),
                 reply = Reply(description = "Status after connecting", schema = S.ref("Status")),
             ) { call ->
                 val b = call.bodyObject()
                 b.allowOnly("mode", "waitMs")
-                val mode = b.string("mode")?.let { m -> ConnectMode.entries.firstOrNull { it.name.equals(m, ignoreCase = true) } ?: throw badRequest("'mode' must be usb or simulation") }
+                val mode = b.string("mode")?.let { m -> ConnectMode.entries.firstOrNull { it.name.equals(m, ignoreCase = true) } ?: throw badRequest("'mode' must be usb, bluetooth or simulation") }
                 val wait = (b.long("waitMs") ?: 6000L).also { if (it !in 0..20000) throw badRequest("'waitMs' must be 0..20000") }
+                if (mode == null && backend.settings().lastMode == null) {
+                    throw ApiException(409, "no_mode", "No connection mode chosen yet: send 'mode' (usb, bluetooth or simulation)")
+                }
                 backend.connect(mode)
                 sleep(150)
                 waitFor(wait) { backend.status().connection.state.let { it != "connecting" && it != "disconnected" } }
@@ -905,18 +908,17 @@ class ApiService(
             Route(
                 "PATCH", "/api/v1/settings", RouteAccess.Needs(Scope.Config), "Settings", "updateSettings",
                 "Change app settings",
-                "Changes `defaultMode` and / or `autoConnectOnCable`. The API settings (enable, port, token, scopes) can only be changed on the phone: sending `api` answers 403.",
+                "Changes `autoConnectOnCable` and / or `bluetoothConnectOnStart`. The Bluetooth adapter itself is chosen on the phone. The API settings (enable, port, token, scopes) can only be changed on the phone: sending `api` answers 403.",
                 body = Body(S.obj(null, emptyList(), false, null,
-                    "defaultMode" to S.str(enum = listOf("usb", "simulation")), "autoConnectOnCable" to S.bool()),
+                    "autoConnectOnCable" to S.bool(), "bluetoothConnectOnStart" to S.bool()),
                     example = buildJsonObject { put("autoConnectOnCable", true) }),
                 reply = Reply(description = "Settings after the change", schema = S.ref("Settings")),
                 errors = mapOf(400 to "Unknown field or wrong value.", 403 to "Tried to change API settings (phone only) or the config scope is not enabled."),
             ) { call ->
                 val b = call.bodyObject()
                 if ("api" in b) throw ApiException(403, "phone_only", "API settings (enable, port, token, scopes) can only be changed on the phone, in Settings › Local API")
-                b.allowOnly("defaultMode", "autoConnectOnCable")
-                val mode = b.string("defaultMode")?.let { m -> ConnectMode.entries.firstOrNull { it.name.equals(m, ignoreCase = true) } ?: throw badRequest("'defaultMode' must be usb or simulation") }
-                ok(ApiJson.encodeToJsonElement(backend.updateSettings(SettingsPatch(mode, b.bool("autoConnectOnCable")))))
+                b.allowOnly("autoConnectOnCable", "bluetoothConnectOnStart")
+                ok(ApiJson.encodeToJsonElement(backend.updateSettings(SettingsPatch(b.bool("autoConnectOnCable"), b.bool("bluetoothConnectOnStart")))))
             },
 
             // ------------------------------------------------------------ Telegraf export

@@ -139,7 +139,7 @@ fun interface DetectedEcuProvider {
 }
 
 @Serializable
-enum class ConnectMode { @SerialName("usb") Usb, @SerialName("simulation") Simulation }
+enum class ConnectMode { @SerialName("usb") Usb, @SerialName("bluetooth") Bluetooth, @SerialName("simulation") Simulation }
 
 @Serializable
 enum class EcuSource { @SerialName("detected") Detected, @SerialName("catalog") Catalog }
@@ -193,11 +193,18 @@ data class RecordingFile(val name: String, val sizeBytes: Long, val modifiedMs: 
 /** Settings as seen through the API; the `api` part is read-only (it can only be changed on the phone). */
 @Serializable
 data class SettingsView(
-    val defaultMode: ConnectMode,
     val autoConnectOnCable: Boolean,
     val recordingFolder: String,
     val api: ApiSettingsView,
+    /** Deep OBD adapter chosen on the phone (read-only: pairing happens on the phone). */
+    val bluetoothAdapter: BluetoothAdapterView? = null,
+    val bluetoothConnectOnStart: Boolean = false,
+    /** Mode of the last connection (read-only): used by `POST /connect` without a mode. */
+    val lastMode: ConnectMode? = null,
 )
+
+@Serializable
+data class BluetoothAdapterView(val name: String?, val address: String)
 
 @Serializable
 data class ApiSettingsView(
@@ -212,7 +219,10 @@ data class ApiSettingsView(
     val publicKeyPin: String? = null,
 )
 
-data class SettingsPatch(val defaultMode: ConnectMode? = null, val autoConnectOnCable: Boolean? = null)
+data class SettingsPatch(
+    val autoConnectOnCable: Boolean? = null,
+    val bluetoothConnectOnStart: Boolean? = null,
+)
 
 class RenderRequest(
     val target: Target,

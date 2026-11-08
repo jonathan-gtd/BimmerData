@@ -7,6 +7,16 @@
         android:name="android.hardware.usb.host"
         android:required="false" />
 
+    <!-- Deep OBD Bluetooth adapter (Bluetooth classic, SPP). The app only uses paired devices: no
+         scan, no location. BLUETOOTH_CONNECT is a runtime permission on Android 12+. -->
+    <uses-feature
+        android:name="android.hardware.bluetooth"
+        android:required="false" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+
     <!-- Live acquisition: foreground service of type connectedDevice (USB cable), its ongoing
          notification (runtime permission on Android 13+) and a partial wake lock (screen off) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />

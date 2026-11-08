@@ -5,10 +5,6 @@
 
     <!-- Connection -->
     <string name="settings_section_connection">Connection</string>
-    <string name="settings_default_mode">Default mode</string>
-    <string name="settings_default_mode_hint">Used when a connection is started without choosing, for example from the API.</string>
-    <string name="settings_mode_usb">USB cable</string>
-    <string name="settings_mode_sim">Simulation</string>
     <string name="settings_auto_connect">Connect when the cable is plugged in</string>
     <string name="settings_auto_connect_hint">Connects over USB as soon as the K+DCAN cable is detected while BimmerData runs.</string>
 
