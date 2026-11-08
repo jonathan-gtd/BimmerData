@@ -31,6 +31,24 @@ Supported EDIABAS concepts so far: BMW-FAST (0x010F). DS2, KWP2000\* and D-CAN a
 Safety: the interface refuses flashing, coding writes, security access and the programming
 session before anything is sent to the car. Fault memory clear is allowed.
 
+## Android Auto
+
+The car pages of the dashboard (edited on the phone: **Edit** › **Android Auto**) are shown in
+Android Auto with the same card renderer as the phone, full screen, next to the media card, or as
+a small card next to another app (cards then reflow on two columns). Tap the screen to show the
+buttons: previous / next page and **Connect** (USB cable or Simulation).
+
+BimmerData uses the Car App Library as a *navigation* app, because that is the only category that
+lets an app draw its own screen; it never starts route guidance. If a head unit refuses to hand
+over the drawing surface, the same cards are shown as a grid template, refreshed every second.
+
+Live data is shared with the phone: what is visible on the car screen and on the phone screen is
+read together; a phone in the pocket (screen off) does not slow down the car screen.
+
+Since the APK is not installed from Google Play, Android Auto only lists it with its developer
+settings enabled: on the phone, **Settings › Connected devices › Connection preferences › Android
+Auto**, tap **Version** ten times, then **⋮ › Developer settings** › tick **Unknown sources**.
+
 ## Building
 
 Requirements: JDK 21 and the Android SDK (`ANDROID_HOME` set).

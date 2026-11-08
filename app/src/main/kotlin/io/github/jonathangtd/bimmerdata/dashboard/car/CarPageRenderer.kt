@@ -18,6 +18,7 @@ import io.github.jonathangtd.bimmerdata.gauges.GaugeState
 import io.github.jonathangtd.bimmerdata.gauges.GaugeTheme
 import io.github.jonathangtd.bimmerdata.gauges.GridGeometry
 import java.util.Locale
+import kotlin.math.min
 
 /** Texts of the car screen frame, already localized by the caller. */
 data class CarChrome(
@@ -37,8 +38,8 @@ data class CarChrome(
  * the card grid and a status line, into the area of the car surface the app may use (the host
  * draws its own rail beside it). All sizes scale with the area height (480 px reference).
  */
-class CarPageRenderer(context: Context, locale: Locale) {
-    private val baseTheme = GaugeTheme.car(context, 1f)
+class CarPageRenderer(context: Context, locale: Locale, night: Boolean = false) {
+    private val baseTheme = GaugeTheme.car(context, 1f, night)
     val gauges = GaugeRenderer(baseTheme, GaugeFormat(locale))
     private var unit = 1f
 
@@ -55,12 +56,19 @@ class CarPageRenderer(context: Context, locale: Locale) {
     /** Card rectangles are valid after [layout] for the same size. */
     private val grid = RectF()
 
-    fun layout(left: Float, top: Float, width: Float, height: Float) {
-        val u = (height / REFERENCE_HEIGHT).coerceAtLeast(0.2f)
+    private fun setUnit(u: Float) {
         if (u != unit) {
             unit = u
             gauges.theme = baseTheme.withUnit(u)
         }
+    }
+
+    /** Background color of the car screen. */
+    val background: Int get() = baseTheme.background
+
+    fun layout(left: Float, top: Float, width: Float, height: Float) {
+        val u = (height / REFERENCE_HEIGHT).coerceAtLeast(0.2f)
+        setUnit(u)
         grid.set(
             left + 28f * u, top + (24f + 32f + 14f) * u,
             left + width - 28f * u, top + height - (18f + 20f + 14f) * u,
@@ -136,6 +144,67 @@ class CarPageRenderer(context: Context, locale: Locale) {
         }
     }
 
+    /**
+     * Android Auto layout: the header line (title, page, status) in [header], the cards in [grid].
+     * On a full-screen Android Auto surface the host keeps a band at the top for its action strip
+     * (right side, hidden after a few seconds): [header] is that band and [reserveRight] (mockup
+     * pixels) keeps the text clear of the strip. Sizes scale with [surfaceHeight] (480 px
+     * reference). Returns true while needles are still moving.
+     */
+    fun drawHosted(
+        canvas: Canvas, header: RectF, grid: RectF, surfaceHeight: Float, reserveRight: Float,
+        page: Page?, specs: List<GaugeSpec>, states: List<GaugeState>, feed: GaugeFeed, frameNanos: Long, chrome: CarChrome,
+    ): Boolean {
+        setUnit((surfaceHeight / REFERENCE_HEIGHT).coerceAtLeast(0.2f))
+        this.grid.set(grid)
+        drawHeaderLine(canvas, header, chrome, reserveRight)
+        if (page == null) return false
+        var animating = false
+        page.cards.forEachIndexed { i, card ->
+            cardRect(page, card.col, card.row, card.colSpan, card.rowSpan, rect)
+            if (gauges.draw(canvas, rect, specs[i], states[i], feed, frameNanos)) animating = true
+        }
+        return animating
+    }
+
+    /** "Engine  1 / 3   ● Simulation · 8,4 reads/s   ● REC 01:23" on one line, left part of [band]. */
+    private fun drawHeaderLine(canvas: Canvas, band: RectF, chrome: CarChrome, reserveRight: Float) {
+        val u = unit
+        // Keep clear of the host's action strip on the right of the band.
+        val right = if (reserveRight <= 0f) band.right - 6f * u
+        else min(band.left + band.width() * HEADER_WIDTH, band.right - reserveRight * u)
+        val titleSize = 30f * u
+        val baseline = band.centerY() + titleSize * GaugeRenderer.CAP / 2f
+        var x = band.left + 6f * u
+        titlePaint.textSize = titleSize
+        titlePaint.color = baseTheme.text
+        val title = GaugeState.ellipsize(chrome.title, titlePaint, (right - x) * 0.45f)
+        canvas.drawText(title, x, baseline, titlePaint)
+        x += titlePaint.measureText(title) + 14f * u
+        textPaint.textSize = 19f * u
+        textPaint.color = baseTheme.muted
+        if (chrome.pageLabel.isNotEmpty()) {
+            canvas.drawText(chrome.pageLabel, x, baseline, textPaint)
+            x += textPaint.measureText(chrome.pageLabel) + 30f * u
+        }
+        val dotY = baseline - 19f * u * GaugeRenderer.CAP / 2f
+        fill.color = chrome.statusColor
+        canvas.drawCircle(x + 5f * u, dotY, 5f * u, fill)
+        x += 18f * u
+        val rec = chrome.recordText
+        val recW = if (rec != null) textPaint.measureText(rec) + 48f * u else 0f
+        val status = GaugeState.ellipsize(chrome.statusText, textPaint, right - x - recW)
+        canvas.drawText(status, x, baseline, textPaint)
+        x += textPaint.measureText(status)
+        if (rec != null) {
+            x += 30f * u
+            fill.color = baseTheme.record
+            canvas.drawCircle(x + 5f * u, dotY, 5f * u, fill)
+            textPaint.color = baseTheme.recordText
+            canvas.drawText(rec, x + 18f * u, baseline, textPaint)
+        }
+    }
+
     /** Draws a whole page; returns true while needles are still moving. */
     fun draw(
         canvas: Canvas, left: Float, top: Float, width: Float, height: Float,
@@ -152,6 +221,12 @@ class CarPageRenderer(context: Context, locale: Locale) {
 
     companion object {
         const val REFERENCE_HEIGHT = 480f
+
+        /** Part of the action strip band the header line may use (the strip takes up to ~35 %). */
+        const val HEADER_WIDTH = 0.6f
+
+        /** Widest Android Auto action strip we show (previous, next, "Connect"), in mockup pixels. */
+        const val ACTION_STRIP_WIDTH = 370f
 
         /** Width of the mockup content area next to the Android Auto rail (1280 − 88). */
         const val REFERENCE_WIDTH = 1192f

@@ -169,4 +169,12 @@
     <string name="default_bank2">Bank 2</string>
     <string name="default_trim_b1">Trim B1</string>
     <string name="default_trim_b2">Trim B2</string>
+
+    <!-- Android Auto -->
+    <string name="car_connect">Connect</string>
+    <string name="car_connection">Connection</string>
+    <string name="car_connected">Connected</string>
+    <string name="car_usb_hint">K+DCAN cable plugged into the phone</string>
+    <string name="car_sim_hint">Built-in simulated engine, moving values</string>
+    <string name="car_no_pages">No Android Auto page yet: add one in the dashboard editor on the phone.</string>
 </resources>

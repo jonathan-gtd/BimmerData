@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 270° track, radius 22 around (54, 56) -->
+    <path
+        android:pathData="M38.44,71.56A22,22 0 1,1 69.56,71.56"
+        android:strokeColor="#FF2A3039"
+        android:strokeWidth="6"
+        android:strokeLineCap="round" />
+    <!-- value arc, 68 % of the scale -->
+    <path
+        android:pathData="M38.44,71.56A22,22 0 1,1 70.50,41.45"
+        android:strokeColor="#FF5CC8FF"
+        android:strokeWidth="6"
+        android:strokeLineCap="round" />
+    <!-- needle and hub -->
+    <path
+        android:pathData="M54,56L63.8,47.4"
+        android:strokeColor="#FFE8EAED"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="#FFE8EAED"
+        android:pathData="M54,56m-3.6,0a3.6,3.6 0 1,1 7.2,0a3.6,3.6 0 1,1 -7.2,0" />
+</vector>

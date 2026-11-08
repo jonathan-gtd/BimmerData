@@ -171,4 +171,12 @@
     <string name="default_bank2">Banc 2</string>
     <string name="default_trim_b1">Richesse B1</string>
     <string name="default_trim_b2">Richesse B2</string>
+
+    <!-- Android Auto -->
+    <string name="car_connect">Connecter</string>
+    <string name="car_connection">Connexion</string>
+    <string name="car_connected">Connecté</string>
+    <string name="car_usb_hint">Câble K+DCAN branché sur le téléphone</string>
+    <string name="car_sim_hint">Moteur simulé intégré, valeurs en mouvement</string>
+    <string name="car_no_pages">Aucune page Android Auto : ajoutez-en une dans l’éditeur du tableau de bord sur le téléphone.</string>
 </resources>

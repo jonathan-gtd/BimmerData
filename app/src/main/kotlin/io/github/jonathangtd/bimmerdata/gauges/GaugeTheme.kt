@@ -69,11 +69,15 @@ class GaugeTheme(
             cornerRadius = 20f,
         )
 
-        /** Android Auto: darker background, bigger corners; [unit] = surface pixels per mockup pixel. */
-        fun car(context: Context, unit: Float) = GaugeTheme(
+        /**
+         * Android Auto: darker background, bigger corners; [unit] = surface pixels per mockup pixel.
+         * [night] (the head unit's dark mode) dims the white text a little to avoid glare.
+         */
+        fun car(context: Context, unit: Float, night: Boolean = false) = GaugeTheme(
             car = true, unit = unit, fonts = GaugeFonts.get(context),
             background = 0xFF07090B.toInt(), card = 0xFF111418.toInt(), track = 0xFF22272E.toInt(),
-            text = 0xFFE8EAED.toInt(), muted = 0xFF8E97A3.toInt(), accent = 0xFF5CC8FF.toInt(),
+            text = if (night) 0xFFCDD1D6.toInt() else 0xFFE8EAED.toInt(),
+            muted = if (night) 0xFF7F8894.toInt() else 0xFF8E97A3.toInt(), accent = 0xFF5CC8FF.toInt(),
             warning = 0xFFFFB547.toInt(), centerTick = 0xFF4A525C.toInt(),
             record = 0xFFFF5A5F.toInt(), recordText = 0xFFFF8A8E.toInt(),
             cornerRadius = 26f,

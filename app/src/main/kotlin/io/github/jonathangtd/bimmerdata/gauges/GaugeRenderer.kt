@@ -92,7 +92,7 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
         val h = r.height()
         val pad = (min(w, h) * 0.07f).coerceIn(6f * u, 20f * u)
         val showRange = !car
-        val labelK = if (car) 0.105f else 0.115f
+        val labelK = if (car) 0.125f else 0.115f
         val rangeK = 0.09f
         // Total block height relative to the dial size d: dial + label (+ range line).
         val blockK = 1.04f + labelK * 0.78f + (if (showRange) rangeK * 1.45f else 0f) + 0.03f
@@ -100,7 +100,8 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
         val cx = r.centerX()
         val top = r.top + (h - d * blockK) / 2f
         val cy = top + d / 2f
-        val radius = d * 0.40f
+        // Car cards are tall and narrow: let the ring use the whole width.
+        val radius = d * if (car) 0.44f else 0.40f
         val stroke = d * 0.075f
         arcRect.set(cx - radius, cy - radius, cx + radius, cy + radius)
 
