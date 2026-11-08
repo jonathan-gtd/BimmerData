@@ -32,7 +32,8 @@ import io.github.jonathangtd.bimmerdata.dashboard.ui.DashboardHeader
 import io.github.jonathangtd.bimmerdata.dashboard.ui.GridActions
 import io.github.jonathangtd.bimmerdata.dashboard.ui.MeasurementList
 import io.github.jonathangtd.bimmerdata.dashboard.ui.ProfileEcuBar
-import io.github.jonathangtd.bimmerdata.dashboard.ui.ProfilesSheetContent
+import io.github.jonathangtd.bimmerdata.dashboard.ui.ProfileActions
+import io.github.jonathangtd.bimmerdata.dashboard.ui.ProfilesTabContent
 import io.github.jonathangtd.bimmerdata.dashboard.ui.SegmentedTabs
 import io.github.jonathangtd.bimmerdata.dashboard.ui.SheetHeader
 import io.github.jonathangtd.bimmerdata.ediabas.EdInterfaceObd
@@ -277,10 +278,8 @@ class ReadmeScreenshotTest {
     }
 
     @Test
-    fun profiles() = capture("profiles.png", heightDp = 500) {
-        Surface(color = Cockpit.Card, modifier = Modifier.fillMaxWidth().padding(top = 24.dp)) {
-            ProfilesSheetContent(profiles, {}, {}, {}, {}, {}, {}, {})
-        }
+    fun profiles() = capture("profiles.png") {
+        ProfilesTabContent(profiles, onActivate = {}, onNew = {}, onImport = {}, actions = ProfileActions({}, {}, {}, {}))
     }
 
     /** The built-in demo car, scanned and read like in the app; the VIN is left out. */
