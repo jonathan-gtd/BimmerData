@@ -19,9 +19,10 @@ import java.util.Collections
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLServerSocket
 import javax.net.ssl.SSLSocket
 import io.github.jonathangtd.bimmerdata.api.tls.restrictToModernTls
 
@@ -71,6 +72,12 @@ data class HttpLimits(
     val maxRequestsPerConnection: Int = 500,
     /** Idle keep-alive and slow-client read timeout. */
     val readTimeoutMs: Int = 15_000,
+    /** A TLS client must finish its handshake within this time. */
+    val handshakeTimeoutMs: Int = 10_000,
+    /** Long-lived responses (event streams) at the same time; they do not use connection slots. */
+    val maxStreams: Int = 4,
+    /** Watchdog period: checks that every listening socket still accepts (0 = no watchdog). */
+    val watchdogPeriodMs: Long = 20_000,
 )
 
 /**
@@ -81,7 +88,16 @@ data class HttpLimits(
  *
  * It is meant for a token-protected LAN API, not for the internet. With an [SSLContext] given to
  * [start] it speaks HTTPS only (TLS 1.3 / 1.2, see [restrictToModernTls]): a plain HTTP client
- * fails the handshake and gets no answer. The handshake runs on the connection's own thread.
+ * fails the handshake and gets no answer.
+ *
+ * Nothing can stop the server from accepting connections:
+ * - the listening sockets are plain TCP sockets; TLS is layered on each accepted connection on its
+ *   own worker thread, with a handshake timeout, so the accept loop never reads from a client;
+ * - the accept loop survives any exception (it logs it and goes on);
+ * - every read has a timeout; event streams use their own slots ([HttpLimits.maxStreams]) and do
+ *   not hold connection slots;
+ * - a watchdog connects to each listening socket now and then; one whose pending connection is not
+ *   accepted within a few seconds is closed and bound again.
  */
 class HttpServer(
     private val handler: (HttpRequest) -> HttpResponse,
@@ -93,9 +109,17 @@ class HttpServer(
     private val sockets = Collections.synchronizedList(ArrayList<ServerSocket>())
     private val clients: MutableSet<Socket> = Collections.synchronizedSet(HashSet())
     private val slots = Semaphore(limits.maxConnections)
+    private val streamSlots = Semaphore(limits.maxStreams)
     private val threadIds = AtomicInteger()
+    /** Connections accepted per listening socket (watchdog). */
+    private val accepted = ConcurrentHashMap<ServerSocket, AtomicLong>()
     @Volatile private var pool: ExecutorService? = null
+    @Volatile private var tlsContext: SSLContext? = null
+    @Volatile private var watchdog: Thread? = null
     @Volatile private var running = false
+
+    /** Listening sockets bound again by the watchdog (tests, diagnostics). */
+    val rebinds = AtomicInteger()
 
     /** True while serving HTTPS. */
     @Volatile var secure: Boolean = false
@@ -124,13 +148,7 @@ class HttpServer(
         var lastError: IOException? = null
         for (address in addresses.distinct()) {
             try {
-                val ss = if (tls != null) {
-                    (tls.serverSocketFactory.createServerSocket() as SSLServerSocket).apply { restrictToModernTls() }
-                } else {
-                    ServerSocket()
-                }
-                ss.reuseAddress = true
-                ss.bind(InetSocketAddress(address, chosen), 50)
+                val ss = bindSocket(address, chosen)
                 chosen = ss.localPort
                 sockets += ss
             } catch (e: IOException) {
@@ -143,17 +161,42 @@ class HttpServer(
             throw lastError ?: IOException("Cannot bind any address")
         }
         pool = executor
+        tlsContext = tls
         running = true
         secure = tls != null
         this.port = chosen
-        for (ss in sockets.toList()) executor.execute { acceptLoop(ss) }
+        for (ss in sockets.toList()) startAcceptLoop(ss)
+        if (limits.watchdogPeriodMs > 0) {
+            watchdog = Thread({ watchdogLoop() }, "bd-api-watchdog").apply { isDaemon = true; start() }
+        }
+    }
+
+    private fun bindSocket(address: InetAddress, port: Int): ServerSocket {
+        val ss = ServerSocket()
+        try {
+            ss.reuseAddress = true
+            ss.bind(InetSocketAddress(address, port), 50)
+        } catch (e: IOException) {
+            runCatching { ss.close() }
+            throw e
+        }
+        return ss
+    }
+
+    private fun startAcceptLoop(ss: ServerSocket) {
+        accepted[ss] = AtomicLong()
+        Thread({ acceptLoop(ss) }, "bd-api-accept-" + ss.inetAddress.hostAddress).apply { isDaemon = true; start() }
     }
 
     @Synchronized
     fun stop() {
         if (!running) return
         running = false
+        watchdog?.interrupt()
+        watchdog = null
         synchronized(sockets) { sockets.forEach { runCatching { it.close() } }; sockets.clear() }
+        accepted.clear()
+        tlsContext = null
         synchronized(clients) { clients.forEach { runCatching { it.close() } }; clients.clear() }
         pool?.shutdownNow()
         pool = null
@@ -164,59 +207,173 @@ class HttpServer(
     val isRunning: Boolean get() = running
 
     private fun acceptLoop(ss: ServerSocket) {
+        var failures = 0
         while (running && !ss.isClosed) {
-            val socket = try {
-                ss.accept()
-            } catch (e: IOException) {
-                if (running && !ss.isClosed) log("accept failed", e)
-                continue
-            }
-            if (!acceptPeer(socket.inetAddress)) {
-                runCatching { socket.close() }
-                continue
-            }
-            if (!slots.tryAcquire()) {
-                if (socket is SSLSocket) { runCatching { socket.close() }; continue } // no handshake on the accept thread
-                runCatching {
-                    socket.soTimeout = 2000
-                    writeSimple(socket.getOutputStream(), 503, "busy", "Too many connections")
-                    socket.close()
-                }
-                continue
-            }
-            clients += socket
-            val executor = pool
-            if (executor == null) {
-                slots.release(); clients -= socket; runCatching { socket.close() }
-                continue
-            }
             try {
-                executor.execute {
-                    try {
-                        serve(socket)
-                    } finally {
-                        clients -= socket
-                        runCatching { socket.close() }
-                        slots.release()
-                    }
-                }
-            } catch (e: Exception) {
-                slots.release(); clients -= socket; runCatching { socket.close() }
+                val socket = ss.accept()
+                accepted[ss]?.incrementAndGet()
+                failures = 0
+                dispatch(socket)
+            } catch (t: Throwable) {
+                if (!running || ss.isClosed) break
+                // Never let the loop die: a dead accept loop leaves a socket that queues and never answers.
+                log("accept loop: ${t.javaClass.simpleName}", t)
+                failures++
+                if (failures > 3) runCatching { Thread.sleep((failures * 50L).coerceAtMost(1_000)) }
             }
         }
     }
 
-    private fun serve(socket: Socket) {
-        socket.soTimeout = limits.readTimeoutMs
-        socket.tcpNoDelay = true
-        if (socket is SSLSocket) {
-            try {
-                socket.startHandshake()
-            } catch (e: IOException) {
-                // plain HTTP on the HTTPS port, old TLS version, client that does not trust us...
-                return
+    /** Hands an accepted connection to a worker; never blocks and never reads from the client. */
+    private fun dispatch(socket: Socket) {
+        if (!acceptPeer(socket.inetAddress)) {
+            runCatching { socket.close() }
+            return
+        }
+        val executor = pool
+        if (executor == null) {
+            runCatching { socket.close() }
+            return
+        }
+        if (!slots.tryAcquire()) {
+            // Busy: answer 503 from a worker (plain HTTP only; for HTTPS a refusal needs a handshake: just close).
+            if (tlsContext != null) {
+                runCatching { socket.close() }
+            } else {
+                runCatching {
+                    executor.execute {
+                        runCatching {
+                            socket.soTimeout = 2_000
+                            writeSimple(socket.getOutputStream(), 503, "busy", "Too many connections")
+                        }
+                        runCatching { socket.close() }
+                    }
+                }.onFailure { runCatching { socket.close() } }
+            }
+            return
+        }
+        clients += socket
+        val slot = SlotHolder(slots)
+        try {
+            executor.execute {
+                try {
+                    serve(socket, slot)
+                } catch (t: Throwable) {
+                    if (running) log("connection: ${t.javaClass.simpleName}", t)
+                } finally {
+                    clients -= socket
+                    runCatching { socket.close() }
+                    slot.release()
+                }
+            }
+        } catch (t: Throwable) {
+            slot.release(); clients -= socket; runCatching { socket.close() }
+        }
+    }
+
+    /** A connection slot, released once (early for event streams, which use [streamSlots]). */
+    private class SlotHolder(private val semaphore: Semaphore) {
+        private var held = true
+
+        @Synchronized
+        fun release() {
+            if (held) {
+                held = false
+                semaphore.release()
             }
         }
+    }
+
+    /**
+     * Connects to each listening socket and checks that the connection gets accepted; a socket
+     * whose accept loop is stuck or gone is closed and bound again on the same address and port.
+     */
+    private fun watchdogLoop() {
+        while (running) {
+            try {
+                Thread.sleep(limits.watchdogPeriodMs)
+            } catch (_: InterruptedException) {
+                return
+            }
+            for (ss in synchronized(sockets) { sockets.toList() }) {
+                if (!running) return
+                runCatching { checkAccepting(ss) }.onFailure { log("watchdog", it) }
+            }
+        }
+    }
+
+    private fun checkAccepting(ss: ServerSocket) {
+        val counter = accepted[ss] ?: return
+        val before = counter.get()
+        val probe = Socket()
+        try {
+            // Not being able to connect at all is not the accept loop's fault (network rules): skip.
+            probe.connect(InetSocketAddress(ss.inetAddress, ss.localPort), 2_000)
+        } catch (_: IOException) {
+            runCatching { probe.close() }
+            return
+        }
+        try {
+            val deadline = System.nanoTime() + 3_000_000_000L
+            while (counter.get() == before && System.nanoTime() < deadline) Thread.sleep(50)
+        } finally {
+            runCatching { probe.close() }
+        }
+        if (counter.get() != before || !running) return
+        log("watchdog: ${ss.inetAddress.hostAddress}:${ss.localPort} does not accept connections any more, binding it again", null)
+        rebind(ss)
+    }
+
+    private fun rebind(old: ServerSocket) {
+        val address = old.inetAddress
+        val port = old.localPort
+        synchronized(sockets) { sockets -= old }
+        accepted.remove(old)
+        runCatching { old.close() }
+        if (!running) return
+        val fresh = try {
+            bindSocket(address, port)
+        } catch (e: IOException) {
+            log("watchdog: cannot bind ${address.hostAddress}:$port again", e)
+            return
+        }
+        synchronized(sockets) { sockets += fresh }
+        rebinds.incrementAndGet()
+        startAcceptLoop(fresh)
+    }
+
+    private fun serve(raw: Socket, slot: SlotHolder) {
+        raw.tcpNoDelay = true
+        val tls = tlsContext
+        val socket: Socket = if (tls != null) {
+            raw.soTimeout = limits.handshakeTimeoutMs
+            val ssl = tls.socketFactory.createSocket(raw, raw.inetAddress.hostAddress, raw.port, true) as SSLSocket
+            ssl.useClientMode = false
+            ssl.restrictToModernTls()
+            try {
+                ssl.startHandshake()
+            } catch (e: IOException) {
+                // plain HTTP on the HTTPS port, old TLS version, client that does not trust us, silent client...
+                runCatching { ssl.close() }
+                return
+            }
+            clients += ssl
+            ssl
+        } else {
+            raw
+        }
+        socket.soTimeout = limits.readTimeoutMs
+        try {
+            serveHttp(socket, slot)
+        } finally {
+            if (socket !== raw) {
+                clients -= socket
+                runCatching { socket.close() }
+            }
+        }
+    }
+
+    private fun serveHttp(socket: Socket, slot: SlotHolder) {
         val input = BufferedInputStream(socket.getInputStream())
         val output = BufferedOutputStream(socket.getOutputStream())
         var served = 0
@@ -250,10 +407,20 @@ class HttpServer(
                         if (!keepAlive) return
                     }
                     is HttpResponse.Stream -> {
-                        writeHead(output, response.status, response.contentType, response.headers, null, false)
-                        output.flush()
-                        response.write(output)
-                        output.flush()
+                        if (!streamSlots.tryAcquire()) {
+                            writeSimple(output, 503, "busy", "Too many open streams (at most ${limits.maxStreams})")
+                            return
+                        }
+                        // the stream may last long: it gives its connection slot back to normal requests
+                        slot.release()
+                        try {
+                            writeHead(output, response.status, response.contentType, response.headers, null, false)
+                            output.flush()
+                            response.write(output)
+                            output.flush()
+                        } finally {
+                            streamSlots.release()
+                        }
                         return
                     }
                 }
