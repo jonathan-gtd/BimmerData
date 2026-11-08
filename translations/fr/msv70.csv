@@ -1,6 +1,6 @@
 type;cle;de;traduction;statut
 ecu;;MSV70 fuer N52 mit EWS3 oder CAS · SGBD für MSV70 Serie mit SW 0911 an ZGM oder K-Line;;
-mesure;0x4200;Ansauglufttemperatur 1;;
+mesure;0x4200;Ansauglufttemperatur 1;Température d'air d'admission 1;auto
 mesure;0x4201;Umgebungsdruck;;
 mesure;0x4202;Saugrohrdruck;;
 mesure;0x4203;Massenstrom vom HFM;;
