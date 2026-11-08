@@ -233,6 +233,11 @@ data class ApiSettingsView(
     val certificateSha256: String? = null,
     /** `sha256//…` public-key pin for `curl --pinnedpubkey` (HTTPS on). */
     val publicKeyPin: String? = null,
+    /**
+     * Android 17 local network permission: `granted`, `denied` (the API is then only reachable
+     * from the phone itself, 127.0.0.1) or `notRequired` (older Android). Null when unknown.
+     */
+    val localNetworkAccess: String? = null,
 )
 
 data class SettingsPatch(

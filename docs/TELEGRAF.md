@@ -120,6 +120,14 @@ GROUP BY 1 ORDER BY 1;
   reachable from the road: prefer a VPN (WireGuard, Tailscale…) to an open port, and HTTPS
   (`tls_cert` / `tls_key` in the listener, or a reverse proxy).
 
+**Android 17 and later:** a Telegraf server on the local network (private address such as
+`192.168.x.x`, or a name such as `nas` / `server.local`) can only be reached once the
+**local network** permission is granted (`ACCESS_LOCAL_NETWORK`, under *Nearby devices*).
+BimmerData asks for it when you enable the export or press **Test** with such a URL, and shows a
+red banner while it is missing. Points stay in the queue meanwhile: nothing is lost, they leave
+once the permission is granted. A server on the internet, or reached through a VPN address
+outside the private ranges, does not need it.
+
 The Settings page shows the state, the points waiting, their size on the phone, the free space
 and the room left before the reserve, the last error, and the batches refused by the server.
 

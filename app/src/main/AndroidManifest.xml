@@ -40,6 +40,8 @@
          addresses, and network callbacks to rebind when they change. Also used by the Telegraf
          export (off by default, Settings › Telegraf export). -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 17: reach / be reached by devices of the local network (REST API, Telegraf on the LAN) -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application

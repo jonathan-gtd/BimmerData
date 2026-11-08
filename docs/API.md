@@ -31,6 +31,15 @@ connected to the phone's hotspot (handy in the car). The server never listens on
 VPN interfaces. It also listens on `127.0.0.1`, so with a USB cable you can use
 `adb forward tcp:8765 tcp:8765` and call `http://127.0.0.1:8765/api/v1` from the computer.
 
+**Android 17 and later: local network permission.** Android 17 protects the local network: an
+app may only talk to, or be reached by, the other devices of the Wi-Fi network once the user has
+granted the **local network** permission (`android.permission.ACCESS_LOCAL_NETWORK`, shown under
+*Nearby devices*). BimmerData asks for it when you enable the API, and again when you open the
+Local API page while it is missing. Without it the server still runs, but connections from other
+devices **time out** (only `127.0.0.1` / `adb forward` work): the page then shows a red banner
+with **Allow** and **App settings**. `GET /api/v1/settings` reports it in
+`api.localNetworkAccess` (`granted`, `denied`, or `notRequired` before Android 17).
+
 ## Using it from an AI agent
 
 No plug-in is needed: an agent that can run `curl` (Claude Code, other coding agents) or that

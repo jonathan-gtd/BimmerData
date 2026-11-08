@@ -436,6 +436,7 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
                 "https" to S.bool("HTTPS only, with the phone's self-signed certificate."),
                 "certificateSha256" to S.str("SHA-256 of the certificate to trust (HTTPS on).", "3F:A2:…"),
                 "publicKeyPin" to S.str("Server public-key pin for `curl --pinnedpubkey` (HTTPS on).", "sha256//…"),
+                "localNetworkAccess" to S.str("Android 17 local network permission. When `denied`, other devices of the network cannot reach the API.", enum = listOf("granted", "denied", "notRequired")),
             ),
         ))
     }
