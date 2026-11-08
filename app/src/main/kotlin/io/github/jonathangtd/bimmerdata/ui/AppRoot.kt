@@ -31,6 +31,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -40,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -51,11 +53,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.jonathangtd.bimmerdata.R
 import io.github.jonathangtd.bimmerdata.dashboard.ui.DashboardScreen
+import io.github.jonathangtd.bimmerdata.settings.AppServices
+import io.github.jonathangtd.bimmerdata.settings.SettingsScreen
 
 enum class AppTab(@param:DrawableRes val icon: Int, @param:StringRes val label: Int) {
     Dashboard(R.drawable.ic_dashboard, R.string.nav_dashboard),
     Tool32(R.drawable.ic_tool32, R.string.nav_tool32),
     Faults(R.drawable.ic_faults, R.string.nav_faults),
+    Settings(R.drawable.ic_settings, R.string.nav_settings),
 }
 
 /** Top-level screens with a bottom navigation bar (hidden while editing the dashboard layout). */
@@ -65,6 +70,9 @@ fun AppRoot() {
     var editing by rememberSaveable { mutableStateOf(false) }
     val holder = rememberSaveableStateHolder()
     val barVisible = !(editing && tab == AppTab.Dashboard)
+    // REST API server and USB auto-connect follow the settings for the whole process life.
+    val context = LocalContext.current
+    LaunchedEffect(Unit) { AppServices.start(context) }
     Column(Modifier.fillMaxSize().background(Cockpit.Background)) {
         // While the bottom bar is shown it owns the navigation bar inset.
         Box(Modifier.fillMaxWidth().weight(1f).then(if (barVisible) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
@@ -73,6 +81,7 @@ fun AppRoot() {
                     AppTab.Dashboard -> DashboardScreen(onEditingChange = { editing = it })
                     AppTab.Tool32 -> Tool32Screen()
                     AppTab.Faults -> FaultsPlaceholder()
+                    AppTab.Settings -> SettingsScreen()
                 }
             }
         }
