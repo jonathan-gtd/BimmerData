@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_settings">Settings</string>
+    <string name="settings_title">Settings</string>
+
+    <!-- Connection -->
+    <string name="settings_section_connection">Connection</string>
+    <string name="settings_default_mode">Default mode</string>
+    <string name="settings_default_mode_hint">Used when a connection is started without choosing, for example from the API.</string>
+    <string name="settings_mode_usb">USB cable</string>
+    <string name="settings_mode_sim">Simulation</string>
+    <string name="settings_auto_connect">Connect when the cable is plugged in</string>
+    <string name="settings_auto_connect_hint">Connects over USB as soon as the K+DCAN cable is detected while BimmerData runs.</string>
+
+    <!-- Recording -->
+    <string name="settings_section_recording">Recording</string>
+    <string name="settings_rec_folder">Folder</string>
+    <string name="settings_rec_folder_hint">Internal storage › %1$s, visible in the Files app and over USB.</string>
+    <string name="settings_rec_rate">Sample rate</string>
+    <string name="settings_rec_rate_value">One row per read cycle: the rate follows the reads/s shown on the dashboard. Fewer measurements on screen means faster rows.</string>
+    <string name="settings_rec_columns">Columns</string>
+    <string name="settings_rec_columns_value">Every measurement being read when the recording starts.</string>
+
+    <!-- API -->
+    <string name="settings_section_api">Local API</string>
+    <string name="settings_api_enable">Enable the REST API</string>
+    <string name="settings_api_enable_hint">Lets scripts and AI agents on the same network read live values, build dashboards and change settings, with the token below.</string>
+    <string name="settings_api_warning">Plain HTTP on the local network: anyone on the same Wi-Fi who learns the token can use the API. Enable it on networks you trust (home, your own hotspot), not on public Wi-Fi.</string>
+    <string name="settings_api_status_running">Listening on port %1$d</string>
+    <string name="settings_api_status_starting">Starting…</string>
+    <string name="settings_api_status_error">Cannot start: %1$s</string>
+    <string name="settings_api_port">Port</string>
+    <string name="settings_api_port_error">1024 to 65535</string>
+    <string name="settings_api_apply">Apply</string>
+    <string name="settings_api_addresses">Addresses</string>
+    <string name="settings_api_no_network">No Wi-Fi or hotspot network. Connect the phone to Wi-Fi or turn on its hotspot; meanwhile only 127.0.0.1 answers (adb forward).</string>
+    <string name="settings_api_refresh">Refresh</string>
+    <string name="settings_api_token">Token</string>
+    <string name="settings_api_show">Show</string>
+    <string name="settings_api_hide">Hide</string>
+    <string name="settings_api_regenerate">Regenerate</string>
+    <string name="settings_api_regenerate_title">Regenerate the token?</string>
+    <string name="settings_api_regenerate_text">Scripts and AI agents using the current token will be refused until you give them the new one.</string>
+    <string name="settings_api_scopes">Permissions</string>
+    <string name="settings_scope_read">Read</string>
+    <string name="settings_scope_read_hint">Live values, ECUs, layout, recordings, page pictures.</string>
+    <string name="settings_scope_layout">Dashboard layout</string>
+    <string name="settings_scope_layout_hint">Add, change and delete pages and cards.</string>
+    <string name="settings_scope_config">Control</string>
+    <string name="settings_scope_config_hint">Connect and disconnect, recordings, connection settings.</string>
+    <string name="settings_scope_diag">Diagnostics</string>
+    <string name="settings_scope_diag_hint">Comes with the fault memory. Every write to the car will need your confirmation here and is refused while driving.</string>
+    <string name="settings_api_instruction">For an AI agent or a script</string>
+    <string name="settings_api_instruction_hint">Give this line to your AI agent: it reads the specification and does the rest.</string>
+    <string name="settings_api_instruction_line">BimmerData REST API: %1$s, token: %2$s (send the header \"Authorization: Bearer &lt;token&gt;\"), OpenAPI spec: %3$s</string>
+    <string name="settings_api_background">The API answers while BimmerData is open, and in the background while it reads the car over USB. Otherwise Android may pause the app until you open it again.</string>
+    <string name="settings_copy">Copy</string>
+    <string name="settings_share">Share</string>
+    <string name="settings_copied">Copied</string>
+    <string name="settings_cancel">Cancel</string>
+
+    <!-- About -->
+    <string name="settings_section_about">About</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_license">Free software under the GPL-3.0-or-later license: you may use, study, share and modify it.</string>
+    <string name="settings_source">Source code</string>
+    <string name="settings_credits">Credits</string>
+    <string name="settings_credit_ediabas">EDIABAS interpreter: Kotlin port of EdiabasLib by Ulrich Holeschak (GPL-3.0).</string>
+    <string name="settings_credit_fonts">Barlow and Barlow Semi Condensed fonts by Jeremy Tribby (SIL Open Font License 1.1).</string>
+    <string name="settings_credit_libs">Libraries: AndroidX, Jetpack Compose, Car App Library, Kotlin, kotlinx.coroutines and kotlinx.serialization (Apache-2.0); usb-serial-for-android (MIT).</string>
+    <string name="settings_trademark">BMW, EDIABAS and related names are trademarks of their respective owners. BimmerData is not affiliated with or endorsed by BMW.</string>
+</resources>

@@ -5,8 +5,8 @@ package io.github.jonathangtd.bimmerdata.live
 
 import java.util.EnumMap
 
-/** A screen that shows live values. */
-enum class MeasurementClient { Phone, Car }
+/** A screen that shows live values, or the REST API (measurements requested by scripts / AI agents). */
+enum class MeasurementClient { Phone, Car, Api }
 
 /**
  * Decides what the single acquisition engine reads when several screens show live values (the

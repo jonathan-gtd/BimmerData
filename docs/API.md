@@ -1,0 +1,234 @@
+# BimmerData REST API
+
+BimmerData can run a small HTTP/JSON API on the phone so that scripts and AI agents on the same
+local network can read live values, build dashboard layouts (phone and Android Auto) and manage
+the configuration. It is **off by default**.
+
+- Base URL: `http://<phone-ip>:<port>/api/v1` (default port 8765)
+- Authentication: `Authorization: Bearer <token>` on every request
+- Machine-readable spec: `GET /api/v1/openapi.json` (OpenAPI 3.1, no token needed)
+
+The OpenAPI document is the reference: every operation has a description, its parameters, the
+request / response schemas, examples and its error codes. This page is the human overview.
+
+## Enabling it
+
+1. On the phone: **Settings › Local API › Enable the REST API**.
+2. Check the **Permissions** (scopes) you want to grant, see below. Default: Read + Dashboard layout.
+3. The screen shows the address(es) the server listens on (e.g. `http://192.168.1.20:8765/api/v1`),
+   the token (Show / Copy / Share / Regenerate) and a ready-made line for an AI agent:
+
+   ```
+   BimmerData REST API: http://192.168.1.20:8765/api/v1, token: bd_… (send the header "Authorization: Bearer <token>"), OpenAPI spec: http://192.168.1.20:8765/api/v1/openapi.json
+   ```
+
+The phone and the computer must be on the same network: the same Wi-Fi, or the computer
+connected to the phone's hotspot (handy in the car). The server never listens on mobile data or
+VPN interfaces. It also listens on `127.0.0.1`, so with a USB cable you can use
+`adb forward tcp:8765 tcp:8765` and call `http://127.0.0.1:8765/api/v1` from the computer.
+
+## Using it from an AI agent
+
+No plug-in is needed: an agent that can run `curl` (Claude Code, other coding agents) or that
+imports OpenAPI documents as tools can use the API directly.
+
+**Claude Code** (or any shell-capable agent): paste the instruction line from Settings into the
+conversation, for example:
+
+> BimmerData REST API: http://192.168.1.20:8765/api/v1, token: bd_xxx (send the header
+> "Authorization: Bearer <token>"), OpenAPI spec: http://192.168.1.20:8765/api/v1/openapi.json.
+> Read the spec, then build me an Android Auto page with oil temperature, coolant temperature and
+> both fuel trims, and show me a picture of it.
+
+The agent fetches the spec with `curl`, then calls the operations. Tip: keep the token out of
+files that you commit; an environment variable works well:
+
+```sh
+export BD=http://192.168.1.20:8765/api/v1
+export BD_TOKEN=bd_xxx
+```
+
+Fetch tools that cannot send an `Authorization` header can still read `openapi.json` (public),
+but every other call needs the header.
+
+**OpenAPI-aware tools** (agent frameworks that turn an OpenAPI document into tools, HTTP clients
+such as Postman / Bruno / Insomnia, code generators): import
+`http://<phone-ip>:<port>/api/v1/openapi.json`; the document's `servers` entry already points at
+the phone, and the security scheme is HTTP bearer.
+
+A typical agent session:
+
+1. `GET /api/v1` – check the token, see the granted scopes.
+2. `GET /api/v1/status` – connected? If not, `POST /api/v1/connect` (`{"mode":"simulation"}` needs no car).
+3. `GET /api/v1/ecus`, `GET /api/v1/ecus/msv70/measurements?q=temp` – find measurement ids.
+4. `GET /api/v1/card-types`, `GET /api/v1/presets?target=car` – what a card / page can be.
+5. `POST /api/v1/dashboard/car/pages`, `POST …/pages/{page}/cards` – build.
+6. `GET /api/v1/dashboard/car/pages/{page}/render.png` – look at the result, adjust with `PATCH`.
+
+## curl examples
+
+```sh
+H="Authorization: Bearer $BD_TOKEN"
+
+# Discovery
+curl -s "$BD/openapi.json" | head
+curl -s -H "$H" "$BD"
+curl -s -H "$H" "$BD/status"
+
+# Connect to the built-in simulated ECU (scope config)
+curl -s -H "$H" -X POST "$BD/connect" -d '{"mode":"simulation"}'
+
+# Measurements of the DME, filtered
+curl -s -H "$H" "$BD/ecus/msv70/measurements?q=temp"
+
+# Read two values now (waits for fresh samples)
+curl -s -H "$H" -X POST "$BD/values/read" -d '{"ids":["msv70/0x4402","msv70/0x4300"]}'
+
+# Sample for 10 s: series with min / max / mean
+curl -s -H "$H" -X POST "$BD/values/read" -d '{"ids":["msv70/0x4402"],"seconds":10}'
+
+# Keep reading for 5 minutes, poll the latest values, get the last minute of history
+curl -s -H "$H" -X POST "$BD/values/watch" -d '{"ids":["msv70/0x4402"],"seconds":300}'
+curl -s -H "$H" "$BD/values?ids=msv70/0x4402"
+curl -s -H "$H" "$BD/history?ids=msv70/0x4402&seconds=60"
+
+# Live stream (Server-Sent Events)
+curl -N -H "$H" "$BD/stream?ids=msv70/0x4402,msv70/0x4300&intervalMs=250"
+
+# Layout: whole dashboard, a new car page, a card, a change, a picture (scope layout for writes)
+curl -s -H "$H" "$BD/dashboard" > dashboard-backup.json
+curl -s -H "$H" -X POST "$BD/dashboard/car/pages" -d '{"name":"Temps","presetId":"car_four"}'
+curl -s -H "$H" -X POST "$BD/dashboard/car/pages/1/cards" \
+     -d '{"type":"Dial","measurementIds":["msv70/0x4402"],"title":"Oil","warnAbove":120}'
+curl -s -H "$H" -X PATCH "$BD/dashboard/car/pages/1/cards/<cardId>" -d '{"warnAbove":125}'
+curl -s -H "$H" "$BD/dashboard/car/pages/1/render.png" -o page.png
+
+# Validate, then replace the whole layout
+curl -s -H "$H" -X POST "$BD/dashboard/validate" --data-binary @dashboard.json
+curl -s -H "$H" -X PUT  "$BD/dashboard" --data-binary @dashboard.json
+
+# Recording (scope config) and download
+curl -s -H "$H" -X POST "$BD/recording/start"
+curl -s -H "$H" -X POST "$BD/recording/markers" -d '{"label":"full throttle"}'
+curl -s -H "$H" -X POST "$BD/recording/stop"
+curl -s -H "$H" "$BD/recordings"
+curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
+```
+
+## Operations
+
+`{target}` is `phone` or `car` (Android Auto). `{page}` is a page id or its 0-based index.
+
+| Method | Path | Scope | What |
+|---|---|---|---|
+| GET | `/api/v1/openapi.json` | none | OpenAPI 3.1 document |
+| GET | `/api/v1` | any token | Version and granted scopes |
+| GET | `/api/v1/status` | read | Connection, reads/s, what is read, recording |
+| GET | `/api/v1/ecus` | read | SGBDs with measurements (detected ECUs first, once available) |
+| GET | `/api/v1/ecus/{sgbd}/measurements?q=&limit=&offset=` | read | Measurements of one ECU |
+| GET | `/api/v1/measurements?q=` | read | Search across all ECUs |
+| GET | `/api/v1/values?ids=` | read | Latest values, no waiting |
+| POST | `/api/v1/values/read` | read | Read now (wait for fresh values), optional sampling series |
+| POST / DELETE | `/api/v1/values/watch` | read | Keep measurements read for a while / stop |
+| GET | `/api/v1/history?ids=&seconds=` | read | Samples recorded by the API (last 10 min) |
+| GET | `/api/v1/stream?ids=&intervalMs=` | read | Server-Sent Events of live values |
+| GET | `/api/v1/dashboard` | read | Whole layout |
+| PUT | `/api/v1/dashboard[?dryRun=true]` | layout | Replace the layout (strict validation) |
+| POST | `/api/v1/dashboard/validate` | read | Validate a layout without saving |
+| POST | `/api/v1/dashboard/reset` | layout | Restore the default layout |
+| GET / POST | `/api/v1/dashboard/{target}/pages` | read / layout | List / add pages |
+| GET / PATCH / DELETE | `/api/v1/dashboard/{target}/pages/{page}` | read / layout | One page: get, rename / resize / move, delete |
+| POST | `/api/v1/dashboard/{target}/pages/{page}/cards` | layout | Add a card (exact cell or first free slot) |
+| PATCH / DELETE | `/api/v1/dashboard/{target}/pages/{page}/cards/{card}` | layout | Change (JSON merge patch) / delete a card |
+| POST | `/api/v1/dashboard/{target}/pages/{page}/preset` | layout | Re-lay a page out with a preset |
+| GET | `/api/v1/dashboard/{target}/pages/{page}/render.png` | read | PNG of a saved page |
+| POST | `/api/v1/dashboard/{target}/render` | read | PNG of a draft page (body = page) |
+| GET | `/api/v1/presets?target=` | read | Preset arrangements |
+| GET | `/api/v1/card-types` | read | Card types and measurement counts |
+| POST | `/api/v1/connect` | config | Connect (`usb` / `simulation`) |
+| POST | `/api/v1/disconnect` | config | Disconnect |
+| GET | `/api/v1/recording` | read | Recording state |
+| POST | `/api/v1/recording/start`, `/stop`, `/markers` | config | Control the CSV recording |
+| GET | `/api/v1/recordings`, `/api/v1/recordings/{name}` | read | List / download CSV files |
+| GET / PATCH | `/api/v1/settings` | read / config | App settings (API settings are read-only) |
+
+### Layout rules
+
+- Phone pages: up to 4 columns × 8 rows, 32 cards. Android Auto pages: up to 4 × 2, 4 cards.
+- A card covers `colSpan × rowSpan` cells from (`col`, `row`), 0-based; cards may not overlap
+  or leave the grid.
+- Card types: `Dial`, `BipolarBar` (1–4 measurements), `BigNumber`, `Trend`, `MultiValue`
+  (2–3 measurements), `Status`; the others take exactly one measurement.
+- Unknown JSON fields are rejected (400), so typos do not silently vanish.
+- Measurement ids that are not in the imported ECU folder are accepted but reported as
+  `warnings` (the card shows "--" until the SGBD is imported).
+
+### Errors
+
+Every error has the same shape and a meaningful status:
+
+```json
+{"error":{"code":"card_overlap","message":"card 'k3j4…' (col 0, row 1, 1×1) overlaps card 'a1b2…' (col 0, row 0, 1×2); free cells: (1,0) (1,1) (0,2) (1,2)"}}
+```
+
+`400` bad input · `401` missing / wrong token · `403` scope not enabled (or API settings,
+which are phone-only) · `404` unknown id · `405` wrong method · `409` conflict (overlap, page
+full, last page, not connected) · `413` body over 1 MB · `422` invalid layout (`details` lists
+each problem with its JSON path) · `429` rate limited (`Retry-After`).
+
+## Security model
+
+- **Off by default.** Nothing listens until the switch is on; switching it off closes the sockets.
+- **Token**: 256 random bits (`bd_` + 43 characters), generated on the phone, compared in constant
+  time, never logged, never returned by the API, excluded from backups (`allowBackup=false`).
+  Regenerating it immediately locks out every client using the old one.
+- **Scopes**: each operation needs one scope, granted by toggles on the phone:
+  `read` (values, ECUs, layout, recordings, pictures), `layout` (edit pages and cards),
+  `config` (connect / disconnect, recordings, connection settings). `diag` is reserved.
+  The API settings themselves (enable, port, token, scopes) can only be changed on the phone.
+- **Local network only**: the server binds the phone's private IPv4 addresses on Wi-Fi,
+  Ethernet, USB tethering and its own hotspot (plus 127.0.0.1), never mobile data or VPN
+  interfaces, and drops connections from non-private addresses.
+- **Limits**: about 20 requests/s per client (bursts of 60), lock-out for 5 minutes after 10
+  wrong tokens, 16 connections, 4 event streams, 1 MB request bodies, 16 KB headers.
+- **No TLS**: traffic is plain HTTP. On a shared or public Wi-Fi, anyone sniffing can read the
+  token. Use the API on networks you trust (home Wi-Fi, the phone's own hotspot), or over
+  `adb forward`.
+- **Never writes to ECUs.** The API reads live values and changes app data only. See
+  *Diagnostics* below for the rules future write operations must follow.
+
+## Lifetime on Android
+
+The server lives in the app process:
+
+- it answers while BimmerData is open (any screen);
+- in the background it keeps answering while the acquisition foreground service runs (USB
+  connection to the car, with its ongoing notification);
+- otherwise (app in the background, simulation mode or not connected) Android may freeze or kill
+  the cached process after a while; the API then stops answering until the app is opened again.
+  This is deliberate: a dedicated foreground service only for the API would need a
+  `specialUse` justification and a permanent notification.
+
+With the screen off, Wi-Fi power saving can add latency to the first request.
+
+## Diagnostics (planned)
+
+Fault memory and other diagnostic jobs will be added as extension routes under `/api/v1/diag/`
+(`ApiExtension` in `app/.../api/ApiExtensions.kt`). The rules they must follow:
+
+- they need the `diag` scope (not grantable yet);
+- every operation that writes to the car (clearing faults, coding, actuator tests…) goes through
+  `CarWriteGuard`: the user must confirm **each call** on the phone, and it is refused while the
+  car is moving;
+- the default guard refuses everything.
+
+## Implementation notes
+
+- The HTTP server is a small dependency-free HTTP/1.1 implementation on `java.net` sockets
+  (`app/.../api/http/HttpServer.kt`), so the same code runs on Android and in the JVM tests.
+- `openapi.json` is generated from the same route table that dispatches requests, so the spec
+  and the behaviour cannot drift apart.
+- Layout changes go through `DashboardStore`: Android Auto follows them live.
+- Known limitation: the phone dashboard screen loads the layout once and does not yet follow
+  changes saved by the API (Android Auto does); reopen the app to see them, and avoid editing the
+  same layout on the phone and through the API at the same time.
