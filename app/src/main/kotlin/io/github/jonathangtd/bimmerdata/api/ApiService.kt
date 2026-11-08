@@ -1043,7 +1043,7 @@ class ApiService(
             GaugeType.Dial to "270° arc with the value in the middle; for temperatures, rpm, pressures. Uses min / max for the scale and warnBelow / warnAbove for the amber zone.",
             GaugeType.BipolarBar to "Bars centred on 0, one row per measurement (1–4); for fuel trims per bank or other signed corrections. Scale ±25 by default.",
             GaugeType.BigNumber to "One big value with unit, label and the session min / max; good for a 2×2 hero card.",
-            GaugeType.Trend to "Value with a curve of the last  (5 s to 60 min, default 45 s); good for slowly changing values (temperatures, voltages).",
+            GaugeType.Trend to "Value with a curve of the last `windowSeconds` (5 s to 60 min, default 45 s); good for slowly changing values (temperatures, voltages).",
             GaugeType.MultiValue to "2–3 values side by side with short labels (lambda B1 · B2); use channelLabels to name them.",
             GaugeType.Status to "Text or state results (e.g. switch states, ECU text results).",
         )
