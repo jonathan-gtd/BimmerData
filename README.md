@@ -40,7 +40,7 @@ session before anything is sent to the car. Fault memory clear is allowed.
   name prefix.
 - **Telegraf export**: live values to Telegraf → TimescaleDB → Grafana, live or after the trip
   over home Wi-Fi. See [docs/TELEGRAF.md](docs/TELEGRAF.md) and [deploy/telegraf/](deploy/telegraf/).
-- **Local API**: REST/JSON API for scripts and AI agents, with Swagger UI built in. See
+- **Local API**: REST/JSON API for scripts and AI agents, with Swagger UI built in and optional HTTPS (the phone's own certificate, pinned or trusted once). See
   [docs/API.md](docs/API.md).
 
 ## Android Auto

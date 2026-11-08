@@ -4,7 +4,8 @@ BimmerData can run a small HTTP/JSON API on the phone so that scripts and AI age
 local network can read live values, build dashboard layouts (phone and Android Auto) and manage
 the configuration. It is **off by default**.
 
-- Base URL: `http://<phone-ip>:<port>/api/v1` (default port 8765)
+- Base URL: `http://<phone-ip>:<port>/api/v1` (default port 8765), or `https://…` when HTTPS is
+  switched on (see [HTTPS](#https))
 - Authentication: `Authorization: Bearer <token>` on every request
 - Machine-readable spec: `GET /api/v1/openapi.json` (OpenAPI 3.1, no token needed)
 - Interactive documentation: `GET /api/v1/docs` in a browser (Swagger UI embedded in the app, no
@@ -182,6 +183,71 @@ which are phone-only) · `404` unknown id · `405` wrong method · `409` conflic
 full, last page, not connected) · `413` body over 1 MB · `422` invalid layout (`details` lists
 each problem with its JSON path) · `429` rate limited (`Retry-After`).
 
+## HTTPS
+
+Off by default, so existing clients keep working. **Settings › Local API › HTTPS** switches the
+server to HTTPS only, on the same port: `http://` requests then fail the TLS handshake and get no
+answer. The token and the scopes are unchanged.
+
+There is no domain name on a home network, so no public certificate authority can issue a
+certificate for the phone. The phone therefore has **its own small certificate authority**,
+created the first time HTTPS is switched on:
+
+| | What it is | Shown on the phone as |
+|---|---|---|
+| BimmerData CA certificate | EC P-256, valid 20 years. The file a client trusts. Its critical *name constraints* limit it to private IPv4 addresses (10/8, 172.16/12, 192.168/16, 127/8) and `localhost`: even installed as a trusted root it cannot vouch for an internet site. | **Certificate fingerprint (SHA-256)** `AB:CD:…`, **Export certificate** (`bimmerdata-api-ca.pem`) |
+| Server certificate | EC P-256, valid 10 years, signed by the CA, SAN = `localhost`, `127.0.0.1` and the phone's local addresses. When the phone gets a new address it is re-issued **with the same key**. | **Public key pin** `sha256//…` |
+
+Both the CA fingerprint and the public-key pin stay the same when the phone changes address.
+They change only with **Regenerate certificate**, after which every client must trust / pin
+again. Only TLS 1.3 and TLS 1.2 are offered.
+
+A client does **one** of these:
+
+**Pin the public key** (nothing to install, works with any address):
+
+```sh
+export BIMMERDATA_TOKEN=bd_xxx
+curl --pinnedpubkey 'sha256//<pin shown on the phone>' -k \
+  -H "Authorization: Bearer $BIMMERDATA_TOKEN" https://192.168.1.20:8765/api/v1/status
+```
+
+`-k` only skips the certificate-authority check; curl still refuses the connection unless the
+server's key matches the pin.
+
+**Trust the exported certificate** (full verification, address included). Copy
+`bimmerdata-api-ca.pem` from the phone (Export certificate, or Share), then check that it is the
+right one before trusting it:
+
+```sh
+openssl x509 -in bimmerdata-api-ca.pem -noout -fingerprint -sha256   # must match the phone
+curl --cacert bimmerdata-api-ca.pem -H "Authorization: Bearer $BIMMERDATA_TOKEN" \
+  https://192.168.1.20:8765/api/v1/status
+```
+
+```python
+import os, requests
+r = requests.get("https://192.168.1.20:8765/api/v1/status",
+    headers={"Authorization": "Bearer " + os.environ["BIMMERDATA_TOKEN"]},
+    verify="bimmerdata-api-ca.pem")
+print(r.json())
+```
+
+With the Python standard library: `ssl.create_default_context(cafile="bimmerdata-api-ca.pem")`.
+The certificates pass Python 3.13's strict X.509 checks and `openssl verify -x509_strict`.
+
+The same fingerprints are readable with `GET /api/v1/settings` (`api.https`,
+`api.certificateSha256`, `api.publicKeyPin`); `openapi.json` announces `https://` while HTTPS is on.
+The in-app documentation does not go through the network, so it is unaffected.
+
+**Where the keys live**: both private keys are stored in one file in the app's private storage
+(`files/api_tls.bin`), encrypted with AES-256-GCM by a key that never leaves the Android Keystore.
+The keys themselves are ordinary software keys, not Keystore keys: a Keystore-generated
+certificate cannot carry the subject alternative names a client checks. The file is not backed
+up. If it cannot be read (for instance after the phone was restored), a new identity is created
+and the fingerprints change. If no identity can be prepared, the server stays off rather than
+fall back to plain HTTP.
+
 ## Security model
 
 - **Off by default.** Nothing listens until the switch is on; switching it off closes the sockets.
@@ -197,9 +263,9 @@ each problem with its JSON path) · `429` rate limited (`Retry-After`).
   interfaces, and drops connections from non-private addresses.
 - **Limits**: about 20 requests/s per client (bursts of 60), lock-out for 5 minutes after 10
   wrong tokens, 16 connections, 4 event streams, 1 MB request bodies, 16 KB headers.
-- **No TLS**: traffic is plain HTTP. On a shared or public Wi-Fi, anyone sniffing can read the
-  token. Use the API on networks you trust (home Wi-Fi, the phone's own hotspot), or over
-  `adb forward`.
+- **Encryption**: plain HTTP by default. On a shared or public Wi-Fi, anyone sniffing can then
+  read the token: switch [HTTPS](#https) on, or use the API on networks you trust (home Wi-Fi,
+  the phone's own hotspot), over a VPN or over `adb forward`.
 - **Never writes to ECUs.** The API reads live values and changes app data only. See
   *Diagnostics* below for the rules future write operations must follow.
 
@@ -232,6 +298,8 @@ Fault memory and other diagnostic jobs will be added as extension routes under `
 
 - The HTTP server is a small dependency-free HTTP/1.1 implementation on `java.net` sockets
   (`app/.../api/http/HttpServer.kt`), so the same code runs on Android and in the JVM tests.
+  HTTPS uses the platform TLS stack (Conscrypt on Android, JSSE in the tests); the certificates
+  are written by a few lines of DER code (`app/.../api/tls/`), without any extra library.
 - `openapi.json` is generated from the same route table that dispatches requests, so the spec
   and the behaviour cannot drift apart.
 - Layout changes go through `DashboardStore`: Android Auto follows them live.
