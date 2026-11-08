@@ -35,6 +35,7 @@ android {
 
 dependencies {
     implementation(project(":ediabas"))
+    implementation(project(":live"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)

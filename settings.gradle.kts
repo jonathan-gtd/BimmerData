@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 rootProject.name = "BimmerData"
 
 include(":ediabas")
+include(":live")
 include(":app")
