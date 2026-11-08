@@ -1,0 +1,2766 @@
+type;cle;de;traduction;statut
+ecu;;MSV70 fuer N52 mit EWS3 oder CAS · SGBD für MSV70 Serie mit SW 0911 an ZGM oder K-Line;;
+mesure;0x4200;Ansauglufttemperatur 1;Air intake temperature;auto
+mesure;0x4201;Umgebungsdruck;;
+mesure;0x4202;Saugrohrdruck;Intake manifold pressure;auto
+mesure;0x4203;Massenstrom vom HFM;Air mass;auto
+mesure;0x4204;Umgebungstemperatur;Ambient temperature;auto
+mesure;0x4205;Saugrohrdruck 1 / Ladedruck 1;Boost pressure;auto
+mesure;0x4300;Kühlwassertemperatur;Coolant temperature;auto
+mesure;0x4301;Kuehlerauslasstemperatur;;
+mesure;0x4302;Wasserpumpe Leistung ueber BSD;Water pump output via BSD;auto
+mesure;0x4303;Wasserpumpe Elektronik Temperatur;Recommended temperature of BSS water pump;auto
+mesure;0x4304;Wasserpumpe Strom;Current from water pump;auto
+mesure;0x4305;Wasserpumpe Drehzahl Ist;Water pump RPM;auto
+mesure;0x4306;Wasserpumpe Drehzahl Soll;BSS Waterpump target RPM;auto
+mesure;0x4400;Ölstand Mittelwert Langzeit;Oil level average long-term;auto
+mesure;0x4401;Füllstand Motoröl;Oil level - brief;auto
+mesure;0x4402;Öltemperatur;Oil temperature;auto
+mesure;0x4403;Kraftstoff-Verbrauch seit letztem Service;Fuel consumption since last service;auto
+mesure;0x4404;km seit letztem Service;KM reading since last service;auto
+mesure;0x4405;Oelsensor Niveau Rohwert;Oil sensor level raw value;auto
+mesure;0x4406;Oelsensor Qualität Rohwert;Oil sensor quality raw value;auto
+mesure;0x4407;Oelsensor Temperatur Rohwert;Oil sensor temperature raw value;auto
+mesure;0x4408;Oelsensor Temperatur;Oil sensor temperature;auto
+mesure;0x4409;Oelsensor Niveau;Oil sensor level;auto
+mesure;0x440A;Oelsensor Qualität;Oil sensor quality;auto
+mesure;0x440B;Länderfaktor 1 codiert;;
+mesure;0x440C;Länderfaktor 2 codiert;;
+mesure;0x440D;Länderfaktor 1;;
+mesure;0x440E;Länderfaktor 2;;
+mesure;0x440F;Kurzmittelwert-Niveau für den Tester;;
+mesure;0x4410;Restweg aus Permittivität abgeleitet;;
+mesure;0x4411;Restweg aus Kraftstoffverbrauch abgeleitet;;
+mesure;0x4412;Öl-Alter in Monate;;
+mesure;0x4413;aufbereitete Permittivität bei letztem Ölwechsel;;
+mesure;0x4414;Permittivität für Bewertung aufbereitet (extrapoliert);;
+mesure;0x4415;Offset für Permittivitätskorrektur;;
+mesure;0x4416;zugeteilte Bonuskraftstoffmenge;;
+mesure;0x4417;zugeteilter Permittivitätsbonus;;
+mesure;0x4500;VVT-Excenter Istwert;VVT eccentric actual value;auto
+mesure;0x4501;VVT-Excenter Sollwert;;
+mesure;0x4502;Mechanischer Verstellbereich VVT aus Lernroutine;Mechanical adjustment range VVT from learning routine;auto
+mesure;0x4503;Sollwert für Lageregler;Target value for position controller from the tester;auto
+mesure;0x4504;Sollwert für Lageregler vom Tester;Target value inlet spread;auto
+mesure;0x4505;Sollwert Einlassspreizung;Target value inlet spread;auto
+mesure;0x4506;Nockenwellenposition Einlass;Camshaft position intake;auto
+mesure;0x4507;Nockenwellenposition Auslass;Camshaft position exhaust;auto
+mesure;0x4508;Istwert Einlassspreizung;Camshaft inlet spread;auto
+mesure;0x4509;Istwert Auslassspreizung;Camshaft outlet spread;auto
+mesure;0x450A;Normspreizung Auslass;Standard spread outlet;auto
+mesure;0x450B;Normspreizung Einlass;Standard spread inlet;auto
+mesure;0x4600;aktueller Drosselklappenwinkel;Throttle position;auto
+mesure;0x4601;Drosselklappe Sollwert;Throttle position target;auto
+mesure;0x4602;Generator Sollspannung ueber BSD;Generator target voltage via BSD;auto
+mesure;0x4603;Chiptemperatur Generator 1;Chip temperature of the controller (BSD, LIN, SGR - resolution 1 °C);auto
+mesure;0x4604;Generator Strom;Generator current;auto
+mesure;0x4605;Chipversion Generator 1;;
+mesure;0x4606;Reglerversion Generator 1;Regulator version Generator 1;auto
+mesure;0x4607;Herstellercode Generator 1;Manufacturer Code Generator 1;auto
+mesure;0x4608;Kennung Generatortyp Generator 1;Identifier Generator type Generator 1;auto
+mesure;0x4609;Kl.87 Spannung / Versorgung DME;Terminal 87 Voltage / Supply DME;auto
+mesure;0x460A;Batteriespannung aktuell;Battery voltage;auto
+mesure;0x460B;Batteriespannung von IBS gemessen;Battery voltage (IBS);auto
+mesure;0x460C;Batteriespannung vom AD-Wandler DME;Battery voltage from the AD converter DME;auto
+mesure;0x460D;Korrekturwert Abschaltung;;
+mesure;0x460E;Abstand zur Startfähigkeitsgrenze;;
+mesure;0x460F;Batterielast;Battery load;auto
+mesure;0x4610;aktuelle Position Disaklappen;Current position of the DISA flaps;auto
+mesure;0x4611;Sollwert E-Lüfter als PWM Wert;Target value of electric fan as PWM value;auto
+mesure;0x4612;Erregerstrom Generator 1;;
+mesure;0x4613;Kopierter Wert von zum Generator gesendeter Sollspannung Generator 1;;
+mesure;0x4614;Auslastungsgrad Generator 1;;
+mesure;0x4615;Kopie begrenzter Erregerstrom Generator 1;;
+mesure;0x4616;Kopie Generator 1 LR Vorgabe auf Bus gelegt;;
+mesure;0x4617;gefiltertes Generatormoment absolut Ausgang;;
+mesure;0x4618;Kopie Drehzahlschwelle für LR-Funktion Generator 1 aktiv;;
+mesure;0x4700;Status Lambdasonde betriebsbereit Vorkat Bank 1;Condition: Probe must be operational before catalytic converter;auto
+mesure;0x4701;Status Lambdasonde betriebsbereit Vorkat Bank 2;;
+mesure;0x4702;Spannung Lambdasonde Vorkat Bank 1 mit Offsetkorrektur;Voltage lambda sensor before cat. Bank 1 with offset correction;auto
+mesure;0x4703;Spannung Lambdasonde Vorkat Bank 2 mit Offsetkorrektur;Voltage lambda sensor before cat. Bank 2 with offset correction;auto
+mesure;0x4704;Lambda Sollwert Bank 1;Lambda target bank1;auto
+mesure;0x4705;Lambda Sollwert Bank 2;Lambda target bank2;auto
+mesure;0x4800;Kupplungsschalter Status;;
+mesure;0x4801;Kupplungsschalter vorhanden;Clutch switch present;auto
+mesure;0x4802;Sporttaster aktiv;Sport button activated;auto
+mesure;0x4803;Status Klima ein;Condition for switching on the compressor;auto
+mesure;0x4804;Sekundärluft Pumpe aktiv;Secondary air pump active;auto
+mesure;0x4805;Startrelais über CAN aktiv;Switch terminal 50 of CAN;auto
+mesure;0x4806;Steuergeraete-Innentemperatur;;
+mesure;0x4807;Motor Drehzahl;Engine Speed;auto
+mesure;0x4808;Leerlauf Solldrehzahl;Idle target RPM;auto
+mesure;0x4809;Status LL;Idle speed control condition;auto
+mesure;0x480A;Kilometerstand Auflösung 1 km;Mileage;auto
+mesure;0x480B;Pedalwert Fahrerwunsch in %;Accelerator Pedal;auto
+mesure;0x5800;Zeit nach Start;;
+mesure;0x5801;Umgebungsdruck;;
+mesure;0x5802;Zustand Lambdaregelung Bank 1;Lambda control state Bank 1;auto
+mesure;0x5803;Zustand Lambdaregelung Bank 2;Lambda control state Bank 2;auto
+mesure;0x5804;Berechneter Lastwert;Calculated load value;auto
+mesure;0x5805;Kühlmitteltemperatur OBD;;
+mesure;0x5806;Lambda Integrator Gruppe 1;Lambda Integrator Group 1;auto
+mesure;0x5807;Lambda Adaption Summe mul. & add. Gruppe 1;Lambda Adaptation Sum of multiplicative and additive group 1;auto
+mesure;0x5808;Lambda Integrator Gruppe 2;Lambda Integrator Group 2;auto
+mesure;0x5809;Lambda Adaption Summe mul. & add. Gruppe 2;Lambda Adaptation Sum of multiplicative and additive group 2;auto
+mesure;0x580A;Kraftstoffdruck;Fuel pressure;auto
+mesure;0x580B;Saugrohrdruck;Intake manifold pressure;auto
+mesure;0x580C;Drehzahl;;
+mesure;0x580D;Geschwindigkeit;Speed;auto
+mesure;0x580E;Zündzeitpunkt Zylinder 1;;
+mesure;0x580F;Ansauglufttemperatur;Intake air temperature;auto
+mesure;0x5810;Luftdurchsatz OBD;Relative air mass (calc. load value) according to SAE J1979;auto
+mesure;0x5811;Motordrehzahl;Engine RPM;auto
+mesure;0x5812;Luftmasse gemessen;;
+mesure;0x5813;Relative Last;Relative Filling;auto
+mesure;0x5814;Fahrpedalwert;Accelerator pedal value (raw);auto
+mesure;0x5815;Batteriespannung;;
+mesure;0x5816;Lambda Setpoint;;
+mesure;0x5817;Umgebungstemperatur;Ambient temperature;auto
+mesure;0x5818;Luftmasse gerechnet;Air mass per cylinder;auto
+mesure;0x5819;Drehzahl OBD Byte;;
+mesure;0x581A;Nockenwelle Einlass;;
+mesure;0x581B;Nockenwelle Einlass Sollwert;;
+mesure;0x581C;Nockenwelle Auslass;;
+mesure;0x581D;Nockenwelle Auslass Sollwert;Outlet Camshaft Target;auto
+mesure;0x581E;Ansauglufttemperatur;Intake air temperature;auto
+mesure;0x581F;Motortemperatur;;
+mesure;0x5820;Kühlmitteltemperatur Kühlerausgang;Coolant temperature (sensor value) after low-pass filtering;auto
+mesure;0x5821;Steuergerät Innentemperatur;;
+mesure;0x5822;( Motor ) - Öltemperatur;;
+mesure;0x5823;Zeit Motor steht;Parking time;auto
+mesure;0x5824;Umgebungstemperatur;Ambient temperature;auto
+mesure;0x5825;Abstellzeit;;
+mesure;0x5826;Drosselklappe Sensor 1;Throttle sensor 1;auto
+mesure;0x5827;Lambdasonden Heizung Vorkat 1;;
+mesure;0x5828;Lambdasonden Heizung Vorkat 2;;
+mesure;0x5829;Lambdasonden Heizung Hinterkat 1;;
+mesure;0x582A;Lambdasonden Heizung Hinterkat 2;;
+mesure;0x582B;Drehmomenteingriff über CAN;Torque intervention via CAN;auto
+mesure;0x582C;Anzahl ungültiger Schreibüberprüfungszyklen am SPI-Interface der Lambdasonde vor Kat Bank 1;;
+mesure;0x582D;Anzahl ungültiger Schreibüberprüfungszyklen am SPI-Interface der Lambdasonde vor Kat Bank 2;;
+mesure;0x582E;Adaptionsfaktor Sensor Zeitkonstante vor Kat Bank 1;;
+mesure;0x582F;Adaptionsfaktor Sensor Zeitkonstante vor Kat Bank 2;;
+mesure;0x5830;Mittelwert der normierten Signalamplitude der Lambdasonde vor Kat Bank 1;;
+mesure;0x5831;Mittelwert der normierten Signalamplitude der Lambdasonde vor Kat Bank 2;;
+mesure;0x5832;Motor Status;Engine Coordinator Condition;auto
+mesure;0x5833;Umgebungstemperatur beim Start;;
+mesure;0x5834;Umgebungsdruck;;
+mesure;0x5836;Drehzahlgradient;Speed gradient;auto
+mesure;0x5837;Status OBD-I Fehler vor Kat Bank 1;;
+mesure;0x5838;Status OBD-I Fehler vor Kat Bank 2;;
+mesure;0x5839;Status Drosselklappe Notlauf;;
+mesure;0x583A;Ansauglufttemperatur beim Start;;
+mesure;0x583B;Kraftstofftank Füllstand;Fuel Tank Level;auto
+mesure;0x583C;Spannung Kl. 87;;
+mesure;0x583D;Reset: Quelle;;
+mesure;0x583E;Motordrehzahl bei Reset;;
+mesure;0x583F;Drosselklappe Sollwert;Throttle position target;auto
+mesure;0x5840;CPU Last bei Reset;;
+mesure;0x5841;SG-Innentemperatur Rohwert;;
+mesure;0x5843;Versorgung FWG 1;Power supply for accelerator pedal sensor 1;auto
+mesure;0x5845;Spannung Lambdasonde VorKat 1;Lambda probe voltage pre-cat Bank 1;auto
+mesure;0x5846;Spannung Pedalwertgeber 1;Pedal 1 Position Voltage;auto
+mesure;0x5847;Spannung Pedalwertgeber 2;Pedal 2 Position Voltage;auto
+mesure;0x5848;Spannung Lambdasonde VorKat 2;Lambda probe voltage pre-cat Bank 2;auto
+mesure;0x5849;Spannung Lambdasonde HinterKat 1;Voltage Lambda sensor downstream of catalytic converter, bank 1;auto
+mesure;0x584A;Spannung Kl. 15 Rohwert;Voltage Class 15 Raw Value;auto
+mesure;0x584B;Spannung Lambdasonde HinterKat 2;Voltage Lambda sensor behind catalytic converter, bank 2;auto
+mesure;0x584C;Spannung Drosselklappe Poti 2;Throttle 2 pos. voltage;auto
+mesure;0x584D;korrigierter Sollwert Durchfluss Tankentlüftung;Tank ventilation air flow target in intake manifold;auto
+mesure;0x584E;Spannung Drosselklappe Poti 1;Throttle 1 pos. voltage;auto
+mesure;0x584F;Spannung Luftmasse;Air mass sensor voltage;auto
+mesure;0x5850;Spannung Motortemperatur;;
+mesure;0x5851;Spannung Ansauglufttemperatur;Voltage Intake air temperature;auto
+mesure;0x5852;Kühlmitteltemperatur Kühlerausgang Rohwert;;
+mesure;0x5853;Spannung Kl.87 Rohwert;;
+mesure;0x5854;Versorgung FWG 2;Power supply for accelerator pedal sensor 2;auto
+mesure;0x5855;Mittelwert Bank 1;;
+mesure;0x5856;Mittelwert Bank 2;;
+mesure;0x5858;Drosselklappe aktueller Wert;;
+mesure;0x5859;DMTL Strom Referenzleck;;
+mesure;0x585A;DMTL Strom Grobleck;;
+mesure;0x585B;DMTL Strom Diagnoseende;;
+mesure;0x585C;Widerstand Lambdasonde NK 1;;
+mesure;0x585D;Widerstand Lambdasonde NK 2;Lambda sensor resistance downstream of catalytic converter, bank 2;auto
+mesure;0x585E;unteres Byte Widerstand Lambdasonde NK 1;;
+mesure;0x585F;unteres Byte Widerstand Lambdasonde NK 2;;
+mesure;0x5860;Widerstand Lambdasonde VK 1;Lambda sensor resistance before catalytic converter, Bank 1;auto
+mesure;0x5861;Widerstand Lambdasonde VK 2;Lambda sensor resistance before catalytic converter, Bank 2;auto
+mesure;0x5863;untere Byte Widerstand Lambdasonde VK 1;;
+mesure;0x5864;untere Byte Widerstand Lambdasonde VK 2;;
+mesure;0x5865;Oelstand Mittelwert Langzeit;Oil level average long-term;auto
+mesure;0x5866;Füllstand Motoröl;Oil level - brief;auto
+mesure;0x5867;Kilometerstand;;
+mesure;0x5868;Status Standverbraucher registriert Teil 1;;
+mesure;0x5869;Status Standverbraucher registriert Teil 2;;
+mesure;0x586A;Batteriespannung von IBS gemessen;Battery voltage (IBS);auto
+mesure;0x586B;Zeit mit Ruhestrom 80 - 200 mA;Time with quiescent current 80 - 200 mA;auto
+mesure;0x586C;Zeit mit Ruhestrom 200 - 1000 mA;Time with quiescent current 200 - 1000 mA;auto
+mesure;0x586D;Zähler Erkennung schlechte Strasse;Counter detection bad road;auto
+mesure;0x586E;Zeit mit Ruhestrom größer 1000 mA;Time with quiescent current greater than 1000 mA;auto
+mesure;0x5870;Spannung DME Umgebungsdruck;Atmospheric pressure sensor voltage;auto
+mesure;0x5871;Lambda-Sollwert Gruppe 1;Lambda target group 1;auto
+mesure;0x5873;Lambda-Sollwert Gruppe 2;Lambda target group 2;auto
+mesure;0x5874;Spannung Strommessung DMTL;Voltage pump current tank diagnostics;auto
+mesure;0x5876;Mittlere Diagnosewert minimale Luftmasse;Average diagnostic value minimum air mass;auto
+mesure;0x5877;Differenz zwischen Maximum und Minimum SAF;Difference between maximum and minimum SAF;auto
+mesure;0x5878;Lambdaverschiebung Rückführregler 1;Lambda shift feedback controller 1;auto
+mesure;0x5879;Lambdaverschiebung Rückführregler 2;Lambda shift feedback controller 2;auto
+mesure;0x587A;Status FGR;;
+mesure;0x587C;Status Motorsteuerung;;
+mesure;0x587D;Symptom bei Schubabschaltung Sonde vor Kat Bank 1;;
+mesure;0x587E;Symptom bei Schubabschaltung Sonde vor Kat Bank 2;;
+mesure;0x587F;Tastverhaeltnis E-Lüfter;Electric fan duty cycle;auto
+mesure;0x5880;Tastverhältnis: Luftklappe;;
+mesure;0x5881;berechneter Gang;Gear information;auto
+mesure;0x5882;Motortemperatur beim Start;Engine temperature at start;auto
+mesure;0x5883;Spannung Klopfwerte Zylinder 1;Knock voltage Cylinder 1;auto
+mesure;0x5885;Spannung Klopfwerte Zylinder 3;Knock voltage Cylinder 3;auto
+mesure;0x5886;Spannung Klopfwerte Zylinder 6;Knock voltage Cylinder 6;auto
+mesure;0x5888;Spannung Klopfwerte Zylinder 4;Knock voltage Cylinder 4;auto
+mesure;0x5889;Lambda-Istwert Gruppe 1;Lambda value group 1;auto
+mesure;0x588A;Lambda-Istwert Gruppe 2;Lambda value group 2;auto
+mesure;0x588B;Zeit seit Startende;Time since start;auto
+mesure;0x588C;Keramiktemperatur Lambdasonde VK 1;Lambda ceramic temp pre-cat bank 1;auto
+mesure;0x588D;aktuelle Zeit DMTL Leckmessung;Current leak measurement time;auto
+mesure;0x588E;Pumpenstrom bei DMTL Pumpenprüfung;Pump current tank diagnostics;auto
+mesure;0x588F;Keramiktemperatur Lambdasonde VK 2;Lambda ceramic temp pre-cat bank 2;auto
+mesure;0x5891;Momentanforderung an der Kupplung;Torque request from clutch;auto
+mesure;0x5893;Drehmomentabfall schnell bei Gangwechsel;Rapid torque drop during gear changes;auto
+mesure;0x5894;Symptom Lambdasondenheizung vor Kat Bank 1;;
+mesure;0x5895;Symptom Lambdasondenheizung vor Kat Bank 2;;
+mesure;0x5896;Abgastemperatur nach Kat Bank 1;;
+mesure;0x5897;Abgastemperatur nach Kat Bank 2;;
+mesure;0x5898;Generator Sollspannung;Generator target voltage;auto
+mesure;0x5899;Istwert DISA-Position;;
+mesure;0x589B;Spannungsoffset Signalpfad CJ120 1;Voltage offset signal path CJ120 1;auto
+mesure;0x589C;Spannungsoffset Signalpfad CJ120 2;Voltage offset signal path CJ120 2;auto
+mesure;0x589E;Status VVT- Entlastungsrelais;;
+mesure;0x589F;VVT Istwinkel;VVT actual angle;auto
+mesure;0x58A0;VVT Sollwinkel;VVT target angle;auto
+mesure;0x58A1;Ausgegeben Tastverhältnis;;
+mesure;0x58A2;VVT Motorstrom;Current for VVT actuator;auto
+mesure;0x58A3;VVT Motortemperatur;VVT engine temperature;auto
+mesure;0x58A4;VVT Spannungsversorgung;VVT power supply;auto
+mesure;0x58A5;VVT Sensorversorgungsspannung;VVT sensor supply voltage;auto
+mesure;0x58A6;VVT Sensordifferenz;VVT sensor difference;auto
+mesure;0x58A7;VVT Endstufentemperatur;VVT output stage temperature from model;auto
+mesure;0x58A8;Motorabstellzeit;Engine shutdown time;auto
+mesure;0x58A9;Reset Zähler Überwachungsrechner;;
+mesure;0x58AA;Reset Zähler Hauptrechner;;
+mesure;0x58AB;Abweichung DK-Ersatzwert und DK-Poti 1;Deviation of DK potentiometer 1 and model value;auto
+mesure;0x58AC;Abweichung DK-Ersatzwert und DK-Poti 2;Deviation of DK potentiometer 2 and model value;auto
+mesure;0x58AD;Pedalwertgeber 1;Accelerator pedal sensor 1;auto
+mesure;0x58AF;Kraftstoff Anforderung an Pumpe;EKP target volume flow;auto
+mesure;0x58B0;DK-Adaptionsschritt;DK adaptation step;auto
+mesure;0x58B1;Funkenbrenndauer Zylinder 1;Spark burn duration Cylinder 1;auto
+mesure;0x58B2;Funkenbrenndauer Zylinder 5;Spark burn duration Cylinder 5;auto
+mesure;0x58B3;Funkenbrenndauer Zylinder 3;Spark burn duration Cylinder 3;auto
+mesure;0x58B4;Funkenbrenndauer Zylinder 6;Spark burn duration Cylinder 6;auto
+mesure;0x58B5;Funkenbrenndauer Zylinder 2;Spark burn duration Cylinder 2;auto
+mesure;0x58B6;Funkenbrenndauer Zylinder 4;Spark burn duration Cylinder 4;auto
+mesure;0x58B7;Bremsdruck;Brake pressure;auto
+mesure;0x58B8;Drehzahl Überwachung;;
+mesure;0x58B9;Pedalwert Überwachung;;
+mesure;0x58BC;Luftmasse Überwachung;;
+mesure;0x58BD;Modellluftmasse Überwachung tiefpassgefiltert;;
+mesure;0x58BF;relative Momentenforderung von MSR über CAN;Relative torque request from MSR via CAN;auto
+mesure;0x58C0;Motordrehzahl Eratztwert Überwachung;;
+mesure;0x58C1;Laufunruhe Segmentzeit;Running roughness segment time;auto
+mesure;0x58C7;LL-Solldrehzahlabweichung Überwachung;LL target speed deviation monitoring;auto
+mesure;0x58C8;I-Anteil Momentdifferenz Überwachung und Modell;;
+mesure;0x58C9;I-Anteil LL passive Rampe aktiv;;
+mesure;0x58CA;PD-Anteil langsam Leerlaufregelung;;
+mesure;0x58CB;PD-Anteil schnell Leerlaufregelung;;
+mesure;0x58CC;Verlustmoment Überwachung;;
+mesure;0x58CD;Verlustmomentabweichung Überwachung;;
+mesure;0x58CE;Carrierbyte Schalterstati;;
+mesure;0x58CF;Motormoment Sollwert Überwachung;Engine torque target;auto
+mesure;0x58D0;Motormoment Istwert Überwachung;Engine torque;auto
+mesure;0x58D1;Moment aktueller Wert;Engine torque output;auto
+mesure;0x58D4;Abweichung maximales Moment an Kupplung Überwachung;;
+mesure;0x58D6;Abweichung minimales Moment an Kupplung Überwachung;;
+mesure;0x58D9;Fehler Hauptrechner;;
+mesure;0x58DA;Fehler Überwachungsrechner;;
+mesure;0x58DB;Fehler Bitfeld high Byte;;
+mesure;0x58DC;Fehler Bitfeld low Byte;;
+mesure;0x58DF;Spannung Sportschalter;Voltage Sport Switch;auto
+mesure;0x58E0;Abgleich Drosselklappenmodell (Faktor);;
+mesure;0x58E1;Abgleich Drosselklappenmodell (Offset);;
+mesure;0x58E2;Abgleich Einlassventilmodell (Faktor);;
+mesure;0x58E3;Abgleich Einlassventilmodell (Offset);;
+mesure;0x58E4;Betriebsart Istwert;;
+mesure;0x58E5;Maximale Drehzahl bei Zündaussetzern;Maximum engine speed during misfires;auto
+mesure;0x58E6;Maximale relative Last bei Zündaussetzern;Maximum relative load during misfires;auto
+mesure;0x58E7;Minimale relative Last bei Zündaussetzern;Minimum relative load during misfires;auto
+mesure;0x58E8;Minimale Drehzahl bei Zündaussetzern;Minimum engine speed during misfires;auto
+mesure;0x58E9;Wasserpumpe Spannung;Recommended voltage for BSS water pump;auto
+mesure;0x58EA;Wasserpumpe Drehzahl;;
+mesure;0x58EB;Wasserpumpe Drehzahl Soll-Ist-Differenz;Water pump speed: target/actual difference;auto
+mesure;0x58EC;Wasserpumpe Temperatur Elektronik;;
+mesure;0x58ED;Wasserpumpe Stromaufnahme;;
+mesure;0x58EE;Wasserpumpe leistungsreduziert;Water pump with reduced power;auto
+mesure;0x58F1;DME - Losnummer;DME - Lot number;auto
+mesure;0x58F5;Eingangssignal Rückführregler 1;;
+mesure;0x58F6;Eingangssignal Rückführregler 2;;
+mesure;0x58F8;Segmentadaption Laufunruhe Zyl. 5;Segment adaptation Unsteady running Cyl. 5;auto
+mesure;0x58F9;Segmentadaption Laufunruhe Zyl. 3;Segment adaptation Unsteady running Cyl. 3;auto
+mesure;0x58FA;Beladungsgrad Aktivkohlefilter TEV- Funktionstest;;
+mesure;0x58FB;Zähler Drehzahlerhöhungen TEV- Funktionstest;;
+mesure;0x5A00;Versorgung FWG 1;Power supply for accelerator pedal sensor 1;auto
+mesure;0x5A01;Versorgung FWG 2;Power supply for accelerator pedal sensor 2;auto
+mesure;0x5A02;Versorgung VVT Rohwert;VVT supply voltage raw;auto
+mesure;0x5A03;Versorgung VVT;VVT supply voltage;auto
+mesure;0x5A04;Spannung Pedalwertgeber 1;Pedal 1 Position Voltage;auto
+mesure;0x5A05;Spannung Pedalwertgeber 2;Pedal 2 Position Voltage;auto
+mesure;0x5A06;Spannung Drosselklappe Poti 1;Throttle 1 pos. voltage;auto
+mesure;0x5A07;Spannung Drosselklappe Poti 2;Throttle 2 pos. voltage;auto
+mesure;0x5A08;Spannung Ansauglufttemperatur;Voltage Intake air temperature;auto
+mesure;0x5A09;Spannung Motortemperatur;;
+mesure;0x5A0A;Spannung Kühlmitteltemperatur Kühlerausgang;Voltage, coolant temperature, radiator outlet;auto
+mesure;0x5A0B;Spannung DME Umgebungsdruck;Atmospheric pressure sensor voltage;auto
+mesure;0x5A0C;Spannung Luftmasse;Air mass sensor voltage;auto
+mesure;0x5A0D;Spannung Sekundärluft;Voltage secondary air;auto
+mesure;0x5A0E;Spannung SG-Innentemperatur;Voltage SG-Internal temperature;auto
+mesure;0x5A0F;Spannung Kl.15;Load signal SPG;auto
+mesure;0x5A10;Spannung Kl15;Load signal SPG;auto
+mesure;0x5A11;Spannung Lambdasonde vor Kat 1;Lambda probe voltage pre-cat Bank 1;auto
+mesure;0x5A12;Spannung Lambdasonde vor Kat 2;Lambda probe voltage pre-cat Bank 2;auto
+mesure;0x5A13;Spannung Lambdasonde hinter Kat 1;Voltage Lambda sensor downstream of catalytic converter, bank 1;auto
+mesure;0x5A14;Spannung Lambdasonde hinter Kat 2;Voltage Lambda sensor behind catalytic converter, bank 2;auto
+mesure;0x5A17;Spannung Strommessung DMTL;Voltage pump current tank diagnostics;auto
+mesure;0x5A21;Kühlmitteltemperatur Kühlerausgang;Coolant temperature (sensor value) after low-pass filtering;auto
+mesure;0x5A22;Steuergerät Innentemperatur;;
+mesure;0x5A24;Drosselklappe Sollwert;Throttle position target;auto
+mesure;0x5A26;Saugrohrdruck;Intake manifold pressure;auto
+mesure;0x5A27;Pedalwertgeber Poti 1;;
+mesure;0x5A28;Pedalwertgeber Poti 2;;
+mesure;0x5A29;Fahrpedalwert;Accelerator pedal value (raw);auto
+mesure;0x5A2A;Luftmasse Sekundärluft;Secondary air mass flow;auto
+mesure;0x5A30;Laufunruhe Zylinder 1;Running roughness cylinder 1;auto
+mesure;0x5A31;Laufunruhe Zylinder 2;Running roughness cylinder 2;auto
+mesure;0x5A32;Laufunruhe Zylinder 3;Running roughness cylinder 3;auto
+mesure;0x5A33;Laufunruhe Zylinder 4;Running roughness cylinder 4;auto
+mesure;0x5A34;Laufunruhe Zylinder 5;[1] Running roughness Cylinder 5;auto
+mesure;0x5A35;Laufunruhe Zylinder 6;[3] Running roughness Cylinder 6;auto
+mesure;0x5A36;Status Klopfen;;
+mesure;0x5A37;Spannung Klopfwerte Zylinder 1;Knock voltage Cylinder 1;auto
+mesure;0x5A38;Spannung Klopfwerte Zylinder 2;Knock voltage Cylinder 2;auto
+mesure;0x5A39;Spannung Klopfwerte Zylinder 3;Knock voltage Cylinder 3;auto
+mesure;0x5A3A;Spannung Klopfwerte Zylinder 4;Knock voltage Cylinder 4;auto
+mesure;0x5A3B;Spannung Klopfwerte Zylinder 5;Knock voltage Cylinder 5;auto
+mesure;0x5A3C;Spannung Klopfwerte Zylinder 6;Knock voltage Cylinder 6;auto
+mesure;0x5A3D;Klopfsignal Zylinder 1;Knock sensor signal cylinder 1;auto
+mesure;0x5A3E;Klopfsignal Zylinder 1 relativ;Knock sensor signal Cylinder 1 relative;auto
+mesure;0x5A3F;Klopfsignal Zylinder 6;Knock sensor signal cylinder 6;auto
+mesure;0x5A40;Klopfsignal Zylinder 6 relativ;Knock sensor signal Cylinder 6 relative;auto
+mesure;0x5A42;Einspritzzeit Zylinder 1;Injection time Cylinder 1;auto
+mesure;0x5A43;Einspritzzeit Zylinder 2;Injection time Cylinder 2;auto
+mesure;0x5A44;Einspritzzeit Zylinder 3;Injection time Cylinder 3;auto
+mesure;0x5A45;Einspritzzeit Zylinder 4;Injection time Cylinder 4;auto
+mesure;0x5A46;Einspritzzeit Zylinder 5;Injection time Cylinder 5;auto
+mesure;0x5A47;Einspritzzeit Zylinder 6;Injection time Cylinder 6;auto
+mesure;0x5A49;Zündwinkel Zylinder 1;;
+mesure;0x5A4B;Berechneter Lastwert;Calculated load value;auto
+mesure;0x5A4E;Klimakompressorrelais Ein;Air conditioning compressor relay ON;auto
+mesure;0x5A4F;VVT- Entlastungsrelais Ein;VVT relief relay ON;auto
+mesure;0x5A50;Lambdawert vor Kat Bank 1;Lambda pre-cat bank1;auto
+mesure;0x5A51;Lambdawert vor Kat Bank 2;Lambda pre-cat Bank2;auto
+mesure;0x5A52;Status LS nach Kat Bank 1;;
+mesure;0x5A53;Status LS nach Kat Bank 2;;
+mesure;0x5A54;Status LS Heizung nach Kat Bank 1;;
+mesure;0x5A55;Status LS Heizung nach Kat Bank 2;;
+mesure;0x5A56;Status LS Heizung vor Kat Bank 1;;
+mesure;0x5A57;Status LS Heizung vor Kat Bank 2;;
+mesure;0x5A58;Lambdasondenheizung PWM vor Kat Bank 1;Lambda heating PWM before cat. Bench 1;auto
+mesure;0x5A59;Lambdasondenheizung PWM nach Kat Bank 1;Normalized heating power of the lambda sensor downstream of the catalytic converter;auto
+mesure;0x5A5A;Lambdasondenheizung PWM vor Kat Bank 2;Lambda heating PWM before cat. Bench 2;auto
+mesure;0x5A5B;Lambdasondenheizung PWM nach Kat Bank 2;Lambda heating PWM behind catalytic converter, bank 2;auto
+mesure;0x5A60;Bremslichtschalter Ein;Raw value brake contact not debounced;auto
+mesure;0x5A61;Bremslichttestschalter Ein;Raw value of redundant brake contact not debounced;auto
+mesure;0x5A62;Öldruckschalter Ein;Output signal oil pressure switch;auto
+mesure;0x5A63;E-Boxlüfter Ein;E-Box fan ON;auto
+mesure;0x5A64;Kühlerjalousie;;
+mesure;0x5A65;Abgasklappe Ein;Condition: Exhaust flap with resonator;auto
+mesure;0x5A66;DMTL Pumpe Ein;;
+mesure;0x5A67;DMTL Ventil Ein;Condition: DMTL solenoid valve on;auto
+mesure;0x5A68;DMTL Heizung Ein;Condition: Heating DM-TL port control;auto
+mesure;0x5A69;MIL Lampe Ein;;
+mesure;0x5A6A;Lampe FGR Ein;;
+mesure;0x5A6B;Lampe Check Engine Ein;Check Engine Light On;auto
+mesure;0x5A6D;Status Taste FGR;;
+mesure;0x5A70;Soundklappe Zustand;Sound flap condition;auto
+mesure;0x5A71;DISA1 PWM (große/obere Klappe);DISA1 PWM (large/top flap);auto
+mesure;0x5A72;DISA2 PWM (kleine/untere Klappe);DISA2 PWM (small/bottom flap);auto
+mesure;0x5A73;Kurbelgehäuseentlüftungsheizung;;
+mesure;0x5A74;Beheizter Thermostat PWM;Heated thermostat PWM;auto
+mesure;0x5A75;Sekundärluft Ventil;Secondary air valve;auto
+mesure;0x5A76;Adaption Öffnungspunkt Tankentlüftungsventil;;
+mesure;0x5A77;TankEntlüftungsVentil TEV PWM;Tank valve PWM;auto
+mesure;0x5A78;Abgasklappe Ansteuerung;Condition: Exhaust flap with resonator;auto
+mesure;0x5A79;E-Lüfter PWM;Electric fan PWM;auto
+mesure;0x5A7A;VANOS PWM Wert Einlass;Inlet VANOS PWM;auto
+mesure;0x5A7B;VANOS PWM Wert Auslass;VANOS PWM Outlet;auto
+mesure;0x5A81;Integrator Bank 1;Short-term fuel trim Bank 1;auto
+mesure;0x5A82;Integrator Bank 2;Short-term fuel trim Bank 2;auto
+mesure;0x5A83;Adaption Offset Lambda Bank 1;LTFT additive bank 1;auto
+mesure;0x5A84;Adaption Offset Lambda Bank 2;LTFT additive bank 2;auto
+mesure;0x5A85;Adaption Multiplikation Lambda Bank 1;LTFT multiplicative bank 1;auto
+mesure;0x5A86;Adaption Multiplikation Lambda Bank 2;LTFT multiplicative bank 2;auto
+mesure;0x5A87;Adaptionswert Trimregelung Bank 1;;
+mesure;0x5A88;Adaptionswert Trimregelung Bank 2;;
+mesure;0x5A89;multiplikative Gemischadaption hohe Last Bank 1;;
+mesure;0x5A8A;multiplikative Gemischadaption hohe Last Bank 2;;
+mesure;0x5A8B;multiplikative Gemischadaption niedrige Last Bank 1;;
+mesure;0x5A8C;multiplikative Gemischadaption niedrige Last Bank 2;;
+mesure;0x5A8D;additive Gemischadaption Leerlauf Bank 1;;
+mesure;0x5A8E;additive Gemischadaption Leerlauf Bank 2;;
+mesure;0x5A91;Katalysatordiagnosewert Bank 1;;
+mesure;0x5A92;Katalysatordiagnosewert Bank 2;;
+mesure;0x5A94;Nockenwelle Auslass Sollwert;Outlet Camshaft Target;auto
+mesure;0x5A95;Adaptionswert Nockenwelle Auslaß;Encoder wheel adaptation VSA;auto
+mesure;0x5A96;Adaptionswert Nockenwelle Einlaß;Encoder wheel adaptation VSE;auto
+mesure;0x5A97;Bedingung EVANOS im Anschlag beim letzten Abstellen;;
+mesure;0x5A99;Kurbelwellen Adaption beendet;Crankshaft adaptation completed;auto
+mesure;0x5AA1;Status Diagnose TEV;;
+mesure;0x5AA2;Status Diagnose DMTL;;
+mesure;0x5AA3;Status Diagnose Lambdasonden;;
+mesure;0x5AA4;Status Diagnose Leerlaufdrehzahlverstellung;;
+mesure;0x5AA5;Status Diagnose Sekundärluft;;
+mesure;0x5AA6;Status Diagnose VVT Anschläge lernen;;
+mesure;0x5AB1;Geschwindigkeit;Vehicle Speed;auto
+mesure;0x5AB3;Fahrstrecke mit MIL an;Odometer for kilometers driven with MIL ON;auto
+mesure;0x5AB4;Betriebsstundenzähler;Operating hours counter;auto
+mesure;0x5AB5;Variante Sekundärluftpumpe;Variant secondary air pump;auto
+mesure;0x5AB6;Rohwert Ansauglufttemperatur 1;Air intake temperature raw value 1;auto
+mesure;0x5AB7;Rohwert Kühlwassertemperatur;Raw value cooling water temperature;auto
+mesure;0x5AB8;Spannung Saugrohrdruck;Intake manifold pressure voltage;auto
+mesure;0x5AB9;Spannung Sportschalter;Voltage Sport Switch;auto
+mesure;0x5ABA;PWM Kraftstoffpumpe;Fuel pump PWM;auto
+mesure;0x5ABB;Ausgewählter VVT Istwinkel;VVT selected actual angle;auto
+mesure;0x5ABC;Luftmasse;Air mass;auto
+mesure;0x5ABD;Starterrelais aktiv;Automatic start condition;auto
+mesure;0x5AC0;Reset Status Hardware-Register;;
+mesure;0x5AC1;Reset Status Software-Register;;
+mesure;0x5AC2;Reset Adresse;;
+mesure;0x5AC3;Fehler Segmentzähler;;
+mesure;0x5AE0;TM_1;;
+mesure;0x5AE1;TM_2;;
+mesure;0x5AE2;TM_3;;
+mesure;0x5AE3;TM_4;;
+mesure;0x5AE4;TM_5;;
+mesure;0x5AE5;TO_1;;
+mesure;0x5AE6;TO_2;;
+mesure;0x5AE7;TO_3;;
+mesure;0x5AE8;TO_4;;
+mesure;0x5AE9;TO_5;;
+mesure;0x5AEA;TG_1;;
+mesure;0x5AEB;TG_2;;
+mesure;0x5AEC;TG_3;;
+mesure;0x5AED;TG_4;;
+mesure;0x5AEE;TG_5;;
+mesure;0x5AEF;TU_1;;
+mesure;0x5AF0;TU_2;;
+mesure;0x5AF1;TU_3;;
+mesure;0x5AF2;TU_4;;
+mesure;0x5AF3;TU_5;;
+mesure;0x58FF;Umweltbedingung unbekannt;;
+resultat;STATUS_AGK/STAT_STAT_AGK;Status Abgasklappe;;
+resultat;STATUS_AN_LUFTTEMPERATUR/STAT_ADC_TANS1_WERT;ADC-Wert Ansauglufttemperatur 1;;
+resultat;STATUS_AN_LUFTTEMPERATUR/STAT_AN_LUFTTEMPERATUR_WERT;Temperatur Ansauglufttemperatur 1;;
+resultat;STATUS_ANWS/STAT_STAT_ANWS_WERT;Status Vanos_A Ventil;;
+resultat;STATUS_BLS/STAT_STAT_BLS;Status Bremslichtschalter;;
+resultat;STATUS_BLTS/STAT_STAT_BLTS;Status Bremslichttestschalter;;
+resultat;STATUS_CO_ABGLEICH/STAT_LV_FAC_MFF_ADD_EXT_ADJ_NVMY;Logical value for storing CO correction in NVMY;;
+resultat;STATUS_CO_ABGLEICH/STAT_LV_RST_MFF_ADD_EXT_ADJ_NVMY;Flag to reset external MFF correction to 0;;
+resultat;STATUS_CO_ABGLEICH/STAT_CO_ABGLEICH_WERT;Status Abgleichwert CO (Kohlenmonoxid);;
+resultat;STATUS_CO_ABGLEICH/STAT_MFF_ADD_EXT_ADJ_1_WERT;Mass fuel flow for CO adjustment at idling, value for injection correction;;
+resultat;STATUS_CO_ABGLEICH/STAT_MFF_ADD_EXT_ADJ_2_WERT;Mass fuel flow for CO adjustment at idling, value for injection correction;;
+resultat;STATUS_CO_ABGLEICH/STAT_MFF_ADD_EXT_ADJ_NVMY_WERT;Mass fuel flow for CO adjustment at idling, value for storing in NVMY;;
+resultat;STATUS_DISA/STAT_STAT_DISA_WERT;Status Variable Sauganlage (DISA) Klappe;;
+resultat;STATUS_DISA2/STAT_STAT_DISA2_WERT;Status Variable Sauganlage (DISA) Klappe2;;
+resultat;STATUS_DKP_VOLT/STAT_DKP_VOLT_WERT;ADC-Wert1 Drosselklappe;;
+resultat;STATUS_DKP_VOLT/STAT_ADC2_DK_WERT;ADC-Wert2 Drosselklappe;;
+resultat;STATUS_DKP_VOLT/STAT_STAT_DK_WERT;Status Drosselklappe;;
+resultat;STATUS_DMTL_HEIZUNG/STAT_STAT_DMTLH;Status Diagnosemodul-Tank Leckage Heizung;;
+resultat;STATUS_DMTL_P/STAT_STAT_DMTL_P;Status Diagnosemodul-Tank Leckage Pumpe;;
+resultat;STATUS_DMTL_V/STAT_STAT_DMTL_V;Status Diagnosemodul-Tank Leckage Ventil;;
+resultat;STATUS_E_LUEFTER/STAT_STAT_ELUE_WERT;Status E-Luefter;;
+resultat;*/STAT_PHY_TCO_WERT;Kuehlmitteltemperatur (Dieser Wert wurde zusaetzlich zum geforderten Umfang e…;;
+resultat;STATUS_E_LUEFTER/STAT_PHY_TCO_2_WERT;Kuehlmitteltemperatur am Kuehlerausgang (Dieser Wert wurde zusaetzlich zum ge…;;
+resultat;STATUS_EWAP/STAT_PHY_TCO_2_WERT;Coolant temperature (radiator outlet) (A2L-Name: tco_2);;
+resultat;STATUS_KFT/STAT_PHY_TCO_2_WERT;Kuehlmitteltemperatur am Kuehlerausgang (Dieser Wert wurde zusaetzlich zum ge…;;
+resultat;STATUS_EBL/STAT_STAT_EBL;Status E-Box-Luefter;;
+resultat;STATUS_EBL/STAT_PHY_TECU_WERT;Steuergeraetetemperatur DME (Dieser Wert wurde zusaetzlich zum geforderten Um…;;
+resultat;STATUS_EISYGD/STAT_FS_EISYGD_TEXT;Adaption Massenstromregler auf DK erstmalig erfolgt;;
+resultat;STATUS_EISYGD/STAT_FS_EISYGD_WERT;FS Eisygd;;
+resultat;STATUS_EISYGD/STAT_MRNN_TEST_DK_WERT;Massenstromregler-Adaptionswert NN im GD - Betrieb ueber Test gelesen;;
+resultat;STATUS_EISYUGD/STAT_FS_EISYUGD_TEXT;Adaption Massenstromregler auf Hub erstmalig erfolgt;;
+resultat;STATUS_EISYUGD/STAT_FS_EISYUGD_WERT;FS Eisyugd;;
+resultat;STATUS_EISYUGD/STAT_MRNN_TEST_VVT_WERT;Massenstromregler-Adaptionswert NN im VVT Betrieb ueber Test gelesen;;
+resultat;STATUS_EKP/STAT_STAT_EKP1_WERT;Status Elektrische Kraftstoffpumpe 1;;
+resultat;STATUS_EML/STAT_STAT_EML;Status EML (Engine Malfunction Lamp);;
+resultat;STATUS_ENWS/STAT_STAT_ENWS_WERT;Status Vanos_E Ventil;;
+resultat;STATUS_EV1/STAT_PHY_EV1_WERT;Einspritzzeit Einspritzventil 1;;
+resultat;STATUS_EV2/STAT_PHY_EV2_WERT;Einspritzzeit Einspritzventil 2;;
+resultat;STATUS_EV3/STAT_PHY_EV3_WERT;Einspritzzeit Einspritzventil 3;;
+resultat;STATUS_EV4/STAT_PHY_EV4_WERT;Einspritzzeit Einspritzventil 4;;
+resultat;STATUS_EV5/STAT_PHY_EV5_WERT;Einspritzzeit Einspritzventil 5;;
+resultat;STATUS_EV6/STAT_PHY_EV6_WERT;Einspritzzeit Einspritzventil 6;;
+resultat;STATUS_EWAP/STAT_STAT_EWAP_WERT;Status elektr. Wasserpumpe ueber BSD (Bit Serielle Datenschnittstelle) (Ausna…;;
+resultat;STATUS_FGRL/STAT_STAT_FGRL;Status Fahrgeschwindigkeitsregler-Lampe;;
+resultat;STATUS_FWV1/STAT_ADC_FWV1_WERT;ADC-Wert Fahrerwunschversorgung 1;;
+resultat;STATUS_FWV2/STAT_ADC_FWV2_WERT;ADC-Wert Fahrerwunschversorgung 2;;
+resultat;STATUS_GLF/STAT_STAT_GLF;Status Gesteuerte Luftfuehrung;;
+resultat;STATUS_HFMS/STAT_ADC_HFMS_WERT;ADC-Wert Sekundaerluft HFM (Heissfilm Luftmassenmesser);;
+resultat;STATUS_HFMS/STAT_PHY_HFMS_WERT;Luftmasse Sekundaerluft HFM (Heissfilm Luftmassenmesser);;
+resultat;STATUS_KB1/STAT_ADC_KB1_WERT;ADC-Wert Klopfbaustein 1;;
+resultat;STATUS_KB1/STAT_STAT_KB1_WERT;Status Klopfbaustein 1;;
+resultat;STATUS_KB2/STAT_ADC_KB2_WERT;ADC-Wert Klopfbaustein 2;;
+resultat;STATUS_KB2/STAT_STAT_KB2_WERT;Status Klopfbaustein 2;;
+resultat;STATUS_KFT/STAT_STAT_KFT_WERT;Status Kennfeldthermostat;;
+resultat;STATUS_KGEH/STAT_STAT_KGEH;Status Kurbelgehaeuseentlueftungsheizung;;
+resultat;STATUS_KOREL/STAT_STAT_KOREL;Status Klimakompressor-Relais;;
+resultat;STATUS_KRANN/STAT_KRNN_TEST_WERT;Zuendwinkelaenderung aus Adaption Klopfregelung fuer Testerabfrage;;
+resultat;STATUS_KUP/STAT_STAT_KUP;Status Kupplungsschalter;;
+resultat;STATUS_L_SONDE/STAT_L_SONDE_WERT;ADC-Wert Lambdasonde vor Kat Bank1;;
+resultat;STATUS_L_SONDE/STAT_PHY_LSVK1_WERT;Lambdawert Lambdasonde vor Kat Bank1;;
+resultat;STATUS_L_SONDE_2/STAT_L_SONDE_2_WERT;ADC-Wert Lambdasonde vor Kat Bank2;;
+resultat;STATUS_L_SONDE_2/STAT_PHY_LSVK2_WERT;Lambdawert Lambdasonde vor Kat Bank2;;
+resultat;STATUS_L_SONDE_2_H/STAT_L_SONDE_2_H_WERT;ADC-Wert Lambdasonde hinter Kat Bank2;;
+resultat;STATUS_L_SONDE_H/STAT_L_SONDE_H_WERT;ADC-Wert Lambdasonde hinter Kat Bank1;;
+resultat;STATUS_LMM_MASSE/STAT_ADC_LMM1_WERT;ADC-Wert Luftmassenmesser 1;;
+resultat;STATUS_LMM_MASSE/STAT_LMM_MASSE_WERT;Durchsatz Luftmassenmesser 1;;
+resultat;STATUS_LRP/STAT_STAT_ZUENDWINKELEINGRIFF_AKTIV;1BYTE IDENTICAL HEX Min: 0 Max: 255;;
+resultat;STATUS_LRP/STAT_STAT_GEMISCHEINGRIFF_AKTIV;1BYTE IDENTICAL HEX Min: 0 Max: 255;;
+resultat;STATUS_LRP/STAT_STAT_HUBEINGRIFF_AKTIV;1BYTE IDENTICAL HEX Min: 0 Max: 255;;
+resultat;STATUS_LRP/STAT_STAT_MINHUBEINGRIFF_AKTIV;1BYTE IDENTICAL HEX Min: 0 Max: 255;;
+resultat;STATUS_LRP/STAT_STAT_ZUENDWINKELEINGRIFF_FREIGEGEBEN;1BYTE IDENTICAL HEX Min: 0 Max: 255;;
+resultat;STATUS_LRP/STAT_STAT_GEMISCHEINGRIFF_FREIGEGEBEN;1BYTE IDENTICAL HEX Min: 0 Max: 255;;
+resultat;STATUS_LRP/STAT_STAT_HUBEINGRIFF_FREIGEGEBEN;1BYTE IDENTICAL HEX Min: 0 Max: 255;;
+resultat;STATUS_LRP/STAT_STAT_MINHUBEINGRIFF_FREIGEGEBEN;1BYTE IDENTICAL HEX Min: 0 Max: 255;;
+resultat;STATUS_LSH1/STAT_STAT_LSH1_WERT;Status Lambdasondenheizung vor Kat Bank1;;
+resultat;STATUS_LSH2/STAT_STAT_LSH2_WERT;Status Lambdasondenheizung hinter Kat Bank1;;
+resultat;STATUS_LSH3/STAT_STAT_LSH3_WERT;Status Lambdasondenheizung vor Kat Bank2;;
+resultat;STATUS_LSH4/STAT_STAT_LSH4_WERT;Status Lambdasondenheizung hinter Kat Bank2;;
+resultat;STATUS_MESSWERTE_LRP/STAT_ST_VBRVS_AUS;Statuswort Verbrennungsregelung fuer Service (A2L-Name: St_vbrvs_aus);;
+resultat;STATUS_MESSWERTE_LRP/STAT_ST_VBRVS_EIN;Statuswort Verbrennungsregelung vom Tester (A2L-Name: St_vbrvs_ein);;
+resultat;STATUS_MESSWERTE_LRP/STAT_AMO_05_WERT;Gesamte DFT 0,5 Motorordnung (A2L-Name: Amo_05);;
+resultat;STATUS_MESSWERTE_LRP/STAT_AMO_10_WERT;Gesamte DFT 1,0 Motorordnung (A2L-Name: Amo_10);;
+resultat;STATUS_MESSWERTE_LRP/STAT_AMO_15_WERT;Gesamte DFT 1,5 Motorordnung (A2L-Name: Amo_15);;
+resultat;STATUS_MESSWERTE_LRP/STAT_AMO_20_WERT;Gesamte DFT 2,0 Motorordnung (A2L-Name: Amo_20);;
+resultat;STATUS_MESSWERTE_LRP/STAT_EXWINKKOR_WERT;Korrekturwinkel Excenterwelle zur Hubkorrektur (A2L-Name: Exwinkkor);;
+resultat;STATUS_MESSWERTE_LRP/STAT_ZYLHUBKOR;Fuer Hubkorrektur ausgewaehlter Zylinder (A2L-Name: Zylhubkor);;
+resultat;STATUS_MESSWERTE_LRP/STAT_MINHUB_WERT;Tatsaechlich wirksamer Minhub (nach Ein-/Ausblendungsfakoren) (A2L-Name: Minhub);;
+resultat;STATUS_MESSWERTE_LRP/STAT_F_MINHUB_WERT;Faktor Ein-/Ausblendung Minhub ueber Tmot und Nkw (A2L-Name: F_minhub);;
+resultat;STATUS_MESSWERTE_LRP/STAT_MINHUB_ROH_WERT;Minhubrohwert aus Adaption (A2L-Name: Minhub_roh);;
+resultat;STATUS_MESSWERTE_LRP/STAT_MINHUBVS_WERT;Vorgabe Minhub ueber Tester (A2L-Name: Minhubvs);;
+resultat;STATUS_MESSWERTE_LRP/STAT_MINHUBVS_IST_WERT;Tatsaechlich wirksamer Minhub aus Verstelleingriff (vor Ein-/Ausblendungsfakt…;;
+resultat;STATUS_MESSWERTE_LRP/STAT_MINHUBVSNV_WERT;dauerhaft fest programmierter Minhub (A2L-Name: Minhubvsnv);;
+resultat;STATUS_MESSWERTE_LRP/STAT_S_VSMNHB;Schalter fuer Testereingriff (A2L-Name: S_vsmnhb);;
+resultat;STATUS_MESSWERTE_LRP/STAT_S_VSMNHBNV;Schalter fuer Testereingriff (A2L-Name: S_vsmnhbnv);;
+resultat;STATUS_MESSWERTE_LRP/STAT_F_TIKORRVR_0_WERT;Zylinderselektive Gemischkorrektur (A2L-Name: F_tikorrvr);;
+resultat;STATUS_MESSWERTE_LRP/STAT_LURABS_F_0_WERT;gefilterte Laufunruhedeltas eines Zylinders (A2L-Name: Lurabs_f);;
+resultat;STATUS_MESSWERTE_LRP/STAT_LURDIF_F_0_WERT;gefilterte mittlere Abweichung des Lur-Wertes (A2L-Name: Lurdif_f);;
+resultat;STATUS_MESSWERTE_LRP/STAT_ZW_OFFKORRVR_0_WERT;Zuendwinkeloffset fuer Verbrennungsregelung (A2L-Name: Zw_offkorrvr);;
+resultat;STATUS_MESSWERTE_LRP/STAT_F_TIKORRVR_1_WERT;Zylinderselektive Gemischkorrektur (A2L-Name: F_tikorrvr);;
+resultat;STATUS_MESSWERTE_LRP/STAT_LURABS_F_1_WERT;gefilterte Laufunruhedeltas eines Zylinders (A2L-Name: Lurabs_f);;
+resultat;STATUS_MESSWERTE_LRP/STAT_LURDIF_F_1_WERT;gefilterte mittlere Abweichung des Lur-Wertes (A2L-Name: Lurdif_f);;
+resultat;STATUS_MESSWERTE_LRP/STAT_ZW_OFFKORRVR_1_WERT;Zuendwinkeloffset fuer Verbrennungsregelung (A2L-Name: Zw_offkorrvr);;
+resultat;STATUS_MESSWERTE_LRP/STAT_F_TIKORRVR_2_WERT;Zylinderselektive Gemischkorrektur (A2L-Name: F_tikorrvr);;
+resultat;STATUS_MESSWERTE_LRP/STAT_LURABS_F_2_WERT;gefilterte Laufunruhedeltas eines Zylinders (A2L-Name: Lurabs_f);;
+resultat;STATUS_MESSWERTE_LRP/STAT_LURDIF_F_2_WERT;gefilterte mittlere Abweichung des Lur-Wertes (A2L-Name: Lurdif_f);;
+resultat;STATUS_MESSWERTE_LRP/STAT_ZW_OFFKORRVR_2_WERT;Zuendwinkeloffset fuer Verbrennungsregelung (A2L-Name: Zw_offkorrvr);;
+resultat;STATUS_MESSWERTE_LRP/STAT_F_TIKORRVR_3_WERT;Zylinderselektive Gemischkorrektur (A2L-Name: F_tikorrvr);;
+resultat;STATUS_MESSWERTE_LRP/STAT_LURABS_F_3_WERT;gefilterte Laufunruhedeltas eines Zylinders (A2L-Name: Lurabs_f);;
+resultat;STATUS_MESSWERTE_LRP/STAT_LURDIF_F_3_WERT;gefilterte mittlere Abweichung des Lur-Wertes (A2L-Name: Lurdif_f);;
+resultat;STATUS_MESSWERTE_LRP/STAT_ZW_OFFKORRVR_3_WERT;Zuendwinkeloffset fuer Verbrennungsregelung (A2L-Name: Zw_offkorrvr);;
+resultat;STATUS_MESSWERTE_LRP/STAT_F_TIKORRVR_4_WERT;Zylinderselektive Gemischkorrektur (A2L-Name: F_tikorrvr);;
+resultat;STATUS_MESSWERTE_LRP/STAT_LURABS_F_4_WERT;gefilterte Laufunruhedeltas eines Zylinders (A2L-Name: Lurabs_f);;
+resultat;STATUS_MESSWERTE_LRP/STAT_LURDIF_F_4_WERT;gefilterte mittlere Abweichung des Lur-Wertes (A2L-Name: Lurdif_f);;
+resultat;STATUS_MESSWERTE_LRP/STAT_ZW_OFFKORRVR_4_WERT;Zuendwinkeloffset fuer Verbrennungsregelung (A2L-Name: Zw_offkorrvr);;
+resultat;STATUS_MESSWERTE_LRP/STAT_F_TIKORRVR_5_WERT;Zylinderselektive Gemischkorrektur (A2L-Name: F_tikorrvr);;
+resultat;STATUS_MESSWERTE_LRP/STAT_LURABS_F_5_WERT;gefilterte Laufunruhedeltas eines Zylinders (A2L-Name: Lurabs_f);;
+resultat;STATUS_MESSWERTE_LRP/STAT_LURDIF_F_5_WERT;gefilterte mittlere Abweichung des Lur-Wertes (A2L-Name: Lurdif_f);;
+resultat;STATUS_MESSWERTE_LRP/STAT_ZW_OFFKORRVR_5_WERT;Zuendwinkeloffset fuer Verbrennungsregelung (A2L-Name: Zw_offkorrvr);;
+resultat;STATUS_MIL/STAT_STAT_MIL;Status MIL (Malfunction Indicator Lamp);;
+resultat;STATUS_MOTORTEMPERATUR/STAT_ADC_TMOT_WERT;ADC-Wert Motortemperatur;;
+resultat;STATUS_MOTORTEMPERATUR/STAT_MOTORTEMPERATUR_WERT;Temperatur Motortemperatur;;
+resultat;STATUS_ODS/STAT_STAT_ODS;Status Oeldruckschalter;;
+resultat;STATUS_OEL/STAT_PHY_TOEL_WERT;Oeltemperatur;Oil temperature;auto
+resultat;STATUS_OEL/STAT_PHY_NIVOEL_WERT;Oelniveau;;
+resultat;STATUS_OEL/STAT_PHY_QOEL_WERT;Oelqualitaet;;
+resultat;STATUS_PWG_POTI_SPANNUNG/STAT_PWG_POTI_SPANNUNG_1_WERT;ADC-Wert Fahrerwunsch 1;;
+resultat;STATUS_PWG_POTI_SPANNUNG/STAT_STAT_PWG1_WERT;Status Fahrerwunsch 1;;
+resultat;STATUS_PWG2/STAT_ADC_PWG2_WERT;ADC-Wert Fahrerwunsch 2;;
+resultat;STATUS_PWG2/STAT_STAT_PWG2_WERT;Status Fahrerwunsch 2;;
+resultat;STATUS_RBMMODE9/STAT_OBDCOND;OBD Monitoring Conditions Encountered Counts (general denominator);;
+resultat;STATUS_RBMMODE9/STAT_IGNCNTR;Ignition Counter;;
+resultat;STATUS_RBMMODE9/STAT_CATCOMP1;Catalyst Monitor Completion Counts Bank 1 (Numerator);;
+resultat;STATUS_RBMMODE9/STAT_CATCOND1;Catalyst Monitor Conditions Encountered Counts Bank 1 (Denominator);;
+resultat;STATUS_RBMMODE9/STAT_CATCOMP2;Catalyst Monitor Completion Counts Bank 2 (Numerator);;
+resultat;STATUS_RBMMODE9/STAT_CATCOND2;Catalyst Monitor Conditions Encountered Counts Bank 2 (Denominator);;
+resultat;STATUS_RBMMODE9/STAT_O2SCOMP1;O2 Sensor Monitor Completion Counts Bank 1 (Numerator);;
+resultat;STATUS_RBMMODE9/STAT_O2SCOND1;O2 Sensor Monitor Conditions Encountered Counts Bank 1 (Denominator);;
+resultat;STATUS_RBMMODE9/STAT_O2SCOMP2;O2 Sensor Monitor Completion Counts Bank 2 (Numerator);;
+resultat;STATUS_RBMMODE9/STAT_O2SCOND2;O2 Sensor Monitor Conditions Encountered Counts Bank 2 (Denominator);;
+resultat;STATUS_RBMMODE9/STAT_EGRCOMP;EGR Monitor Completion Condition Counts (Numerator);;
+resultat;STATUS_RBMMODE9/STAT_EGRCOND;EGR Monitor Conditions Encountered Counts (Denominator);;
+resultat;STATUS_RBMMODE9/STAT_AIRCOMP1;AIR Monitor Completion Condition Counts Bank 1 (Secondary Air) (Numerator);;
+resultat;STATUS_RBMMODE9/STAT_AIRCOND1;AIR Monitor Conditions Encountered Counts Bank 1 (Secondary Air) (Denominator);;
+resultat;STATUS_RBMMODE9/STAT_AIRCOMP2;AIR Monitor Completion Condition Counts Bank 2 (Secondary Air) (Numerator);;
+resultat;STATUS_RBMMODE9/STAT_AIRCOND2;AIR Monitor Conditions Encountered Counts Bank 2 (Secondary Air) (Denominator);;
+resultat;STATUS_RBMMODE9/STAT_EVAPCOMP;EVAP Monitor Completion Condition Counts (Numerator);;
+resultat;STATUS_RBMMODE9/STAT_EVAPCOND;EVAP Monitor Conditions Encountered Counts (Denominator);;
+resultat;STATUS_RBMMODE9/STAT_VVTCOMP1;Variable Valve Timing (VANOS) Monitor Completion Condition Counts Bank 1 (Num…;;
+resultat;STATUS_RBMMODE9/STAT_VVTCOND1;Variable Valve Timing (VANOS) Monitor Conditions Encountered Counts Bank 1 (D…;;
+resultat;STATUS_RBMMODE9/STAT_VVTCOMP2;Variable Valve Timing (VANOS) Monitor Completion Condition Counts Bank 2 (Num…;;
+resultat;STATUS_RBMMODE9/STAT_VVTCOND2;Variable Valve Timing (VANOS) Monitor Conditions Encountered Counts Bank 2 (D…;;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_CAT_DIAG_1;Diagnose Katalysator Sauerstoffspeicherfaehigkeit Bank 1 (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_CAT_DIAG_1;Diagnose Katalysator Sauerstoffspeicherfaehigkeit Bank 1 (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_CAT_DIAG_2;Diagnose Katalysator Sauerstoffspeicherfaehigkeit Bank 2 (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_CAT_DIAG_2;Diagnose Katalysator Sauerstoffspeicherfaehigkeit Bank 2 (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_DYN_VLD_LS_UP_1;Diagnose Dynamikpruefung lineare Lamdasonden Bank 1 (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_DYN_VLD_LS_UP_1;Diagnose Dynamikpruefung lineare Lamdasonden Bank 1 (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_DYN_VLD_LS_UP_2;Diagnose Dynamikpruefung lineare Lamdasonden Bank 2 (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_DYN_VLD_LS_UP_2;Diagnose Dynamikpruefung lineare Lamdasonden Bank 2 (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_SHIFT_AFL_LSL_UP_1;Diagnose Lamdasondensignalverschiebung mager Bank 1 (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_SHIFT_AFL_LSL_UP_1;Diagnose Lamdasondensignalverschiebung mager Bank 1 (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_SHIFT_AFL_LSL_UP_2;Diagnose Lamdasondensignalverschiebung mager Bank 2 (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_SHIFT_AFL_LSL_UP_2;Diagnose Lamdasondensignalverschiebung mager Bank 2 (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_SHIFT_AFR_LSL_UP_1;Diagnose Lamdasondensignalverschiebung fett Bank 1 (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_SHIFT_AFR_LSL_UP_1;Diagnose Lamdasondensignalverschiebung fett Bank 1 (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_SHIFT_AFR_LSL_UP_2;Diagnose Lamdasondensignalverschiebung fett Bank 2 (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_SHIFT_AFR_LSL_UP_2;Diagnose Lamdasondensignalverschiebung fett Bank 2 (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_AIR_LSL_UP_1;Diagnose lineare Lamdasonde korrekt verbaut Bank 1 (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_AIR_LSL_UP_1;Diagnose lineare Lamdasonde korrekt verbaut Bank 1 (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_AIR_LSL_UP_2;Diagnose lineare Lamdasonde korrekt verbaut Bank 2 (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_AIR_LSL_UP_2;Diagnose lineare Lamdasonde korrekt verbaut Bank 2 (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_DIAGCPS;Diagnose Tankentlueftungssystem (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_DIAGCPS;Diagnose Tankentlueftungssystem (Numerator) (A2L-Name: rbm_stat_DIAGCPS.ctr_c…;;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_DIAGCPS;Diagnose Tankentlueftungssystem (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_DIAGCPS;Diagnose Tankentlueftungssystem (Denominator) (A2L-Name: rbm_stat_DIAGCPS.ctr…;;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_SMALL_LEAK;Diagnose Tankfeinleckpruefung (DMTL) (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_SMALL_LEAK;Diagnose Tankfeinleckpruefung (DMTL) (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_ROUGH_LEAK;Diagnose Tankgrobleckpruefung (DMTL) (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_ROUGH_LEAK;Diagnose Tankgrobleckpruefung (DMTL) (Numerator) (A2L-Name: rbm_stat_ROUGH_LE…;;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_ROUGH_LEAK;Diagnose Tankgrobleckpruefung (DMTL) (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_ROUGH_LEAK;Diagnose Tankgrobleckpruefung (DMTL) (Denominator) (A2L-Name: rbm_stat_ROUGH_…;;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_DMTLM;Diagnosemodul Tankleckage (DMTL) (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_DMTLM;Diagnosemodul Tankleckage (DMTL) (Numerator) (A2L-Name: rbm_stat_DMTLM.ctr_co…;;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_DMTLM;Diagnosemodul Tankleckage (DMTL) (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_DMTLM;Diagnosemodul Tankleckage (DMTL) (Denominator) (A2L-Name: rbm_stat_DMTLM.ctr_…;;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_REF_CRK_CAM_IN_1;Diagnose Veraenderung der Steuerzeiten Nockenwelleneinlass (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_REF_CRK_CAM_IN_1;Diagnose Veraenderung der Steuerzeiten Nockenwelleneinlass (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_REF_CRK_CAM_EX_1;Diagnose Veraenderung der Steuerzeiten Nockenwellenauslass (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_REF_CRK_CAM_EX_1;Diagnose Veraenderung der Steuerzeiten Nockenwellenauslass (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_MEC_IVVT_IN;Diagnose mechanische Schwergaengigkeit VANOS (Einlass) (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_MEC_IVVT_IN;Diagnose mechanische Schwergaengigkeit VANOS (Einlass) (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_MEC_IVVT_EX;Diagnose mechanische Schwergaengigkeit VANOS (Auslass) (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_MEC_IVVT_EX;Diagnose mechanische Schwergaengigkeit VANOS (Auslass) (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_SA_SYS;Diagnose Sekundaerluftsystem (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_SA_SYS;Diagnose Sekundaerluftsystem (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_SA_SAFM;Diagnose Sekundaerluftsystem Heissfilmluftmassenmesser (Mini-HFM) (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_SA_SAFM;Diagnose Sekundaerluftsystem Heissfilmluftmassenmesser (Mini-HFM) (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_SA_SAV;Diagnose Sekundaerluftventil (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_SA_SAV;Diagnose Sekundaerluftventil (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_SA_SAP;Diagnose Sekundaerluftpumpe (Numerator);;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_SA_SAP;Diagnose Sekundaerluftpumpe (Denominator);;
+resultat;STATUS_RBMMS1/STAT_CTR_COMP_RBM_SA_SAV_LSL;Diagnose Sekundaerluftsystem durch Signalaenderung Lambdasonde vor Katalysato…;;
+resultat;STATUS_RBMMS1/STAT_CTR_CDN_RBM_SA_SAV_LSL;Diagnose Sekundaerluftsystem durch Signalaenderung Lambdasonde vor Katalysato…;;
+resultat;STATUS_SDF1/STAT_ADC_SDF1_WERT;ADC-Wert Saugrohrdruck1 / Ladedruck1;;
+resultat;STATUS_SDF1/STAT_PHY_SDF1_WERT;Druck Saugrohrdruck1 / Ladedruck1;;
+resultat;STATUS_SLP/STAT_STAT_SLP;Status Sekundaerluftpumpe;;
+resultat;STATUS_SLV/STAT_STAT_SLV;Status Sekundarluftventil;;
+resultat;STATUS_SOK/STAT_STAT_SOK;Status Soundklappe;;
+resultat;STATUS_SPT/STAT_ADC_SPT_WERT;ADC-Wert Sporttaster;;
+resultat;STATUS_SPT/STAT_STAT_SPT;Status Sporttaster;;
+resultat;STATUS_SR/STAT_STAT_SR;Status Startrelais;;
+resultat;STATUS_TEV/STAT_STAT_TEV_WERT;Status Tankentlueftungsventil;;
+resultat;STATUS_TKA/STAT_ADC_TKA_WERT;ADC-Wert Kuehlerauslasstemperatur;;
+resultat;STATUS_TKA/STAT_PHY_TKA_WERT;Temperatur Kuehlerauslasstemperatur;;
+resultat;STATUS_TTEMP/STAT_STAT_TTEMP_TEXT;BITFELD Taster Tempomat;;
+resultat;STATUS_TTEMP/STAT_STAT_TTEMP_WERT;Stat Ttemp;;
+resultat;STATUS_UBAT/STAT_ADC_UBAT_WERT;ADC-Wert Batteriesensor;;
+resultat;STATUS_UBAT/STAT_PHY_UBAT_WERT;Spannung Batteriesensor;;
+resultat;STATUS_UBATT/STAT_ADC_UVSG_WERT;ADC-Wert Kl.87 Spannung / Versorgung DME (Digitale Motor Elektronik);;
+resultat;STATUS_UDF/STAT_ADC_UDF_WERT;ADC-Wert Umgebungsdruck;;
+resultat;STATUS_UDF/STAT_PHY_UDF_WERT;Druck Umgebungsdruck;;
+resultat;STATUS_UGEN/STAT_PHY_UGEN_WERT;Spannung Generator Sollspannung BSD (Bit Serielle Datenschnittstelle);;
+resultat;STATUS_UKL15/STAT_ADC_UKL15_WERT;ADC-Wert Kl.15 Spannung;;
+resultat;STATUS_UKL15/STAT_PHY_UKL15_WERT;Spannung Kl.15 Spannung;;
+resultat;STATUS_UVLSS/STAT_ADC_UVLSS_WERT;ADC-Wert Versorgungsspannung Lastsignal-Sensor;;
+resultat;STATUS_VVT/STAT_STAT_VVT_WERT;Status VVT;;
+resultat;STATUS_VVTR/STAT_STAT_VVTR;Status VVT-Entlastungsrelais;;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_TH;Diagnose Thermostat (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_TH;Diagnose Thermostat (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_TCO_PLAUS;Diagnose Motortemperatur Plausibilitaet (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_TCO_PLAUS;Diagnose Motortemperatur Plausibilitaet (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_TCO_STUCK;Diagnose Motortemperatur haengendes Sensorsignal (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_TCO_STUCK;Diagnose Motortemperatur haengendes Sensorsignal (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_TCO_2_PLAUS;Diagnose Kuehlerauslasstemperatur Plausibilitaet (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_TCO_2_PLAUS;Diagnose Kuehlerauslasstemperatur Plausibilitaet (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_TAM_PLAUS;Diagnose Umgebungstemperatur Plausibilitaet (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_TAM_PLAUS;Diagnose Umgebungstemperatur Plausibilitaet (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_VS_PLAUS;Diagnose Geschwindigkeit Plausibilitaet (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_VS_PLAUS;Diagnose Geschwindigkeit Plausibilitaet (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_FTL_OBD;Diagnose Tankfuellstand (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_FTL_OBD;Diagnose Tankfuellstand (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_OBD_LSH_DOWN_1;Diagnose Lamdasondenheizung nach Katalysator Bank 1 (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_OBD_LSH_DOWN_1;Diagnose Lamdasondenheizung nach Katalysator Bank 1 (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_OBD_LSH_DOWN_2;Diagnose Lamdasondenheizung nach Katalysator Bank 2 (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_OBD_LSH_DOWN_2;Diagnose Lamdasondenheizung nach Katalysator Bank 2 (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_OBD_VLD_LSH_UP_1;Diagnose Alterung lineare Lamdasonde Bank 1 (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_OBD_VLD_LSH_UP_1;Diagnose Alterung lineare Lamdasonde Bank 1 (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_OBD_VLD_LSH_UP_2;Diagnose Alterung lineare Lamdasonde Bank 2 (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_OBD_VLD_LSH_UP_2;Diagnose Alterung lineare Lamdasonde Bank 2 (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_CS;Diagnose Kupplungsschalter (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_CS;Diagnose Kupplungsschalter (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_ISC;Diagnose Leerlaufregler (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_ISC;Diagnose Leerlaufregler (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_MAF;Diagnose Luftmassenmesser (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_MAF;Diagnose Luftmassenmesser (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_TIA_PLAUS;Diagnose Ansauglufttemperatur Plausibilitaet (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_TIA_PLAUS;Diagnose Ansauglufttemperatur Plausibilitaet (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_AMP_PLAUS;Diagnose Umgebungsdruck Plausibilitaet (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CND_RBM_AMP_PLAUS;Diagnose Umgebungsdruck Plausibilitaet (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_LOAD_TPS_PLAUS;Diagnose Plausibilitaet Drosselklappeposition zu Signal Luftmassenmesser (Num…;;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_LOAD_TPS_PLAUS;Diagnose Plausibilitaet Drosselklappeposition zu Signal Luftmassenmesser (Den…;;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_MAP_DIP_PLAUS;Diagnose Differenzdrucksensor Sauganlage zu Umgebung Plausibilitaet (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_MAP_DIP_PLAUS;Diagnose Differenzdrucksensor Sauganlage zu Umgebung Plausibilitaet (Denomina…;;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_VLS_DOWN_DIF_1;Diagnose Abweichung Lambdaregelung Bank 1 (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_VLS_DOWN_DIF_1;Diagnose Abweichung Lambdaregelung Bank 1 (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_VLS_DOWN_DIF_2;Diagnose Abweichung Lambdaregelung Bank 2 (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_VLS_DOWN_DIF_2;Diagnose Abweichung Lambdaregelung Bank 2 (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_CHK_LS_DOWN_1;Diagnose binaere Lamdasonde nach Katalysator Bank 1 (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_CHK_LS_DOWN_1;Diagnose binaere Lamdasonde nach Katalysator Bank 1 (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_CHK_LS_DOWN_2;Diagnose binaere Lamdasonde nach Katalysator Bank 2 (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_CHK_LS_DOWN_2;Diagnose binaere Lamdasonde nach Katalysator Bank 2 (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_SWT_LS_DOWN_1;Diagnose Schaltzeit binaere Lamdasonde Bank 1 (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_SWT_LS_DOWN_1;Diagnose Schaltzeit binaere Lamdasonde Bank 1 (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_SWT_LS_DOWN_2;Diagnose Schaltzeit binaere Lamdasonde Bank 2 (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_SWT_LS_DOWN_2;Diagnose Schaltzeit binaere Lamdasonde Bank 2 (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_T_ES;Diagnose Abstellzeit (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_T_ES;Diagnose Abstellzeit (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_TPS;Diagnose Drosselklappenlagesensoren (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_TPS;Diagnose Drosselklappenlagesensoren (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_ANG_INST_AD_VVL;Diagnose Adaption Excenterwellensensor (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_ANG_INST_AD_VVL;Diagnose Adaption Excenterwellensensor (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_ANG_CHK_MAX_VVL;Diagnose maximaler Hub VVT (Numerator);;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_ANG_CHK_MAX_VVL;Diagnose maximaler Hub VVT (Denominator);;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_ISC_CST;Diagnose Leerlaufregler bei Kaltstart (Numerator) (A2L-Name: rbm_stat_ISC_CST…;;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_ISC_CST;Diagnose Leerlaufregler bei Kaltstart (Denominator) (A2L-Name: rbm_stat_ISC_C…;;
+resultat;STATUS_RBMMS2/STAT_CTR_COMP_RBM_TQ_CST;Diagnose Momentenreserve bei Kaltstart (Numerator) (A2L-Name: rbm_stat_TQ_CST…;;
+resultat;STATUS_RBMMS2/STAT_CTR_CDN_RBM_TQ_CST;Diagnose Momentenreserve bei Kaltstart (Denominator) (A2L-Name: rbm_stat_TQ_C…;;
+resultat;STATUS_MESSWERTE_VANOS/STAT_EINLASS_WERT;VANOS Einlass Istwert 60 bis 155,6;;
+resultat;STATUS_MESSWERTE_VANOS/STAT_EINLASS_TEXT;Einlass;;
+resultat;STATUS_MESSWERTE_VANOS/STAT_EINLASS_SOLL_WERT;VANOS Einlass Sollwert 60 bis 155,6;;
+resultat;STATUS_MESSWERTE_VANOS/STAT_EINLASS_SOLL_TEXT;Einlass Soll;;
+resultat;STATUS_MESSWERTE_VANOS/STAT_AUSLASS_WERT;VANOS Auslass Istwert -135,6 bis -40;;
+resultat;STATUS_MESSWERTE_VANOS/STAT_AUSLASS_TEXT;Auslass;;
+resultat;STATUS_MESSWERTE_VANOS/STAT_AUSLASS_SOLL_WERT;VANOS Auslass Sollwert -135,6 bis -40;;
+resultat;STATUS_MESSWERTE_VANOS/STAT_AUSLASS_SOLL_TEXT;Auslass Soll;;
+resultat;STATUS_MESSWERTE_VANOS/STAT_ANZAHL_WERTE;Anzahl Werte;;
+resultat;STATUS_MESSWERTE_KD/STAT_ANZAHL_WERTE;Anzahl Messwerte 0 bis 16;;
+resultat;STATUS_GEBERRAD_ADAPTION/STAT_ANZAHL_WERTE;Anzahl Messwerte 0 bis 1;;
+resultat;STATUS_MESSWERTE_NL/STAT_ANZAHL_WERTE;Anzahl Messwerte 0 bis 16;;
+resultat;*/STAT_MESSWERT0_WERT;Messwert (Word);;
+resultat;*/STAT_MESSWERT0_STRING;Messwert (Word);;
+resultat;*/STAT_MESSWERT0_TEXT;Messwert;;
+resultat;*/STAT_MESSWERT1_WERT;Messwert (Word);;
+resultat;*/STAT_MESSWERT1_STRING;Messwert (Word);;
+resultat;*/STAT_MESSWERT1_TEXT;Messwert;;
+resultat;*/STAT_MESSWERT2_WERT;Messwert (Word);;
+resultat;*/STAT_MESSWERT2_STRING;Messwert (Word);;
+resultat;*/STAT_MESSWERT2_TEXT;Messwert;;
+resultat;*/STAT_MESSWERT3_WERT;Messwert (Word);;
+resultat;*/STAT_MESSWERT3_STRING;Messwert (Word);;
+resultat;*/STAT_MESSWERT3_TEXT;Messwert;;
+resultat;*/STAT_MESSWERT4_WERT;Messwert (Word);;
+resultat;*/STAT_MESSWERT4_STRING;Messwert (Word);;
+resultat;*/STAT_MESSWERT4_TEXT;Messwert;;
+resultat;*/STAT_MESSWERT5_WERT;Messwert (Word);;
+resultat;*/STAT_MESSWERT5_STRING;Messwert (Word);;
+resultat;*/STAT_MESSWERT5_TEXT;Messwert;;
+resultat;*/STAT_MESSWERT6_WERT;Messwert (Word);;
+resultat;STATUS_MESSWERTE_KD/STAT_MESSWERT6_STRING;Messwert (Word);;
+resultat;*/STAT_MESSWERT6_TEXT;Messwert;;
+resultat;*/STAT_MESSWERT7_WERT;Messwert (Word);;
+resultat;STATUS_MESSWERTE_KD/STAT_MESSWERT7_STRING;Messwert (Word);;
+resultat;*/STAT_MESSWERT7_TEXT;Messwert;;
+resultat;*/STAT_MESSWERT8_WERT;Messwert (Word);;
+resultat;STATUS_MESSWERTE_KD/STAT_MESSWERT8_STRING;Messwert (Word);;
+resultat;*/STAT_MESSWERT8_TEXT;Messwert;;
+resultat;*/STAT_MESSWERT9_WERT;Messwert (Word);;
+resultat;STATUS_MESSWERTE_KD/STAT_MESSWERT9_STRING;Messwert (Word);;
+resultat;*/STAT_MESSWERT9_TEXT;Messwert;;
+resultat;*/STAT_MESSWERT10_WERT;Messwert (Word);;
+resultat;STATUS_MESSWERTE_KD/STAT_MESSWERT10_STRING;Messwert (Word);;
+resultat;*/STAT_MESSWERT10_TEXT;Messwert;;
+resultat;*/STAT_MESSWERT11_WERT;Messwert (Word);;
+resultat;STATUS_MESSWERTE_KD/STAT_MESSWERT11_STRING;Messwert (Word);;
+resultat;*/STAT_MESSWERT11_TEXT;Messwert;;
+resultat;*/STAT_MESSWERT12_WERT;Messwert (Word);;
+resultat;STATUS_MESSWERTE_KD/STAT_MESSWERT12_STRING;Messwert (Word);;
+resultat;*/STAT_MESSWERT12_TEXT;Messwert;;
+resultat;*/STAT_MESSWERT13_WERT;Messwert (Word);;
+resultat;STATUS_MESSWERTE_KD/STAT_MESSWERT13_STRING;Messwert (Word);;
+resultat;*/STAT_MESSWERT13_TEXT;Messwert;;
+resultat;STATUS_MESSWERTE_KD/STAT_MESSWERT14_WERT;Messwert (Word);;
+resultat;STATUS_MESSWERTE_KD/STAT_MESSWERT14_STRING;Messwert (Word);;
+resultat;STATUS_MESSWERTE_KD/STAT_MESSWERT14_TEXT;Messwert;;
+resultat;STATUS_MESSWERTE_KD/STAT_MESSWERT15_WERT;Messwert (Word);;
+resultat;STATUS_MESSWERTE_KD/STAT_MESSWERT15_STRING;Messwert (Word);;
+resultat;STATUS_MESSWERTE_KD/STAT_MESSWERT15_TEXT;Messwert;;
+resultat;STATUS_OBD/STAT_MISSFIRE_MONITOR;Missfire Monitor;;
+resultat;STATUS_OBD/STAT_MISSFIRE;Missfire;;
+resultat;STATUS_OBD/STAT_FUELSYSTEM_MONITOR;Fuelsystem Monitor;;
+resultat;STATUS_OBD/STAT_FUELSYSTEM;Fuelsystem;;
+resultat;STATUS_OBD/STAT_COMPREHENSIVE_MONITOR;Comprehensive Monitor;;
+resultat;STATUS_OBD/STAT_COMPREHENSIVE;Comprehensive;;
+resultat;STATUS_OBD/STAT_KAT_UEBERWACHUNG_MONITOR;KAT Ueberwachung Monitor;;
+resultat;STATUS_OBD/STAT_KAT_UEBERWACHUNG;KAT Ueberwachung;;
+resultat;STATUS_OBD/STAT_KAT_HEIZUNG_MONITOR;KAT Heizung Monitor;;
+resultat;STATUS_OBD/STAT_KAT_HEIZUNG;KAT Heizung;;
+resultat;STATUS_OBD/STAT_EVAPORATE_MONITOR;Evaporate Monitor;;
+resultat;STATUS_OBD/STAT_EVAPORATE;Evaporate;;
+resultat;STATUS_OBD/STAT_SEC_AIR_MONITOR;SEC AIR Monitor;;
+resultat;STATUS_OBD/STAT_SEC_AIR;SEC AIR;;
+resultat;STATUS_OBD/STAT_AC_SYSTEM_MONITOR;AC System Monitor;;
+resultat;STATUS_OBD/STAT_AC_SYSTEM;AC System;;
+resultat;STATUS_OBD/STAT_LAMBDA_MONITOR;Lambda Monitor;;
+resultat;STATUS_OBD/STAT_LAMBDA;Lambda;;
+resultat;STATUS_OBD/STAT_LAMBDA_HEATER_MONITOR;Lambda Heater Monitor;;
+resultat;STATUS_OBD/STAT_LAMBDA_HEATER;Lambda Heater;;
+resultat;STATUS_OBD/STAT_EGR_MONITOR;EGR Monitor;;
+resultat;STATUS_OBD/STAT_EGR;EGR;;
+resultat;STATUS_READINESS/STAT_KATRDY_EIN;Katrdy;;
+resultat;STATUS_READINESS/STAT_HKATRDY_EIN;Hkatrdy;;
+resultat;STATUS_READINESS/STAT_TESRDY_EIN;Tesrdy;;
+resultat;STATUS_READINESS/STAT_SLSRDY_EIN;Slsrdy;;
+resultat;STATUS_READINESS/STAT_KLIMARDY_EIN;Klimardy;;
+resultat;STATUS_READINESS/STAT_LSRDY_EIN;Lsrdy;;
+resultat;STATUS_READINESS/STAT_HSRDY_EIN;Hsrdy;;
+resultat;STATUS_READINESS/STAT_AGRRDY_EIN;Agrrdy;;
+resultat;STATUS_FGR/STAT_MSW_CAN;Status STATE_MSW_CAN 0 bis 6;;
+resultat;STATUS_FGR/STAT_PLUS;Plus;;
+resultat;STATUS_FGR/STAT_MINUS;Minus;;
+resultat;STATUS_FGR/STAT_SET;SET;;
+resultat;STATUS_FGR/STAT_OFF;OFF;;
+resultat;*/STAT_KO_EIN;KO;;
+resultat;*/STAT_LL_EIN;LL;;
+resultat;*/STAT_L_SONDE_HEIZUNG_WERT;L Sonde Heizung;;
+resultat;*/STAT_L_SONDE_HEIZUNG_TEXT;Text Regelzustand L-Sonde Heizung;;
+resultat;STATUS_EWS_LOCK/STAT_EWS_LOCK_WERT;EWS Lock;;
+resultat;STATUS_ZEIT_EINSPRITZ/STAT_ZEIT_WERT;Wert von V_PVS_1;;
+resultat;STATUS_ZUENDWINKEL/STAT_ZUENDWINKEL_WERT;Wert von Zuendwinkel Zylinder 1;;
+resultat;STATUS_DROSSELKLAPPE/STAT_DROSSELKLAPPE_WERT;Wert von TPS_AV;;
+resultat;STATUS_KLOPFEN/STAT_KLOPFEN_WERT;Wert von Zuendwinkel Zylinder 1;;
+resultat;STATUS_KVA/STAT_KVA_WERT;Wert von vsa_adp;;
+resultat;STATUS_BETRIEBSSTUNDENZAEHLER/STAT_BSZ_WERT;Status Betriebsstundenzaehler lesen;;
+resultat;STATUS_BETRIEBSSTUNDENZAEHLER/STAT_BSZ_TEXT;Status Betriebsstundenzaehler;;
+resultat;STATUS_BETRIEBSSTUNDENZAEHLER/STAT_TRT_WERT;Status Betriebsstundenzaehler lesen;;
+resultat;STATUS_LEISTUNGSSTUFE/STAT_LEISTUNGSSTUFE_WERT;Leistungsstufe;;
+resultat;STATUS_LEISTUNGSSTUFE/STAT_LEISTUNGSSTUFE_TEXT;Codierung für Leistungsstufe als Text;;
+resultat;STATUS_MOTORDREHZAHL/STAT_SOLL_MOTORDREHZAHL_WERT;Wert von LeerLaufSollDrehzahl;;
+resultat;STATUS_DFMONITOR/STAT_AUSGANG_WERT;DF-Monitor Wert 0 - 100%;;
+resultat;STATUS_DFMONITOR/STAT_AUSGANG_TEXT;DF-Monitor Text;;
+resultat;STATUS_DIGITAL_1/STAT_KL15_EIN;Ignition Key Position on LV_IGK;;
+resultat;STATUS_DIGITAL_1/STAT_MOTOR_AUS;Motor AUS;;
+resultat;STATUS_DIGITAL_1/STAT_KUPPL_EIN;Clutch Switch on LV_CS;;
+resultat;STATUS_DIGITAL_1/STAT_BLS_EIN;Brake Light Switch on LV_IM_BLS;;
+resultat;STATUS_DIGITAL_1/STAT_BTS_EIN;Brake Test Switch on LV_IM_BTS;;
+resultat;STATUS_DIGITAL_1/STAT_AC_EIN;Kopie von STAT_KO_EIN;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_ZYL1_WERT;gefilterte Laufunruhe Zylinder 1;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_ZYL1_TEXT;Beschreibungstext;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_ZYL2_WERT;gefilterte Laufunruhe Zylinder 2;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_ZYL2_TEXT;Beschreibungstext;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_ZYL3_WERT;gefilterte Laufunruhe Zylinder 3;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_ZYL3_TEXT;Beschreibungstext;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_ZYL4_WERT;gefilterte Laufunruhe Zylinder 4;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_ZYL4_TEXT;Beschreibungstext;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_ZYL5_WERT;gefilterte Laufunruhe Zylinder 5;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_ZYL5_TEXT;Beschreibungstext;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_ZYL6_WERT;gefilterte Laufunruhe Zylinder 6;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_ZYL6_TEXT;Beschreibungstext;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_VLS_UP_WERT1;VLS UP WERT1;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_VLS_UP_TEXT1;Beschreibungstext;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_VLS_UP_WERT2;VLS UP WERT2;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_VLS_UP_TEXT2;Beschreibungstext;;
+resultat;STATUS_MOTORLAUFUNRUHE/STAT_GEBERRAD_ADAPTION_WERT;Geberrad Adaption;;
+resultat;STATUS_GEBERRAD_ADAPTION/STAT_GEBERRAD_ADAPTION_VSA_TEXT;Text von vsa_adp;;
+resultat;STATUS_GEBERRAD_ADAPTION/STAT_GEBERRAD_ADAPTION_VSE_TEXT;Text von vse_adp;;
+resultat;STATUS_GEBERRAD_ADAPTION/STAT_SEG_AD_WERT;SEG AD;;
+resultat;STATUS_NOCKENWELLE_ADAPTION/STAT_PSN_EDGE_AD_CAM_IN;Adaptierte Werte NW Einlass 1 Werte -32 bis +32;;
+resultat;STATUS_NOCKENWELLE_ADAPTION/STAT_PSN_EDGE_AD_CAM_IN_TEXT;Beschreibungstext;;
+resultat;STATUS_NOCKENWELLE_ADAPTION/STAT_PSN_EDGE_AD_CAM_EX;Adaptierte Werte NW Auslass 1 Werte -32 bis +32;;
+resultat;STATUS_NOCKENWELLE_ADAPTION/STAT_PSN_EDGE_AD_CAM_EX_TEXT;Beschreibungstext;;
+resultat;STATUS_NOCKENWELLE_ADAPTION/STAT_NC_PSN_EDGE_CAM_IN;Position zu TDC0 NW-Einlass Werte 0 bis 720;;
+resultat;STATUS_NOCKENWELLE_ADAPTION/STAT_NC_PSN_EDGE_CAM_IN_TEXT;Beschreibungstext;;
+resultat;STATUS_NOCKENWELLE_ADAPTION/STAT_NC_PSN_EDGE_CAM_EX;Position zu TDC0 NW-Einlass Werte 0 bis 720;;
+resultat;STATUS_NOCKENWELLE_ADAPTION/STAT_NC_PSN_EDGE_CAM_EX_TEXT;Beschreibungstext;;
+resultat;STATUS_DIGITAL_0/STAT_SBBHK2;SBBHK2;;
+resultat;STATUS_DIGITAL_0/STAT_SBBHK;Sbbhk;;
+resultat;STATUS_DIGITAL_0/STAT_SBBVK2;SBBVK2;;
+resultat;STATUS_DIGITAL_0/STAT_SBBVK;Sbbvk;;
+resultat;STATUS_FUNKTIONS/STAT_TEILLAST_EIN;Teillast;;
+resultat;STATUS_FUNKTIONS/STAT_VL_EIN;VL;;
+resultat;STATUS_FUNKTIONS/STAT_LSHK2_EIN;LSHK2;;
+resultat;STATUS_FUNKTIONS/STAT_LSHK1_EIN;LSHK1;;
+resultat;STATUS_FUNKTIONS/STAT_LSVK2_EIN;LSVK2;;
+resultat;STATUS_FUNKTIONS/STAT_LSVK1_EIN;LSVK1;;
+resultat;STATUS_FUNKTIONS/STAT_LS2_REGELUNG;LS2 Regelung;;
+resultat;STATUS_FUNKTIONS/STAT_LS1_REGELUNG;LS1 Regelung;;
+resultat;STATUS_FUNKTIONS/STAT_KICKDOWN;Kickdown;;
+resultat;STATUS_FUNKTIONS/STAT_FAHRSTUFE;Gang eingelegt ,nicht Park/Neutral;;
+resultat;STATUS_FUNKTIONS/STAT_SCHUBAB;Schubab;;
+resultat;STATUS_FUNKTIONS/STAT_DK_ABGLEICH;DK Abgleich;;
+resultat;STATUS_FUNKTIONS/STAT_DYN_LIM_1;DYN LIM 1;;
+resultat;STATUS_FUNKTIONS/STAT_DYN_LIM_2;DYN LIM 2;;
+resultat;STATUS_FUNKTIONS/STAT_FEHLER_CLSW;Fehler Clsw;;
+resultat;STATUS_FUNKTIONS/STAT_FEHLER_MFL;Fehler MFL;;
+resultat;STATUS_FUNKTIONS/STAT_TIMEOUT_EGS1;Timeout EGS1;;
+resultat;STATUS_FUNKTIONS/STAT_FEHLER_BREMSE;Fehler Bremse;;
+resultat;STATUS_FUNKTIONS/STAT_MON_LEVEL2;MON LEVEL2;;
+resultat;STATUS_FUNKTIONS/STAT_V_PLAUSIBEL;V Plausibel;;
+resultat;STATUS_FUNKTIONS/STAT_NOTLAUF_LL;Notlauf LL;;
+resultat;STATUS_FUNKTIONS/STAT_NOTLAUF_DK;Notlauf DK;;
+resultat;STATUS_FUNKTIONS/STAT_FEHLER_VS;Fehler VS;;
+resultat;STATUS_FUNKTIONS/STAT_ASR_TIMEOUT;ASR Timeout;;
+resultat;STATUS_FUNKTIONS/STAT_EGAS_NOTLAUF;Egas Notlauf;;
+resultat;STATUS_FUNKTIONS/STAT_VS_DIF_HOCH;VS DIF Hoch;;
+resultat;STATUS_FUNKTIONS/STAT_UEBERN_LANG;Uebern Lang;;
+resultat;STATUS_FUNKTIONS/STAT_VS_SP_MAX;VS SP MAX;;
+resultat;STATUS_FUNKTIONS/STAT_EXT_MOMENT;EXT Moment;;
+resultat;STATUS_FUNKTIONS/STAT_MFL_AUS;MFL AUS;;
+resultat;STATUS_FUNKTIONS/STAT_VS_CAN_LANG;VS CAN Lang;;
+resultat;STATUS_FUNKTIONS/STAT_BESCHL_MON;Beschl MON;;
+resultat;STATUS_FUNKTIONS/STAT_HOCHDREH_S;Hochdreh S;;
+resultat;STATUS_FUNKTIONS/STAT_TAKEOVER_VS;Takeover VS;;
+resultat;STATUS_FUNKTIONS/STAT_VS_FIL_LOW;VS FIL LOW;;
+resultat;STATUS_FUNKTIONS/STAT_DREHZAHL_BEG;Drehzahl BEG;;
+resultat;STATUS_FUNKTIONS/STAT_BREMSE_AKTIV;Bremse Aktiv;;
+resultat;STATUS_FUNKTIONS/STAT_MFL_HARD_OFF;MFL Hard OFF;;
+resultat;STATUS_ADAPTION_DK/STAT_DK_ADD_WERT;Adaption Leerlaufsteller Offset +-29,3 qcm;;
+resultat;STATUS_ADAPTION_DK/STAT_DK_ADD_TEXT;Beschreibungstext;;
+resultat;STATUS_ADAPTION_DK/STAT_DK_FAC_WERT;Adaption Leerlaufsteller multiplikativ +-50%;;
+resultat;STATUS_ADAPTION_DK/STAT_DK_FAC_TEXT;Beschreibungstext;;
+resultat;STATUS_ADAPTION_GEMISCH/STAT_ADD_WERT1;Adaption Gemisch additiv Bank1;;
+resultat;STATUS_ADAPTION_GEMISCH/STAT_ADD_TEXT1;Beschreibungstext;;
+resultat;STATUS_ADAPTION_GEMISCH/STAT_ADD_WERT2;Adaption Gemisch additiv Bank2;;
+resultat;STATUS_ADAPTION_GEMISCH/STAT_ADD_TEXT2;Beschreibungstext;;
+resultat;STATUS_ADAPTION_GEMISCH/STAT_FAC_WERT1;Adaption Gemisch multiplikativ Bank1;;
+resultat;STATUS_ADAPTION_GEMISCH/STAT_FAC_TEXT1;Beschreibungstext;;
+resultat;STATUS_ADAPTION_GEMISCH/STAT_FAC_WERT2;Adaption Gemisch multiplikativ Bank2;;
+resultat;STATUS_ADAPTION_GEMISCH/STAT_FAC_TEXT2;Beschreibungstext;;
+resultat;STATUS_ADAPTION_GEMISCH/STAT_PWM_UP_WERT1;PWM vor Kat Bank1;;
+resultat;STATUS_ADAPTION_GEMISCH/STAT_PWM_UP_WERT2;PWM vor Kat Bank2;;
+resultat;STATUS_ADAPTION_GEMISCH/STAT_PWM_DOWN_WERT1;PWM hinter Kat Bank1;;
+resultat;STATUS_ADAPTION_GEMISCH/STAT_PWM_DOWN_WERT2;PWM hinter Kat Bank2;;
+resultat;STATUS_ADAPTION_GEMISCH/STAT_PWM_UP_TEXT1;vor Kat Bank 1;;
+resultat;STATUS_ADAPTION_GEMISCH/STAT_PWM_UP_TEXT2;vor Kat Bank 2;;
+resultat;STATUS_ADAPTION_GEMISCH/STAT_PWM_DOWN_TEXT1;vor Kat Bank 1;;
+resultat;STATUS_ADAPTION_GEMISCH/STAT_PWM_DOWN_TEXT2;vor Kat Bank 2;;
+resultat;STATUS_FASTA_COMMON/STAT_AMP_MES_WERT;Umgebungsdruck;;
+resultat;STATUS_FASTA_COMMON/STAT_DIST_ACT_MIL_WERT;Fahrstrecke mit MIL an;Odometer for kilometers driven with MIL ON;auto
+resultat;*/STAT_OZOELKM_WERT;km seit letztem Service;KM reading since last service;auto
+resultat;STATUS_FASTA_COMMON/STAT_OZKVBSM_UL_WERT;Kraftstoff-Verbrauch seit letztem Service;Fuel consumption since last service;auto
+resultat;STATUS_FASTA2/STAT_OZKVBSM_UL_WERT;Spritverbrauch seit letztem Service;;
+resultat;STATUS_FASTA_COMMON/STAT_N_WERT;Motor Drehzahl;Engine Speed;auto
+resultat;STATUS_FASTA_COMMON/STAT_N_SP_IS_WERT;Leerlauf Solldrehzahl;Idle target RPM;auto
+resultat;STATUS_FASTA2/STAT_N_SP_IS_WERT;Sollwert Leerlauf;;
+resultat;STATUS_FASTA_COMMON/STAT_T_ES_WERT;Motorabstellzeit;Engine shutdown time;auto
+resultat;STATUS_FASTA_COMMON/STAT_TCO_WERT;Kühlwassertemperatur;Coolant temperature;auto
+resultat;STATUS_FASTA_COMMON/STAT_TCO_2_WERT;Kuehlerauslasstemperatur;;
+resultat;STATUS_FASTA_COMMON/STAT_TCO_ST_WERT;Motortemperatur beim Start;Engine temperature at start;auto
+resultat;STATUS_FASTA_COMMON/STAT_TIA_WERT;Ansauglufttemperatur;Intake air temperature;auto
+resultat;STATUS_FASTA_COMMON/STAT_TOEL_WERT;Öltemperatur;Oil temperature;auto
+resultat;STATUS_FASTA_COMMON/STAT_VB_BAS_KWP_WERT;Spannung Kl. 87;;
+resultat;STATUS_FASTA_COMMON/STAT_STATE_ETC_LIH_WERT;Status Drosselklappe Notlauf;;
+resultat;STATUS_FASTA_COMMON/STAT_CAM_SP_IVVT_EX_WERT;Nockenwelle Auslass Sollwert;Outlet Camshaft Target;auto
+resultat;STATUS_FASTA_COMMON/STAT_CAM_SP_IVVT_IN_WERT;Nockenwelle Einlass Sollwert;;
+resultat;STATUS_FASTA_COMMON/STAT_ER_CYL_0_WERT;Laufunruhe Zylinder 1;Running roughness cylinder 1;auto
+resultat;STATUS_FASTA_COMMON/STAT_ER_CYL_1_WERT;Laufunruhe Zylinder 5;[1] Running roughness Cylinder 5;auto
+resultat;STATUS_FASTA_COMMON/STAT_ER_CYL_2_WERT;Laufunruhe Zylinder 3;Running roughness cylinder 3;auto
+resultat;STATUS_FASTA_COMMON/STAT_ER_CYL_3_WERT;Laufunruhe Zylinder 6;[3] Running roughness Cylinder 6;auto
+resultat;STATUS_FASTA_COMMON/STAT_ER_CYL_4_WERT;Laufunruhe Zylinder 2;Running roughness cylinder 2;auto
+resultat;STATUS_FASTA_COMMON/STAT_ER_CYL_5_WERT;Laufunruhe Zylinder 4;Running roughness cylinder 4;auto
+resultat;STATUS_FASTA_COMMON/STAT_IGA_IGC_0_WERT;Zündwinkel Zylinder 1;;
+resultat;STATUS_FASTA2/STAT_IGA_IGC_0_WERT;Zündzeitpunkt Zyl.1;;
+resultat;STATUS_FASTA_COMMON/STAT_LSHPWM_UP_1_WERT;Lambdasondenheizung PWM vor Kat Bank 1;Lambda heating PWM before cat. Bench 1;auto
+resultat;STATUS_FASTA_COMMON/STAT_LSHPWM_UP_2_WERT;Lambdasondenheizung PWM vor Kat Bank 2;Lambda heating PWM before cat. Bench 2;auto
+resultat;STATUS_FASTA_COMMON/STAT_LSHPWM_DOWN_1_WERT;Lambdasondenheizung PWM nach Kat Bank 1;Normalized heating power of the lambda sensor downstream of the catalytic converter;auto
+resultat;STATUS_FASTA_COMMON/STAT_LSHPWM_DOWN_2_WERT;Lambdasondenheizung PWM nach Kat Bank 2;Lambda heating PWM behind catalytic converter, bank 2;auto
+resultat;STATUS_FASTA_COMMON/STAT_MAF_KGH_MES_BAS_WERT;Luftmasse;Air mass;auto
+resultat;STATUS_FASTA_COMMON/STAT_TQ_DIF_I_IS_MON_WERT;I-Anteil Momentdifferenz Überwachung und Modell;;
+resultat;STATUS_ADD/STAT_ADD_WERT;+-694,5 Wert von MFF_AD_ADD_MMV_REL;;
+resultat;STATUS_ADD_2/STAT_ADD_2_WERT;+-694,5 Wert von MFF_AD_ADD_MMV_REL;;
+resultat;STATUS_MUL/STAT_MUL_WERT;+-50 Wert von MFF_AD_FAC_MMV_REL;;
+resultat;STATUS_MUL_2/STAT_MUL_2_WERT;+-50 Wert von MFF_AD_FAC_MMV_REL;;
+resultat;STATUS_INT/STAT_INT_WERT;+-50 Wert von TI_LAM_COR;;
+resultat;STATUS_INT_2/STAT_INT_2_WERT;+-50 Wert von TI_LAM_COR;;
+resultat;STATUS_LL_ABGLEICH/STAT_OFS_ACC_DRI;Abgleichswert LL mit Klima und Fahrbedingung;;
+resultat;STATUS_LL_ABGLEICH/STAT_OFS_DRI;Abgleichswert LL mit Fahrstufe;;
+resultat;STATUS_LL_ABGLEICH/STAT_OFS;Abgleichswert LL;;
+resultat;STATUS_LL_ABGLEICH/STAT_OFS_ACC;Abgleichswert LL mit Klimaanlage;;
+resultat;STATUS_LL_ABGLEICH/STAT_OFS_VB;Abgleichswert LL mit niedriger UBatt;;
+resultat;STATUS_FASTA2/STAT_RL_WERT;relative Last;Relative Filling;auto
+resultat;STATUS_FASTA2/STAT_BIOS_TI_0_WERT;EinspritzZeit Zyl.1;;
+resultat;STATUS_FASTA2/STAT_TPS_AV_WERT;Position Drosselklappe;;
+resultat;STATUS_FASTA2/STAT_TPS_SP_WERT;Sollwert Drosselklappe;;
+resultat;STATUS_FASTA2/STAT_PV_AV_RAW_WERT;Fahrpedalwert;Accelerator pedal value (raw);auto
+resultat;STATUS_MESSWERTBLOCK_ADC/STAT_MESSWERTA_WERT;Messwert (Word);;
+resultat;STATUS_MESSWERTBLOCK_ADC/STAT_MESSWERTA_TEXT;Messwert;;
+resultat;STATUS_MESSWERTBLOCK_ADC/STAT_MESSWERTB_WERT;Messwert (Word);;
+resultat;STATUS_MESSWERTBLOCK_ADC/STAT_MESSWERTB_TEXT;Messwert;;
+resultat;STATUS_MESSWERTBLOCK_ADC/STAT_MESSWERTC_WERT;Messwert (Word);;
+resultat;STATUS_MESSWERTBLOCK_ADC/STAT_MESSWERTC_TEXT;Messwert;;
+resultat;STATUS_MESSWERTBLOCK_ADC/STAT_MESSWERTD_WERT;Messwert (Word);;
+resultat;STATUS_MESSWERTBLOCK_ADC/STAT_MESSWERTD_TEXT;Messwert;;
+resultat;STATUS_MESSWERTBLOCK_ADC/STAT_MESSWERTE_WERT;Messwert (Word);;
+resultat;STATUS_MESSWERTBLOCK_ADC/STAT_MESSWERTE_TEXT;Messwert;;
+resultat;STATUS_MESSWERTBLOCK_ADC/STAT_MESSWERTF_WERT;Messwert (Word);;
+resultat;STATUS_MESSWERTBLOCK_ADC/STAT_MESSWERTF_TEXT;Messwert;;
+resultat;INNENTEMP_LESEN/STAT_ADC_TSG_WERT;ADC-Wert Steuergeraete-Innentemperatur;;
+resultat;INNENTEMP_LESEN/SG_INNENTEMP_WERT;Temperatur Steuergeraete-Innentemperatur;;
+resultat;IDENT_AIF/ID_BMW_NR;BMW-Teilenummer;;
+resultat;IDENT/ID_BMW_NR;BMW-Teilenummer;;
+resultat;IDENT_IBS/ID_BMW_NR;BMW-Teilenummer 7 stellig;;
+resultat;IDENT_AIF/ID_HW_NR;BMW-Hardwarenummer;;
+resultat;IDENT/ID_HW_NR;BMW-Hardware-Versionsindex;;
+resultat;*/ID_COD_INDEX;Codier-Index;;
+resultat;*/ID_DIAG_INDEX;Diagnose-Index;;
+resultat;*/ID_VAR_INDEX;Varianten-Index;;
+resultat;*/ID_DATUM_JAHR;Herstelldatum (Jahr);;
+resultat;*/ID_DATUM_MONAT;Herstelldatum (Monat);;
+resultat;*/ID_DATUM_TAG;Herstelldatum (Tag);;
+resultat;*/ID_DATUM;Herstelldatum (TT.MM.JJJJ);;
+resultat;*/ID_LIEF_NR;Lieferanten-Nummer;;
+resultat;IDENT_AIF/ID_LIEF_TEXT;Lieferanten-Text nach Tabelle Lieferanten;;
+resultat;IDENT/ID_LIEF_TEXT;Lieferanten-Text;;
+resultat;*/ID_SW_NR_MCV;Softwarenummer (message catalogue version);;
+resultat;*/ID_SW_NR_FSV;Softwarenummer (functional software version);;
+resultat;*/ID_SW_NR_OSV;Softwarenummer (operating system version);;
+resultat;*/ID_SW_NR_RES;Softwarenummer (reserved - currently unused);;
+resultat;IDENT_AIF/AIF_ADRESSE;AIF Adresse;;
+resultat;IDENT_AIF/AIF_FAHRGESTELL_NR;Fahrgestellnummer 7-stellig;;
+resultat;IDENT_AIF/AIF_PROGRAMMIER_DATUM;Datum der SG-Programmierung in der Form JJJJ.MM.TT;;
+resultat;IDENT_AIF/AIF_ZUSAMMENBAU_NR;BMW/Rover Zusammenbaunummer;;
+resultat;IDENT_AIF/AIF_DATENSATZ_NR;BMW/Rover Datensatznummer - Softwarenummer;;
+resultat;IDENT_AIF/AIF_BEHOERDEN_NR;BMW/Rover Behoerdennummer;;
+resultat;IDENT_AIF/AIF_HAENDLER_NR;Haendlernummer;;
+resultat;IDENT_AIF/AIF_TESTER_NR;Tester Seriennummer;;
+resultat;IDENT_AIF/AIF_KM_STAND;km-Stand bei der Programmierung;;
+resultat;IDENT_AIF/AIF_PROGRAMM_STAND;Programmstandsnummer;;
+resultat;IDENT_AIF/AIF_ANZ_FREI;Anzahl noch vorhandener AIF-Eintraege;;
+resultat;IDENT_AIF/AIF_ANZ_DATEN;Groesse des AIF-Eintrags;;
+resultat;IDENT/ID_SG_ADR;Steuergeraeteadresse;;
+resultat;IDENT/ID_LIN_SLAVE_ADR;LIN Slave Steuergeraeteadresse;;
+resultat;IDENT/ID_EWS_SS;Identifikation EWS-Schnittstelle;;
+resultat;PRUEFSTEMPEL_LESEN/BYTE1;BYTE1;;
+resultat;PRUEFSTEMPEL_LESEN/BYTE2;BYTE2;;
+resultat;PRUEFSTEMPEL_LESEN/BYTE3;BYTE3;;
+resultat;SERIENNUMMER_LESEN/SERIENNUMMER;Seriennummer des Steuergeraets;;
+resultat;IDENT_IBS/SERIENNUMMER;BMW-Seriennummer;;
+resultat;ZIF_LESEN/ZIF_PROGRAMM_REFERENZ;PRGREF ProgrammReferenz;;
+resultat;ZIF_LESEN/ZIF_SG_KENNUNG;ZZZ;;
+resultat;ZIF_LESEN/ZIF_PROJEKT;PPPxV;;
+resultat;ZIF_LESEN/ZIF_PROGRAMM_STAND;BBxh;;
+resultat;ZIF_LESEN/ZIF_STATUS;Dateninhalt bei FF noch nicht beschrieben;;
+resultat;IDENT_IBS/ZIF_STATUS;Programm Revision;;
+resultat;ZIF_LESEN/ZIF_BMW_HW;VMECUH*N vehicleManufacturerECUHardware*Number;;
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_PROGRAMM_REFERENZ;PRGREFB ProgrammReferenzBackup;;
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_SG_KENNUNG;ZZZ;;
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_PROJEKT;PPPxV;;
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_PROGRAMM_STAND;BBxh;;
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_STATUS;Dateninhalt bei FF noch nicht beschrieben;;
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_BMW_HW;VMECUH*NB vehicleManufECUHW*NumberBackup;;
+resultat;PHYSIKALISCHE_HW_NR_LESEN/PHYSIKALISCHE_HW_NR;Physikalische Hardware-Nummer;;
+resultat;HARDWARE_REFERENZ_LESEN/HARDWARE_REFERENZ;Hardware Referenz;;
+resultat;HARDWARE_REFERENZ_LESEN/HW_REF_SG_KENNUNG;ZZZ;;
+resultat;HARDWARE_REFERENZ_LESEN/HW_REF_PROJEKT;PPPx;;
+resultat;HARDWARE_REFERENZ_LESEN/HW_REF_STATUS;Dateninhalt bei FF noch nicht beschrieben;;
+resultat;DATEN_REFERENZ_LESEN/DATEN_REFERENZ;Daten Referenz;;
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_SG_KENNUNG;ZZZ;;
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_PROJEKT;PPPxV;;
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_PROGRAMM_STAND;BBxh;;
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_DATENSATZ;dxxxx;;
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_STATUS;Dateninhalt bei FF noch nicht beschrieben;;
+resultat;IDENT_IBS/ZIF_PROGRAMMSTAND;Programm referenz;;
+resultat;IDENT_IBS/HW_REF;Hardware Referenz;;
+resultat;CBS_DATEN_LESEN/ECU_ADR_WERT;Steuergeraeteadresse als Hex-String;;
+resultat;CBS_DATEN_LESEN/ECU_ADR_HEX;Steuergeraeteadresse als Hex-String;;
+resultat;CBS_DATEN_LESEN/ECU_ADR_TEXT;Steuergeraeteadresse im Klartext;;
+resultat;CBS_DATEN_LESEN/ANZ_CBS;Anzahl der CBS - Umfaenge im Steuergeraet;;
+resultat;CBS_DATEN_LESEN/ID_FN_CBS_MESS_WERT;CBS-Kennung als Zahl;;
+resultat;CBS_DATEN_LESEN/ID_FN_CBS_MESS_HEX;CBS-Kennung als Hex-String;;
+resultat;CBS_DATEN_LESEN/ID_FN_CBS_MESS_TEXT;CBS-Kennung im Klartext;;
+resultat;CBS_DATEN_LESEN/RMMI_CBS_WERT;Restlaufleistung;;
+resultat;CBS_DATEN_LESEN/ST_UN_CBS_WERT;ST UN CBS;;
+resultat;CBS_DATEN_LESEN/ST_UN_CBS_HEX;ST UN CBS HEX;;
+resultat;CBS_DATEN_LESEN/ST_UN_CBS_TEXT;ST UN CBS;;
+resultat;CBS_DATEN_LESEN/COU_RSTG_CBS_MESS_WERT;Servicezaehler;;
+resultat;CBS_DATEN_LESEN/AVAI_CBS_WERT;Verfuegbarkeit;;
+resultat;CBS_DATEN_LESEN/AVAI_CBS_WERT_OEL;Verfuegbarkeit OEL, fuer Pruefablauf Bandende;;
+resultat;CBS_DATEN_LESEN/AVAI_CBS_WERT_CSF;Verfuegbarkeit CSF, fuer Pruefablauf Bandende;;
+resultat;CBS_DATEN_LESEN/AVAI_CBS_WERT_BATT;Verfügbarkeit BATT, für Prüfablauf Bandende;;
+resultat;CBS_DATEN_LESEN/AVAI_CBS_WERT_VTG;Verfügbarkeit VTG, für Prüfablauf Bandende;;
+resultat;CBS_DATEN_LESEN/AVAI_CBS_WERT_FILT;Verfuegbarkeit FILT, fuer Pruefablauf Bandende;;
+resultat;CBS_DATEN_LESEN/AVAI_CBS_WERT_BR_V;Verfuegbarkeit BR_V, fuer Pruefablauf Bandende;;
+resultat;CBS_DATEN_LESEN/AVAI_CBS_WERT_BR_H;Verfuegbarkeit BR_H, fuer Pruefablauf Bandende;;
+resultat;CBS_DATEN_LESEN/AVAI_CBS_WERT_BRFL;Verfuegbarkeit BRFL, fuer Pruefablauf Bandende;;
+resultat;CBS_DATEN_LESEN/AVAI_CBS_WERT_ZKRZ;Verfuegbarkeit ZKRZ, fuer Pruefablauf Bandende;;
+resultat;CBS_DATEN_LESEN/AVAI_CBS_WERT_SIC;Verfuegbarkeit SIC, fuer Pruefablauf Bandende;;
+resultat;CBS_DATEN_LESEN/AVAI_CBS_WERT_KFL;Verfuegbarkeit KFL, fuer Pruefablauf Bandende;;
+resultat;CBS_DATEN_LESEN/AVAI_CBS_WERT_UEB;Verfuegbarkeit UEB, fuer Pruefablauf Bandende;;
+resultat;CBS_DATEN_LESEN/AVAI_CBS_WERT_DAD;Verfuegbarkeit DAD, fuer Pruefablauf Bandende;;
+resultat;CBS_DATEN_LESEN/AVAI_CBS_WERT_ZKRZ_A;Verfuegbarkeit ZKRZ_A, fuer Pruefablauf Bandende;;
+resultat;CBS_DATEN_LESEN/AVAI_CBS_WERT_H2;Verfuegbarkeit H2, fuer Pruefablauf Bandende;;
+resultat;CBS_DATEN_LESEN/ZIEL_MM_WERT;Ziel-Monat;;
+resultat;CBS_DATEN_LESEN/ZIEL_YY_WERT;Ziel-Jahr;;
+resultat;CBS_DATEN_LESEN/FRC_INTM_WAY_CBS_MESS;Prognose Wegintervall;;
+resultat;CBS_DATEN_LESEN/FRC_INTM_T_CBS_MESS;Prognose Zeitintervall;;
+resultat;CBS_DATEN_LESEN/MANIP_CBS;Manipulationsbyte;;
+resultat;CBS_DATEN_LESEN/MANIP_CBS_TEXT;Manipulationsbyte im Klartext;;
+resultat;CBS_DATEN_LESEN/RES_BYTE;Reserve Byte (noch unbenutzt);;
+job;INNENTEMP_LESEN;Steuergeraete-Innentemperatur auslesen;Read interior temperature;auto
+job;STATUS_AGK;Abgasklappe auslesen;;
+job;STATUS_AN_LUFTTEMPERATUR;Ansauglufttemperatur 1 auslesen;Air intake temperature;auto
+job;STATUS_ANWS;Vanos Auslass Ventil auslesen;;
+job;STATUS_BLS;Bremslichtschalter auslesen;Read brake light switch;auto
+job;STATUS_BLTS;Bremslichttestschalter auslesen;Read brake light test switch;auto
+job;STATUS_CO_ABGLEICH;Abgleichwert CO (Kohlenmonoxid) auslesen;Reading the LL-CO value;auto
+job;STATUS_DISA;Variable Sauganlage (DISA) Klappe auslesen;Read DISA variable intake flap;auto
+job;STATUS_DISA2;Variable Sauganlage (DISA) Klappe2 auslesen;;
+job;STATUS_DKP_VOLT;Drosselklappe auslesen;Read throttle valve angle;auto
+job;STATUS_DMTL_HEIZUNG;Diagnosemodul-Tank Leckage Heizung auslesen;;
+job;STATUS_DMTL_P;Diagnosemodul-Tank Leckage Pumpe auslesen;Read DMTL pump;auto
+job;STATUS_DMTL_V;Diagnosemodul-Tank Leckage Ventil auslesen;Read DMTL valve;auto
+job;STATUS_E_LUEFTER;E-Luefter auslesen;Read electric cooling fan;auto
+job;STATUS_EBL;E-Box-Luefter auslesen;Read E-box fan;auto
+job;STATUS_EISYGD;Auslesen Eisy-Adaptionswerte (gedrosselt) (Anforderung aus CP5403);Read Eisy adaptation (throttled);auto
+job;STATUS_EISYUGD;Auslesen Eisy-Adaptionswerte (ungedrosselt) (Anforderung aus CP5403);;
+job;STATUS_EKP;Elektrische Kraftstoffpumpe 1 auslesen;Read electric fuel pump;auto
+job;STATUS_EML;EML (Engine Malfunction Lamp) auslesen;Read engine power management;auto
+job;STATUS_ENWS;Vanos Einlass Ventil auslesen;;
+job;STATUS_EV1;Einspritzventil 1 auslesen;Read fuel injector 1;auto
+job;STATUS_EV2;Einspritzventil 2 auslesen;Read fuel injector 2;auto
+job;STATUS_EV3;Einspritzventil 3 auslesen;Read fuel injector 3;auto
+job;STATUS_EV4;Einspritzventil 4 auslesen;Read fuel injector 4;auto
+job;STATUS_EV5;Einspritzventil 5 auslesen;Read fuel injector 5;auto
+job;STATUS_EV6;Einspritzventil 6 auslesen;Read fuel injector 6;auto
+job;STATUS_EWAP;elektr. Wasserpumpe ueber BSD (Bit Serielle Datenschnittstelle) auslesen;Read electric water pump;auto
+job;STATUS_FGRL;Fahrgeschwindigkeitsregler-Lampe auslesen;;
+job;STATUS_FWV1;Fahrerwunschversorgung 1 auslesen;Read coolant flow valve 1;auto
+job;STATUS_FWV2;Fahrerwunschversorgung 2 auslesen;Read coolant flow valve 2;auto
+job;STATUS_GLF;Gesteuerte Luftfuehrung auslesen;;
+job;STATUS_HFMS;Sekundaerluft HFM (Heissfilm Luftmassenmesser) auslesen;Read hot film mass airflow sensor;auto
+job;STATUS_KB1;Klopfbaustein 1 auslesen;Read knock bank 1;auto
+job;STATUS_KB2;Klopfbaustein 2 auslesen;Read knock bank 2;auto
+job;STATUS_KFT;Kennfeldthermostat auslesen;Read fuel temperature;auto
+job;STATUS_KGEH;Kurbelgehaeuseentlueftungsheizung auslesen;Read crankcase;auto
+job;STATUS_KOREL;Klimakompressor-Relais auslesen;;
+job;STATUS_KRANN;Auslesen Krann-Adaptionswerte (Anforderung aus CP5404);;
+job;STATUS_KUP;Kupplungsschalter auslesen;;
+job;STATUS_L_SONDE;Lambdasonde vor Kat Bank1 auslesen;Lambda sensor differential voltage 1;auto
+job;STATUS_L_SONDE_2;Lambdasonde vor Kat Bank2 auslesen;Lambda sensor differential voltage 2;auto
+job;STATUS_L_SONDE_2_H;Lambdasonde hinter Kat Bank2 auslesen;Read the voltage of the lambda sensor before the catalytic converter (sensor 2).;auto
+job;STATUS_L_SONDE_H;Lambdasonde hinter Kat Bank1 auslesen;Read out the voltage of the lambda sensor after the catalytic converter;auto
+job;STATUS_LMM_MASSE;Luftmassenmesser 1 auslesen;Read air volume;auto
+job;STATUS_LRP;Laufruhepruefung auslesen;Read out smooth running test;auto
+job;STATUS_LSH1;Lambdasondenheizung vor Kat Bank1 auslesen;Read lambda probe heater 1;auto
+job;STATUS_LSH2;Lambdasondenheizung hinter Kat Bank1 auslesen;Read lambda probe heater 2;auto
+job;STATUS_LSH3;Lambdasondenheizung vor Kat Bank2 auslesen;Read lambda probe heater 3;auto
+job;STATUS_LSH4;Lambdasondenheizung hinter Kat Bank2 auslesen;Read lambda probe heater 4;auto
+job;STATUS_MESSWERTE_LRP;Messwerte Laufruhepruefung auslesen;Read out measured values from the smooth running test;auto
+job;STATUS_MIL;MIL (Malfunction Indicator Lamp) auslesen;Read MIL (check engine light);auto
+job;STATUS_MOTORTEMPERATUR;Motortemperatur auslesen;Read engine temperature;auto
+job;STATUS_ODS;Oeldruckschalter auslesen;Read oil pressure switch;auto
+job;STATUS_OEL;Oelsensor auslesen;;
+job;STATUS_PWG_POTI_SPANNUNG;Fahrerwunsch 1 auslesen;Pedal sensor voltage;auto
+job;STATUS_PWG2;Fahrerwunsch 2 auslesen;Read accelerator pedal sensor 2;auto
+job;STATUS_RBMMODE9;Rate Based Monitoring Mode 9 auslesen (Ausgabe der Werte wie im Scantool Mode 9);Ring buffer measurement mode 9;auto
+job;STATUS_RBMMS1;Rate Based Monitoring Motorsteuerung MS... Block 1 auslesen (Vorhalt);Ring buffer measurement selection 1;auto
+job;STATUS_SDF1;Saugrohrdruck1 / Ladedruck1 auslesen;;
+job;STATUS_SLP;Sekundaerluftpumpe auslesen;Read secondary air pump;auto
+job;STATUS_SLV;Sekundarluftventil auslesen;Read secondary air valve;auto
+job;STATUS_SOK;Soundklappe auslesen;Read catalyst oxygen sensor;auto
+job;STATUS_SPT;Sporttaster auslesen;Read sport switch;auto
+job;STATUS_SR;Startrelais auslesen;Read secondary air relay;auto
+job;STATUS_TEV;Tankentlueftungsventil auslesen;MUL signal TEV bank 1;auto
+job;STATUS_TKA;Kuehlerauslasstemperatur auslesen;Read tank control output;auto
+job;STATUS_TTEMP;Taster Tempomat auslesen;Read throttle temperature;auto
+job;STATUS_UBAT;Batteriesensor auslesen;Read battery voltage;auto
+job;STATUS_UBATT;Kl.87 Spannung / Versorgung DME (Digitale Motor Elektronik) auslesen;Battery voltage;auto
+job;STATUS_UDF;Umgebungsdruck auslesen;;
+job;STATUS_UGEN;Generator Sollspannung BSD (Bit Serielle Datenschnittstelle) auslesen;Read generator voltage;auto
+job;STATUS_UKL15;Kl.15 Spannung auslesen;Read terminal 15 voltage (ignition);auto
+job;STATUS_UVLSS;Versorgungsspannung Lastsignal-Sensor auslesen;;
+job;STATUS_VVT;VVT auslesen;Reading VVT measured values;auto
+job;STATUS_VVTR;VVT-Entlastungsrelais auslesen;Read VVT relay;auto
+job;STEUERN_AGK;Abgasklappe ansteuern;;
+job;STEUERN_ANWS;Vanos Auslass Ventil ansteuern;;
+job;STEUERN_CO_ABGLEICH_PROGRAMMIEREN;Abgleichwert CO (Kohlenmonoxid) programmieren;;
+job;STEUERN_CO_ABGLEICH_RESET;Abgleichwert CO (Kohlenmonoxid) loeschen;;
+job;STEUERN_CO_ABGLEICH_VERSTELLEN;Abgleichwert CO (Kohlenmonoxid) vorgeben;;
+job;STEUERN_DISA;Variable Sauganlage (DISA) Klappe ansteuern;;
+job;STEUERN_DISA2;Variable Sauganlage (DISA) Klappe2 ansteuern;;
+job;STEUERN_DK;Drosselklappe ansteuern;;
+job;STEUERN_DMTL_HEIZUNG;Diagnosemodul-Tank Leckage Heizung ansteuern;;
+job;STEUERN_DMTL_P;Diagnosemodul-Tank Leckage Pumpe ansteuern;;
+job;STEUERN_DMTL_V;Diagnosemodul-Tank Leckage Ventil ansteuern;;
+job;STEUERN_E_LUEFTER;E-Luefter ansteuern;;
+job;STEUERN_EBL;E-Box-Luefter ansteuern;;
+job;STEUERN_EISYGD;Ansteuern Eisy-Adaptionswerte (gedrosselt) (Anforderung aus CP5403);;
+job;STEUERN_EISYUGD;Ansteuern Eisy-Adaptionswerte (ungedrosselt) (Anforderung aus CP5403);;
+job;STEUERN_EKP;Elektrische Kraftstoffpumpe 1 ansteuern Elektrische Kraftstoffpumpe 1 Deaktivierung aufheben;;
+job;STEUERN_EML;EML (Engine Malfunction Lamp) ansteuern;;
+job;STEUERN_ENDE_AGK;Abgasklappe Ansteuerung beenden;;
+job;STEUERN_ENDE_ANWS;Vanos Auslass Ventil Ansteuerung beenden;;
+job;STEUERN_ENDE_DISA;Variable Sauganlage (DISA) Klappe Ansteuerung beenden;;
+job;STEUERN_ENDE_DISA2;Variable Sauganlage (DISA) Klappe2 Ansteuerung beenden;;
+job;STEUERN_ENDE_DK;Drosselklappe Ansteuerung beenden;;
+job;STEUERN_ENDE_DMTL_HEIZUNG;Diagnosemodul-Tank Leckage Heizung Ansteuerung beenden;;
+job;STEUERN_ENDE_DMTL_P;Diagnosemodul-Tank Leckage Pumpe Ansteuerung beenden;;
+job;STEUERN_ENDE_DMTL_V;Diagnosemodul-Tank Leckage Ventil Ansteuerung beenden;;
+job;STEUERN_ENDE_E_LUEFTER;E-Luefter Ansteuerung beenden;;
+job;STEUERN_ENDE_EBL;E-Box-Luefter Ansteuerung beenden;;
+job;STEUERN_ENDE_EKP;Elektrische Kraftstoffpumpe 1 Ansteuerung beenden Elektrische Kraftstoffpumpe 1 Deaktivierung aufheben;;
+job;STEUERN_ENDE_EML;EML (Engine Malfunction Lamp) Ansteuerung beenden;;
+job;STEUERN_ENDE_ENWS;Vanos Einlass Ventil Ansteuerung beenden;;
+job;STEUERN_ENDE_EV1;Einspritzventil 1 Ansteuerung beenden;;
+job;STEUERN_ENDE_EV2;Einspritzventil 2 Ansteuerung beenden;;
+job;STEUERN_ENDE_EV3;Einspritzventil 3 Ansteuerung beenden;;
+job;STEUERN_ENDE_EV4;Einspritzventil 4 Ansteuerung beenden;;
+job;STEUERN_ENDE_EV5;Einspritzventil 5 Ansteuerung beenden;;
+job;STEUERN_ENDE_EV6;Einspritzventil 6 Ansteuerung beenden;;
+job;STEUERN_ENDE_EWAP;elektr. Wasserpumpe ueber BSD (Bit Serielle Datenschnittstelle) Ansteuerung beenden;;
+job;STEUERN_ENDE_FGRL;Fahrgeschwindigkeitsregler-Lampe Ansteuerung beenden;;
+job;STEUERN_ENDE_GLF;Gesteuerte Luftfuehrung Ansteuerung beenden;;
+job;STEUERN_ENDE_KFT;Kennfeldthermostat Ansteuerung beenden;;
+job;STEUERN_ENDE_KGEH;Kurbelgehaeuseentlueftungsheizung Ansteuerung beenden;;
+job;STEUERN_ENDE_KOREL;Klimakompressor-Relais Ansteuerung beenden;;
+job;STEUERN_ENDE_LRP;Laufruhepruefung Vorgeben beenden;;
+job;STEUERN_ENDE_LSH1;Lambdasondenheizung vor Kat Bank1 Ansteuerung beenden;;
+job;STEUERN_ENDE_LSH2;Lambdasondenheizung hinter Kat Bank1 Ansteuerung beenden;;
+job;STEUERN_ENDE_LSH3;Lambdasondenheizung vor Kat Bank2 Ansteuerung beenden;;
+job;STEUERN_ENDE_LSH4;Lambdasondenheizung hinter Kat Bank2 Ansteuerung beenden;;
+job;STEUERN_ENDE_MIL;MIL (Malfunction Indicator Lamp) Ansteuerung beenden;;
+job;STEUERN_ENDE_SLP;Sekundaerluftpumpe Ansteuerung beenden;;
+job;STEUERN_ENDE_SLV;Sekundarluftventil Ansteuerung beenden;;
+job;STEUERN_ENDE_SOK;Soundklappe Ansteuerung beenden;;
+job;STEUERN_ENDE_SR;Startrelais Ansteuerung beenden;;
+job;STEUERN_ENDE_TEV;Tankentlueftungsventil Ansteuerung beenden;;
+job;STEUERN_ENDE_UGEN;Generator Sollspannung BSD (Bit Serielle Datenschnittstelle) Ansteuerung beenden;;
+job;STEUERN_ENDE_UVSG;Kl.87 Spannung / Versorgung DME (Digitale Motor Elektronik) Ansteuerung beenden;;
+job;STEUERN_ENDE_VVT;VVT Ansteuerung beenden;;
+job;STEUERN_ENDE_VVTR;VVT-Entlastungsrelais Ansteuerung beenden;;
+job;STEUERN_ENWS;Vanos Einlass Ventil ansteuern;;
+job;STEUERN_EV1;Einspritzventil 1 ansteuern;;
+job;STEUERN_EV2;Einspritzventil 2 ansteuern;;
+job;STEUERN_EV3;Einspritzventil 3 ansteuern;;
+job;STEUERN_EV4;Einspritzventil 4 ansteuern;;
+job;STEUERN_EV5;Einspritzventil 5 ansteuern;;
+job;STEUERN_EV6;Einspritzventil 6 ansteuern;;
+job;STEUERN_EWAP;elektr. Wasserpumpe ueber BSD (Bit Serielle Datenschnittstelle) ansteuern;;
+job;STEUERN_EWAP_SF;Sonderfunktionen elektr. Wasserpumpe ueber BSD (Bit Serielle Datenschnittstelle) ansteuern;;
+job;STEUERN_FGRL;Fahrgeschwindigkeitsregler-Lampe ansteuern;;
+job;STEUERN_GLF;Gesteuerte Luftfuehrung ansteuern;;
+job;STEUERN_KFT;Kennfeldthermostat ansteuern;;
+job;STEUERN_KGEH;Kurbelgehaeuseentlueftungsheizung ansteuern;;
+job;STEUERN_KOREL;Klimakompressor-Relais ansteuern;;
+job;STEUERN_KRANN;Ansteuern Krann-Adaptionswerte (Anforderung aus CP5404);;
+job;STEUERN_LRP;Laufruhepruefung vorgeben;;
+job;STEUERN_LSH1;Lambdasondenheizung vor Kat Bank1 ansteuern;;
+job;STEUERN_LSH2;Lambdasondenheizung hinter Kat Bank1 ansteuern;;
+job;STEUERN_LSH3;Lambdasondenheizung vor Kat Bank2 ansteuern;;
+job;STEUERN_LSH4;Lambdasondenheizung hinter Kat Bank2 ansteuern;;
+job;STEUERN_MIL;MIL (Malfunction Indicator Lamp) ansteuern;;
+job;STEUERN_PROGRAMM_LRP;Laufruhepruefung programmieren;;
+job;STEUERN_SLP;Sekundaerluftpumpe ansteuern;;
+job;STEUERN_SLV;Sekundarluftventil ansteuern;;
+job;STEUERN_SOK;Soundklappe ansteuern;;
+job;STEUERN_SR;Startrelais ansteuern;;
+job;STEUERN_TEV;Tankentlueftungsventil ansteuern;;
+job;STEUERN_UGEN;Generator Sollspannung BSD (Bit Serielle Datenschnittstelle) ansteuern;;
+job;STEUERN_UVSG;Kl.87 Spannung / Versorgung DME (Digitale Motor Elektronik) ansteuern;;
+job;STEUERN_VVT;VVT ansteuern;;
+job;STEUERN_VVTR;VVT-Entlastungsrelais ansteuern;;
+job;_STATUS_FASTA_EISYUGD;0x31E0 & 0x33E0 Ansteuern und Auslesen Eisy-Adaptionswerte (ungedrosselt);Control and read Eisy adaptation values (unthrottled);auto
+job;_STATUS_FASTA_EISYGD;0x31E1 & 0x33E1 Ansteuern und Auslesen Eisy-Adaptionswerte (gedrosselt);Control and read Eisy adaptation values (throttled);auto
+job;_STATUS_FASTA_KRANN;0x31E3 & 0x33E3 Ansteuern und Auslesen Krann-Adaptionswerte;Control and read crane adaptation values;auto
+job;_STATUS_INPA_EISYUGD;0x31E0 & 0x33E0 Ansteuern und Auslesen Eisy-Adaptionswerte (ungedrosselt);Control and read Eisy adaptation values (unthrottled);auto
+job;_STATUS_INPA_EISYGD;0x31E1 & 0x33E1 Ansteuern und Auslesen Eisy-Adaptionswerte (gedrosselt);Control and read Eisy adaptation values (throttled);auto
+job;_STATUS_INPA_KRANN;0x31E3 & 0x33E3 Ansteuern und Auslesen Krann-Adaptionswerte;Control and read crane adaptation values;auto
+job;_STATUS_FASTA_TECU;0x23 Auslesen der DME-Temperaturstatistik;Reading the DME temperature statistics;auto
+job;STATUS_MESSWERTBLOCK_LESEN;Lesen eines Messwertblockes;Reading a measured value block;auto
+job;STATUS_RBMMS2;Rate Based Monitoring Motorsteuerung MS... Block 2 auslesen (Vorhalt);Ring buffer measurement selection 2;auto
+job;_STATUS_OBD_MODE_01;Auslesen der Motor-Diagnosedaten nach Mode 01 PID 01;OBD mode 01 - Current powertrain data;auto
+job;_STATUS_OBD_MODE_03;Auslesen der P-Codes nach Mode 3;OBD mode 03 - Stored emission-related DTCs;auto
+job;_STATUS_OBD_MODE_07;Auslesen der P-Codes nach Mode 7;OBD mode 07 - Pending emission-related DTCs;auto
+job;FS_LESEN_DETAIL;Fehlerspeicher lesen (ein Fehler / alle Details);Read error memory (one error / all details);auto
+job;SET_BAUDRATE;Initialisierung der Kommunikationsparameter;;
+job;SET_PARAMETER;Aenderung der Kommunikationsparameter bei Long-Parametersätzen;;
+job;INTERFACETYPE;Interface-Typ bestimmen und ausgeben;;
+job;ACCESS_TIMING_PARAMETER;Aenderung der Timingparameter im SG;;
+job;ACCESS_TIMING_PARAMETER_DEFAULT;Default-Timingparameter im SG;;
+job;FS_LESEN_HEX;Fehlerspeicher auslesen als Hex Dump;Read fault memory as hex dump;auto
+job;FS_LESEN_FREEZE_FRAME;Fehlerspeicher auslesen mit SAE Werten Umwelt und P-Code;Read fault memory with SAE values, environmental and P-code;auto
+job;IDENT_AIF;Anwender Informations Felder mit KWP 2000: $23 ReadMemoryByAddress;;
+job;EWS_EMPFANG;EWS-Empfangsstatus auslesen;;
+job;DISTANCE_MIL_ON;Auslesen Fahrstrecke mit MIL-eingeschaltet;;
+job;STATUS_SYSTEMCHECK_SEK_LUFT;Stand der Diagnose;TEV system check;auto
+job;STATUS_SYSTEMCHECK_TEV_FUNC;Status und Messströme;;
+job;STATUS_SYSTEMCHECK_TEV;Stand der Diagnose;TEV system check;auto
+job;STATUS_SYSTEMCHECK_EVAUSBL;welches EV-Ventil ist abgeschaltet;EV actuator system check;auto
+job;STATUS_SYSTEMCHECK_VVT_ANSCHLAG;Stand der Diagnose;TEV system check;auto
+job;STATUS_DIGITAL_3;Statusbit KOmpressorRELais;;
+job;STATUS_DIGITAL_4;Statusbit LeerLauf;;
+job;STATUS_L_SONDE_HEIZUNG_H_2;Auslesen des Reglerzustands der Sondenheizung;;
+job;STATUS_L_SONDE_HEIZUNG_H_1;Auslesen des Reglerzustands der Sondenheizung;;
+job;STATUS_L_SONDE_HEIZUNG_V_2;Auslesen des Reglerzustands der Sondenheizung;;
+job;STATUS_L_SONDE_HEIZUNG_V_1;Auslesen des Reglerzustands der Sondenheizung;;
+job;STATUS_EWS_LOCK;Statusbit LV_LOCK_IMOB = 1 blockt Zündung und Einspritzung;;
+job;STATUS_ZEIT_EINSPRITZ;Auslesen der Einspritzzeit Zyl. 1;Reading the injection time of cylinder 1;auto
+job;STATUS_ZUENDWINKEL;Auslesen des Zündwinkels Zylinder 1;Read ignition angle;auto
+job;STATUS_DROSSELKLAPPE;Auslesen des Drosselklappen Winkels;Reading the throttle valve angle;auto
+job;STATUS_KLOPFEN;Auslesen des Status Klopfen erkannt 0/1;;
+job;STATUS_KVA;Auslesen Faktor KVA;;
+job;STATUS_SYSTEMCHECK_DMTL;Stand der Diagnose;TEV system check;auto
+job;STATUS_SYSTEMCHECK_L_SONDE;Stand der Diagnose;Lambda sensor system check;auto
+job;HS_LESEN;Historyspeicher lesen (alle History-Meldungen / Ort und Art);Read history snapshot;auto
+job;STATUS_LEISTUNGSSTUFE;Auslesen der Codierung Obere/Untere Leistungsstufe;Reading the coding: Upper/Lower power level;auto
+job;STATUS_MOTORDREHZAHL;Auslesen der Motordrehzahl und LL-Sollwert;Read engine RPM;auto
+job;STATUS_DFMONITOR;Generator Belastung;Read battery charge level;auto
+job;STATUS_DIGITAL_1;Status Schaltzustaende;;
+job;STATUS_DIGITAL_0;Status Schaltzustaende;;
+job;STATUS_FUNKTIONS;Status Schaltzustaende;;
+job;STATUS_FASTA_COMMON;Messwerteblock lesen;Read measured value block;auto
+job;SPEICHER_LESEN;Auslesen des Steuergeraete-Speichers;Read memory (ASCII format);auto
+job;SPEICHER_LESEN_ASCII;Auslesen des Steuergeraete-Speichers;Read memory (ASCII format);auto
+job;STATUS_ADD;Auslesen der additiven Korrektur Bank 1;Additive adaptation value;auto
+job;STATUS_ADD_2;Auslesen der additiven Korrektur Bank 2;Additive adaptation value Bank2;auto
+job;STATUS_MUL;Auslesen des Korrekturfaktors Bank 1;Multiplicative reading of the mixture adaptation;auto
+job;STATUS_MUL_2;Auslesen des Korrekturfaktors Bank 1;MUL signal Bank 2;auto
+job;STATUS_INT;Auslesen des Integrator Bank 1;Read lambda control factor;auto
+job;STATUS_INT_2;Auslesen des Integrator Bank 1;INT signal Bank 2;auto
+job;STATUS_LL_ABGLEICH;LL-Abgleichswerte lesen;;
+job;STEUERN_LL_ABGLEICH;LL-Abgleich vorgegeben -256 bis +254;;
+job;STEUERN_LLABG_PROG;LL-Abgleichswerte werden vorgegeben;;
+job;FLASH_CRC_PRUEFEN;Codier Checksumme pruefen;;
+job;HS_LOESCHEN;Historyspeicher loeschen;;
+job;DME_STARTWERT_ABGLEICH;Kopiert die ISN auf beide Wechselcodes;Copies the ISN to both rolling codes.;auto
+job;EWS_STARTWERT;EWS-Startwertinitialisierung;EWS initial value;auto
+job;EWS_STARTWERTPROGRAMMIERUNG;EWS-Startwertinitialisierung;EWS initial value;auto
+job;EWS_STARTWERTRUECKSETZUNG;EWS-Startwertinitialisierung;EWS initial value;auto
+job;STATUS_SYSTEMCHECK_SEK_LAMBDA_WERT;Status und Luftmassen;;
+job;STATUS_SYSTEMCHECK_TEV_WERT;Status und Messströme;;
+job;STATUS_SYSTEMCHECK_LLERH_WERT;aktuelle Drehzahl N;Current speed N;auto
+job;STATUS_SYSTEMCHECK_DMTL_WERT;Status und Messströme;;
+job;STATUS_SYSTEMCHECK_L_SONDE_WERTE;Status und Messwerte;;
+job;STEUERN_KVA;Faktor KVA Korrektur vorgeben;;
+job;STATUS_ANALOG;Analogen Messwert periodisch lesen;Periodically read analog measurement value;auto
+job;STATUS_MESSWERTBLOCK_ADC;der zuletzt mit $2C F0 definiert wurde;Read ADC measured value block;auto
+job;INITIALISIERUNG;Initialisierung und Kommunikationsparameter;;
+job;INFO;Information SGBD;Information about SGBD;auto
+job;DIAGNOSEPROTOKOLL_LESEN;Gibt die möglichen Diagnoseprotokolle;Diagnostic protocols;auto
+job;DIAGNOSEPROTOKOLL_SETZEN;Wählt ein Diagnoseprotokoll aus;;
+job;IDENT;Identdaten;DME identification data;auto
+job;FS_LESEN;Fehlerspeicher lesen (alle Fehler / Ort und Art);Read fault codes;auto
+job;FS_LOESCHEN;Fehlerspeicher loeschen;Clear fault codes;auto
+job;PRUEFSTEMPEL_LESEN;Auslesen des Pruefstempels;Reading the test stamp;auto
+job;PRUEFSTEMPEL_SCHREIBEN;Beschreiben des Pruefstempels;;
+job;NORMALER_DATENVERKEHR;Sperren bzw. Freigeben des normalen Datenverkehrs;;
+job;DIAGNOSE_AUFRECHT;Diagnosemode des SG aufrecht erhalten;;
+job;SERIENNUMMER_LESEN;Hersteller Seriennummer lesen;Read manufacturer serial number;auto
+job;ZIF_LESEN;Auslesen des Zulieferinfofeldes;Reading the supplier information field;auto
+job;ZIF_BACKUP_LESEN;Auslesen des Backups des Zulieferinfofeldes;Reading the backup of the supplier information field;auto
+job;PHYSIKALISCHE_HW_NR_LESEN;Auslesen der physikalischen Hardwarenummer;Reading the physical hardware number;auto
+job;HARDWARE_REFERENZ_LESEN;Auslesen der Hardware Referenz;Reading the hardware reference;auto
+job;DATEN_REFERENZ_LESEN;Auslesen der Daten Referenz;Reading the data reference;auto
+job;FLASH_ZEITEN_LESEN;Auslesen der Flash Loeschzeit, Signaturtestzeit,;Reading the flash erase time, signature test time,;auto
+job;FLASH_BLOCKLAENGE_LESEN;Auslesen des maximalen Blocklaenge beim Flashen;Reading the maximum block length during flashing;auto
+job;AUTHENTISIERUNG_ZUFALLSZAHL_LESEN;Authentisierung Zufallszahl des SG lesen;Authentication: Read random number of the SG;auto
+job;AUTHENTISIERUNG_START;Authentisierung pruefen;Verify authentication;auto
+job;FLASH_PROGRAMMIER_STATUS_LESEN;Programmierstatus des SG lesen;;
+job;FLASH_SIGNATUR_PRUEFEN;Flash Signatur pruefen;;
+job;STEUERGERAETE_RESET;Steuergeraete reset ausloesen;;
+job;FLASH_LOESCHEN;Flash loeschen;;
+job;FLASH_SCHREIBEN_ADRESSE;Vorbereitung fuer Flash schreiben;;
+job;FLASH_SCHREIBEN;Flash Daten schreiben;;
+job;FLASH_SCHREIBEN_ENDE;Flashprogrammierung abschliessen;;
+job;AIF_LESEN;Auslesen des Anwender Informations Feldes;Reading the user information field;auto
+job;AIF_SCHREIBEN;Schreiben des Anwender Informations Feldes;;
+job;FLASH_PARAMETER_LESEN;Gibt die SG-spezifischen Flash-Parameter zurück;Returns the SG-specific flash parameters;auto
+job;FLASH_PARAMETER_SETZEN;Setzt die SG-spezifischen Flash-Parameter;;
+job;DIAGNOSE_MODE;SG in bestimmten Diagnosemode bringen;;
+job;DIAGNOSE_ENDE;Diagnosemode des SG beenden;;
+job;SLEEP_MODE;SG in Sleep-Mode versetzen;;
+job;SLEEP_MODE_FUNKTIONAL;SG in Sleep-Mode versetzen;;
+job;PRUEFCODE_LESEN;Standard Pruefcode lesen fuer Kundendienst;Read test code data in hexadecimal format;auto
+job;ADAP_SELEKTIV_LOESCHEN;Löschen von Adaptionen und gelernte Varianten;;
+job;STEUERN_BATTERIETAUSCH_REGISTRIEREN;KWP 2000 $31 30 00 10 00 Bit setzen Batterietausch registrieren;;
+job;CBS_INFO;Ausgabe der CBS-Version;CBS version;auto
+job;CBS_DATEN_LESEN;CBS Daten auslesen (fuer CBS-Version 4);Reading CBS data (for CBS versions 1-3);auto
+job;CBS_RESET;CBS Daten Zuruecksetzen (fuer CBS-Version 4);;
+job;C_CI_LESEN;Codierindex lesen;Read the coding index;auto
+job;C_FG_LESEN;Fahrgestellnummer lesen;Read chassis number;auto
+job;C_FG_SCHREIBEN;Fahrgestellnummer schreiben;;
+job;C_FG_AUFTRAG;Fahrgestellnummer schreiben und ruecklesen;;
+job;C_AEI_LESEN;Aenderungsindex der Codierdaten lesen;Read the change index of the coding data;auto
+job;C_AEI_SCHREIBEN;Aenderungsindex der Codierdaten schreiben;;
+job;C_AEI_AUFTRAG;Aenderungsindex der Codierdaten schreiben und ruecklesen;;
+job;C_C_LESEN;Codierdaten lesen;Read encoding data;auto
+job;C_C_SCHREIBEN;Codierdaten schreiben;;
+job;C_C_AUFTRAG;Codierdaten schreiben und ruecklesen;;
+defaut;0x0000;FehlerOrt nicht bedatet;;
+defaut;0x29CC;Verbrennungsaussetzer, mehrere Zylinder;;
+defaut;0x29CD;Verbrennungsaussetzer, Zylinder 1;;
+defaut;0x29CE;Verbrennungsaussetzer, Zylinder 2;;
+defaut;0x29CF;Verbrennungsaussetzer, Zylinder 3;;
+defaut;0x29D0;Verbrennungsaussetzer, Zylinder 4;;
+defaut;0x29D1;Verbrennungsaussetzer, Zylinder 5;;
+defaut;0x29D2;Verbrennungsaussetzer, Zylinder 6;;
+defaut;0x29D9;Verbrennungsaussetzer bei geringem Tankfüllstand;;
+defaut;0x29DA;Kurbelwellensensor, Segmentadaption;;
+defaut;0x29DB;Laufruhe, Segmentzeitmessung;;
+defaut;0x29DC;Zylindereinspritzabschaltung;;
+defaut;0x29E0;Gemischregelung;;
+defaut;0x29E1;Gemischregelung 2;;
+defaut;0x29F4;Katalysatorkonvertierung;;
+defaut;0x29F5;Katalysatorkonvertierung 2;;
+defaut;0x29FF;Sekundärluftsystem;;
+defaut;0x2A00;Sekundärluftsystem;;
+defaut;0x2A01;Sekundärluftventil, Mechanik;;
+defaut;0x2A02;Sekundärluftventil, Ansteuerung;;
+defaut;0x2A03;Sekundärluftpumpenrelais, Ansteuerung;;
+defaut;0x2A04;Sekundärluftmassenmesser, Plausibilität;;
+defaut;0x2A07;Sekundärluftventil, Mechanik;;
+defaut;0x2A12;DMTL-Magnetventil, Ansteuerung;;
+defaut;0x2A13;DMTL-Leckdiagnosepumpe, Ansteuerung;;
+defaut;0x2A15;DMTL, Feinleck;;
+defaut;0x2A16;DMTL, Feinstleck;;
+defaut;0x2A17;DMTL, Systemfehler;;
+defaut;0x2A18;DMTL, Heizung: Ansteuerung;;
+defaut;0x2A19;Tankentlüftungsventil, Ansteuerung;;
+defaut;0x2A1A;Tankentlüftungssystem, Funktion;;
+defaut;0x2A1B;Tankdeckel;;
+defaut;0x2A1C;Tankfüllstand, Plausibilität;;
+defaut;0x2A2E;Gemischregelung;;
+defaut;0x2A2F;Gemischregelung 2;;
+defaut;0x2A30;Valvetronic, Exzenterwellensensor: Spannungsversorgung;;
+defaut;0x2A31;Valvetronic, Exzenterwellensensor: Führung;;
+defaut;0x2A32;Valvetronic, Exzenterwellensensor: Referenz;;
+defaut;0x2A33;Valvetronic, Exzenterwellensensor: Führung;;
+defaut;0x2A34;Valvetronic, Exzenterwellensensor: Referenz;;
+defaut;0x2A35;Valvetronic, Exzenterwellensensor: Führung;;
+defaut;0x2A36;Valvetronic, Exzenterwellensensor: Referenz;;
+defaut;0x2A37;Valvetronic, Exzenterwellensensor: Plausibilität;;
+defaut;0x2A38;Valvetronic, Stellmotor: Schwergängigkeit oder Leitungsunterbrechung;;
+defaut;0x2A39;Valvetronic, Verstellbereich;;
+defaut;0x2A3A;Valvetronic, interner Fehler;;
+defaut;0x2A3B;Valvetronic, Stellmotor: Drehrichtung;;
+defaut;0x2A3C;Valvetronic-Relais, Ansteuerung;;
+defaut;0x2A3D;Valvetronic, Stellmotor: Ansteuerung;;
+defaut;0x2A3E;Valvetronic, Stellmotor: Überlastung;;
+defaut;0x2A3F;Valvetronic, Stellmotor: Spannungsversorgung;;
+defaut;0x2A40;Valvetronic, thermischer Überlastschutz;;
+defaut;0x2A41;Valvetronic, elektrischer Überlastschutz;;
+defaut;0x2A42;Valvetronic, Position bei Neustart: Plausibilität;;
+defaut;0x2A43;Valvetronic, thermischer Überlastschutz: Warnschwelle;;
+defaut;0x2A44;Valvetronic, Leistungsbegrenzung;;
+defaut;0x2A45;Valvetronic, Stellmotor: Plausibilität;;
+defaut;0x2A46;Valvetronic, Adaption;;
+defaut;0x2A47;Valvetronic, Exzenterwellensensor: Plausibilität;;
+defaut;0x2A80;Einlass-VANOS, Ansteuerung;;
+defaut;0x2A82;Einlass-VANOS;;
+defaut;0x2A85;Auslass-VANOS, Ansteuerung;;
+defaut;0x2A87;Auslass-VANOS, Mechanik;;
+defaut;0x2A94;Kurbelwellensensor, Signal;;
+defaut;0x2A95;Kurbelwellensensor, Synchronisation;;
+defaut;0x2A96;Kurbelwellensensor, Zahnfehler;;
+defaut;0x2A97;Kurbelwellensensor, Lückenfehler;;
+defaut;0x2A98;Kurbelwelle - Einlassnockenwelle, Korrelation;;
+defaut;0x2A99;Kurbelwelle - Auslassnockenwelle, Korrelation;;
+defaut;0x2A9A;Nockenwellensensor Einlass, Signal;;
+defaut;0x2A9B;Nockenwellensensor Auslass, Signal;;
+defaut;0x2A9E;Nockenwellensensor Einlass, Synchonisation;;
+defaut;0x2A9F;Nockenwellensensor Auslass, Synchronisation;;
+defaut;0x2AA0;Nockenwellensensor Einlass, Signal;;
+defaut;0x2AA1;Nockenwellensensor Auslass, Signal;;
+defaut;0x2AA2;Nockenwellensensor Einlass, Lückenverlust;;
+defaut;0x2AA3;Nockenwellensensor Auslass, Lückenverlust;;
+defaut;0x2AA8;Variable Sauganlage Stellmotor: Ansteuerung;;
+defaut;0x2AA9;Variable Sauganlage Stellmotor 2: Ansteuerung;;
+defaut;0x2AAA;Variable Sauganlage, Plausibilität;;
+defaut;0x2AAB;Variable Sauganlage, Eigendiagnose;;
+defaut;0x2AAC;Variable Sauganlage 2, Eigendiagnose;;
+defaut;0x2AAD;Kraftstoffpumpe, Notabschaltung;;
+defaut;0x2AAE;Kraftstoffpumpe;;
+defaut;0x2AB2;DME, interner Fehler: RAM;;
+defaut;0x2AB3;DME, interner Fehler: Checksumme;;
+defaut;0x2AB4;DME, interner Fehler: RAM-Checksumme;;
+defaut;0x2AB5;DME, interner Fehler: Klopfsensorbaustein;;
+defaut;0x2AB6;DME, interner Fehler: Mehrfachendstufenbaustein;;
+defaut;0x2AC1;Soundklappe, Ansteuerung;;
+defaut;0x2AC6;Taster Fahrdynamik-Control (SPORT-Taste), Signal;;
+defaut;0x2ACB;DME-Hauptrelais, Ansteuerung;;
+defaut;0x2ACC;DME-Hauptrelais, Schaltverzögerung;;
+defaut;0x2AD0;Getriebesteuerung;;
+defaut;0x2ADF;Leerlaufregelung, Drehzahl;;
+defaut;0x2AE0;Leerlaufregelung bei Kaltstart, Plausibilität;;
+defaut;0x2AE1;Leistungsbedarf im Leerlauf zu hoch;;
+defaut;0x2AE4;Motorentlüftungs-Heizungsrelais, Ansteuerung;;
+defaut;0x2C24;Lambdasonden vor Katalysator, vertauscht;;
+defaut;0x2C27;Lambdasonde vor Katalysator, Systemcheck;;
+defaut;0x2C28;Lambdasonde vor Katalysator 2, Systemcheck;;
+defaut;0x2C2B;Lambdasonde vor Katalysator, Systemcheck;;
+defaut;0x2C2C;Lambdasonde vor Katalysator 2, Systemcheck;;
+defaut;0x2C2D;Lambdasonde vor Katalysator, Schubprüfung;;
+defaut;0x2C2E;Lambdasonde vor Katalysator 2, Schubprüfung;;
+defaut;0x2C31;Lambdasonde vor Katalysator, Trimmregelung;;
+defaut;0x2C32;Lambdasonde vor Katalysator 2, Trimmregelung;;
+defaut;0x2C37;Lambdasonde vor Katalysator, Heizereinkopplung;;
+defaut;0x2C38;Lambdasonde vor Katalysator 2, Heizereinkopplung;;
+defaut;0x2C39;Lambdasonde vor Katalysator, Dynamik;;
+defaut;0x2C3A;Lambdasonde vor Katalysator 2, Dynamik;;
+defaut;0x2C3B;Lambdasonde vor Katalysator, nicht angesteckt;;
+defaut;0x2C3C;Lambdasonde vor Katalysator 2, nicht angesteckt;;
+defaut;0x2C3D;Lambdasonde vor Katalysator, Leitungsfehler;;
+defaut;0x2C3E;Lambdasonde vor Katalysator 2, Leitungsfehler;;
+defaut;0x2C3F;DME, interner Fehler: Lambdasonde, Auswertebaustein;;
+defaut;0x2C40;DME, interner Fehler: Lambdasonde 2, Auswertebaustein;;
+defaut;0x2C41;DME, interner Fehler: Lambdasonde;;
+defaut;0x2C42;DME, interner Fehler: Lambdasonde 2;;
+defaut;0x2C6A;Lambdasonden nach Katalysator, vertauscht;;
+defaut;0x2C6B;Lambdasonde nach Katalysator, Systemcheck;;
+defaut;0x2C6C;Lambdasonde nach Katalysator 2, Systemcheck;;
+defaut;0x2C6D;Lambdasonde nach Katalysator, Alterung;;
+defaut;0x2C6E;Lambdasonde nach Katalysator 2, Alterung;;
+defaut;0x2C6F;Lambdasonde nach Katalysator, Signal bei Volllast;;
+defaut;0x2C70;Lambdasonde nach Katalysator 2, Signal bei Volllast;;
+defaut;0x2C73;Lambdasonde nach Katalysator, Signal;;
+defaut;0x2C74;Lambdasonde nach Katalysator 2, Signal;;
+defaut;0x2C75;Lambdasonde nach Katalysator, Signal;;
+defaut;0x2C76;Lambdasonde nach Katalysator 2, Signal;;
+defaut;0x2C77;Lambdasonde nach Katalysator, Signal;;
+defaut;0x2C78;Lambdasonde nach Katalysator 2, Signal;;
+defaut;0x2C79;Lambdasonde nach Katalysator, Signal;;
+defaut;0x2C7A;Lambdasonde nach Katalysator 2, Signal;;
+defaut;0x2C7B;Lambdasonde nach Katalysator, Signal;;
+defaut;0x2C7C;Lambdasonde nach Katalysator 2, Signal;;
+defaut;0x2C7E;Lambdasonde nach Katalysator, Trimmregelung;;
+defaut;0x2C7F;Lambdasonde nach Katalysator 2, Trimmregelung;;
+defaut;0x2C9C;Lambdasondenbeheizung vor Katalysator, Ansteuerung;;
+defaut;0x2C9D;Lambdasondenbeheizung vor Katalysator 2, Ansteuerung;;
+defaut;0x2C9E;Lambdasondenbeheizung nach Katalysator, Ansteuerung;;
+defaut;0x2C9F;Lambdasondenbeheizung nach Katalysator 2, Ansteuerung;;
+defaut;0x2CA6;Lambdasondenbeheizung vor Katalysator, Funktion;;
+defaut;0x2CA7;Lambdasondenbeheizung vor Katalysator 2, Funktion;;
+defaut;0x2CA8;Lambdasondenbeheizung nach Katalysator, Funktion;;
+defaut;0x2CA9;Lambdasondenbeheizung nach Katalysator 2, Funktion;;
+defaut;0x2CEC;Drosselklappensteller, klemmt kurzzeitig;;
+defaut;0x2CED;Drosselklappensteller, klemmt dauerhaft;;
+defaut;0x2CEE;Drosselklappensteller, schwergängig;;
+defaut;0x2CEF;Drosselklappensteller, Ansteuerung;;
+defaut;0x2CF6;Drosselklappenpotenziometer 1, Plausibilität zu Luftmasse;;
+defaut;0x2CF7;Drosselklappenpotenziometer 2, Plausibilität zu Luftmasse;;
+defaut;0x2CF9;Drosselklappenpotenziometer 1;;
+defaut;0x2CFA;Drosselklappenpotenziometer 2;;
+defaut;0x2CFB;Drosselklappen-Adaptionswert;;
+defaut;0x2CFC;Drosselklappe, Startprüfung;;
+defaut;0x2CFD;Drosselklappen-Adaptionswert fehlt;;
+defaut;0x2CFE;Drosselklappe, kontinuierliche Adaption;;
+defaut;0x2D06;Luftmassensystem;;
+defaut;0x2D07;Drosselklappe;;
+defaut;0x2D09;Drosselklappe;;
+defaut;0x2D0F;Luftmassenmesser, Signal;;
+defaut;0x2D1B;Fahrpedalmodul, Pedalwertgeber Signal 1;;
+defaut;0x2D1C;Fahrpedalmodul, Pedalwertgeber Signal 2;;
+defaut;0x2D1D;Fahrpedalmodul, Pedalwertgeber 1, Spannungsversorgung;;
+defaut;0x2D1E;Fahrpedalmodul, Pedalwertgeber 2, Spannungsversorgung;;
+defaut;0x2D1F;Fahrpedalmodul, Pedalwertgeber Potentiometer, Signal;;
+defaut;0x2D20;Fahrpedalmodul, Pedalwertgeber, Plausibilität zwischen Signal 1 und Signal 2;;
+defaut;0x2D28;Differenzdrucksensor, Saugrohr: Signal;;
+defaut;0x2D29;Differenzdrucksensor, Saugrohr: Plausibilität;;
+defaut;0x2D2A;Differenzdrucksensor, Saugrohr: Adaption;;
+defaut;0x2D50;DME, interner Fehler: Überwachung Fahrgeschwindigkeitsregelung;;
+defaut;0x2D51;Überwachung Luftpfad;;
+defaut;0x2D52;DME, interner Fehler: Überwachung Motordrehzahl;;
+defaut;0x2D53;DME, interner Fehler: Überwachung Drehzahlbegrenzung;;
+defaut;0x2D54;DME, interner Fehler: Überwachung Drehzahlbegrenzung Reset;;
+defaut;0x2D55;DME, interner Fehler: Überwachung Fahrpedalmodul;;
+defaut;0x2D56;DME, interner Fehler: Überwachung Leerlaufregelung;;
+defaut;0x2D57;DME, interner Fehler: Überwachung externe Momentenanforderung;;
+defaut;0x2D58;DME, interner Fehler: Überwachung Sollmoment;;
+defaut;0x2D59;DME, interner Fehler: Überwachung Istmoment;;
+defaut;0x2D5A;Überwachung Motordrehmoment-Begrenzung;;
+defaut;0x2D5B;DME, interner Fehler: Momentenüberwachung;;
+defaut;0x2D5C;DME, interner Fehler: Überwachung Hardware;;
+defaut;0x2D5F;Reset;;
+defaut;0x2DB5;Fahrgeschwindigkeitsregelung, Signal;;
+defaut;0x2DB6;Fahrgeschwindigkeitsregelung, Schalter Multifunktionslenkrad;;
+defaut;0x2DB7;Fahrgeschwindigkeitsregelung, Zeitlimit der Datenübertragung erreicht;;
+defaut;0x2DBE;Aktive Geschwindigkeitsregelung, gesperrt für Fahrzyklus;;
+defaut;0x2DC0;Längsdynamikmanagement;;
+defaut;0x2DC3;Überwachung Klemme 15;;
+defaut;0x2DC5;Momentenanforderung über CAN, Plausibilität;;
+defaut;0x2DC6;Tankfüllstandswert, Plausibilität;;
+defaut;0x2DC8;Botschaft vom EGS fehlt, EGS 1;;
+defaut;0x2DC9;Botschaft vom EGS fehlt, EGS 2;;
+defaut;0x2DCC;Botschaft vom ASC/DSC fehlt, ASC 1;;
+defaut;0x2DCD;Botschaft vom ASC/DSC fehlt, ASC 3;;
+defaut;0x2DCE;Botschaft vom ASC/DSC fehlt, ASC 4;;
+defaut;0x2DD0;Botschaft von der Instrumentenkombination fehlt, I-Kombi 2;;
+defaut;0x2DD1;Botschaft von der Instrumentenkombination fehlt, I-Kombi 3;;
+defaut;0x2DD2;Botschaft vom LWS-Steuergerät fehlt, LWS;;
+defaut;0x2DD3;Botschaft vom SMG-Steuergerät fehlt, SMG 1;;
+defaut;0x2DD4;Botschaft (TxU) fehlt;;
+defaut;0x2DD5;Botschaft von der EKP fehlt;;
+defaut;0x2DE0;Botschaft von der elektrischen Kraftstoffpumpe fehlt, EKP;;
+defaut;0x2DE1;Krafstoff-Füllstandsgeber, links: Signal;;
+defaut;0x2DE2;Krafstoff-Füllstandsgeber, rechts: Signal;;
+defaut;0x2DE3;Botschaft von der Instrumentenkombination fehlt, I-Kombi 7;;
+defaut;0x2DEB;Powermanagement, Bordnetzüberwachung;;
+defaut;0x2DEC;Powermanagement, Batterieüberwachung;;
+defaut;0x2DED;Powermanagement, Ruhestromüberwachung;;
+defaut;0x2E18;Zündung, Zylinder 1;;
+defaut;0x2E19;Zündung, Zylinder 2;;
+defaut;0x2E1A;Zündung, Zylinder 3;;
+defaut;0x2E1B;Zündung, Zylinder 4;;
+defaut;0x2E1C;Zündung, Zylinder 5;;
+defaut;0x2E1D;Zündung, Zylinder 6;;
+defaut;0x2E24;Zündspule Zylinder 1;;
+defaut;0x2E25;Zündspule Zylinder 2;;
+defaut;0x2E26;Zündspule Zylinder 3;;
+defaut;0x2E27;Zündspule Zylinder 4;;
+defaut;0x2E28;Zündspule Zylinder 5;;
+defaut;0x2E29;Zündspule Zylinder 6;;
+defaut;0x2E30;Einspritzventil Zylinder 1, Ansteuerung;;
+defaut;0x2E31;Einspritzventil Zylinder 2, Ansteuerung;;
+defaut;0x2E32;Einspritzventil Zylinder 3, Ansteuerung;;
+defaut;0x2E33;Einspritzventil Zylinder 4, Ansteuerung;;
+defaut;0x2E34;Einspritzventil Zylinder 5, Ansteuerung;;
+defaut;0x2E35;Einspritzventil Zylinder 6, Ansteuerung;;
+defaut;0x2E68;Klopfsensorsignal 1;;
+defaut;0x2E69;Klopfsensorsignal 2;;
+defaut;0x2E77;Zündung, Spannungsversorgung;;
+defaut;0x2E7C;Bitserielle Datenschnittstelle, Signal;;
+defaut;0x2E81;Elektrische Kühlmittelpumpe, Drehzahlabweichung;;
+defaut;0x2E82;Elektrische Kühlmittelpumpe, Abschaltung;;
+defaut;0x2E83;Elektrische Kühlmittelpumpe, leistungsreduzierter Betrieb;;
+defaut;0x2E84;Elektrische Kühlmittelpumpe, Kommunikation;;
+defaut;0x2E85;Elektrische Kühlmittelpumpe, Kommunikation;;
+defaut;0x2E8B;Intelligenter Batteriesensor, Signal;;
+defaut;0x2E8C;Intelligenter Batteriesensor, Funktion;;
+defaut;0x2E8D;Intelligenter Batteriesensor, Signalübertragung;;
+defaut;0x2E8E;Intelligenter Batteriesensor, Kommunikation;;
+defaut;0x2E96;Generator, Untererregung;;
+defaut;0x2E97;Generator;;
+defaut;0x2E98;Generator, Kommunikation;;
+defaut;0x2E9F;Ölzustandssensor;;
+defaut;0x2EA1;Ölzustandssensor, Kommunikation;;
+defaut;0x2EE0;Kühlmitteltemperatursensor, Signal;;
+defaut;0x2EE1;Kühlmitteltemperatursensor, Plausibilität;;
+defaut;0x2EE2;Kühlmitteltemperatursensor, Plausibilität: Signal konstant;;
+defaut;0x2EE3;Kühlmitteltemperatursensor, Plausibilität: Gradient;;
+defaut;0x2EEA;Temperatursensor Kühleraustritt, Signal;;
+defaut;0x2EEB;Temperatursensor Kühleraustritt, Plausibilität, Gradient;;
+defaut;0x2EEC;Temperatursensor Kühleraustritt, Plausibilität;;
+defaut;0x2EF4;Kennfeldthermostat, Mechanik;;
+defaut;0x2EF5;Kennfeldthermostat, Ansteuerung;;
+defaut;0x2EFE;Elektrolüfter, Ansteuerung;;
+defaut;0x2EFF;Elektrolüfter, Eigendiagnose;;
+defaut;0x2F08;Ansauglufttemperatursensor, Signal;;
+defaut;0x2F09;Ansauglufttemperatursensor, Plausibilität;;
+defaut;0x2F0D;Kühlerjalousie, Ansteuerung, (GLF);;
+defaut;0x2F0F;Kühlerjalousie, unten;;
+defaut;0x2F12;Klimakompressor, Ansteuerung;;
+defaut;0x2F44;EWS Manipulationsschutz;;
+defaut;0x2F45;Schnittstelle EWS-DME;;
+defaut;0x2F46;EWS Wechselcode-Abspeicherng;;
+defaut;0x2F47;EWS Irreversibler Steuergerätefehler;;
+defaut;0x2F4E;Fahrzeuggeschwindigkeit, Signal;;
+defaut;0x2F4F;Fahrzeuggeschwindigkeit, Plausibilität;;
+defaut;0x2F58;Startautomatik, Ansteuerung;;
+defaut;0x2F63;Bremslichtschalter, Plausibilität;;
+defaut;0x2F64;Bremslichttestschalter, Plausibilität;;
+defaut;0x2F67;Kupplungsschalter, Signal;;
+defaut;0x2F6C;Abgasklappe, Ansteuerung;Condition: Exhaust flap with resonator;auto
+defaut;0x2F71;E-Box-Lüfter, Ansteuerung;;
+defaut;0x2F76;Umgebungsdrucksensor, Signal;;
+defaut;0x2F77;Umgebungsdrucksensor, Plausibilität;;
+defaut;0x2F7B;Öldruckschalter, Plausibilität;;
+defaut;0x2F80;Motorabstellzeit, Plausibilität;;
+defaut;0x2F85;DME, interner Fehler: Innentemperatursensor, Signal;;
+defaut;0x2F8F;Fahrpedalmodul und Bremspedal, Plausibilität;;
+defaut;0x2F94;Kraftstoffpumpenrelais, Ansteuerung;;
+defaut;0x2F99;Außentemperatursensor, Plausibilität;;
+defaut;0x2F9A;Außentemperatursensor, Kommunikation;;
+defaut;0x2F9E;Thermischer Ölniveausensor;;
+defaut;0x2FA3;Codierung fehlt;;
+defaut;0x2FA4;Falscher Datensatz;;
+defaut;0x2FC6;Energiesparmodus aktiv;;
+defaut;0xCD87;PT-CAN Kommunikationsfehler;;
+defaut;0xCD8B;Local-CAN Kommunikationsfehler;;
+defaut;0xCD8F;PT-CAN Kommunikationsfehler;;
+defaut;0xCD94;Botschaft (Außentemperatur/Relativzeit, 310);;
+defaut;0xCD95;Botschaft (Bedienung FGR / ACC, 194);;
+defaut;0xCD96;Botschaft (Drehmomentanforderung ACC, B7);;
+defaut;0xCD97;Botschaft (Drehmomentanforderung AFS, B1);;
+defaut;0xCD98;Botschaft (Drehmomentanforderung DSC, B6);;
+defaut;0xCD99;Botschaft (Drehmomentanforderung EGS, B5);;
+defaut;0xCD9A;Botschaft (Drehmomentanforderung SMG, BD);;
+defaut;0xCD9B;Botschaft (Fahrzeugmodus, 315);;
+defaut;0xCD9C;Botschaft (Geschwindigkeit, 1A0);;
+defaut;0xCD9D;Botschaft (Getriebedaten, BA);;
+defaut;0xCD9E;Botschaft (Getriebedaten 2, 1A2);;
+defaut;0xCD9F;Botschaft (Kilometerstand/Reichweite, 330);;
+defaut;0xCDA0;Botschaft (Klemmenstatus, 130);;
+defaut;0xCDA1;Botschaft (Lenkradwinkel, C4);;
+defaut;0xCDA2;Botschaft (Powermanagement Batteriespannung, 3B4);;
+defaut;0xCDA3;Botschaft (Powermanagement Ladespannung, 334);;
+defaut;0xCDA4;Botschaft (Status ARS-Modul, 1AC);;
+defaut;0xCDA5;Botschaft (Status DSC, 19E);;
+defaut;0xCDA6;Botschaft (Status Elektrische Kraftstoffpumpe, 335);;
+defaut;0xCDA7;Botschaft (Status Rückwärtsgang, 3B0);;
+defaut;0xCDA8;Botschaft (Status KOMBI, 1B4);;
+defaut;0xCDA9;Botschaft (Wärmestrom/Lastmoment Klimaanlage, 1B5);;
+defaut;0xCDAA;Botschaft (Status Crashabschaltung EKP, 135);;
+defaut;0xCDAB;Botschaft (Lampenzustand, 21A);;
+defaut;0xCDAC;Botschaft (Status Wasserventil, 3B5);;
+defaut;0xCDAD;Botschaft (Anforderung Radmoment Antriebstrang, BF);;
+defaut;0xCDAE;Botschaft (Uhrzeit/Datum, 2F8);;
+defaut;0xCDAF;Botschaft (Status Anhänger, 2E4);;
+defaut;0xCDB0;Botschaft (Anzeige Getriebedaten);;
+defaut;0xFFFF;unbekannter Fehlerort;;
+symptome;0x00;kein passendes Fehlersymptom;;
+symptome;0x01;Signal oder Wert oberhalb Schwelle;;
+symptome;0x02;Signal oder Wert unterhalb Schwelle;;
+symptome;0x03;Tankfüllstand zu gering;;
+symptome;0x04;kein Signal oder Wert;;
+symptome;0x05;1. Startwert im Flash zerstört. 2- aus 3-Auswahl fehlgeschlagen oder 2. Fehlerrückmeldung: Startwertprogrammierroutine;;
+symptome;0x06;ALIVE-Fehler;;
+symptome;0x07;Abbruch wegen Stromschwankungen bei Feinleckprüfung;;
+symptome;0x08;unplausibles Signal oder Wert;;
+symptome;0x09;Abgas nach Katalysator zu fett;;
+symptome;0x0A;Abgas nach Katalysator zu mager;;
+symptome;0x0B;Abgasschädigend;;
+symptome;0x0C;Abgasschädigend nach Startvorgang;;
+symptome;0x0D;Aktualisierungszähler inkrementiert nicht (Alive-Zähler);;
+symptome;0x0E;Anforderung AMT unplausibel;;
+symptome;0x0F;Anforderung EGS unplausibel;;
+symptome;0x10;Anforderung I-Anteil unplausibel;;
+symptome;0x11;Anforderung MSR unplausibel;;
+symptome;0x12;Anforderung PD-Anteil unplausibel;;
+symptome;0x13;Ansteuerung fehlerhaft;;
+symptome;0x14;Applikationssoftware;;
+symptome;0x15;Arbeitstemperatur Sonde nicht erreicht;;
+symptome;0x16;BSD-Fehler;;
+symptome;0x17;Betriebsbereitschaft Sonde zu spät erreicht;;
+symptome;0x18;Bootsoftware;;
+symptome;0x19;CAN Baustein im Zustand passiv;;
+symptome;0x1A;CAN Bus off;;
+symptome;0x1B;CAN Timeout;;
+symptome;0x1C;CAN Wert unplausibel;;
+symptome;0x1D;CAS-Fehler;;
+symptome;0x1E;Checksumme;;
+symptome;0x1F;Codierdaten im EEPROM fehlerhaft;;
+symptome;0x20;DISA 1: Schalter defekt;;
+symptome;0x21;DISA 2: Schalter defekt;;
+symptome;0x22;Datenbereich;;
+symptome;0x23;Differenz Stop-/Startposition;;
+symptome;0x24;Doppelfehler;;
+symptome;0x25;Drehrichtungserkennung;;
+symptome;0x26;Drehzahl außerhalb der Toleranz;;
+symptome;0x27;Drehzahl zu hoch;;
+symptome;0x28;Drehzahl zu niedrig;;
+symptome;0x29;Drosselklappenstellung unplausibel;;
+symptome;0x2A;EBSD-Fehler;;
+symptome;0x2B;Eigendiagnose / Mechanischer- oder Hardwaredefekt;;
+symptome;0x2C;Elektrisch;;
+symptome;0x2D;Empfangsfehler des EWS-Telegramms (Start-, Stopbit- oder Framefehler);;
+symptome;0x2E;Exzenterwinkel fährt nicht auf Vollhubposition;;
+symptome;0x2F;Falsche EWS-Telegramme empfangen. Die Fangbereichsrechnung ist für mindestens 5 Telegrammauswertungen fehlgeschlagen.;;
+symptome;0x30;Federtest;;
+symptome;0x31;Federtest und Notluftprüfung verfehlt;;
+symptome;0x32;Fehler Ablage;;
+symptome;0x33;Fehler beim Programmieren oder rücksetzen des Startwertes;;
+symptome;0x34;Fehlerverwaltung Getriebe;;
+symptome;0x35;Funktionstest;;
+symptome;0x36;Funktionstest Bandende;;
+symptome;0x37;Füllstandssignalwert zum Verbrauchswert unplausibel;;
+symptome;0x38;Gemisch zu fett;;
+symptome;0x39;Gemisch zu mager;;
+symptome;0x3A;Gleichlauffehler;;
+symptome;0x3B;Grobe Undichtigkeit zwischen Sekundärluftpumpe und -Ventil;;
+symptome;0x3C;Hardware;;
+symptome;0x3D;Heiztakteinkopplung auf Signal;;
+symptome;0x3E;IST Wert zu hoch;;
+symptome;0x3F;IST Wert zu niedrig;;
+symptome;0x40;Initialisierungsfehler;;
+symptome;0x41;Innenwiderstand des Signalkreises zu hochohmig;;
+symptome;0x42;Klemmt offen;;
+symptome;0x43;Kommunikationsfehler;;
+symptome;0x44;Kurzschluss der Motorleitungen;;
+symptome;0x45;Kurzschluss nach Minus;;
+symptome;0x46;Kurzschluss nach Minus oder Leitungsunterbrechung;;
+symptome;0x47;Kurzschluss nach Plus;;
+symptome;0x48;Kurzschluss nach Plus oder Leitungsunterbrechung;;
+symptome;0x49;Lagereglerüberwachung;;
+symptome;0x4A;Leckage grösser 0,5 mm;;
+symptome;0x4B;Leckage grösser 1,0 mm;;
+symptome;0x4C;Leitungsunterbrechung;;
+symptome;0x4D;Leitungsunterbrechung;;
+symptome;0x4E;Lesefehler im EEPROM: Wechselcode Ablage;;
+symptome;0x4F;Luftzufuhr nicht korrekt;;
+symptome;0x50;Mechanisch;;
+symptome;0x51;Mechanischer- oder Hardwaredefekt;;
+symptome;0x52;Mehr als 3 Parity-Fehler erkannt;;
+symptome;0x53;Messwert HFM zu hoch;;
+symptome;0x54;Messwert HFM zu niedrig;;
+symptome;0x55;Momentenanforderung vom ACC/DCC unplausibel;;
+symptome;0x56;Momentenanforderung vom LDM trotzt Bremssignal;;
+symptome;0x57;Momentenanforderung vom LDM unplausibel;;
+symptome;0x58;Momentenanforderung vom Tempomat trotz Bremssignal;;
+symptome;0x59;Motor mechanisch zu laut;;
+symptome;0x5A;Motor mechanisch zu laut;;
+symptome;0x5B;Motor mechanisch zu leise;;
+symptome;0x5C;Neuadaption erforderlich;;
+symptome;0x5D;Niveaumessung;;
+symptome;0x5E;Notabschaltung;;
+symptome;0x5F;Notlauf;;
+symptome;0x60;Notluftprüfung;;
+symptome;0x61;Notluftpunkt nicht adaptiert;;
+symptome;0x62;Offset Maximum überschritten;;
+symptome;0x63;Parity-Fehler;;
+symptome;0x64;Pedalwert zu Bremspedal;;
+symptome;0x65;Permittivitätsmessung;;
+symptome;0x66;Plausibilitaet zwischen Poti 1 und 2 verletzt;;
+symptome;0x67;Poti 1 unplausibel zu MAF;;
+symptome;0x68;Poti 2 unplausibel zu MAF;;
+symptome;0x69;Powermanagement;;
+symptome;0x6A;Prüfsumme ungleich errechnetem Wert;;
+symptome;0x6B;Pumpenstromschwelle bei Ventilprüfung erreicht;;
+symptome;0x6C;RAM-Überprüfung;;
+symptome;0x6D;Randbedingungen verletzt;;
+symptome;0x6E;Relais-Fehler;;
+symptome;0x6F;Ruhestromverletzung;;
+symptome;0x70;SPI-Fehler;;
+symptome;0x71;Schalter defekt;;
+symptome;0x72;Schreib-/Lesefehler im EEPROM;;
+symptome;0x73;Schreibfehler im EEPROM: Wechselcode Ablage;;
+symptome;0x74;Segmentadaption am Anschlag;;
+symptome;0x75;Segmentzeit;;
+symptome;0x76;Sekundärluftmasse zu gering;;
+symptome;0x77;Sekundärluftmenge zu gering Bank 1;;
+symptome;0x78;Sekundärluftmenge zu gering Bank 1 und Bank 2;;
+symptome;0x79;Sekundärluftmenge zu gering Bank 2;;
+symptome;0x7A;Sekundärluftpumpe nicht aktiv;;
+symptome;0x7B;Sekundärluftventil oder -schlauch blockiert;;
+symptome;0x7C;Sensordiagnose;;
+symptome;0x7D;Sensorsignal;;
+symptome;0x7E;Sensorsignale zueinander unplausibel;;
+symptome;0x7F;Sicherheitsabschaltung;;
+symptome;0x80;Sicherheitsrechner RAM;;
+symptome;0x81;Signal fehlt;;
+symptome;0x82;Signal nicht plausibel;;
+symptome;0x83;Signal oberhalb Schwelle;;
+symptome;0x84;Signal ungültig für Synchronisation;;
+symptome;0x85;Signal unplausibel;;
+symptome;0x86;Signal unterhalb Schwelle;;
+symptome;0x87;Signal während Schubabschaltung oberhalb Schwelle;;
+symptome;0x88;Signal während Schubabschaltung unterhalb Schwelle;;
+symptome;0x89;Signalamplitude zu gering;;
+symptome;0x8A;Signalfehler;;
+symptome;0x8B;Software;;
+symptome;0x8C;Software-Fehler;;
+symptome;0x8D;Sonde nicht angesteckt;;
+symptome;0x8E;Sondensignal zu träge;;
+symptome;0x8F;Sondensignal zu träge nach Schubphase;;
+symptome;0x90;Sondentemperatur ungültig;;
+symptome;0x91;Spannung;;
+symptome;0x92;Spannungsregler 1;;
+symptome;0x93;Spannungsregler 2;;
+symptome;0x94;Sporttastersignal unplausibel;;
+symptome;0x95;Startphase;;
+symptome;0x96;Steuergerät defekt;;
+symptome;0x97;Strom;;
+symptome;0x98;Synchronisation;;
+symptome;0x99;Systemfehler;;
+symptome;0x9A;Temperatur;;
+symptome;0x9B;Temperaturgradient zu steil;;
+symptome;0x9C;Temperaturmessung;;
+symptome;0x9D;Temperaturschwelle 1 überschritten;;
+symptome;0x9E;Temperaturschwelle 2 überschritten;;
+symptome;0x9F;Temperatursignal konstant;;
+symptome;0xA0;Tiefentladung;;
+symptome;0xA1;Timeout;;
+symptome;0xA2;Timeout;;
+symptome;0xA3;Timeout SPI Bus;;
+symptome;0xA4;Timeoutfehler: 10 Sekunden nach Kl.15 EIN noch kein EWS-Telegramm empfangen, evtl. Leitungsunterbrechung oder Kurzschluss nach Minus;;
+symptome;0xA5;Toggle-Bit;;
+symptome;0xA6;Trockenlauf;;
+symptome;0xA7;Unterbrechung Abgleichsleitung;;
+symptome;0xA8;Unterbrechung Nernstleitung;;
+symptome;0xA9;Unterbrechung Pumpstrompfad;;
+symptome;0xAA;Unterbrechung virtuelle Masse;;
+symptome;0xAB;Unterspannung;;
+symptome;0xAC;Variantenüberwachung;;
+symptome;0xAD;Verbrennungsaussetzer an mehreren Zylindern;;
+symptome;0xAE;Verlustmoment unplausibel;;
+symptome;0xAF;Wakeupleitung Masseschluss;;
+symptome;0xB0;Wakeupleitung Pegel unplausibel;;
+symptome;0xB1;Warnschwelle Stellmotor Temperatur;;
+symptome;0xB2;Warnschwelle Strom;;
+symptome;0xB3;Wert außerhalb Referenzbereich;;
+symptome;0xB4;Wirkungsgrad unter Schwellwert;;
+symptome;0xB5;Zahnfehler;;
+symptome;0xB6;Zahnfehler Kurbelwellengeber;;
+symptome;0xB7;Zahnzeitfehler;;
+symptome;0xB8;Zündkreisüberwachung;;
+symptome;0xB9;Zündzeit Zylinder 1 zu gering;;
+symptome;0xBA;Zündzeit Zylinder 2 zu gering;;
+symptome;0xBB;Zündzeit Zylinder 3 zu gering;;
+symptome;0xBC;Zündzeit Zylinder 4 zu gering;;
+symptome;0xBD;Zündzeit Zylinder 5 zu gering;;
+symptome;0xBE;Zündzeit Zylinder 6 zu gering;;
+symptome;0xBF;batterieloser Betrieb;;
+symptome;0xC0;defekt;;
+symptome;0xC1;gelernter Bereich ausserhalb der Toleranzen;;
+symptome;0xC2;interne Temperatur zu hoch;;
+symptome;0xC3;interner RAM-Baustein;;
+symptome;0xC4;irreversibel aus;;
+symptome;0xC5;kein Signal;;
+symptome;0xC6;kein Startwert programmiert;;
+symptome;0xC7;keine Anschläge gelernt;;
+symptome;0xC8;keine Codierung erfolgt (nach Programmierung);;
+symptome;0xC9;keine Kommunikation über BSD-Schnittstelle;;
+symptome;0xCA;keine Spannung am Notlauf-Eingang der Pumpe;;
+symptome;0xCB;klemmt dauerhaft;;
+symptome;0xCC;klemmt kurzzeitig;;
+symptome;0xCD;klemmt offen;;
+symptome;0xCE;kurzschluss nach Plus;;
+symptome;0xCF;maximales Kupplungsmoment unplausibel;;
+symptome;0xD0;minimales Kupplungsmoment unplausibel;;
+symptome;0xD1;mit Kraftstoffabschaltung;;
+symptome;0xD2;nicht abgefallen;;
+symptome;0xD3;nicht angezogen;;
+symptome;0xD4;nicht korrekt geschlossen;;
+symptome;0xD5;obere Schwelle Pumpenstrom bei Referenzmessung;;
+symptome;0xD6;oberer Anschlag nicht gelernt;;
+symptome;0xD7;reversibel aus;;
+symptome;0xD8;schaltet zu spät;;
+symptome;0xD9;schwergängig zu langsam;;
+symptome;0xDA;schwergängig, klemmt mechanisch;;
+symptome;0xDB;unplausibel bezüglich Lambdaregelung;;
+symptome;0xDC;untere Schwelle Pumpenstrom bei Referenzmessung;;
+symptome;0xDD;unteren Anschlag lernen während Urinitialisierung abgebrochen;;
+symptome;0xDE;unterer Anschlag nicht gelernt;;
+symptome;0xDF;vertauschte Lambdasonden nach Katalysator;;
+symptome;0xE0;vertauschte Lambdasonden vor Katalysator;;
+symptome;0xE1;Überlast;;
+symptome;0xE2;Überlast Strom;;
+symptome;0xE3;Überspannung;;
+symptome;0xE4;Überstrom;;
+symptome;0xE5;Überstrom zu lange;;
+symptome;0xE6;Übertemperatur;;
+symptome;0xE7;Übertemperatur Endstufe;;
+symptome;0xE8;Warnschwelle Steuergerät Temperatur (VVT-Endstufe);;
+symptome;0xE9;Ventil öffnet nicht;;
+symptome;0xEA;Sensor defekt;;
+symptome;0xEB;Zahnsprung;;
+symptome;0xEC;Unterbrechung Pumpstrompfad oder virtuelle Masse;;
+symptome;0xED;Signal magerer als erwartet;;
+symptome;0xEE;Signal fetter als erwartet;;
+symptome;0xEF;Spannungsversorgung fehlt;;
+symptome;0xF0;Temperaturgradient zu hoch;;
+symptome;0xF1;Timeout (Ungültigkeitswert vom Kombi);;
+symptome;0xF2;Oelniveau zu niedrig;;
+symptome;0xF3;Fertigungsmodus;;
+symptome;0xF4;Transportmodus;;
+symptome;0xF5;Werkstattmodus;;
+symptome;0xF6;Prüfsumme;;
+symptome;0xF7;Valvetronic öffnet nicht;;
+symptome;0xF8;Integrierte Momentenreserve nicht erreicht;;
+symptome;0xF9;Motorkühlmitteltemperatur - Signal festliegend hoch;;
+symptome;0xFA;Tankfüllstand zu gering;;
+symptome;0xFFFF;unbekannte Fehlerart;;
+table;FUMWELTTEXTE/0x4200;Ansauglufttemperatur 1;Air intake temperature;auto
+table;FUMWELTTEXTE/0x4201;Umgebungsdruck;;
+table;FUMWELTTEXTE/0x4202;Saugrohrdruck;Intake manifold pressure;auto
+table;FUMWELTTEXTE/0x4203;Massenstrom vom HFM;Air mass;auto
+table;FUMWELTTEXTE/0x4204;Umgebungstemperatur;Ambient temperature;auto
+table;FUMWELTTEXTE/0x4205;Saugrohrdruck 1 / Ladedruck 1;Boost pressure;auto
+table;FUMWELTTEXTE/0x4300;Kühlwassertemperatur;Coolant temperature;auto
+table;FUMWELTTEXTE/0x4301;Kuehlerauslasstemperatur;;
+table;FUMWELTTEXTE/0x4302;Wasserpumpe Leistung ueber BSD;Water pump output via BSD;auto
+table;FUMWELTTEXTE/0x4303;Wasserpumpe Elektronik Temperatur;Recommended temperature of BSS water pump;auto
+table;FUMWELTTEXTE/0x4304;Wasserpumpe Strom;Current from water pump;auto
+table;FUMWELTTEXTE/0x4305;Wasserpumpe Drehzahl Ist;Water pump RPM;auto
+table;FUMWELTTEXTE/0x4306;Wasserpumpe Drehzahl Soll;BSS Waterpump target RPM;auto
+table;FUMWELTTEXTE/0x4400;Ölstand Mittelwert Langzeit;Oil level average long-term;auto
+table;FUMWELTTEXTE/0x4401;Füllstand Motoröl;Oil level - brief;auto
+table;FUMWELTTEXTE/0x4402;Öltemperatur;Oil temperature;auto
+table;FUMWELTTEXTE/0x4403;Kraftstoff-Verbrauch seit letztem Service;Fuel consumption since last service;auto
+table;FUMWELTTEXTE/0x4404;km seit letztem Service;KM reading since last service;auto
+table;FUMWELTTEXTE/0x4405;Oelsensor Niveau Rohwert;Oil sensor level raw value;auto
+table;FUMWELTTEXTE/0x4406;Oelsensor Qualität Rohwert;Oil sensor quality raw value;auto
+table;FUMWELTTEXTE/0x4407;Oelsensor Temperatur Rohwert;Oil sensor temperature raw value;auto
+table;FUMWELTTEXTE/0x4408;Oelsensor Temperatur;Oil sensor temperature;auto
+table;FUMWELTTEXTE/0x4409;Oelsensor Niveau;Oil sensor level;auto
+table;FUMWELTTEXTE/0x440A;Oelsensor Qualität;Oil sensor quality;auto
+table;FUMWELTTEXTE/0x440B;Länderfaktor 1 codiert;;
+table;FUMWELTTEXTE/0x440C;Länderfaktor 2 codiert;;
+table;FUMWELTTEXTE/0x440D;Länderfaktor 1;;
+table;FUMWELTTEXTE/0x440E;Länderfaktor 2;;
+table;FUMWELTTEXTE/0x440F;Kurzmittelwert-Niveau für den Tester;;
+table;FUMWELTTEXTE/0x4410;Restweg aus Permittivität abgeleitet;;
+table;FUMWELTTEXTE/0x4411;Restweg aus Kraftstoffverbrauch abgeleitet;;
+table;FUMWELTTEXTE/0x4412;Öl-Alter in Monate;;
+table;FUMWELTTEXTE/0x4413;aufbereitete Permittivität bei letztem Ölwechsel;;
+table;FUMWELTTEXTE/0x4414;Permittivität für Bewertung aufbereitet (extrapoliert);;
+table;FUMWELTTEXTE/0x4415;Offset für Permittivitätskorrektur;;
+table;FUMWELTTEXTE/0x4416;zugeteilte Bonuskraftstoffmenge;;
+table;FUMWELTTEXTE/0x4417;zugeteilter Permittivitätsbonus;;
+table;FUMWELTTEXTE/0x4500;VVT-Excenter Istwert;VVT eccentric actual value;auto
+table;FUMWELTTEXTE/0x4501;VVT-Excenter Sollwert;;
+table;FUMWELTTEXTE/0x4502;Mechanischer Verstellbereich VVT aus Lernroutine;Mechanical adjustment range VVT from learning routine;auto
+table;FUMWELTTEXTE/0x4503;Sollwert für Lageregler;Target value for position controller from the tester;auto
+table;FUMWELTTEXTE/0x4504;Sollwert für Lageregler vom Tester;Target value inlet spread;auto
+table;FUMWELTTEXTE/0x4505;Sollwert Einlassspreizung;Target value inlet spread;auto
+table;FUMWELTTEXTE/0x4506;Nockenwellenposition Einlass;Camshaft position intake;auto
+table;FUMWELTTEXTE/0x4507;Nockenwellenposition Auslass;Camshaft position exhaust;auto
+table;FUMWELTTEXTE/0x4508;Istwert Einlassspreizung;Camshaft inlet spread;auto
+table;FUMWELTTEXTE/0x4509;Istwert Auslassspreizung;Camshaft outlet spread;auto
+table;FUMWELTTEXTE/0x450A;Normspreizung Auslass;Standard spread outlet;auto
+table;FUMWELTTEXTE/0x450B;Normspreizung Einlass;Standard spread inlet;auto
+table;FUMWELTTEXTE/0x4600;aktueller Drosselklappenwinkel;Throttle position;auto
+table;FUMWELTTEXTE/0x4601;Drosselklappe Sollwert;Throttle position target;auto
+table;FUMWELTTEXTE/0x4602;Generator Sollspannung ueber BSD;Generator target voltage via BSD;auto
+table;FUMWELTTEXTE/0x4603;Chiptemperatur Generator 1;Chip temperature of the controller (BSD, LIN, SGR - resolution 1 °C);auto
+table;FUMWELTTEXTE/0x4604;Generator Strom;Generator current;auto
+table;FUMWELTTEXTE/0x4605;Chipversion Generator 1;;
+table;FUMWELTTEXTE/0x4606;Reglerversion Generator 1;Regulator version Generator 1;auto
+table;FUMWELTTEXTE/0x4607;Herstellercode Generator 1;Manufacturer Code Generator 1;auto
+table;FUMWELTTEXTE/0x4608;Kennung Generatortyp Generator 1;Identifier Generator type Generator 1;auto
+table;FUMWELTTEXTE/0x4609;Kl.87 Spannung / Versorgung DME;Terminal 87 Voltage / Supply DME;auto
+table;FUMWELTTEXTE/0x460A;Batteriespannung aktuell;Battery voltage;auto
+table;FUMWELTTEXTE/0x460B;Batteriespannung von IBS gemessen;Battery voltage (IBS);auto
+table;FUMWELTTEXTE/0x460C;Batteriespannung vom AD-Wandler DME;Battery voltage from the AD converter DME;auto
+table;FUMWELTTEXTE/0x460D;Korrekturwert Abschaltung;;
+table;FUMWELTTEXTE/0x460E;Abstand zur Startfähigkeitsgrenze;;
+table;FUMWELTTEXTE/0x460F;Batterielast;Battery load;auto
+table;FUMWELTTEXTE/0x4610;aktuelle Position Disaklappen;Current position of the DISA flaps;auto
+table;FUMWELTTEXTE/0x4611;Sollwert E-Lüfter als PWM Wert;Target value of electric fan as PWM value;auto
+table;FUMWELTTEXTE/0x4612;Erregerstrom Generator 1;;
+table;FUMWELTTEXTE/0x4613;Kopierter Wert von zum Generator gesendeter Sollspannung Generator 1;;
+table;FUMWELTTEXTE/0x4614;Auslastungsgrad Generator 1;;
+table;FUMWELTTEXTE/0x4615;Kopie begrenzter Erregerstrom Generator 1;;
+table;FUMWELTTEXTE/0x4616;Kopie Generator 1 LR Vorgabe auf Bus gelegt;;
+table;FUMWELTTEXTE/0x4617;gefiltertes Generatormoment absolut Ausgang;;
+table;FUMWELTTEXTE/0x4618;Kopie Drehzahlschwelle für LR-Funktion Generator 1 aktiv;;
+table;FUMWELTTEXTE/0x4700;Status Lambdasonde betriebsbereit Vorkat Bank 1;Condition: Probe must be operational before catalytic converter;auto
+table;FUMWELTTEXTE/0x4701;Status Lambdasonde betriebsbereit Vorkat Bank 2;;
+table;FUMWELTTEXTE/0x4702;Spannung Lambdasonde Vorkat Bank 1 mit Offsetkorrektur;Voltage lambda sensor before cat. Bank 1 with offset correction;auto
+table;FUMWELTTEXTE/0x4703;Spannung Lambdasonde Vorkat Bank 2 mit Offsetkorrektur;Voltage lambda sensor before cat. Bank 2 with offset correction;auto
+table;FUMWELTTEXTE/0x4704;Lambda Sollwert Bank 1;Lambda target bank1;auto
+table;FUMWELTTEXTE/0x4705;Lambda Sollwert Bank 2;Lambda target bank2;auto
+table;FUMWELTTEXTE/0x4800;Kupplungsschalter Status;;
+table;FUMWELTTEXTE/0x4801;Kupplungsschalter vorhanden;Clutch switch present;auto
+table;FUMWELTTEXTE/0x4802;Sporttaster aktiv;Sport button activated;auto
+table;FUMWELTTEXTE/0x4803;Status Klima ein;Condition for switching on the compressor;auto
+table;FUMWELTTEXTE/0x4804;Sekundärluft Pumpe aktiv;Secondary air pump active;auto
+table;FUMWELTTEXTE/0x4805;Startrelais über CAN aktiv;Switch terminal 50 of CAN;auto
+table;FUMWELTTEXTE/0x4806;Steuergeraete-Innentemperatur;;
+table;FUMWELTTEXTE/0x4807;Motor Drehzahl;Engine Speed;auto
+table;FUMWELTTEXTE/0x4808;Leerlauf Solldrehzahl;Idle target RPM;auto
+table;FUMWELTTEXTE/0x4809;Status LL;Idle speed control condition;auto
+table;FUMWELTTEXTE/0x480A;Kilometerstand Auflösung 1 km;Mileage;auto
+table;FUMWELTTEXTE/0x480B;Pedalwert Fahrerwunsch in %;Accelerator Pedal;auto
+table;FUMWELTTEXTE/0x5800;Zeit nach Start;;
+table;FUMWELTTEXTE/0x5801;Umgebungsdruck;;
+table;FUMWELTTEXTE/0x5802;Zustand Lambdaregelung Bank 1;Lambda control state Bank 1;auto
+table;FUMWELTTEXTE/0x5803;Zustand Lambdaregelung Bank 2;Lambda control state Bank 2;auto
+table;FUMWELTTEXTE/0x5804;Berechneter Lastwert;Calculated load value;auto
+table;FUMWELTTEXTE/0x5805;Kühlmitteltemperatur OBD;;
+table;FUMWELTTEXTE/0x5806;Lambda Integrator Gruppe 1;Lambda Integrator Group 1;auto
+table;FUMWELTTEXTE/0x5807;Lambda Adaption Summe mul. & add. Gruppe 1;Lambda Adaptation Sum of multiplicative and additive group 1;auto
+table;FUMWELTTEXTE/0x5808;Lambda Integrator Gruppe 2;Lambda Integrator Group 2;auto
+table;FUMWELTTEXTE/0x5809;Lambda Adaption Summe mul. & add. Gruppe 2;Lambda Adaptation Sum of multiplicative and additive group 2;auto
+table;FUMWELTTEXTE/0x580A;Kraftstoffdruck;Fuel pressure;auto
+table;FUMWELTTEXTE/0x580B;Saugrohrdruck;Intake manifold pressure;auto
+table;FUMWELTTEXTE/0x580C;Drehzahl;;
+table;FUMWELTTEXTE/0x580D;Geschwindigkeit;Speed;auto
+table;FUMWELTTEXTE/0x580E;Zündzeitpunkt Zylinder 1;;
+table;FUMWELTTEXTE/0x580F;Ansauglufttemperatur;Intake air temperature;auto
+table;FUMWELTTEXTE/0x5810;Luftdurchsatz OBD;Relative air mass (calc. load value) according to SAE J1979;auto
+table;FUMWELTTEXTE/0x5811;Motordrehzahl;Engine Speed;auto
+table;FUMWELTTEXTE/0x5812;Luftmasse gemessen;;
+table;FUMWELTTEXTE/0x5813;Relative Last;Relative Filling;auto
+table;FUMWELTTEXTE/0x5814;Fahrpedalwert;Accelerator pedal value (raw);auto
+table;FUMWELTTEXTE/0x5815;Batteriespannung;;
+table;FUMWELTTEXTE/0x5816;Lambda Setpoint;;
+table;FUMWELTTEXTE/0x5817;Umgebungstemperatur;Ambient temperature;auto
+table;FUMWELTTEXTE/0x5818;Luftmasse gerechnet;Air mass per cylinder;auto
+table;FUMWELTTEXTE/0x5819;Drehzahl OBD Byte;;
+table;FUMWELTTEXTE/0x581A;Nockenwelle Einlass;;
+table;FUMWELTTEXTE/0x581B;Nockenwelle Einlass Sollwert;;
+table;FUMWELTTEXTE/0x581C;Nockenwelle Auslass;;
+table;FUMWELTTEXTE/0x581D;Nockenwelle Auslass Sollwert;Outlet Camshaft Target;auto
+table;FUMWELTTEXTE/0x581E;Ansauglufttemperatur;Intake air temperature;auto
+table;FUMWELTTEXTE/0x581F;Motortemperatur;;
+table;FUMWELTTEXTE/0x5820;Kühlmitteltemperatur Kühlerausgang;Coolant temperature (sensor value) after low-pass filtering;auto
+table;FUMWELTTEXTE/0x5821;Steuergerät Innentemperatur;;
+table;FUMWELTTEXTE/0x5822;( Motor ) - Öltemperatur;;
+table;FUMWELTTEXTE/0x5823;Zeit Motor steht;Parking time;auto
+table;FUMWELTTEXTE/0x5824;Umgebungstemperatur;Ambient temperature;auto
+table;FUMWELTTEXTE/0x5825;Abstellzeit;;
+table;FUMWELTTEXTE/0x5826;Drosselklappe Sensor 1;Throttle sensor 1;auto
+table;FUMWELTTEXTE/0x5827;Lambdasonden Heizung Vorkat 1;;
+table;FUMWELTTEXTE/0x5828;Lambdasonden Heizung Vorkat 2;;
+table;FUMWELTTEXTE/0x5829;Lambdasonden Heizung Hinterkat 1;;
+table;FUMWELTTEXTE/0x582A;Lambdasonden Heizung Hinterkat 2;;
+table;FUMWELTTEXTE/0x582B;Drehmomenteingriff über CAN;Torque intervention via CAN;auto
+table;FUMWELTTEXTE/0x582C;Anzahl ungültiger Schreibüberprüfungszyklen am SPI-Interface der Lambdasonde vor Kat Bank 1;;
+table;FUMWELTTEXTE/0x582D;Anzahl ungültiger Schreibüberprüfungszyklen am SPI-Interface der Lambdasonde vor Kat Bank 2;;
+table;FUMWELTTEXTE/0x582E;Adaptionsfaktor Sensor Zeitkonstante vor Kat Bank 1;;
+table;FUMWELTTEXTE/0x582F;Adaptionsfaktor Sensor Zeitkonstante vor Kat Bank 2;;
+table;FUMWELTTEXTE/0x5830;Mittelwert der normierten Signalamplitude der Lambdasonde vor Kat Bank 1;;
+table;FUMWELTTEXTE/0x5831;Mittelwert der normierten Signalamplitude der Lambdasonde vor Kat Bank 2;;
+table;FUMWELTTEXTE/0x5832;Motor Status;Engine Coordinator Condition;auto
+table;FUMWELTTEXTE/0x5833;Umgebungstemperatur beim Start;;
+table;FUMWELTTEXTE/0x5834;Umgebungsdruck;;
+table;FUMWELTTEXTE/0x5836;Drehzahlgradient;Speed gradient;auto
+table;FUMWELTTEXTE/0x5837;Status OBD-I Fehler vor Kat Bank 1;;
+table;FUMWELTTEXTE/0x5838;Status OBD-I Fehler vor Kat Bank 2;;
+table;FUMWELTTEXTE/0x5839;Status Drosselklappe Notlauf;;
+table;FUMWELTTEXTE/0x583A;Ansauglufttemperatur beim Start;;
+table;FUMWELTTEXTE/0x583B;Kraftstofftank Füllstand;Fuel Tank Level;auto
+table;FUMWELTTEXTE/0x583C;Spannung Kl. 87;;
+table;FUMWELTTEXTE/0x583D;Reset: Quelle;;
+table;FUMWELTTEXTE/0x583E;Motordrehzahl bei Reset;;
+table;FUMWELTTEXTE/0x583F;Drosselklappe Sollwert;Throttle position target;auto
+table;FUMWELTTEXTE/0x5840;CPU Last bei Reset;;
+table;FUMWELTTEXTE/0x5841;SG-Innentemperatur Rohwert;;
+table;FUMWELTTEXTE/0x5843;Versorgung FWG 1;Power supply for accelerator pedal sensor 1;auto
+table;FUMWELTTEXTE/0x5845;Spannung Lambdasonde VorKat 1;Lambda probe voltage pre-cat Bank 1;auto
+table;FUMWELTTEXTE/0x5846;Spannung Pedalwertgeber 1;Pedal 1 Position Voltage;auto
+table;FUMWELTTEXTE/0x5847;Spannung Pedalwertgeber 2;Pedal 2 Position Voltage;auto
+table;FUMWELTTEXTE/0x5848;Spannung Lambdasonde VorKat 2;Lambda probe voltage pre-cat Bank 2;auto
+table;FUMWELTTEXTE/0x5849;Spannung Lambdasonde HinterKat 1;Voltage Lambda sensor downstream of catalytic converter, bank 1;auto
+table;FUMWELTTEXTE/0x584A;Spannung Kl. 15 Rohwert;Voltage Class 15 Raw Value;auto
+table;FUMWELTTEXTE/0x584B;Spannung Lambdasonde HinterKat 2;Voltage Lambda sensor behind catalytic converter, bank 2;auto
+table;FUMWELTTEXTE/0x584C;Spannung Drosselklappe Poti 2;Throttle 2 pos. voltage;auto
+table;FUMWELTTEXTE/0x584D;korrigierter Sollwert Durchfluss Tankentlüftung;Tank ventilation air flow target in intake manifold;auto
+table;FUMWELTTEXTE/0x584E;Spannung Drosselklappe Poti 1;Throttle 1 pos. voltage;auto
+table;FUMWELTTEXTE/0x584F;Spannung Luftmasse;Air mass sensor voltage;auto
+table;FUMWELTTEXTE/0x5850;Spannung Motortemperatur;;
+table;FUMWELTTEXTE/0x5851;Spannung Ansauglufttemperatur;Voltage Intake air temperature;auto
+table;FUMWELTTEXTE/0x5852;Kühlmitteltemperatur Kühlerausgang Rohwert;;
+table;FUMWELTTEXTE/0x5853;Spannung Kl.87 Rohwert;;
+table;FUMWELTTEXTE/0x5854;Versorgung FWG 2;Power supply for accelerator pedal sensor 2;auto
+table;FUMWELTTEXTE/0x5855;Mittelwert Bank 1;;
+table;FUMWELTTEXTE/0x5856;Mittelwert Bank 2;;
+table;FUMWELTTEXTE/0x5858;Drosselklappe aktueller Wert;;
+table;FUMWELTTEXTE/0x5859;DMTL Strom Referenzleck;;
+table;FUMWELTTEXTE/0x585A;DMTL Strom Grobleck;;
+table;FUMWELTTEXTE/0x585B;DMTL Strom Diagnoseende;;
+table;FUMWELTTEXTE/0x585C;Widerstand Lambdasonde NK 1;;
+table;FUMWELTTEXTE/0x585D;Widerstand Lambdasonde NK 2;Lambda sensor resistance downstream of catalytic converter, bank 2;auto
+table;FUMWELTTEXTE/0x585E;unteres Byte Widerstand Lambdasonde NK 1;;
+table;FUMWELTTEXTE/0x585F;unteres Byte Widerstand Lambdasonde NK 2;;
+table;FUMWELTTEXTE/0x5860;Widerstand Lambdasonde VK 1;Lambda sensor resistance before catalytic converter, Bank 1;auto
+table;FUMWELTTEXTE/0x5861;Widerstand Lambdasonde VK 2;Lambda sensor resistance before catalytic converter, Bank 2;auto
+table;FUMWELTTEXTE/0x5863;untere Byte Widerstand Lambdasonde VK 1;;
+table;FUMWELTTEXTE/0x5864;untere Byte Widerstand Lambdasonde VK 2;;
+table;FUMWELTTEXTE/0x5865;Oelstand Mittelwert Langzeit;Oil level average long-term;auto
+table;FUMWELTTEXTE/0x5866;Füllstand Motoröl;Oil level - brief;auto
+table;FUMWELTTEXTE/0x5867;Kilometerstand;;
+table;FUMWELTTEXTE/0x5868;Status Standverbraucher registriert Teil 1;;
+table;FUMWELTTEXTE/0x5869;Status Standverbraucher registriert Teil 2;;
+table;FUMWELTTEXTE/0x586A;Batteriespannung von IBS gemessen;Battery voltage (IBS);auto
+table;FUMWELTTEXTE/0x586B;Zeit mit Ruhestrom 80 - 200 mA;Time with quiescent current 80 - 200 mA;auto
+table;FUMWELTTEXTE/0x586C;Zeit mit Ruhestrom 200 - 1000 mA;Time with quiescent current 200 - 1000 mA;auto
+table;FUMWELTTEXTE/0x586D;Zähler Erkennung schlechte Strasse;Counter detection bad road;auto
+table;FUMWELTTEXTE/0x586E;Zeit mit Ruhestrom größer 1000 mA;Time with quiescent current greater than 1000 mA;auto
+table;FUMWELTTEXTE/0x5870;Spannung DME Umgebungsdruck;Atmospheric pressure sensor voltage;auto
+table;FUMWELTTEXTE/0x5871;Lambda-Sollwert Gruppe 1;Lambda target group 1;auto
+table;FUMWELTTEXTE/0x5873;Lambda-Sollwert Gruppe 2;Lambda target group 2;auto
+table;FUMWELTTEXTE/0x5874;Spannung Strommessung DMTL;Voltage pump current tank diagnostics;auto
+table;FUMWELTTEXTE/0x5876;Mittlere Diagnosewert minimale Luftmasse;Average diagnostic value minimum air mass;auto
+table;FUMWELTTEXTE/0x5877;Differenz zwischen Maximum und Minimum SAF;Difference between maximum and minimum SAF;auto
+table;FUMWELTTEXTE/0x5878;Lambdaverschiebung Rückführregler 1;Lambda shift feedback controller 1;auto
+table;FUMWELTTEXTE/0x5879;Lambdaverschiebung Rückführregler 2;Lambda shift feedback controller 2;auto
+table;FUMWELTTEXTE/0x587A;Status FGR;;
+table;FUMWELTTEXTE/0x587C;Status Motorsteuerung;;
+table;FUMWELTTEXTE/0x587D;Symptom bei Schubabschaltung Sonde vor Kat Bank 1;;
+table;FUMWELTTEXTE/0x587E;Symptom bei Schubabschaltung Sonde vor Kat Bank 2;;
+table;FUMWELTTEXTE/0x587F;Tastverhaeltnis E-Lüfter;Electric fan duty cycle;auto
+table;FUMWELTTEXTE/0x5880;Tastverhältnis: Luftklappe;;
+table;FUMWELTTEXTE/0x5881;berechneter Gang;Gear information;auto
+table;FUMWELTTEXTE/0x5882;Motortemperatur beim Start;Engine temperature at start;auto
+table;FUMWELTTEXTE/0x5883;Spannung Klopfwerte Zylinder 1;Knock voltage Cylinder 1;auto
+table;FUMWELTTEXTE/0x5885;Spannung Klopfwerte Zylinder 3;Knock voltage Cylinder 3;auto
+table;FUMWELTTEXTE/0x5886;Spannung Klopfwerte Zylinder 6;Knock voltage Cylinder 6;auto
+table;FUMWELTTEXTE/0x5888;Spannung Klopfwerte Zylinder 4;Knock voltage Cylinder 4;auto
+table;FUMWELTTEXTE/0x5889;Lambda-Istwert Gruppe 1;Lambda value group 1;auto
+table;FUMWELTTEXTE/0x588A;Lambda-Istwert Gruppe 2;Lambda value group 2;auto
+table;FUMWELTTEXTE/0x588B;Zeit seit Startende;Time since start;auto
+table;FUMWELTTEXTE/0x588C;Keramiktemperatur Lambdasonde VK 1;Lambda ceramic temp pre-cat bank 1;auto
+table;FUMWELTTEXTE/0x588D;aktuelle Zeit DMTL Leckmessung;Current leak measurement time;auto
+table;FUMWELTTEXTE/0x588E;Pumpenstrom bei DMTL Pumpenprüfung;Pump current tank diagnostics;auto
+table;FUMWELTTEXTE/0x588F;Keramiktemperatur Lambdasonde VK 2;Lambda ceramic temp pre-cat bank 2;auto
+table;FUMWELTTEXTE/0x5891;Momentanforderung an der Kupplung;Torque request from clutch;auto
+table;FUMWELTTEXTE/0x5893;Drehmomentabfall schnell bei Gangwechsel;Rapid torque drop during gear changes;auto
+table;FUMWELTTEXTE/0x5894;Symptom Lambdasondenheizung vor Kat Bank 1;;
+table;FUMWELTTEXTE/0x5895;Symptom Lambdasondenheizung vor Kat Bank 2;;
+table;FUMWELTTEXTE/0x5896;Abgastemperatur nach Kat Bank 1;;
+table;FUMWELTTEXTE/0x5897;Abgastemperatur nach Kat Bank 2;;
+table;FUMWELTTEXTE/0x5898;Generator Sollspannung;Generator target voltage;auto
+table;FUMWELTTEXTE/0x5899;Istwert DISA-Position;;
+table;FUMWELTTEXTE/0x589B;Spannungsoffset Signalpfad CJ120 1;Voltage offset signal path CJ120 1;auto
+table;FUMWELTTEXTE/0x589C;Spannungsoffset Signalpfad CJ120 2;Voltage offset signal path CJ120 2;auto
+table;FUMWELTTEXTE/0x589E;Status VVT- Entlastungsrelais;;
+table;FUMWELTTEXTE/0x589F;VVT Istwinkel;VVT actual angle;auto
+table;FUMWELTTEXTE/0x58A0;VVT Sollwinkel;VVT target angle;auto
+table;FUMWELTTEXTE/0x58A1;Ausgegeben Tastverhältnis;;
+table;FUMWELTTEXTE/0x58A2;VVT Motorstrom;Current for VVT actuator;auto
+table;FUMWELTTEXTE/0x58A3;VVT Motortemperatur;VVT engine temperature;auto
+table;FUMWELTTEXTE/0x58A4;VVT Spannungsversorgung;VVT power supply;auto
+table;FUMWELTTEXTE/0x58A5;VVT Sensorversorgungsspannung;VVT sensor supply voltage;auto
+table;FUMWELTTEXTE/0x58A6;VVT Sensordifferenz;VVT sensor difference;auto
+table;FUMWELTTEXTE/0x58A7;VVT Endstufentemperatur;VVT output stage temperature from model;auto
+table;FUMWELTTEXTE/0x58A8;Motorabstellzeit;Engine shutdown time;auto
+table;FUMWELTTEXTE/0x58A9;Reset Zähler Überwachungsrechner;;
+table;FUMWELTTEXTE/0x58AA;Reset Zähler Hauptrechner;;
+table;FUMWELTTEXTE/0x58AB;Abweichung DK-Ersatzwert und DK-Poti 1;Deviation of DK potentiometer 1 and model value;auto
+table;FUMWELTTEXTE/0x58AC;Abweichung DK-Ersatzwert und DK-Poti 2;Deviation of DK potentiometer 2 and model value;auto
+table;FUMWELTTEXTE/0x58AD;Pedalwertgeber 1;Accelerator pedal sensor 1;auto
+table;FUMWELTTEXTE/0x58AF;Kraftstoff Anforderung an Pumpe;EKP target volume flow;auto
+table;FUMWELTTEXTE/0x58B0;DK-Adaptionsschritt;DK adaptation step;auto
+table;FUMWELTTEXTE/0x58B1;Funkenbrenndauer Zylinder 1;Spark burn duration Cylinder 1;auto
+table;FUMWELTTEXTE/0x58B2;Funkenbrenndauer Zylinder 5;Spark burn duration Cylinder 5;auto
+table;FUMWELTTEXTE/0x58B3;Funkenbrenndauer Zylinder 3;Spark burn duration Cylinder 3;auto
+table;FUMWELTTEXTE/0x58B4;Funkenbrenndauer Zylinder 6;Spark burn duration Cylinder 6;auto
+table;FUMWELTTEXTE/0x58B5;Funkenbrenndauer Zylinder 2;Spark burn duration Cylinder 2;auto
+table;FUMWELTTEXTE/0x58B6;Funkenbrenndauer Zylinder 4;Spark burn duration Cylinder 4;auto
+table;FUMWELTTEXTE/0x58B7;Bremsdruck;Brake pressure;auto
+table;FUMWELTTEXTE/0x58B8;Drehzahl Überwachung;;
+table;FUMWELTTEXTE/0x58B9;Pedalwert Überwachung;;
+table;FUMWELTTEXTE/0x58BC;Luftmasse Überwachung;;
+table;FUMWELTTEXTE/0x58BD;Modellluftmasse Überwachung tiefpassgefiltert;;
+table;FUMWELTTEXTE/0x58BF;relative Momentenforderung von MSR über CAN;Relative torque request from MSR via CAN;auto
+table;FUMWELTTEXTE/0x58C0;Motordrehzahl Eratztwert Überwachung;;
+table;FUMWELTTEXTE/0x58C1;Laufunruhe Segmentzeit;Running roughness segment time;auto
+table;FUMWELTTEXTE/0x58C7;LL-Solldrehzahlabweichung Überwachung;LL target speed deviation monitoring;auto
+table;FUMWELTTEXTE/0x58C8;I-Anteil Momentdifferenz Überwachung und Modell;;
+table;FUMWELTTEXTE/0x58C9;I-Anteil LL passive Rampe aktiv;;
+table;FUMWELTTEXTE/0x58CA;PD-Anteil langsam Leerlaufregelung;;
+table;FUMWELTTEXTE/0x58CB;PD-Anteil schnell Leerlaufregelung;;
+table;FUMWELTTEXTE/0x58CC;Verlustmoment Überwachung;;
+table;FUMWELTTEXTE/0x58CD;Verlustmomentabweichung Überwachung;;
+table;FUMWELTTEXTE/0x58CE;Carrierbyte Schalterstati;;
+table;FUMWELTTEXTE/0x58CF;Motormoment Sollwert Überwachung;Engine torque target;auto
+table;FUMWELTTEXTE/0x58D0;Motormoment Istwert Überwachung;Engine torque;auto
+table;FUMWELTTEXTE/0x58D1;Moment aktueller Wert;Engine torque output;auto
+table;FUMWELTTEXTE/0x58D4;Abweichung maximales Moment an Kupplung Überwachung;;
+table;FUMWELTTEXTE/0x58D6;Abweichung minimales Moment an Kupplung Überwachung;;
+table;FUMWELTTEXTE/0x58D9;Fehler Hauptrechner;;
+table;FUMWELTTEXTE/0x58DA;Fehler Überwachungsrechner;;
+table;FUMWELTTEXTE/0x58DB;Fehler Bitfeld high Byte;;
+table;FUMWELTTEXTE/0x58DC;Fehler Bitfeld low Byte;;
+table;FUMWELTTEXTE/0x58DF;Spannung Sportschalter;Voltage Sport Switch;auto
+table;FUMWELTTEXTE/0x58E0;Abgleich Drosselklappenmodell (Faktor);;
+table;FUMWELTTEXTE/0x58E1;Abgleich Drosselklappenmodell (Offset);;
+table;FUMWELTTEXTE/0x58E2;Abgleich Einlassventilmodell (Faktor);;
+table;FUMWELTTEXTE/0x58E3;Abgleich Einlassventilmodell (Offset);;
+table;FUMWELTTEXTE/0x58E4;Betriebsart Istwert;;
+table;FUMWELTTEXTE/0x58E5;Maximale Drehzahl bei Zündaussetzern;Maximum engine speed during misfires;auto
+table;FUMWELTTEXTE/0x58E6;Maximale relative Last bei Zündaussetzern;Maximum relative load during misfires;auto
+table;FUMWELTTEXTE/0x58E7;Minimale relative Last bei Zündaussetzern;Minimum relative load during misfires;auto
+table;FUMWELTTEXTE/0x58E8;Minimale Drehzahl bei Zündaussetzern;Minimum engine speed during misfires;auto
+table;FUMWELTTEXTE/0x58E9;Wasserpumpe Spannung;Recommended voltage for BSS water pump;auto
+table;FUMWELTTEXTE/0x58EA;Wasserpumpe Drehzahl;;
+table;FUMWELTTEXTE/0x58EB;Wasserpumpe Drehzahl Soll-Ist-Differenz;Water pump speed: target/actual difference;auto
+table;FUMWELTTEXTE/0x58EC;Wasserpumpe Temperatur Elektronik;;
+table;FUMWELTTEXTE/0x58ED;Wasserpumpe Stromaufnahme;;
+table;FUMWELTTEXTE/0x58EE;Wasserpumpe leistungsreduziert;Water pump with reduced power;auto
+table;FUMWELTTEXTE/0x58F1;DME - Losnummer;DME - Lot number;auto
+table;FUMWELTTEXTE/0x58F5;Eingangssignal Rückführregler 1;;
+table;FUMWELTTEXTE/0x58F6;Eingangssignal Rückführregler 2;;
+table;FUMWELTTEXTE/0x58F8;Segmentadaption Laufunruhe Zyl. 5;Segment adaptation Unsteady running Cyl. 5;auto
+table;FUMWELTTEXTE/0x58F9;Segmentadaption Laufunruhe Zyl. 3;Segment adaptation Unsteady running Cyl. 3;auto
+table;FUMWELTTEXTE/0x58FA;Beladungsgrad Aktivkohlefilter TEV- Funktionstest;;
+table;FUMWELTTEXTE/0x58FB;Zähler Drehzahlerhöhungen TEV- Funktionstest;;
+table;FUMWELTTEXTE/0x5A00;Versorgung FWG 1;Power supply for accelerator pedal sensor 1;auto
+table;FUMWELTTEXTE/0x5A01;Versorgung FWG 2;Power supply for accelerator pedal sensor 2;auto
+table;FUMWELTTEXTE/0x5A02;Versorgung VVT Rohwert;VVT supply voltage raw;auto
+table;FUMWELTTEXTE/0x5A03;Versorgung VVT;VVT supply voltage;auto
+table;FUMWELTTEXTE/0x5A04;Spannung Pedalwertgeber 1;Pedal 1 Position Voltage;auto
+table;FUMWELTTEXTE/0x5A05;Spannung Pedalwertgeber 2;Pedal 2 Position Voltage;auto
+table;FUMWELTTEXTE/0x5A06;Spannung Drosselklappe Poti 1;Throttle 1 pos. voltage;auto
+table;FUMWELTTEXTE/0x5A07;Spannung Drosselklappe Poti 2;Throttle 2 pos. voltage;auto
+table;FUMWELTTEXTE/0x5A08;Spannung Ansauglufttemperatur;Voltage Intake air temperature;auto
+table;FUMWELTTEXTE/0x5A09;Spannung Motortemperatur;;
+table;FUMWELTTEXTE/0x5A0A;Spannung Kühlmitteltemperatur Kühlerausgang;Voltage, coolant temperature, radiator outlet;auto
+table;FUMWELTTEXTE/0x5A0B;Spannung DME Umgebungsdruck;Atmospheric pressure sensor voltage;auto
+table;FUMWELTTEXTE/0x5A0C;Spannung Luftmasse;Air mass sensor voltage;auto
+table;FUMWELTTEXTE/0x5A0D;Spannung Sekundärluft;Voltage secondary air;auto
+table;FUMWELTTEXTE/0x5A0E;Spannung SG-Innentemperatur;Voltage SG-Internal temperature;auto
+table;FUMWELTTEXTE/0x5A0F;Spannung Kl.15;Load signal SPG;auto
+table;FUMWELTTEXTE/0x5A10;Spannung Kl15;Load signal SPG;auto
+table;FUMWELTTEXTE/0x5A11;Spannung Lambdasonde vor Kat 1;Lambda probe voltage pre-cat Bank 1;auto
+table;FUMWELTTEXTE/0x5A12;Spannung Lambdasonde vor Kat 2;Lambda probe voltage pre-cat Bank 2;auto
+table;FUMWELTTEXTE/0x5A13;Spannung Lambdasonde hinter Kat 1;Voltage Lambda sensor downstream of catalytic converter, bank 1;auto
+table;FUMWELTTEXTE/0x5A14;Spannung Lambdasonde hinter Kat 2;Voltage Lambda sensor behind catalytic converter, bank 2;auto
+table;FUMWELTTEXTE/0x5A17;Spannung Strommessung DMTL;Voltage pump current tank diagnostics;auto
+table;FUMWELTTEXTE/0x5A21;Kühlmitteltemperatur Kühlerausgang;Coolant temperature (sensor value) after low-pass filtering;auto
+table;FUMWELTTEXTE/0x5A22;Steuergerät Innentemperatur;;
+table;FUMWELTTEXTE/0x5A24;Drosselklappe Sollwert;Throttle position target;auto
+table;FUMWELTTEXTE/0x5A26;Saugrohrdruck;Intake manifold pressure;auto
+table;FUMWELTTEXTE/0x5A27;Pedalwertgeber Poti 1;;
+table;FUMWELTTEXTE/0x5A28;Pedalwertgeber Poti 2;;
+table;FUMWELTTEXTE/0x5A29;Fahrpedalwert;Accelerator pedal value (raw);auto
+table;FUMWELTTEXTE/0x5A2A;Luftmasse Sekundärluft;Secondary air mass flow;auto
+table;FUMWELTTEXTE/0x5A30;Laufunruhe Zylinder 1;Running roughness cylinder 1;auto
+table;FUMWELTTEXTE/0x5A31;Laufunruhe Zylinder 2;Running roughness cylinder 2;auto
+table;FUMWELTTEXTE/0x5A32;Laufunruhe Zylinder 3;Running roughness cylinder 3;auto
+table;FUMWELTTEXTE/0x5A33;Laufunruhe Zylinder 4;Running roughness cylinder 4;auto
+table;FUMWELTTEXTE/0x5A34;Laufunruhe Zylinder 5;[1] Running roughness Cylinder 5;auto
+table;FUMWELTTEXTE/0x5A35;Laufunruhe Zylinder 6;[3] Running roughness Cylinder 6;auto
+table;FUMWELTTEXTE/0x5A36;Status Klopfen;;
+table;FUMWELTTEXTE/0x5A37;Spannung Klopfwerte Zylinder 1;Knock voltage Cylinder 1;auto
+table;FUMWELTTEXTE/0x5A38;Spannung Klopfwerte Zylinder 2;Knock voltage Cylinder 2;auto
+table;FUMWELTTEXTE/0x5A39;Spannung Klopfwerte Zylinder 3;Knock voltage Cylinder 3;auto
+table;FUMWELTTEXTE/0x5A3A;Spannung Klopfwerte Zylinder 4;Knock voltage Cylinder 4;auto
+table;FUMWELTTEXTE/0x5A3B;Spannung Klopfwerte Zylinder 5;Knock voltage Cylinder 5;auto
+table;FUMWELTTEXTE/0x5A3C;Spannung Klopfwerte Zylinder 6;Knock voltage Cylinder 6;auto
+table;FUMWELTTEXTE/0x5A3D;Klopfsignal Zylinder 1;Knock sensor signal cylinder 1;auto
+table;FUMWELTTEXTE/0x5A3E;Klopfsignal Zylinder 1 relativ;Knock sensor signal Cylinder 1 relative;auto
+table;FUMWELTTEXTE/0x5A3F;Klopfsignal Zylinder 6;Knock sensor signal cylinder 6;auto
+table;FUMWELTTEXTE/0x5A40;Klopfsignal Zylinder 6 relativ;Knock sensor signal Cylinder 6 relative;auto
+table;FUMWELTTEXTE/0x5A42;Einspritzzeit Zylinder 1;Injection time Cylinder 1;auto
+table;FUMWELTTEXTE/0x5A43;Einspritzzeit Zylinder 2;Injection time Cylinder 2;auto
+table;FUMWELTTEXTE/0x5A44;Einspritzzeit Zylinder 3;Injection time Cylinder 3;auto
+table;FUMWELTTEXTE/0x5A45;Einspritzzeit Zylinder 4;Injection time Cylinder 4;auto
+table;FUMWELTTEXTE/0x5A46;Einspritzzeit Zylinder 5;Injection time Cylinder 5;auto
+table;FUMWELTTEXTE/0x5A47;Einspritzzeit Zylinder 6;Injection time Cylinder 6;auto
+table;FUMWELTTEXTE/0x5A49;Zündwinkel Zylinder 1;;
+table;FUMWELTTEXTE/0x5A4B;Berechneter Lastwert;Calculated load value;auto
+table;FUMWELTTEXTE/0x5A4E;Klimakompressorrelais Ein;Air conditioning compressor relay ON;auto
+table;FUMWELTTEXTE/0x5A4F;VVT- Entlastungsrelais Ein;VVT relief relay ON;auto
+table;FUMWELTTEXTE/0x5A50;Lambdawert vor Kat Bank 1;Lambda pre-cat bank1;auto
+table;FUMWELTTEXTE/0x5A51;Lambdawert vor Kat Bank 2;Lambda pre-cat Bank2;auto
+table;FUMWELTTEXTE/0x5A52;Status LS nach Kat Bank 1;;
+table;FUMWELTTEXTE/0x5A53;Status LS nach Kat Bank 2;;
+table;FUMWELTTEXTE/0x5A54;Status LS Heizung nach Kat Bank 1;;
+table;FUMWELTTEXTE/0x5A55;Status LS Heizung nach Kat Bank 2;;
+table;FUMWELTTEXTE/0x5A56;Status LS Heizung vor Kat Bank 1;;
+table;FUMWELTTEXTE/0x5A57;Status LS Heizung vor Kat Bank 2;;
+table;FUMWELTTEXTE/0x5A58;Lambdasondenheizung PWM vor Kat Bank 1;Lambda heating PWM before cat. Bench 1;auto
+table;FUMWELTTEXTE/0x5A59;Lambdasondenheizung PWM nach Kat Bank 1;Normalized heating power of the lambda sensor downstream of the catalytic converter;auto
+table;FUMWELTTEXTE/0x5A5A;Lambdasondenheizung PWM vor Kat Bank 2;Lambda heating PWM before cat. Bench 2;auto
+table;FUMWELTTEXTE/0x5A5B;Lambdasondenheizung PWM nach Kat Bank 2;Lambda heating PWM behind catalytic converter, bank 2;auto
+table;FUMWELTTEXTE/0x5A60;Bremslichtschalter Ein;Raw value brake contact not debounced;auto
+table;FUMWELTTEXTE/0x5A61;Bremslichttestschalter Ein;Raw value of redundant brake contact not debounced;auto
+table;FUMWELTTEXTE/0x5A62;Öldruckschalter Ein;Output signal oil pressure switch;auto
+table;FUMWELTTEXTE/0x5A63;E-Boxlüfter Ein;E-Box fan ON;auto
+table;FUMWELTTEXTE/0x5A64;Kühlerjalousie;;
+table;FUMWELTTEXTE/0x5A65;Abgasklappe Ein;Condition: Exhaust flap with resonator;auto
+table;FUMWELTTEXTE/0x5A66;DMTL Pumpe Ein;;
+table;FUMWELTTEXTE/0x5A67;DMTL Ventil Ein;Condition: DMTL solenoid valve on;auto
+table;FUMWELTTEXTE/0x5A68;DMTL Heizung Ein;Condition: Heating DM-TL port control;auto
+table;FUMWELTTEXTE/0x5A69;MIL Lampe Ein;;
+table;FUMWELTTEXTE/0x5A6A;Lampe FGR Ein;;
+table;FUMWELTTEXTE/0x5A6B;Lampe Check Engine Ein;Check Engine Light On;auto
+table;FUMWELTTEXTE/0x5A6D;Status Taste FGR;;
+table;FUMWELTTEXTE/0x5A70;Soundklappe Zustand;Sound flap condition;auto
+table;FUMWELTTEXTE/0x5A71;DISA1 PWM (große/obere Klappe);DISA1 PWM (large/top flap);auto
+table;FUMWELTTEXTE/0x5A72;DISA2 PWM (kleine/untere Klappe);DISA2 PWM (small/bottom flap);auto
+table;FUMWELTTEXTE/0x5A73;Kurbelgehäuseentlüftungsheizung;;
+table;FUMWELTTEXTE/0x5A74;Beheizter Thermostat PWM;Heated thermostat PWM;auto
+table;FUMWELTTEXTE/0x5A75;Sekundärluft Ventil;Secondary air valve;auto
+table;FUMWELTTEXTE/0x5A76;Adaption Öffnungspunkt Tankentlüftungsventil;;
+table;FUMWELTTEXTE/0x5A77;TankEntlüftungsVentil TEV PWM;Tank valve PWM;auto
+table;FUMWELTTEXTE/0x5A78;Abgasklappe Ansteuerung;Condition: Exhaust flap with resonator;auto
+table;FUMWELTTEXTE/0x5A79;E-Lüfter PWM;Electric fan PWM;auto
+table;FUMWELTTEXTE/0x5A7A;VANOS PWM Wert Einlass;Inlet VANOS PWM;auto
+table;FUMWELTTEXTE/0x5A7B;VANOS PWM Wert Auslass;VANOS PWM Outlet;auto
+table;FUMWELTTEXTE/0x5A81;Integrator Bank 1;Short-term fuel trim Bank 1;auto
+table;FUMWELTTEXTE/0x5A82;Integrator Bank 2;Short-term fuel trim Bank 2;auto
+table;FUMWELTTEXTE/0x5A83;Adaption Offset Lambda Bank 1;LTFT additive bank 1;auto
+table;FUMWELTTEXTE/0x5A84;Adaption Offset Lambda Bank 2;LTFT additive bank 2;auto
+table;FUMWELTTEXTE/0x5A85;Adaption Multiplikation Lambda Bank 1;LTFT multiplicative bank 1;auto
+table;FUMWELTTEXTE/0x5A86;Adaption Multiplikation Lambda Bank 2;LTFT multiplicative bank 2;auto
+table;FUMWELTTEXTE/0x5A87;Adaptionswert Trimregelung Bank 1;;
+table;FUMWELTTEXTE/0x5A88;Adaptionswert Trimregelung Bank 2;;
+table;FUMWELTTEXTE/0x5A89;multiplikative Gemischadaption hohe Last Bank 1;;
+table;FUMWELTTEXTE/0x5A8A;multiplikative Gemischadaption hohe Last Bank 2;;
+table;FUMWELTTEXTE/0x5A8B;multiplikative Gemischadaption niedrige Last Bank 1;;
+table;FUMWELTTEXTE/0x5A8C;multiplikative Gemischadaption niedrige Last Bank 2;;
+table;FUMWELTTEXTE/0x5A8D;additive Gemischadaption Leerlauf Bank 1;;
+table;FUMWELTTEXTE/0x5A8E;additive Gemischadaption Leerlauf Bank 2;;
+table;FUMWELTTEXTE/0x5A91;Katalysatordiagnosewert Bank 1;;
+table;FUMWELTTEXTE/0x5A92;Katalysatordiagnosewert Bank 2;;
+table;FUMWELTTEXTE/0x5A94;Nockenwelle Auslass Sollwert;Outlet Camshaft Target;auto
+table;FUMWELTTEXTE/0x5A95;Adaptionswert Nockenwelle Auslaß;Encoder wheel adaptation VSA;auto
+table;FUMWELTTEXTE/0x5A96;Adaptionswert Nockenwelle Einlaß;Encoder wheel adaptation VSE;auto
+table;FUMWELTTEXTE/0x5A97;Bedingung EVANOS im Anschlag beim letzten Abstellen;;
+table;FUMWELTTEXTE/0x5A99;Kurbelwellen Adaption beendet;Crankshaft adaptation completed;auto
+table;FUMWELTTEXTE/0x5AA1;Status Diagnose TEV;;
+table;FUMWELTTEXTE/0x5AA2;Status Diagnose DMTL;;
+table;FUMWELTTEXTE/0x5AA3;Status Diagnose Lambdasonden;;
+table;FUMWELTTEXTE/0x5AA4;Status Diagnose Leerlaufdrehzahlverstellung;;
+table;FUMWELTTEXTE/0x5AA5;Status Diagnose Sekundärluft;;
+table;FUMWELTTEXTE/0x5AA6;Status Diagnose VVT Anschläge lernen;;
+table;FUMWELTTEXTE/0x5AB1;Geschwindigkeit;Speed;auto
+table;FUMWELTTEXTE/0x5AB3;Fahrstrecke mit MIL an;Odometer for kilometers driven with MIL ON;auto
+table;FUMWELTTEXTE/0x5AB4;Betriebsstundenzähler;Operating hours counter;auto
+table;FUMWELTTEXTE/0x5AB5;Variante Sekundärluftpumpe;Variant secondary air pump;auto
+table;FUMWELTTEXTE/0x5AB6;Rohwert Ansauglufttemperatur 1;Air intake temperature raw value 1;auto
+table;FUMWELTTEXTE/0x5AB7;Rohwert Kühlwassertemperatur;Raw value cooling water temperature;auto
+table;FUMWELTTEXTE/0x5AB8;Spannung Saugrohrdruck;Intake manifold pressure voltage;auto
+table;FUMWELTTEXTE/0x5AB9;Spannung Sportschalter;Voltage Sport Switch;auto
+table;FUMWELTTEXTE/0x5ABA;PWM Kraftstoffpumpe;Fuel pump PWM;auto
+table;FUMWELTTEXTE/0x5ABB;Ausgewählter VVT Istwinkel;VVT selected actual angle;auto
+table;FUMWELTTEXTE/0x5ABC;Luftmasse;Air mass;auto
+table;FUMWELTTEXTE/0x5ABD;Starterrelais aktiv;Automatic start condition;auto
+table;FUMWELTTEXTE/0x5AC0;Reset Status Hardware-Register;;
+table;FUMWELTTEXTE/0x5AC1;Reset Status Software-Register;;
+table;FUMWELTTEXTE/0x5AC2;Reset Adresse;;
+table;FUMWELTTEXTE/0x5AC3;Fehler Segmentzähler;;
+table;FUMWELTTEXTE/0x58FF;Umweltbedingung unbekannt;;
+table;_CNV_S_10_STATE_EOL__355/0xFF;undefiniert;;
+table;_CNV_S_11_EGCP_RANGE_729/0xFF;undefiniert;;
+table;_CNV_S_14_TMO3_ERR_C_423/0xFF;undefiniert;;
+table;_CNV_S_21_TMO3_ERR_C_424/0xFF;undefiniert;;
+table;_CNV_S_3_STATE_RLY__375/0x00;Request cannot be executed;;
+table;_CNV_S_3_STATE_RLY__375/0x01;relay open;;
+table;_CNV_S_3_STATE_RLY__375/0x02;relay close;;
+table;_CNV_S_3_STATE_RLY__375/0xFF;undefiniert;;
+table;_CNV_S_4_EGCP_RANGE_733/0xFF;undefiniert;;
+table;_CNV_S_4_EGCP_RANGE_740/0xFF;undefiniert;;
+table;_CNV_S_5_LACO_RANGE_766/0xFF;undefiniert;;
+table;_CNV_S_6_RANGE_STAT_107/0xFF;undefiniert;;
+table;_CNV_S_6_RANGE_STAT_147/0xFF;undefiniert;;
+table;_CNV_S_6_RANGE_STAT_305/0xFF;undefiniert;;
+table;_CNV_S_7_DEF_BA_468/0xFF;undefiniert;;
+table;_CNV_S_7_EGCP_RANGE_711/0xFF;undefiniert;;
+table;_CNV_S_7_RANGE_ECU__143/0xFF;undefiniert;;
+table;_CNV_S_8_RANGE_STAT_19/0x00;None;;
+table;_CNV_S_8_RANGE_STAT_19/0x01;Set-Acc-TipUp;;
+table;_CNV_S_8_RANGE_STAT_19/0x02;Decelerate-TipDown;;
+table;_CNV_S_8_RANGE_STAT_19/0x03;Resume;;
+table;_CNV_S_8_RANGE_STAT_19/0x04;Off;;
+table;_CNV_S_8_RANGE_STAT_19/0x07;Error;;
+table;_CNV_S_8_RANGE_STAT_19/0xFF;undefiniert;;
+table;_CNV_S_8_RANGE_STAT_327/0xFFFF;undefiniert;;
+table;FARTTEXTEERWEITERT/XXXXXXX0;Diagnose läuft nicht;;
+table;FARTTEXTEERWEITERT/XXXXXXX1;Diagnose läuft;;
+table;FARTTEXTEERWEITERT/XXXXX0XX;Zyklus-Flag nicht gesetzt;;
+table;FARTTEXTEERWEITERT/XXXXX1XX;Zyklus-Flag gesetzt;;
+table;FARTTEXTEERWEITERT/XXXX0XXX;kein Fehler durch Tester;;
+table;FARTTEXTEERWEITERT/XXXX1XXX;Fehler durch Tester;;
+table;FARTTEXTEERWEITERT/XXX0XXXX;MIL aus;;
+table;FARTTEXTEERWEITERT/XXX1XXXX;MIL ein;;
+table;FARTTEXTEERWEITERT/XX0XXXXX;Fehler in Entprellphase;;
+table;FARTTEXTEERWEITERT/XX1XXXXX;Fehler entprellt, keine Scan Tool Ausgabe;;
+table;FARTSTATUSTEXTE/0x00;nicht aktiv;;
+table;FARTSTATUSTEXTE/0x01;Fehler momentan vorhanden;;
+table;FARTSTATUSTEXTE/0x02;Fehler geprueft;;
+table;FARTSTATUSTEXTE/0x11;E-Flag entprellt;;
+table;FARTSTATUSTEXTE/0x12;CARB-entprellt;;
+table;FARTSTATUSTEXTE/0x13;SCATT-aktiv;;
+table;FARTSTATUSTEXTE/0x14;MIL ein;;
+table;FARTSTATUSTEXTE/0x15;MIL blink;;
+table;FARTSTATUSTEXTE/0x16;Fehler sporadisch;;
+table;FARTERWTEXTE/0x00;nicht aktiv;;
+table;FARTERWTEXTE/0x11;Diagnose aktiv;;
+table;FARTERWTEXTE/0x12;Diagnose gestoppt;;
+table;FARTERWTEXTE/0x13;Zyklus-Flag gesetzt;;
+table;FARTERWTEXTE/0x14;Error-Flag gesetzt;;
+table;FARTERWTEXTE/0x15;MIL ein;;
+table;FARTERWTEXTE/0x16;Fehler in Entprellphase;;
+table;FARTERWTEXTE/0XXY;Status unbekannt;;
+table;LAMBDASTATUS/0x01;1 Regelung AUS, Einschaltbedingung noch nicht erfuellt;;
+table;LAMBDASTATUS/0x02;2 Regelung EIN;;
+table;LAMBDASTATUS/0x04;3 Regelung AUS wegen Fahrbedingung;;
+table;LAMBDASTATUS/0x08;4 Regelung AUS wegen erkanntem Fehler;;
+table;LAMBDASTATUS/0x10;5 Regelung EIN mit Einschraenkung (Sensor Fehler);;
+table;LAMBDASTATUS/0XXY;Status unbekannt;;
+table;BETRIEBSSTUNDENSTATUS/0x00;Betriebsstundenzaehler verstanden und akzeptiert (top_w < 10h);;
+table;BETRIEBSSTUNDENSTATUS/0x01;Betriebsstundenzaehler verstanden aber nicht akzeptiert (top_w > 10h);;
+table;BETRIEBSSTUNDENSTATUS/0x02;Betriebsstundenzaehler nicht verstanden und nicht akzeptiert;;
+table;BETRIEBSSTUNDENSTATUS/0XXY;Betriebsstundenzaehler kann nicht ausgegeben werden;;
+table;STATE_GEAR/0x00;0 Neutral oder Park/Neutral;;
+table;STATE_GEAR/0x01;1. Gang;;
+table;STATE_GEAR/0x02;2. Gang;;
+table;STATE_GEAR/0x03;3. Gang;;
+table;STATE_GEAR/0x04;4. Gang;;
+table;STATE_GEAR/0x05;5. Gang;;
+table;STATE_GEAR/0x06;6. Gang;;
+table;STATE_GEAR/0x07;R Rückwärtsgang;;
+table;STATE_GEAR/0xFF;FF unbekanntes Getriebe;;
+table;STATE_TQ_CAN_PLAUS/0x00;00 kein externer Eingriff;;
+table;STATE_TQ_CAN_PLAUS/0x01;01 Traktionskontrolle;;
+table;STATE_TQ_CAN_PLAUS/0x02;02 Sequentielles Manuelles Getriebe;;
+table;STATE_TQ_CAN_PLAUS/0x04;04 Getriebesteuerung;;
+table;STATE_TQ_CAN_PLAUS/0x08;08 Abstandsregelung;;
+table;STATE_TQ_CAN_PLAUS/0x10;10 Anti Roll Stabilisierung;;
+table;STATE_TQ_CAN_PLAUS/0x20;20 Servolenkung Typ 2;;
+table;STATE_TQ_CAN_PLAUS/0xFF;FF unbekannter Eingriff;;
+table;TPS_AD_STEP/0x00;0 Position Notlauf 1;;
+table;TPS_AD_STEP/0x01;1 Position oberer Anschlag;;
+table;TPS_AD_STEP/0x02;2 Position Notlauf 2;;
+table;TPS_AD_STEP/0x03;3 Positionen Ende;;
+table;TPS_AD_STEP/0x04;4 Adaption Notlauf 1;;
+table;TPS_AD_STEP/0x05;5 Adaption oberer Anschlag;;
+table;TPS_AD_STEP/0x06;6 Adaption Notlauf 2;;
+table;TPS_AD_STEP/0x07;7 Adaption unterer Ansschlag;;
+table;TPS_AD_STEP/0x08;8 Adaption Notlauf;;
+table;TPS_AD_STEP/0x09;9 Adaption Notlauf 3;;
+table;TPS_AD_STEP/0x0A;10 Adaption Ende;;
+table;TPS_AD_STEP/0xFF;FF Status unbekannt;;
+table;_CNV_S_3_STATE_RLY__396/0x00;Was soll ich hier nur ausgeben ?;;
+table;_CNV_S_3_STATE_RLY__396/0x01;Relais offen;;
+table;_CNV_S_3_STATE_RLY__396/0x02;Relais geschlossen;;
+table;_CNV_S_3_STATE_RLY__396/0xFF;FF Status unbekannt;;
+table;STATE_CP/0x00;0 Tankentlüftung nicht aktiv;;
+table;STATE_CP/0x01;1 Tankentlüftung keine;;
+table;STATE_CP/0x02;2 Tankentlüftung Minimum;;
+table;STATE_CP/0x03;3 Tankentlüftung öffnen;;
+table;STATE_CP/0x04;4 Tankentlüftung schnell öffnen;;
+table;STATE_CP/0x05;5 Tankentlüftung Maximum;;
+table;STATE_CP/0x06;6 Tankentlüftung schliessen;;
+table;STATE_CP/0x07;7 Tankentlüftung warten auf offen;;
+table;STATE_CP/0xFF;FF Status unbekannt;;
+table;STATE_SA/0x00;0 Systemtest Sekundärluft nicht aktiv;;
+table;STATE_SA/0x01;1 Systemtest Sekundärluft verzögert;;
+table;STATE_SA/0x02;2 Systemtest Sekundärluft aktiv;;
+table;STATE_SA/0x03;3 Systemtest Sekundärluft Unterbrechung;;
+table;STATE_SA/0x04;4 Systemtest Sekundärluft Pumpe verzögert;;
+table;STATE_SA/0x05;5 Systemtest Sekundärluft nicht aktiv;;
+table;STATE_SA/0x06;6 Systemtest Sekundärluft abgebrochen;;
+table;STATE_SA/0x07;7 Sekundärluft externe Ansteuerung;;
+table;STATE_SA/0x08;8 Sekundärluft externe Ansteuerung beendet;;
+table;STATE_SA/0x09;9 Bandendetest Sekundärluft aktiv;;
+table;STATE_SA/0x0A;10 Bandendetest Sekundärluft Pumpe;;
+table;STATE_SA/0x0B;11 Bandendetest Sekundärluft Ende;;
+table;STATE_SA/0xFF;FF Status unbekannt;;
+table;VAL_MO3_ERR_CODE_MU/0x00;0 kein Fehler;;
+table;VAL_MO3_ERR_CODE_MU/0x01;1 Falscher Header in der Kommunikation;;
+table;VAL_MO3_ERR_CODE_MU/0x02;2 Fehler Prüfsumme in Kommunikation;;
+table;VAL_MO3_ERR_CODE_MU/0x03;3 Fehler Ausgang Extension;;
+table;VAL_MO3_ERR_CODE_MU/0x04;4 MU passt nicht zu MC Software;;
+table;VAL_MO3_ERR_CODE_MU/0x05;5 Timeout Fehler Maximum;;
+table;VAL_MO3_ERR_CODE_MU/0x06;6 Timeout Fehler Minimum;;
+table;VAL_MO3_ERR_CODE_MU/0x07;7 RAM Fehler;;
+table;VAL_MO3_ERR_CODE_MU/0x08;8 ROM Fehler;;
+table;VAL_MO3_ERR_CODE_MU/0x09;9 Fehler Level 2;;
+table;VAL_MO3_ERR_CODE_MU/0x0A;10 Redundant switch off path was triggerd by MC;;
+table;VAL_MO3_ERR_CODE_MU/0x0B;11 Programmablauf Überwachung 1;;
+table;VAL_MO3_ERR_CODE_MU/0x0C;12 Programmablauf Überwachung 2;;
+table;VAL_MO3_ERR_CODE_MU/0x0D;13 Programmablauf Überwachung 3;;
+table;VAL_MO3_ERR_CODE_MU/0x0E;14 Programmablauf Überwachung 4;;
+table;VAL_MO3_ERR_CODE_MU/0x0F;15 Programmablauf Überwachung 5;;
+table;VAL_MO3_ERR_CODE_MU/0x10;16 Programmablauf Überwachung 6;;
+table;VAL_MO3_ERR_CODE_MU/0x11;17 Programmablauf Überwachung 7;;
+table;VAL_MO3_ERR_CODE_MU/0x12;18 Programmablauf Überwachung 8;;
+table;VAL_MO3_ERR_CODE_MU/0x13;19 Watchdog Fehler;;
+table;VAL_MO3_ERR_CODE_MU/0x14;20 Fehler Kommunikation, falsches enable Byte;;
+table;VAL_MO3_ERR_CODE_MU/0xFF;FF Status unbekannt;;
+table;VAL_MO3_ERR_CODE_MC/0x00;0 kein Fehler;;
+table;VAL_MO3_ERR_CODE_MC/0x01;1 Fehler Prüfsumme in Kommunikation;;
+table;VAL_MO3_ERR_CODE_MC/0x02;2 Falscher Header von MU;;
+table;VAL_MO3_ERR_CODE_MC/0x03;3 Predrive Check: MU schaltet Endstufen nicht ab;;
+table;VAL_MO3_ERR_CODE_MC/0x04;4 SW Referenz: MU sendet falsche SW Version;;
+table;VAL_MO3_ERR_CODE_MC/0x05;5 SW Referenz: MU sendet falschen Varianten code;;
+table;VAL_MO3_ERR_CODE_MC/0x06;6 Kopie Prozessüberwachung: MU incrementiert nicht ABC_CPM_MU;;
+table;VAL_MO3_ERR_CODE_MC/0x07;7 Kopie Prozessüberwachung: MU incrementiert nicht Frage;;
+table;VAL_MO3_ERR_CODE_MC/0x08;8 Programmablauf: MU ändert nicht die Kontrollbits;;
+table;VAL_MO3_ERR_CODE_MC/0x09;9 ROM Test Level 2;;
+table;VAL_MO3_ERR_CODE_MC/0x0A;10 RAM Test Level 2;;
+table;VAL_MO3_ERR_CODE_MC/0x0B;11 ROM Test Level 1;;
+table;VAL_MO3_ERR_CODE_MC/0x0C;12 ROM Test Level 2;;
+table;VAL_MO3_ERR_CODE_MC/0xFF;FF Status unbekannt;;
+table;CONF_SOF_SWI/0x00;0 kein Sporttaster;;
+table;CONF_SOF_SWI/0x01;1 Sporttaster vorhanden;;
+table;CONF_SOF_SWI/0x02;2 Sporttaster mit SSG;;
+table;CONF_SOF_SWI/0xFF;FFStatus unbekannt;;
+table;STATE_MSW_CAN/0x00;0 keine Taste gedrückt;;
+table;STATE_MSW_CAN/0x01;1 Beschleunigen / Taste+;;
+table;STATE_MSW_CAN/0x02;2 Verlangsamen / Taste-;;
+table;STATE_MSW_CAN/0x03;3 Taste Setzen / Wiederaufnahme;;
+table;STATE_MSW_CAN/0x04;4 Taste I/O;;
+table;STATE_MSW_CAN/0x06;6 Fehler;;
+table;STATE_MSW_CAN/0x07;7 kein Text in Spec;;
+table;STATE_MSW_CAN/0xFF;FFStatus unbekannt;;
+table;EWSSTART/0x00;DME bereit Startwert zu empfangen;;
+table;EWSSTART/0x01;kein freier Startwert Speicherplatz vorhanden;;
+table;EWSSTART/0x02;noch kein Startwert gespeichert;;
+table;EWSSTART/0x03;Startwert nicht plausibel;;
+table;EWSSTART/0XXY;unbekannter Status;;
+table;EWSEMPFANGSSTATUS/0x00;Startwert verstanden und akzeptiert;;
+table;EWSEMPFANGSSTATUS/0x01;Startwert verstanden aber nicht akzeptiert;;
+table;EWSEMPFANGSSTATUS/0x02;Startwert nicht verstanden;;
+table;EWSEMPFANGSSTATUS/0x03;Interfacefehler: Frame oder Parity oder Timeout;;
+table;EWSEMPFANGSSTATUS/0x04;Prozess laeuft;;
+table;EWSEMPFANGSSTATUS/0x05;Startwert Programmierung/Synchronisation wird nicht ausgefuehrt in diesem Zyklus;;
+table;EWSEMPFANGSSTATUS/0x06;Dieselbe Zufallszahl wie beim letzten Start;;
+table;EWSEMPFANGSSTATUS/0x07;Kein Startwert programmiert;;
+table;EWSEMPFANGSSTATUS/0x21;2 aus 3 Startwert im Flasch nicht ok;;
+table;EWSEMPFANGSSTATUS/0XXY;unbekannter Status;;
+table;STATE_DIAGCPS/0x00;00 Systemtest TEV Initialisierung;;
+table;STATE_DIAGCPS/0x01;01 Systemtest TEV Schritt 1;;
+table;STATE_DIAGCPS/0x02;02 Systemtest TEV Schritt 2;;
+table;STATE_DIAGCPS/0x03;03 Systemtest TEV Schritt 3;;
+table;STATE_DIAGCPS/0x04;04 Systemtest TEV Rampe;;
+table;STATE_DIAGCPS/0x05;05 Systemtest TEV abgeschlossen LOCK_STEP;;
+table;STATE_DIAGCPS/0XXY;FF Systemtest TEV unbekannter Wert;;
+table;FUNKTIONSTATUS/0x00;0 Funktion nicht aktiv;;
+table;FUNKTIONSTATUS/0x01;1 Systemtest kann nicht gestartet werden;;
+table;FUNKTIONSTATUS/0x05;5 Systemtest ist nicht gestartet;;
+table;FUNKTIONSTATUS/0x06;6 Systemtest ist beendet;;
+table;FUNKTIONSTATUS/0x07;7 Externe Ansteuerung gestartet;;
+table;FUNKTIONSTATUS/0x08;8 Externe Ansteuerung beendet;;
+table;FUNKTIONSTATUS/0XXY;Status kann nicht ausgegeben werden;;
+table;DIAGNOSE_STATUS/0x01;01 Systemtest läuft;;
+table;DIAGNOSE_STATUS/0x03;03 Systemtest beendet, Messwerte gültig;;
+table;DIAGNOSE_STATUS/0x06;06 Systemtest Start nicht möglich;;
+table;DIAGNOSE_STATUS/0x07;07 Systemtest nicht gestartet;;
+table;DIAGNOSE_STATUS/0XXY;FF Systemtest unbekannter Wert;;
+table;DIAGNOSE_DMTL_WERT/0x00;0 Start;;
+table;DIAGNOSE_DMTL_WERT/0x01;1 Referenzleck Messung;;
+table;DIAGNOSE_DMTL_WERT/0x02;2 Grobleck Messung Start;;
+table;DIAGNOSE_DMTL_WERT/0x03;3 Grobleck Messung erweitert;;
+table;DIAGNOSE_DMTL_WERT/0x04;4 Grobleck Messung beendet;;
+table;DIAGNOSE_DMTL_WERT/0x05;5 Feinleck Messung Start;;
+table;DIAGNOSE_DMTL_WERT/0x06;6 Feinleck Messung erweitert;;
+table;DIAGNOSE_DMTL_WERT/0x07;7 2. Referenzleck Messung;;
+table;DIAGNOSE_DMTL_WERT/0x08;8 Tank geprüft;;
+table;DIAGNOSE_DMTL_WERT/0x09;9 Feinleck;;
+table;DIAGNOSE_DMTL_WERT/0x0A;A Grobleck;;
+table;DIAGNOSE_DMTL_WERT/0x0B;B Modulfehler;;
+table;DIAGNOSE_DMTL_WERT/0x0C;C Ende;;
+table;DIAGNOSE_DMTL_WERT/0x11;11 Batteriespannung aus gültigem Bereich;;
+table;DIAGNOSE_DMTL_WERT/0x12;12 elektrischer Fehler;;
+table;DIAGNOSE_DMTL_WERT/0x21;21 Tank Nachfüllen festgestellt;;
+table;DIAGNOSE_DMTL_WERT/0x22;22 Tankverschluss offen;;
+table;DIAGNOSE_DMTL_WERT/0x23;23 Batteriespannung Fluktuation zu hoch;;
+table;DIAGNOSE_DMTL_WERT/0x24;24 Diagnose maximale Zeit erreicht;;
+table;DIAGNOSE_DMTL_WERT/0x25;25 Fluktuationen Referenzstrom zu hoch;;
+table;DIAGNOSE_DMTL_WERT/0x26;26 Pumpenstrom abgefallen während der Messung;;
+table;DIAGNOSE_DMTL_WERT/0x100;1 Funktion läuft;;
+table;DIAGNOSE_DMTL_WERT/0x300;3 Werte gültig;;
+table;DIAGNOSE_DMTL_WERT/0x600;6 Start verhindert;;
+table;DIAGNOSE_DMTL_WERT/0x700;7 nicht gestartet;;
+table;DIAGNOSE_DMTL_WERT/0XXY;XY Status kann nicht ausgegeben werden;;
+table;STATUS_EOL/0x01;01 Systemtest läuft;;
+table;STATUS_EOL/0x03;03 Systemtest beendet, Messwerte gültig;;
+table;STATUS_EOL/0x05;05 Systemtest abgebrochen, keine Werte;;
+table;STATUS_EOL/0x06;06 Systemtest Start nicht möglich;;
+table;STATUS_EOL/0x07;07 Systemtest nicht gestartet;;
+table;STATUS_EOL/0XXY;FF Systemtest unbekannter Wert;;
+table;EOL_STATUS/0x00;0 Funktionstest läuft;;
+table;EOL_STATUS/0x01;1 Startbedingungen nicht erfüllt;;
+table;EOL_STATUS/0x02;2 Übergabeparameter nicht plausibel;;
+table;EOL_STATUS/0x03;3 Funktion wartet auf Freigabe;;
+table;EOL_STATUS/0x05;5 Funktion noch nicht gestartet;;
+table;EOL_STATUS/0x06;6 Funktion beendet;;
+table;EOL_STATUS/0x07;7 Funktion abgebrochen;;
+table;EOL_STATUS/0x08;8 Funktion durchlaufen und kein Fehler erkannt;;
+table;EOL_STATUS/0x09;9 Funktion durchlaufen und Fehler erkannt;;
+table;EOL_STATUS/0xFF;FF Status kann nicht ausgegeben werden;;
+table;SYSTEMCHECK_STATE_CHK_LS/0x00;0 Diagnose Anfang;;
+table;SYSTEMCHECK_STATE_CHK_LS/0x01;1 Diagnose Schritt FETT;;
+table;SYSTEMCHECK_STATE_CHK_LS/0x02;2 Diagnose Schritt MAGER;;
+table;SYSTEMCHECK_STATE_CHK_LS/0x03;3 Diagnose Ende;;
+table;SYSTEMCHECK_STATE_CHK_LS/0xFF;XY Status kann nicht ausgegeben werden;;
+table;STATE_DIAG_SA_LS/0x00;0 Systemtest SLS nicht aktiv;;
+table;STATE_DIAG_SA_LS/0x01;1 Systemtest SLS wartet;;
+table;STATE_DIAG_SA_LS/0x02;2 Systemtest SLS Luftmassen Überwachung;;
+table;STATE_DIAG_SA_LS/0x03;3 Systemtest SLS Diagnose unterbrochen;;
+table;STATE_DIAG_SA_LS/0x04;4 Systemtest SLS wartet auf Ventil Diagnose;;
+table;STATE_DIAG_SA_LS/0x05;5 Systemtest SLS Ventil Diagnose;;
+table;STATE_DIAG_SA_LS/0x06;6 Systemtest SLS in Prüfung;;
+table;STATE_DIAG_SA_LS/0x07;7 Systemtest SLS beendet;;
+table;STATE_DIAG_SA_LS/0x08;8 Systemtest SLS abgebrochen;;
+table;STATE_DIAG_SA_LS/0xFF;XY Status kann nicht ausgegeben werden;;
+table;STATE_VLS_EOL/0x00;0 Diagnose nicht aktiv;;
+table;STATE_VLS_EOL/0x01;1 Diagnose Schritt 1;;
+table;STATE_VLS_EOL/0x02;2 Diagnose Schritt 2;;
+table;STATE_VLS_EOL/0x10;10 Diagnose beendet, Sonden OK;;
+table;STATE_VLS_EOL/0x11;11 Diagnose beendet, Sonden vor Kat vertauscht;;
+table;STATE_VLS_EOL/0x12;12 Diagnose beendet, Sonden nach Kat vertauscht;;
+table;STATE_VLS_EOL/0x13;13 Diagnose beendet, Sonden vor und nach Kat vertauscht;;
+table;STATE_VLS_EOL/0x14;14 Diagnose beendet, Sonden vor Kat Bank 1 nicht plausibel;;
+table;STATE_VLS_EOL/0x15;15 Diagnose beendet, Sonden vor Kat Bank 2 nicht plausibel;;
+table;STATE_VLS_EOL/0x16;16 Diagnose beendet, Sonden nach Kat Bank 1 nicht plausibel;;
+table;STATE_VLS_EOL/0x17;17 Diagnose beendet, Sonden nach Kat Bank 2 nicht plausibel;;
+table;STATE_VLS_EOL/0x18;18 Diagnose beendet, keine brauchbaren Ergebnisse;;
+table;STATE_VLS_EOL/0xFF;FF Status kann nicht ausgegeben werden;;
+table;STATUS_REGLER_LSH_DOWN/0x00;00 Heizung aus;;
+table;STATUS_REGLER_LSH_DOWN/0x01;01 Heizung Vorheizphase;;
+table;STATUS_REGLER_LSH_DOWN/0x02;02 Heizung langsam herunterregeln;;
+table;STATUS_REGLER_LSH_DOWN/0x03;03 Heizung schnell herunterregelm;;
+table;STATUS_REGLER_LSH_DOWN/0x04;04 Heizung langsam heraufregeln;;
+table;STATUS_REGLER_LSH_DOWN/0x05;05 Batteriespannung Schutz;;
+table;STATUS_REGLER_LSH_DOWN/0XXY;FF Heizung unbekannter Wert;;
+table;STATUS_REGLER_LSH_UP/0x00;00 Heizung aus;;
+table;STATUS_REGLER_LSH_UP/0x01;01 Heizung langsam heraufregeln;;
+table;STATUS_REGLER_LSH_UP/0x02;02 Heizung schnell herunterregelm;;
+table;STATUS_REGLER_LSH_UP/0x03;03 Heizung langsam herunterregeln;;
+table;STATUS_REGLER_LSH_UP/0x04;04 Heizung Regelung aktiv;;
+table;STATUS_REGLER_LSH_UP/0x05;05 Batteriespannung Schutz;;
+table;STATUS_REGLER_LSH_UP/0x06;06 Temperatur Schutz;;
+table;STATUS_REGLER_LSH_UP/0XXY;FF Heizung unbekannter Wert;;
+table;FARTTEXTE/0x00;kein passendes Fehlersymptom;;
+table;FARTTEXTE/0x01;Signal oder Wert oberhalb Schwelle;;
+table;FARTTEXTE/0x02;Signal oder Wert unterhalb Schwelle;;
+table;FARTTEXTE/0x04;kein Signal oder Wert;;
+table;FARTTEXTE/0x08;unplausibles Signal oder Wert;;
+table;FARTTEXTE/0x10;Testbedingungen erfüllt;;
+table;FARTTEXTE/0x11;Testbedingungen noch nicht erfüllt;;
+table;FARTTEXTE/0x20;Fehler momentan nicht vorhanden, nicht OBD-entprellt;;
+table;FARTTEXTE/0x21;Fehler momentan nicht vorhanden, OBD-entprellt;;
+table;FARTTEXTE/0x22;Fehler momentan vorhanden, noch nicht OBD-entprellt;;
+table;FARTTEXTE/0x23;Fehler momentan vorhanden, OBD-entprellt;;
+table;FARTTEXTE/0x30;Fehler verursacht kein Aufleuchten der Warnlampe (MIL);;
+table;FARTTEXTE/0x31;Fehler wuerde das Aufleuchten der Warnlampe (MIL) verursachen;;
+table;FARTTEXTE/0xFF;unbekannte Fehlerart;;
+table;STAT_RUHESTROM/0x00;0 keine Ruhestromverletzung, keine Standverbraucher aktiv;;
+table;STAT_RUHESTROM/0x01;1 Ruhestrom 80 bis 200mA aktiv, keine Standverbraucher aktiv;;
+table;STAT_RUHESTROM/0x02;2 Ruhestrom 200 bis 1000mA aktiv, keine Standverbraucher aktiv;;
+table;STAT_RUHESTROM/0x03;3 Ruhestrom über 1000mA aktiv, keine Standverbraucher aktiv;;
+table;STAT_RUHESTROM/0x04;4 keine Ruhestromverletzung, Standverbraucher Licht aktiv;;
+table;STAT_RUHESTROM/0x05;5 Ruhestrom 80 bis 200mA aktiv, Standverbraucher Licht aktiv;;
+table;STAT_RUHESTROM/0x06;6 Ruhestrom 200 bis 1000mA aktiv, Standverbraucher Licht aktiv;;
+table;STAT_RUHESTROM/0x07;7 Ruhestrom über 1000mA aktiv, Standverbraucher Licht aktiv;;
+table;STAT_RUHESTROM/0x08;8 keine Ruhestromverletzung, Standverbraucher Standheizung aktiv;;
+table;STAT_RUHESTROM/0x09;9 Ruhestrom 80 bis 200mA aktiv, Standverbraucher Standheizung aktiv;;
+table;STAT_RUHESTROM/0x0A;10 Ruhestrom 200 bis 1000mA aktiv, Standverbraucher Standheizung aktiv;;
+table;STAT_RUHESTROM/0x0B;11 Ruhestrom über 1000mA aktiv, Standverbraucher Standheizung aktiv;;
+table;STAT_RUHESTROM/0x0C;12 keine Ruhestromverletzung, Standverbraucher Sonstige aktiv;;
+table;STAT_RUHESTROM/0x0D;13 Ruhestrom 80 bis 200mA aktiv, Standverbraucher Sonstige aktiv;;
+table;STAT_RUHESTROM/0x0E;14 Ruhestrom 200 bis 1000mA aktiv, Standverbraucher Sonstige aktiv;;
+table;STAT_RUHESTROM/0x0F;15 Ruhestrom über 1000mA aktiv, Standverbraucher Sonstige aktiv;;
+table;STAT_RUHESTROM/0xFF;255 Status unbekannt;;
+table;_MSV7ASAM_CNV_S_8_RANGE_STAT_18_CM/0x00;None;;
+table;_MSV7ASAM_CNV_S_8_RANGE_STAT_18_CM/0x01;Set-Acc-TipUp;;
+table;_MSV7ASAM_CNV_S_8_RANGE_STAT_18_CM/0x02;Decelerate-TipDown;;
+table;_MSV7ASAM_CNV_S_8_RANGE_STAT_18_CM/0x03;Resume;;
+table;_MSV7ASAM_CNV_S_8_RANGE_STAT_18_CM/0x04;Off;;
+table;_MSV7ASAM_CNV_S_8_RANGE_STAT_18_CM/0x07;Error;;
+table;_MSV7ASAM_TABLE_EWAP_SONDERFUNKTIONEN/0xFB;Sonderfunktion 1 aktivieren;;
+table;_MSV7ASAM_TABLE_EWAP_SONDERFUNKTIONEN/0xFC;Sonderfunktion 2 aktivieren;;
+table;_MSV7ASAM_TABLE_EWAP_SONDERFUNKTIONEN/0xFD;Sonderfunktion 3 aktivieren;;
+table;_MSV7ASAM_TABLE_EWAP_SONDERFUNKTIONEN/0xFE;Sonderfunktion 4 aktivieren;;
+table;_MSV7ASAM_TABLE_EWAP_SONDERFUNKTIONEN/0xFF;Sonderfunktionen deaktivieren;;
+table;_MSV7ASAM_CNV_S_7_DEF_BA_470_CM/0x00;Keine;;
+table;_MSV7ASAM_CNV_S_7_DEF_BA_470_CM/0x01;ungedrosselter Betrieb;;
+table;_MSV7ASAM_CNV_S_7_DEF_BA_470_CM/0x02;gedrosselter Betrieb;;
+table;_MSV7ASAM_CNV_S_7_DEF_BA_470_CM/0x03;gedrosselter Betrieb mit kleinem Hub;;
+table;_MSV7ASAM_CNV_S_7_DEF_BA_470_CM/0x06;Drosselklappennotlauf;;
+table;_MSV7ASAM_CNV_S_7_DEF_BA_470_CM/0x07;VVT-Notlauf 1;;
+table;_MSV7ASAM_CNV_S_7_DEF_BA_470_CM/0x08;VVT-Notlauf 2;;
