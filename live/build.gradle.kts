@@ -27,6 +27,9 @@ tasks.test {
     useJUnitPlatform()
     System.getenv("BIMMERDATA_ECU_DIR")?.let { environment("BIMMERDATA_ECU_DIR", it) }
     System.getenv("BIMMERDATA_TRACE_DIR")?.let { environment("BIMMERDATA_TRACE_DIR", it) }
+    // Optional end-to-end export test against a real Telegraf listener (deploy/telegraf/)
+    System.getenv("BIMMERDATA_TELEGRAF_URL")?.let { environment("BIMMERDATA_TELEGRAF_URL", it) }
+    System.getenv("BIMMERDATA_TELEGRAF_TOKEN")?.let { environment("BIMMERDATA_TELEGRAF_TOKEN", it) }
     testLogging {
         events("passed", "skipped", "failed")
         showStandardStreams = true

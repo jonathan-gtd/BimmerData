@@ -1,0 +1,15 @@
+# Grafana data source for the example docker-compose stack (TimescaleDB = PostgreSQL).
+apiVersion: 1
+datasources:
+  - name: BimmerData
+    uid: bimmerdata
+    type: grafana-postgresql-datasource
+    url: timescaledb:5432
+    user: telegraf
+    secureJsonData:
+      password: $PG_PASSWORD
+    jsonData:
+      database: bimmerdata
+      sslmode: disable
+      timescaledb: true
+      postgresVersion: 1700

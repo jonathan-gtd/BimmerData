@@ -1,0 +1,51 @@
+# Example stack for the BimmerData Telegraf export: Telegraf (HTTP listener) -> TimescaleDB -> Grafana.
+# Copy .env.example to .env, change the secrets, then: docker compose up -d
+# Phone: BimmerData › Settings › Telegraf export › URL http://<this-host>:8186/api/v2/write, token = BIMMERDATA_TOKEN.
+# Grafana: http://<this-host>:3000 (admin / GRAFANA_ADMIN_PASSWORD), then import grafana/bimmerdata-dashboard.json.
+
+services:
+  timescaledb:
+    image: timescale/timescaledb:2.31.0-pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bimmerdata
+      POSTGRES_USER: telegraf
+      POSTGRES_PASSWORD: ${PG_PASSWORD:?set PG_PASSWORD in .env}
+    volumes:
+      - timescaledb:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U telegraf -d bimmerdata"]
+      interval: 5s
+      retries: 20
+
+  telegraf:
+    image: telegraf:1.40.3
+    restart: unless-stopped
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    environment:
+      BIMMERDATA_TOKEN: ${BIMMERDATA_TOKEN:?set BIMMERDATA_TOKEN in .env}
+      PG_CONNECTION: "host=timescaledb user=telegraf password=${PG_PASSWORD} dbname=bimmerdata sslmode=disable"
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    ports:
+      - "8186:8186"
+
+  grafana:
+    image: grafana/grafana-oss:13.0.2
+    restart: unless-stopped
+    depends_on:
+      - timescaledb
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in .env}
+      PG_PASSWORD: ${PG_PASSWORD}
+    volumes:
+      - grafana:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "3000:3000"
+
+volumes:
+  timescaledb:
+  grafana:
