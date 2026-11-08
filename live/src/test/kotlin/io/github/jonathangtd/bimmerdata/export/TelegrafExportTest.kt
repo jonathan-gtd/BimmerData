@@ -67,35 +67,26 @@ class TelegrafExportTest {
     // ---------------------------------------------------------------- queue
 
     @Test
-    fun `queue survives a restart and trims a cut line`(@TempDir dir: File) {
-        val q = LineQueue(dir, segmentBytes = 50)
+    fun `queue survives a crash and trims a cut line`(@TempDir dir: File) {
+        val q = LineQueue(dir, segmentBytes = 50, freeSpace = { Long.MAX_VALUE })
         q.append(listOf("m v=1 1", "m v=2 2"))
         q.append(List(10) { "m v=$it 1$it" })
-        q.close()
-        // simulate a crash in the middle of a line
-        dir.listFiles()!!.maxBy { it.name }.appendText("m v=9")
-        val q2 = LineQueue(dir, segmentBytes = 50)
-        assertEquals(12, q2.state().lines)
+        q.append(listOf("m v=3 3"))
+        // crash: no close(), the open raw segment is cut in the middle of a line
+        val raw = dir.listFiles()!!.single { it.name.endsWith(".lp") }
+        raw.appendText("m v=9")
+        val q2 = LineQueue(dir, segmentBytes = 50, freeSpace = { Long.MAX_VALUE })
+        assertEquals(13, q2.state().lines)
+        assertTrue(dir.listFiles()!!.none { it.name.endsWith(".lp") }, "recovered raw segment is compressed")
         val bodies = ArrayList<String>()
         while (true) {
             val b = q2.next(includeOpen = true) ?: break
-            bodies += b.body.toString(Charsets.UTF_8)
+            assertTrue(b.gzip)
+            bodies += GZIPInputStream(b.body.inputStream()).readBytes().toString(Charsets.UTF_8)
             q2.remove(b)
         }
-        assertEquals(12, bodies.joinToString("").lines().count { it.isNotEmpty() })
+        assertEquals(13, bodies.joinToString("").lines().count { it.isNotEmpty() })
         assertTrue(q2.isEmpty())
-    }
-
-    @Test
-    fun `full queue drops the oldest segments`(@TempDir dir: File) {
-        val q = LineQueue(dir, segmentBytes = 100, maxBytes = 300)
-        repeat(100) { i -> q.append(listOf("m v=$i ${1000 + i}")) }
-        val st = q.state()
-        assertTrue(st.bytes <= 300 + 100, "size ${st.bytes}")
-        assertTrue(st.droppedLines > 0)
-        assertEquals(100, st.lines + st.droppedLines)
-        val first = q.next(includeOpen = true)!!.body.toString(Charsets.UTF_8)
-        assertTrue(!first.contains("v=0 "), "oldest points must be gone")
     }
 
     // ---------------------------------------------------------------- exporter

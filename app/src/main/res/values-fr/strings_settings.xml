@@ -9,14 +9,10 @@
     <string name="settings_auto_connect_hint">Se connecte en USB dès que le câble K+DCAN est détecté, tant que BimmerData tourne.</string>
 
     <!-- Enregistrement -->
-    <string name="settings_section_recording">Enregistrement</string>
     <string name="settings_rec_folder">Dossier</string>
     <string name="settings_rec_folder_hint">Stockage interne › %1$s, visible dans l’app Fichiers et en USB.</string>
-    <string name="settings_rec_columns">Colonnes</string>
-    <string name="settings_rec_columns_value">Toutes les mesures lues au démarrage de l’enregistrement.</string>
 
     <!-- API -->
-    <string name="settings_section_api">API locale</string>
     <string name="settings_api_enable">Activer l’API REST</string>
     <string name="settings_api_enable_hint">Permet aux scripts et aux agents IA du même réseau de lire les valeurs, de créer des tableaux de bord et de modifier les réglages, avec le jeton ci-dessous.</string>
     <string name="settings_api_warning">HTTP non chiffré sur le réseau local : toute personne sur le même Wi-Fi qui connaît le jeton peut utiliser l’API. À activer sur des réseaux de confiance (maison, votre propre partage de connexion), pas sur un Wi-Fi public.</string>
@@ -54,7 +50,6 @@
     <string name="settings_cancel">Annuler</string>
 
     <!-- À propos -->
-    <string name="settings_section_about">À propos</string>
     <string name="settings_version">Version %1$s</string>
     <string name="settings_license">Logiciel libre sous licence GPL-3.0-or-later : vous pouvez l’utiliser, l’étudier, le partager et le modifier.</string>
     <string name="settings_source">Code source</string>

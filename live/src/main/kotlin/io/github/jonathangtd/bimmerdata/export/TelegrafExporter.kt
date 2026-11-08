@@ -25,6 +25,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import java.io.File
 
 /** When points are uploaded. */
 enum class ExportMode {
@@ -49,6 +50,8 @@ data class ExportConfig(
     /** At most this many points per measurement and second (independent of the read rate). */
     val pointsPerSecond: Int = 1,
     val mode: ExportMode = ExportMode.AfterTrip,
+    /** Free space kept on the phone: the queue stops growing (never deletes) below it. */
+    val reserveBytes: Long = LineQueue.DEFAULT_RESERVE_BYTES,
 ) {
     val usable: Boolean get() = enabled && TelegrafClient.isValidUrl(url)
 
@@ -62,20 +65,42 @@ enum class ExportPhase { Off, Idle, WaitingForNetwork, WaitingForUnmetered, Send
 data class ExportState(
     val phase: ExportPhase = ExportPhase.Off,
     val queuedLines: Long = 0,
+    /** Size of the queue on disk (compressed). */
     val queuedBytes: Long = 0,
-    /** Points deleted because the queue was full, or refused by the server for good. */
-    val droppedLines: Long = 0,
+    /** Uncompressed size of the queued points. */
+    val queuedRawBytes: Long = 0,
     val sentLines: Long = 0,
     val lastSuccessMs: Long? = null,
     val lastError: String? = null,
-)
+    /** Points not queued because the phone reached the free-space reserve (the CSV has them). */
+    val refusedLines: Long = 0,
+    /** Batches refused for good by the server (HTTP 400), kept aside in `rejected/`. */
+    val rejectedBatches: Int = 0,
+    val rejectedLines: Long = 0,
+    /** The phone reached the reserve: new points are not queued (nothing is deleted). */
+    val blocked: Boolean = false,
+    val freeBytes: Long = 0,
+    val reserveBytes: Long = LineQueue.DEFAULT_RESERVE_BYTES,
+    /** Uncompressed bytes queued per second over the last minute (0 when nothing is queued). */
+    val queueBytesPerSecond: Double = 0.0,
+    /** Measurements in the last exported batch of samples. */
+    val measurementCount: Int = 0,
+) {
+    /** Space the queue may still use before reaching the reserve. */
+    val roomBytes: Long get() = (freeBytes - reserveBytes).coerceAtLeast(0)
+}
 
 /**
  * Exports live samples to Telegraf: samples → [ExportSampler] (rate limit) → [LineEncoder] →
- * [LineQueue] on disk → [TelegrafClient] in batches, when [ExportConfig.mode] and the
+ * [LineQueue] on disk (gzip) → [TelegrafClient] in batches, when [ExportConfig.mode] and the
  * [network] allow it. Times are the original sample times, so an upload after the trip lands
- * at the right place in Grafana. Network errors are retried with a growing pause (2 s to 5 min);
- * nothing is lost unless the queue overflows (oldest data dropped first).
+ * at the right place in Grafana.
+ *
+ * **Nothing is ever lost on the phone side**: a batch is deleted only after a 2xx answer.
+ * Network errors, 5xx, 404 and other temporary answers are retried with a growing pause (2 s to
+ * 5 min); 401/403 wait for new credentials; a batch refused for good (400) is moved aside to
+ * `rejected/` for the user (retry, export). When the storage reaches the reserve, new points are
+ * not queued (and counted) instead of deleting old ones.
  */
 class TelegrafExporter(
     private val scope: CoroutineScope,
@@ -96,16 +121,17 @@ class TelegrafExporter(
     val state: StateFlow<ExportState> = _state.asStateFlow()
 
     private val sampler = ExportSampler(1, clock())
+    private val rate = QueueEstimate.Rate()
     private val wake = Channel<Unit>(Channel.CONFLATED)
     private val sendLock = Mutex()
     private var jobs: List<Job> = emptyList()
     @Volatile private var authFailedFor: ExportConfig? = null
     private var encoder: Pair<String, LineEncoder>? = null
-    @Volatile private var rejectedLines = 0L
 
     @Synchronized
     fun start() {
         if (jobs.isNotEmpty()) return
+        queue.reserveBytes = config.value.reserveBytes
         refreshQueueState()
         jobs = listOf(
             scope.launch(dispatcher) { collectSamples() },
@@ -127,10 +153,33 @@ class TelegrafExporter(
         wake.trySend(Unit)
     }
 
-    /** Deletes every point waiting on the phone. */
+    /** New free-space reserve; shown (and applied) at once. */
+    fun setReserveBytes(bytes: Long) {
+        queue.reserveBytes = bytes
+        refreshQueueState()
+    }
+
+    /** Recomputes the queue figures (free space, queued-bytes rate) for the Settings screen. */
+    fun refresh() = refreshQueueState()
+
+    /** Deletes every point waiting on the phone (only on the user's explicit request). */
     fun clearQueue() {
         queue.clear()
-        rejectedLines = 0
+        refreshQueueState()
+    }
+
+    /** Puts the rejected batches back into the upload queue and tries now. */
+    fun retryRejected(): Int = queue.retryRejected().also {
+        refreshQueueState()
+        kick()
+    }
+
+    /** The rejected batches (gzip line protocol files), for an export. */
+    fun rejectedFiles(): List<File> = queue.rejectedFiles()
+
+    /** Deletes the rejected batches (only on the user's explicit request). */
+    fun deleteRejected() {
+        queue.deleteRejected()
         refreshQueueState()
     }
 
@@ -171,10 +220,12 @@ class TelegrafExporter(
                 wasUsable = true
             }
             sampler.pointsPerSecond = cfg.pointsPerSecond.coerceIn(ExportConfig.RATES)
+            queue.reserveBytes = cfg.reserveBytes
             val enc = encoderFor(cfg.car)
             val lines = sampler.select(snapshot).mapNotNull { (id, s) -> enc.encode(metadata(id) ?: unknown(id), s) }
             if (lines.isEmpty()) return@collect
-            queue.append(lines)
+            if (queue.append(lines)) rate.add(clock(), lines.sumOf { it.length + 1L })
+            _state.update { it.copy(measurementCount = snapshot.size) }
             refreshQueueState()
             wake.trySend(Unit)
         }
@@ -225,19 +276,18 @@ class TelegrafExporter(
         }
     }
 
-    /** Sends the oldest batch; null when the queue is empty. */
+    /** Sends the oldest batch; null when the queue is empty. Deletes it only on 2xx. */
     private suspend fun sendOne(cfg: ExportConfig): WriteResult? = sendLock.withLock {
         val batch = queue.next(includeOpen = true) ?: return@withLock null
-        val r = clientFactory(cfg).write(batch.body)
+        val r = clientFactory(cfg).write(batch.body, gzipped = batch.gzip)
         when (r) {
             WriteResult.Ok -> {
                 queue.remove(batch)
                 _state.update { it.copy(sentLines = it.sentLines + batch.lines, lastSuccessMs = clock(), lastError = null) }
             }
             is WriteResult.Rejected -> {
-                queue.remove(batch)
-                rejectedLines += batch.lines
-                _state.update { it.copy(lastError = "Rejected by the server: ${r.message}") }
+                queue.reject(batch, r.message)
+                _state.update { it.copy(lastError = "Refused by the server, kept aside: ${r.message}") }
             }
             is WriteResult.AuthFailed -> _state.update { it.copy(lastError = "Authentication failed: ${r.message}") }
             is WriteResult.Retry -> _state.update { it.copy(lastError = r.message) }
@@ -248,7 +298,14 @@ class TelegrafExporter(
 
     private fun refreshQueueState() {
         val q = queue.state()
-        _state.update { it.copy(queuedLines = q.lines, queuedBytes = q.bytes, droppedLines = q.droppedLines + rejectedLines) }
+        val bps = rate.bytesPerSecond(clock())
+        _state.update {
+            it.copy(
+                queuedLines = q.lines, queuedBytes = q.bytes, queuedRawBytes = q.rawBytes,
+                refusedLines = q.refusedLines, rejectedBatches = q.rejectedBatches, rejectedLines = q.rejectedLines,
+                blocked = q.blocked, freeBytes = q.freeBytes, reserveBytes = q.reserveBytes, queueBytesPerSecond = bps,
+            )
+        }
     }
 
     companion object {

@@ -105,6 +105,7 @@ class Translator {
                 val description = if (m.description.isBlank()) null else t.lookup(TranslationType.Job, s.job, m.description)?.takeIf { !it.stale }?.text
                 if (label == null && description == null) m else m.copy(label = label ?: m.label, description = description ?: m.description)
             }
+            is MeasurementSource.Sensor -> m
         }
     }
 

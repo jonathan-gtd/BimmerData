@@ -16,6 +16,7 @@ import android.net.NetworkCapabilities
 import android.util.Log
 import io.github.jonathangtd.bimmerdata.live.LiveRepository
 import io.github.jonathangtd.bimmerdata.live.Measurement
+import io.github.jonathangtd.bimmerdata.live.PhoneSensors
 import io.github.jonathangtd.bimmerdata.settings.AppSettings
 import io.github.jonathangtd.bimmerdata.settings.SecretStore
 import io.github.jonathangtd.bimmerdata.settings.TelegrafAuthMode
@@ -55,7 +56,8 @@ class TelegrafRuntime private constructor(context: Context) {
         .stateIn(scope, SharingStarted.Eagerly, toConfig(settings.state.value.telegraf))
 
     private val exporter = TelegrafExporter(
-        scope, repo.liveDataSource.samples, ::metadata, LineQueue(File(app.filesDir, "telegraf_queue")), config, network,
+        scope, repo.liveDataSource.samples, ::metadata,
+        LineQueue(File(app.filesDir, QUEUE_DIR), reserveBytes = settings.state.value.telegraf.reserveMb * LineQueue.MB), config, network,
     )
 
     val state: StateFlow<ExportState> get() = exporter.state
@@ -78,7 +80,32 @@ class TelegrafRuntime private constructor(context: Context) {
                 .distinctUntilChanged()
                 .collect { (waiting, cfg) -> if (waiting && cfg.usable) TelegrafUploadJob.schedule(app, cfg.mode) else TelegrafUploadJob.cancel(app) }
         }
+        // a new reserve shows (and applies) at once, even with the export off
+        scope.launch { config.map { it.reserveBytes }.distinctUntilChanged().collect { exporter.setReserveBytes(it) } }
+        // tell the user when the queue grows past a step, and when the reserve is reached
+        scope.launch {
+            exporter.state.map { QueueEstimate.growthLevel(it.queuedBytes) }.distinctUntilChanged().collect { level ->
+                if (level >= 0) QueueWarning.showGrowth(app, exporter.state.value) else QueueWarning.cancelGrowth(app)
+            }
+        }
+        scope.launch {
+            exporter.state.map { it.blocked }.distinctUntilChanged().collect { blocked ->
+                if (blocked) QueueWarning.showBlocked(app, exporter.state.value) else QueueWarning.cancelBlocked(app)
+            }
+        }
     }
+
+    /** Recomputes the queue figures (free space, rate, autonomy) for the Settings screen. */
+    fun refresh() = exporter.refresh()
+
+    /** Puts the batches refused by the server back into the queue and tries now. */
+    fun retryRejected(): Int = exporter.retryRejected()
+
+    /** Batches refused by the server (gzip line protocol), oldest first. */
+    fun rejectedFiles(): List<File> = exporter.rejectedFiles()
+
+    /** Deletes the refused batches (user's explicit request). */
+    fun deleteRejected() = exporter.deleteRejected()
 
     suspend fun test(cfg: ExportConfig = configNow()): WriteResult = exporter.test(cfg)
 
@@ -104,13 +131,16 @@ class TelegrafRuntime private constructor(context: Context) {
         car = t.car.trim(),
         pointsPerSecond = t.pointsPerSecond,
         mode = t.mode,
+        reserveBytes = t.reserveMb * LineQueue.MB,
     )
 
     /** Label, unit and SGBD of a measurement id, from what the engine reads. */
     private fun metadata(id: String): Measurement? {
         known[id]?.let { return it }
         for (m in repo.requests.merged()) known[m.id] = m
-        return known[id]
+        known[id]?.let { return it }
+        // phone GPS: exported whenever it is on, even without a card showing it
+        return PhoneSensors.measurement(id)?.also { known[id] = it }
     }
 
     private fun registerNetworkCallback() {
@@ -133,6 +163,9 @@ class TelegrafRuntime private constructor(context: Context) {
 
     companion object {
         private const val TAG = "TelegrafExport"
+
+        /** Queue folder in the app's private storage (`/data/data/<package>/files/telegraf_queue`). */
+        const val QUEUE_DIR = "telegraf_queue"
 
         // holds only the application context
         @SuppressLint("StaticFieldLeak")

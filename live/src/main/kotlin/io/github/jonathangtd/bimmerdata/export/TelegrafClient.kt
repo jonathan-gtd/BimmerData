@@ -25,20 +25,27 @@ sealed interface TelegrafAuth {
 sealed interface WriteResult {
     data object Ok : WriteResult
 
-    /** Network error, timeout, 5xx, 429: keep the batch and retry later. */
+    /**
+     * Anything that may work later: network error, timeout, 5xx, 429, 404 (wrong path or server
+     * not ready), other 4xx. The batch stays queued and is retried.
+     */
     data class Retry(val message: String) : WriteResult
 
     /** 401 / 403: wrong token or password; keep the batch, stop until the settings change. */
     data class AuthFailed(val message: String) : WriteResult
 
-    /** Other 4xx (e.g. 400 parse error, 413): the batch will never be accepted; drop it. */
+    /**
+     * 400 / 413 / 422: the server says this batch itself is wrong (bad line protocol, too big).
+     * It is moved aside (`rejected/`), never deleted automatically.
+     */
     data class Rejected(val message: String) : WriteResult
 }
 
 /**
  * Posts line protocol to a Telegraf HTTP listener, e.g. `http://server:8186/api/v2/write`
- * (influxdb_v2_listener) or `http://server:8080/telegraf` (http_listener_v2). Bodies over 1 KB
- * are gzip-compressed. Blocking; call it off the main thread.
+ * (influxdb_v2_listener) or `http://server:8080/telegraf` (http_listener_v2). Queue batches are
+ * already gzip data and are sent as-is with `Content-Encoding: gzip` (both listeners accept it);
+ * other bodies over 1 KB are compressed here. Blocking; call it off the main thread.
  */
 class TelegrafClient(
     private val url: String,
@@ -46,11 +53,13 @@ class TelegrafClient(
     private val connectTimeoutMs: Int = 10_000,
     private val readTimeoutMs: Int = 30_000,
 ) {
-    fun write(body: ByteArray): WriteResult {
+    /** Posts [body]; [gzipped] = [body] is already gzip data. */
+    fun write(body: ByteArray, gzipped: Boolean = false): WriteResult {
         val target = try {
             parse(url)
         } catch (e: IllegalArgumentException) {
-            return WriteResult.Rejected(e.message ?: "Invalid URL")
+            // a settings problem, not the batch's fault: keep it
+            return WriteResult.Retry(e.message ?: "Invalid URL")
         }
         val conn = try {
             target.toURL().openConnection() as HttpURLConnection
@@ -73,7 +82,10 @@ class TelegrafClient(
                     "Basic " + Base64.getEncoder().encodeToString("${auth.user}:${auth.password}".toByteArray(Charsets.UTF_8)),
                 )
             }
-            val payload = if (body.size > 1024) {
+            val payload = if (gzipped) {
+                conn.setRequestProperty("Content-Encoding", "gzip")
+                body
+            } else if (body.size > 1024) {
                 conn.setRequestProperty("Content-Encoding", "gzip")
                 gzip(body)
             } else {
@@ -88,8 +100,8 @@ class TelegrafClient(
             return when {
                 code in 200..299 -> WriteResult.Ok
                 code == 401 || code == 403 -> WriteResult.AuthFailed(detail)
-                code == 408 || code == 429 || code >= 500 -> WriteResult.Retry(detail)
-                else -> WriteResult.Rejected(detail)
+                code == 400 || code == 413 || code == 422 -> WriteResult.Rejected(detail)
+                else -> WriteResult.Retry(detail)
             }
         } catch (e: IOException) {
             return WriteResult.Retry(e.message ?: e.javaClass.simpleName)

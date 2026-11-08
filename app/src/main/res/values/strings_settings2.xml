@@ -4,7 +4,6 @@
     <string name="settings2_save">Save</string>
 
     <!-- Tools -->
-    <string name="settings2_section_tools">Tools</string>
     <string name="settings2_tool32_hint">Run any EDIABAS job of an ECU file and look at its results, raw frames and timings.</string>
     <string name="settings2_ecu_jobs">Jobs (Tool32)</string>
 
@@ -22,7 +21,6 @@
     <string name="settings2_rec_prefix_hint">Letters, digits, - and _. Example: %1$s</string>
 
     <!-- Telegraf export -->
-    <string name="settings2_section_telegraf">Telegraf export</string>
     <string name="settings2_tg_enable">Export to Telegraf</string>
     <string name="settings2_tg_enable_hint">Sends the live values to a Telegraf server, which stores them in TimescaleDB for Grafana. Setup: docs/TELEGRAF.md in the BimmerData repository.</string>
     <string name="settings2_tg_url">Telegraf URL</string>
@@ -54,8 +52,6 @@
     <string name="settings2_tg_test_ok">Telegraf answered: OK.</string>
     <string name="settings2_tg_test_auth">Telegraf refused the token or password (%1$s).</string>
     <string name="settings2_tg_test_failed">Failed: %1$s</string>
-    <string name="settings2_tg_queue">%1$s points waiting (%2$s) · %3$s sent</string>
-    <string name="settings2_tg_dropped">%1$s points lost (queue full or refused)</string>
     <string name="settings2_tg_last_ok">Last upload: %1$s</string>
     <string name="settings2_tg_last_error">Last error: %1$s</string>
     <string name="settings2_tg_phase_off">Off</string>

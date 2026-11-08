@@ -45,6 +45,12 @@ sealed interface MeasurementSource {
 
     /** Generic path: run [job] with [args] and take result [resultName] from result set [set]. */
     data class JobResult(val job: String, val args: String, val resultName: String, val set: Int = 1) : MeasurementSource
+
+    /**
+     * A sensor of the phone, not an ECU (e.g. [sensor] "gps", [field] "speed"): never read on the
+     * cable, its samples come from the phone (see [PhoneSensors]).
+     */
+    data class Sensor(val sensor: String, val field: String) : MeasurementSource
 }
 
 /** Latest value of a measurement. Numeric results fill [value]; text results fill [text]. */

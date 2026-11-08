@@ -12,7 +12,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.ServiceInfo
 import android.hardware.usb.UsbManager
 import android.os.IBinder
 import android.os.PowerManager
@@ -101,11 +100,10 @@ class AcquisitionService : Service() {
         // every startForegroundService() must be followed by startForeground(), even when already running
         run {
             try {
-                val type = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
-                ServiceCompat.startForeground(
+                // connectedDevice, plus location while the GPS position is recorded
+                io.github.jonathangtd.bimmerdata.gps.startAcquisitionForeground(
                     this, NotificationId,
                     buildNotification(repo.connection.value, repo.liveDataSource.status.value, repo.recorder.state.value),
-                    type,
                 )
                 foreground = true
                 acquireWakeLock()

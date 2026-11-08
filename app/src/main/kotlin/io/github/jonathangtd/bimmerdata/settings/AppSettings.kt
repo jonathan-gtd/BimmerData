@@ -27,6 +27,8 @@ data class Settings(
     val recording: RecordingConfig = RecordingConfig(),
     val telegraf: TelegrafSettings = TelegrafSettings(),
     val bluetooth: BluetoothSettings = BluetoothSettings(),
+    /** Phone GPS position as measurements (Settings › GPS position); off by default. */
+    val gps: GpsSettings = GpsSettings(),
 )
 
 data class ApiConfig(
@@ -79,6 +81,7 @@ class AppSettings private constructor(context: Context) {
             recording = loadRecording(prefs),
             telegraf = loadTelegraf(prefs),
             bluetooth = loadBluetooth(prefs),
+            gps = loadGps(prefs),
         )
     }
 
@@ -109,6 +112,8 @@ class AppSettings private constructor(context: Context) {
     fun updateBluetooth(transform: (BluetoothSettings) -> BluetoothSettings) = update { it.copy(bluetooth = transform(it.bluetooth)) }
 
     fun updateTelegraf(transform: (TelegrafSettings) -> TelegrafSettings) = update { it.copy(telegraf = transform(it.telegraf)) }
+
+    fun updateGps(transform: (GpsSettings) -> GpsSettings) = update { it.copy(gps = transform(it.gps)) }
 
     /** New random token: every client using the old one gets 401 from now on. */
     fun regenerateToken() = updateApi { it.copy(token = ApiTokens.generate()) }

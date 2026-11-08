@@ -22,19 +22,20 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
 
-/** Whole Settings screen in a very tall window (every section visible), for a visual check. */
+/** Settings home and every settings page in a tall window, for a visual check (EN and FR). */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class SettingsScreenshotTest {
     private val out = File(System.getenv("BIMMERDATA_SCREENSHOT_DIR") ?: "build/screenshots").apply { mkdirs() }
 
-    private fun capture(name: String) {
+    private fun capture(name: String, page: SettingsPage?) {
         val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
         AppSettings.get(activity).updateTelegraf {
             it.copy(enabled = true, url = "http://192.168.1.10:8186/api/v2/write", car = "E90 330i", pointsPerSecond = 2, mode = ExportMode.AfterTrip)
         }
         AppSettings.get(activity).updateRecording { it.copy(rowIntervalMs = 200, filePrefix = "e90") }
-        activity.setContent { BimmerDataTheme { Box(Modifier.fillMaxSize().background(Cockpit.Background)) { SettingsScreen() } } }
+        AppSettings.get(activity).updateGps { it.copy(enabled = page == SettingsPage.Gps) }
+        activity.setContent { BimmerDataTheme { Box(Modifier.fillMaxSize().background(Cockpit.Background)) { SettingsScreen(initialPage = page) } } }
         repeat(3) { shadowOf(android.os.Looper.getMainLooper()).idle() }
         val view = activity.window.decorView
         val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
@@ -43,11 +44,16 @@ class SettingsScreenshotTest {
         println("screenshot: ${File(out, name).absolutePath}")
     }
 
-    @Test
-    @Config(qualifiers = "w411dp-h4200dp-mdpi")
-    fun settings() = capture("settings_all.png")
+    private fun all(suffix: String) {
+        capture("settings_home$suffix.png", null)
+        for (p in SettingsPage.entries) capture("settings_${p.name.lowercase()}$suffix.png", p)
+    }
 
     @Test
-    @Config(qualifiers = "fr-w411dp-h4200dp-mdpi")
-    fun settingsFrench() = capture("settings_all_fr.png")
+    @Config(qualifiers = "w411dp-h1900dp-mdpi")
+    fun settings() = all("")
+
+    @Test
+    @Config(qualifiers = "fr-w411dp-h1900dp-mdpi")
+    fun settingsFrench() = all("_fr")
 }
