@@ -51,6 +51,10 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
 
     val status: StateFlow<AcquisitionStatus> = deps.liveDataSource.status
     val recording: StateFlow<RecordingState> = deps.recorder.state
+    val connection: StateFlow<io.github.jonathangtd.bimmerdata.live.LiveConnection> = deps.connection
+
+    fun connect(mode: io.github.jonathangtd.bimmerdata.live.LiveMode) = deps.connect(mode)
+    fun disconnect() = deps.disconnect()
 
     private val _index = MutableStateFlow<Map<String, Measurement>>(emptyMap())
 

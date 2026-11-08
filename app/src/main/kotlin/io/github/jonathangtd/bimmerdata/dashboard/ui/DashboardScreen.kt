@@ -6,6 +6,9 @@ package io.github.jonathangtd.bimmerdata.dashboard.ui
 import android.content.res.Resources
 import android.content.Intent
 import androidx.activity.compose.BackHandler
+import io.github.jonathangtd.bimmerdata.live.LiveConnection
+import io.github.jonathangtd.bimmerdata.live.LiveMode
+import io.github.jonathangtd.bimmerdata.live.LivePermissions
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -113,6 +116,7 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
     val ui by vm.ui.collectAsStateWithLifecycle()
     val status by vm.status.collectAsStateWithLifecycle()
     val rec by vm.recording.collectAsStateWithLifecycle()
+    val connection by vm.connection.collectAsStateWithLifecycle()
     val index by vm.measurementIndex.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val res = LocalResources.current
@@ -197,6 +201,7 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                     title = currentPage?.let { headerTitle(it) } ?: stringResource(R.string.app_name),
                     status = status, rec = rec, format = renderer.format,
                     onRecord = vm::toggleRecording, onEdit = { vm.setEditing(true) },
+                    connection = connection, onConnect = vm::connect, onDisconnect = vm::disconnect,
                 )
             }
             Spacer(Modifier.height(12.dp))
@@ -388,18 +393,66 @@ private fun headerTitle(page: Page): String? {
 private fun DashboardHeader(
     title: String, status: AcquisitionStatus, rec: RecordingState, format: GaugeFormat,
     onRecord: () -> Unit, onEdit: () -> Unit,
+    connection: LiveConnection, onConnect: (LiveMode) -> Unit, onDisconnect: () -> Unit,
 ) {
     val context = LocalContext.current
+    var menu by remember { mutableStateOf(false) }
+    // USB acquisition runs in a foreground service: ask for the notification permission first (Android 13+).
+    val notifPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { onConnect(LiveMode.Usb) }
+    fun connectUsb() {
+        if (LivePermissions.shouldRequestNotifications(context)) notifPermission.launch(LivePermissions.Notifications) else onConnect(LiveMode.Usb)
+    }
+    val statusText = when (connection) {
+        is LiveConnection.Disconnected -> stringResource(R.string.conn_disconnected)
+        is LiveConnection.Paused -> stringResource(R.string.conn_paused)
+        is LiveConnection.Failed -> stringResource(R.string.conn_failed, connection.message)
+        is LiveConnection.Connecting -> stringResource(R.string.status_connecting)
+        is LiveConnection.Connected -> stringResource(
+            R.string.status_running,
+            stringResource(if (connection.mode == LiveMode.Usb) R.string.conn_usb_short else R.string.conn_sim),
+            String.format(java.util.Locale.getDefault(), "%.1f", status.cyclesPerSecond),
+        )
+    }
+    val dotColor = when (connection) {
+        is LiveConnection.Disconnected, is LiveConnection.Paused -> Cockpit.Muted
+        is LiveConnection.Failed -> Cockpit.Warning
+        else -> Color(StatusLine.color(status))
+    }
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(
                 stringResource(R.string.dash_title_live, title), color = Cockpit.Text, fontFamily = BarlowCondensed,
                 fontWeight = FontWeight.SemiBold, fontSize = 22.sp, letterSpacing = 0.5.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(8.dp).background(Color(StatusLine.color(status)), CircleShape))
-                Spacer(Modifier.width(6.dp))
-                Text(StatusLine.text(context, status, format), color = Cockpit.Muted, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Box {
+                Row(
+                    Modifier.clip(RoundedCornerShape(8.dp)).clickable(role = Role.Button) { menu = true }.padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(Modifier.size(8.dp).background(dotColor, CircleShape))
+                    Spacer(Modifier.width(6.dp))
+                    Text(statusText, color = Cockpit.Muted, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text("  ▾", color = Cockpit.Muted, fontSize = 11.sp)
+                }
+                androidx.compose.material3.DropdownMenu(
+                    expanded = menu, onDismissRequest = { menu = false },
+                    containerColor = Cockpit.Card,
+                ) {
+                    androidx.compose.material3.DropdownMenuItem(
+                        text = { Text(stringResource(R.string.conn_usb), color = Cockpit.Text) },
+                        onClick = { menu = false; connectUsb() },
+                    )
+                    androidx.compose.material3.DropdownMenuItem(
+                        text = { Text(stringResource(R.string.conn_sim), color = Cockpit.Text) },
+                        onClick = { menu = false; onConnect(LiveMode.Simulation) },
+                    )
+                    if (connection !is LiveConnection.Disconnected) {
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text(stringResource(R.string.conn_disconnect), color = Cockpit.Text) },
+                            onClick = { menu = false; onDisconnect() },
+                        )
+                    }
+                }
             }
         }
         RecordPill(rec, onRecord)

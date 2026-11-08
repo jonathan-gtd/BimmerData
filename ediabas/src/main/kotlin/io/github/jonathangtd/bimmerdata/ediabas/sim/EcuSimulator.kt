@@ -263,6 +263,8 @@ class EcuSimulator(
             Signal(0x5A86, 2, true, 0.00152587890625, 2.22044609888115E-14) { _, _ -> -1.643372 },
             // ignition advance cylinder 1 degCRK
             Signal(0x580E, 1, false, 0.5, -64.0) { t, id -> 10 + 18 * rev(t) + noise(t, id, 1.5) },
+            // ignition angle cylinder 1 (IGA_IGC[0], MESSWERTETAB: unsigned char x0.375 -35.625)
+            Signal(0x5A49, 1, false, 0.375, -35.6249989382923) { t, id -> 10 + 18 * rev(t) + noise(t, id, 1.5) },
             // VANOS intake / exhaust spread degCRK (intake: target and actual)
             Signal(0x4505, 2, true, 0.100000001490116, 0.0) { t, _ -> 95 - 25 * rev(t) },
             Signal(0x4508, 2, true, 0.100000001490116, 0.0) { t, id -> 95 - 25 * rev(maxOf(0.0, t - 0.3)) + noise(t, id, 0.4) },
