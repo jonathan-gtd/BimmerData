@@ -141,8 +141,9 @@ class AcquisitionEngineTest {
     fun `redefines after an ECU reset and recovers from a silent ECU`() = runBlocking {
         val catalog = catalog()
         val sim = EcuSimulator(liveValues = true)
-        val (_, iface) = kline(sim)
-        val engine = AcquisitionEngine(iface, catalog, AcquisitionEngine.Config(retryDelayMinMs = 50, retryDelayMaxMs = 400))
+        val (line, iface) = kline(sim)
+        fun inits() = line.requests.count { LiveTestData.hex(it).startsWith("82 12 F1 1A 80") }
+        val engine = AcquisitionEngine(iface, catalog, AcquisitionEngine.Config(retryDelayMinMs = 50, retryDelayMaxMs = 400, reconnectAfterFailedCycles = 2))
         try {
             val ms = tableMeasurements(catalog)
             engine.setMeasurements(ms)
@@ -171,6 +172,7 @@ class AcquisitionEngineTest {
             }
             println("recovered: ${engine.status.value}, definitions ${sim.recordDefinitions / blockIds.size}")
             assertTrue(sim.recordDefinitions / blockIds.size >= 3, "redefined after the silence")
+            assertTrue(inits() >= 2, "INITIALISIERUNG ran again after the reconnect: ${inits()}")
         } finally {
             engine.close()
         }
