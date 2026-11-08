@@ -100,21 +100,24 @@ class LineEncoder(
 }
 
 /**
- * Picks which samples to export: only new ones (sample time later than the last exported one of
- * that measurement), at most [pointsPerSecond] per measurement, and nothing older than
- * [notBeforeMs] (the last values kept on screen while disconnected are not exported again).
+ * Picks which samples to export: every reading, once. A sample is exported when its time is
+ * later than the last exported one of that measurement (a value that was not read again is not
+ * sent twice), and never when older than [notBeforeMs] (the last values kept on screen while
+ * disconnected are not exported again). No rate limit: the export follows the read rate.
  */
-class ExportSampler(var pointsPerSecond: Int, var notBeforeMs: Long = Long.MIN_VALUE) {
+class ExportDedup(var notBeforeMs: Long = Long.MIN_VALUE) {
     private val last = HashMap<String, Long>()
 
+    /** Measurements seen since the last [reset]. */
+    val measurementCount: Int @Synchronized get() = last.size
+
     @Synchronized
-    fun select(samples: Map<String, Sample>): List<Pair<String, Sample>> {
-        val minGap = 1000L / pointsPerSecond.coerceIn(1, 50)
-        val out = ArrayList<Pair<String, Sample>>()
+    fun select(samples: List<Pair<String, Sample>>): List<Pair<String, Sample>> {
+        val out = ArrayList<Pair<String, Sample>>(samples.size)
         for ((id, s) in samples) {
             if (s.timestampMs < notBeforeMs) continue
             val prev = last[id]
-            if (prev != null && (s.timestampMs <= prev || s.timestampMs - prev < minGap)) continue
+            if (prev != null && s.timestampMs <= prev) continue
             last[id] = s.timestampMs
             out += id to s
         }

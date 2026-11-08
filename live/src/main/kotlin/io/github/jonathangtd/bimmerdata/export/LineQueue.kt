@@ -316,7 +316,8 @@ class LineQueue(
     companion object {
         /** Megabyte as Android shows file sizes (SI): "500 MB" in the settings is 500 000 000 bytes. */
         const val MB = 1_000_000L
-        const val DEFAULT_RESERVE_BYTES = 500 * MB
+        /** Free space always kept on the phone (fixed, not a setting). */
+        const val DEFAULT_RESERVE_BYTES = 100 * MB
         const val REJECTED = "rejected"
 
         private val ClosedName = Regex("""seg-(\d+)-(\d+)-(\d+)\.lp\.gz""")

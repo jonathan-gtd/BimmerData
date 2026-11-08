@@ -162,6 +162,10 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 | GET / PATCH | `/api/v1/settings` | read / config | App settings (API settings are read-only) |
 | GET / PATCH | `/api/v1/export/telegraf` | config | Telegraf export settings and queue (token / password never returned, changed on the phone only) |
 | POST | `/api/v1/export/telegraf/test`, `/send` | config | Test the listener / upload the waiting points now |
+| GET | `/api/v1/diag/vehicle` | diag | Last detected vehicle, its ECUs and their last fault read (no car traffic, never the VIN) |
+| GET | `/api/v1/diag/faults` | diag | Read the fault memory from the car (`?ecu=0x12` for one ECU, `?cached=true` for the last read) |
+| POST | `/api/v1/diag/faults/clear` | diag | **Writes.** Clear one ECU (`{"ecu":"0x12"}`) or all (`{}`), after a confirmation on the phone |
+| POST | `/api/v1/diag/jobs` | diag | **May write.** Run one EDIABAS job (`{"sgbd","job","args"}`), after a confirmation on the phone |
 
 ### Layout rules
 
@@ -185,7 +189,8 @@ Every error has the same shape and a meaningful status:
 `400` bad input · `401` missing / wrong token · `403` scope not enabled (or API settings,
 which are phone-only) · `404` unknown id · `405` wrong method · `409` conflict (overlap, page
 full, last page, not connected) · `413` body over 1 MB · `422` invalid layout (`details` lists
-each problem with its JSON path) · `429` rate limited (`Retry-After`).
+each problem with its JSON path) · `429` rate limited (`Retry-After`). Diagnostics add `403 refused_on_phone`,
+`408 confirmation_timeout`, `409 vehicle_moving` and `503 confirmation_unavailable` / `not_connected`.
 
 ## HTTPS
 
@@ -260,7 +265,8 @@ fall back to plain HTTP.
   Regenerating it immediately locks out every client using the old one.
 - **Scopes**: each operation needs one scope, granted by toggles on the phone:
   `read` (values, ECUs, layout, recordings, pictures), `layout` (edit pages and cards),
-  `config` (connect / disconnect, recordings, connection settings). `diag` is reserved.
+  `config` (connect / disconnect, recordings, connection settings), `diag` (fault memory;
+  clearing faults and running jobs, each confirmed on the phone, see [Diagnostics](#diagnostics)).
   The API settings themselves (enable, port, token, scopes) can only be changed on the phone.
 - **Local network only**: the server binds the phone's private IPv4 addresses on Wi-Fi,
   Ethernet, USB tethering and its own hotspot (plus 127.0.0.1), never mobile data or VPN
@@ -270,8 +276,10 @@ fall back to plain HTTP.
 - **Encryption**: plain HTTP by default. On a shared or public Wi-Fi, anyone sniffing can then
   read the token: switch [HTTPS](#https) on, or use the API on networks you trust (home Wi-Fi,
   the phone's own hotspot), over a VPN or over `adb forward`.
-- **Never writes to ECUs.** The API reads live values and changes app data only. See
-  *Diagnostics* below for the rules future write operations must follow.
+- **Writes to ECUs only with the user's consent, per call.** Without the `diag` scope the API
+  reads live values and changes app data only. With it, clearing faults and running jobs wait
+  for the user's confirmation on the phone, every single time, and are refused while the car is
+  moving; see [Diagnostics](#diagnostics).
 
 ## Lifetime on Android
 
@@ -287,16 +295,36 @@ The server lives in the app process:
 
 With the screen off, Wi-Fi power saving can add latency to the first request.
 
-## Diagnostics (planned)
+## Diagnostics
 
-Fault memory and other diagnostic jobs will be added as extension routes under `/api/v1/diag/`
-(`ApiExtension` in `app/.../api/ApiExtensions.kt`). The rules they must follow:
+Scope `diag` (off by default; Settings › Local API › Permissions › Diagnostics). Routes under
+`/api/v1/diag/`, in `app/.../api/DiagApi.kt`:
 
-- they need the `diag` scope (not grantable yet);
-- every operation that writes to the car (clearing faults, coding, actuator tests…) goes through
-  `CarWriteGuard`: the user must confirm **each call** on the phone, and it is refused while the
-  car is moving;
-- the default guard refuses everything.
+- **Reading** the fault memory (`GET /diag/faults`, `GET /diag/vehicle`) answers directly. A read
+  from the car takes about 1 s per ECU; the live reading goes on between the jobs. The vehicle
+  must have been scanned once (Faults tab). Fault texts are the ECU file's (German).
+- **Clearing faults** (`POST /diag/faults/clear`) and **running a job** (`POST /diag/jobs`) are
+  confirmed on the phone **for every single call**, nothing is remembered:
+  1. if the car is moving (above 3 km/h, from a speed measurement the app reads or the phone
+     GPS), the call is refused at once: `409 vehicle_moving`; unknown speed is not a refusal;
+  2. the phone shows a dialog over any screen and a high-priority notification with **Allow** /
+     **Refuse** ("A client of the local API wants to clear the fault memory of DME (msv70)");
+  3. the HTTP call **blocks** until the answer, at most 60 s: `200` with the result once allowed,
+     `403 refused_on_phone`, `408 confirmation_timeout` when nobody answered (refused),
+     `503 confirmation_unavailable` when the phone cannot ask.
+  Use a client timeout above 60 s plus the job time (e.g. `curl -m 180`).
+- Jobs run like the in-app Tool32 (any job of an imported SGBD, `.grp` resolved with the ECU),
+  with the same safety guard at the interface: flashing, coding writes, security access and the
+  programming session are blocked whatever the job. `FS_LOESCHEN*` are refused on `/diag/jobs`:
+  use `/diag/faults/clear`.
+- ECUs are named by address (`0x12`), SGBD (`msv70`) or name (`DME`), as listed by
+  `GET /diag/vehicle`.
+
+```sh
+curl -s -H "Authorization: Bearer $T" "$B/diag/faults?ecu=0x12"
+curl -s -m 180 -X POST -H "Authorization: Bearer $T" -d '{"ecu":"0x12"}' "$B/diag/faults/clear"
+curl -s -m 180 -X POST -H "Authorization: Bearer $T" -d '{"sgbd":"msv70","job":"STATUS_OEL"}' "$B/diag/jobs"
+```
 
 ## Implementation notes
 

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Consignes d’interface selon le mode de connexion (ConnectHints), export Telegraf, API de diagnostic. -->
+<resources>
+    <string name="fb3_prepare_any">Branchez votre interface de diagnostic sur la voiture et mettez le contact.</string>
+    <string name="fb3_prepare_usb">Branchez le câble USB sur la voiture et sur le téléphone, et mettez le contact.</string>
+    <string name="fb3_prepare_bt">Branchez l’adaptateur Bluetooth %1$s sur la voiture et mettez le contact.</string>
+    <string name="fb3_prepare_bt_unnamed">Branchez votre adaptateur Bluetooth sur la voiture et mettez le contact.</string>
+    <string name="fb3_veh_none_sim">La simulation montre une voiture de démonstration : lancez la détection pour voir ses calculateurs et leur mémoire de défauts.</string>
+    <string name="fb3_check_any">L’interface de diagnostic est-elle branchée sur la voiture ?</string>
+    <string name="fb3_check_usb">Le câble USB est-il branché sur la voiture ?</string>
+    <string name="fb3_check_bt">L’adaptateur %1$s est-il branché et alimenté ?</string>
+    <string name="fb3_check_bt_unnamed">L’adaptateur Bluetooth est-il branché et alimenté ?</string>
+
+    <string name="fb3_tg_every_reading">Chaque valeur lue est envoyée avec son heure, à la cadence de lecture : Grafana reçoit les mêmes données que le CSV.</string>
+    <string name="fb3_tg_reserve_fixed">La file ne supprime jamais de points d’elle-même. Elle peut utiliser tout l’espace libre sauf %1$s gardés pour le téléphone ; une fois atteint, les nouveaux points ne sont plus mis en file (l’enregistrement CSV les garde).</string>
+    <plurals name="fb3_tg_autonomy_estimated">
+        <item quantity="one">Estimation pour %1$d valeur lue %2$s fois par seconde, avant d’atteindre la réserve.</item>
+        <item quantity="many">Estimation pour %1$d valeurs lues %2$s fois par seconde, avant d’atteindre la réserve.</item>
+        <item quantity="other">Estimation pour %1$d valeurs lues %2$s fois par seconde, avant d’atteindre la réserve.</item>
+    </plurals>
+
+    <!-- API de diagnostic : confirmation sur le téléphone -->
+    <string name="fb3_confirm_channel">Demandes de l’API à confirmer</string>
+    <string name="fb3_confirm_title">Autoriser cette demande de l’API ?</string>
+    <string name="fb3_confirm_clear_all">Un client de l’API locale veut effacer la mémoire de défauts de tous les calculateurs de la voiture.</string>
+    <string name="fb3_confirm_clear_ecu">Un client de l’API locale veut effacer la mémoire de défauts de %1$s.</string>
+    <string name="fb3_confirm_job">Un client de l’API locale veut lancer le job %1$s de %2$s.</string>
+    <string name="fb3_confirm_job_args">Un client de l’API locale veut lancer le job %1$s de %2$s avec les arguments « %3$s ».</string>
+    <string name="fb3_confirm_note">Cela peut écrire dans la voiture. Le flash et le codage restent bloqués quelle que soit la demande. N’autorisez que ce que vous avez demandé.</string>
+    <string name="fb3_confirm_countdown">Refusé automatiquement dans %1$d s.</string>
+    <string name="fb3_confirm_allow">Autoriser</string>
+    <string name="fb3_confirm_refuse">Refuser</string>
+</resources>

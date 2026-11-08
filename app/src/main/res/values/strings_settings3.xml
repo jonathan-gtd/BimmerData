@@ -58,7 +58,7 @@
     <string name="s3_gps_where">Where the position goes</string>
     <string name="s3_gps_values">CSV recording: one column per value. Telegraf export: the points have the tag ecu=gps (ids latitude, longitude…); the example Grafana dashboard draws the trip on a map.</string>
     <string name="s3_gps_cards">Cards: in the card editor, pick \"GPS\" in the list of ECUs (for example the GPS speed next to the speed read by the car).</string>
-    <string name="s3_gps_background">With the cable, the position keeps coming with the screen off. In simulation, only while the app is open.</string>
+    <string name="s3_gps_background">While connected to the car (cable or Bluetooth), the position keeps coming with the screen off. In simulation, only while the app is open.</string>
     <string name="s3_gps_privacy">The position stays on the phone (CSV). It only leaves it to your own Telegraf server, if the export is on.</string>
     <string name="s3_gps_latitude">GPS latitude</string>
     <string name="s3_gps_longitude">GPS longitude</string>
@@ -87,14 +87,8 @@
     <string name="s3_tg_autonomy_none">Reserve reached</string>
     <string name="s3_tg_autonomy">Room left</string>
     <string name="s3_tg_autonomy_measured">At the current rate, before the reserve is reached.</string>
-    <plurals name="s3_tg_autonomy_estimated">
-        <item quantity="one">Estimate for %2$d value at %1$d points per second, before the reserve is reached.</item>
-        <item quantity="other">Estimate for %2$d values at %1$d points per second, before the reserve is reached.</item>
-    </plurals>
     <string name="s3_tg_sent">%1$s points sent since the app started.</string>
     <string name="s3_tg_refused">%1$s points were not queued because the phone was full (they are in the CSV).</string>
-    <string name="s3_tg_reserve">Free space to keep</string>
-    <string name="s3_tg_reserve_hint">The queue never deletes points by itself. It may use all the free space except this reserve; when it is reached, new points are no longer queued.</string>
     <string name="s3_tg_where">Stored compressed (gzip, about 10 times smaller) in the app\'s private storage. A point is deleted only once Telegraf confirmed it (HTTP 2xx).</string>
     <string name="s3_tg_rejected_title">Refused by the server</string>
     <plurals name="s3_tg_rejected_text">

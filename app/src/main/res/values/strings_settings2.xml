@@ -36,8 +36,6 @@
     <string name="settings2_tg_secret_missing">Not set yet.</string>
     <string name="settings2_tg_car">Car name</string>
     <string name="settings2_tg_car_hint">Tag \"car\" of every point, to tell your cars apart in Grafana.</string>
-    <string name="settings2_tg_rate">Points per second</string>
-    <string name="settings2_tg_rate_hint">Per measurement, independent of the read rate.</string>
     <string name="settings2_tg_mode">When to send</string>
     <string name="settings2_tg_mode_after">After the trip</string>
     <string name="settings2_tg_mode_live">Live</string>

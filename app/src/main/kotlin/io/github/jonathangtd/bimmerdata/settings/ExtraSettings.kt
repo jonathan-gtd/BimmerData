@@ -4,9 +4,7 @@
 package io.github.jonathangtd.bimmerdata.settings
 
 import android.content.SharedPreferences
-import io.github.jonathangtd.bimmerdata.export.ExportConfig
 import io.github.jonathangtd.bimmerdata.export.ExportMode
-import io.github.jonathangtd.bimmerdata.export.QueueEstimate
 import io.github.jonathangtd.bimmerdata.live.CsvSessionRecorder
 
 /** CSV recording settings (Settings › Recording). */
@@ -39,18 +37,10 @@ data class TelegrafSettings(
     val username: String = "",
     /** `car` tag; blank = "car". */
     val car: String = "",
-    val pointsPerSecond: Int = 1,
     val mode: ExportMode = ExportMode.AfterTrip,
-    /**
-     * Free space kept on the phone, in MB (one of [QueueEstimate.RESERVES_MB]). The queue never
-     * deletes points: when the phone reaches this reserve, new points are not queued.
-     */
-    val reserveMb: Int = 500,
-) {
-    init {
-        require(pointsPerSecond in ExportConfig.RATES) { "pointsPerSecond must be in ${ExportConfig.RATES}" }
-    }
-}
+)
+// Every reading is exported (no points-per-second setting) and the free space kept on the phone
+// is fixed (LineQueue.DEFAULT_RESERVE_BYTES): the old "tg_rate" / "tg_reserve_mb" keys are dropped.
 
 /** Phone GPS position recorded with the ECU values (Settings › GPS position). */
 data class GpsSettings(
@@ -94,9 +84,7 @@ internal fun loadTelegraf(p: SharedPreferences) = TelegrafSettings(
     authMode = runCatching { TelegrafAuthMode.valueOf(p.getString(K_TG_AUTH, null) ?: "") }.getOrDefault(TelegrafAuthMode.Token),
     username = p.getString(K_TG_USER, null).orEmpty(),
     car = p.getString(K_TG_CAR, null).orEmpty(),
-    pointsPerSecond = p.getInt(K_TG_RATE, 1).coerceIn(ExportConfig.RATES),
     mode = runCatching { ExportMode.valueOf(p.getString(K_TG_MODE, null) ?: "") }.getOrDefault(ExportMode.AfterTrip),
-    reserveMb = p.getInt(K_TG_RESERVE_MB, 500).takeIf { it in QueueEstimate.RESERVES_MB } ?: 500,
 )
 
 internal fun loadGps(p: SharedPreferences) = GpsSettings(
@@ -114,9 +102,9 @@ internal fun SharedPreferences.Editor.saveExtras(s: Settings) {
     putString(K_TG_AUTH, s.telegraf.authMode.name)
     putString(K_TG_USER, s.telegraf.username)
     putString(K_TG_CAR, s.telegraf.car)
-    putInt(K_TG_RATE, s.telegraf.pointsPerSecond)
+    remove(K_TG_RATE) // setting removed: every reading is exported
     putString(K_TG_MODE, s.telegraf.mode.name)
-    putInt(K_TG_RESERVE_MB, s.telegraf.reserveMb)
+    remove(K_TG_RESERVE_MB) // setting removed: fixed reserve
     putBoolean(K_GPS_ON, s.gps.enabled)
     putLong(K_GPS_INTERVAL, s.gps.intervalMs)
 }

@@ -59,8 +59,8 @@ class TelegrafRuntime private constructor(context: Context) {
         .stateIn(scope, SharingStarted.Eagerly, toConfig(settings.state.value.telegraf))
 
     private val exporter = TelegrafExporter(
-        scope, repo.liveDataSource.samples, ::metadata,
-        LineQueue(File(app.filesDir, QUEUE_DIR), reserveBytes = settings.state.value.telegraf.reserveMb * LineQueue.MB), config, network,
+        scope, repo.liveDataSource.readings, ::metadata,
+        LineQueue(File(app.filesDir, QUEUE_DIR)), config, network,
     )
 
     val state: StateFlow<ExportState> get() = exporter.state
@@ -83,8 +83,6 @@ class TelegrafRuntime private constructor(context: Context) {
                 .distinctUntilChanged()
                 .collect { (waiting, cfg) -> if (waiting && cfg.usable) TelegrafUploadJob.schedule(app, cfg.mode) else TelegrafUploadJob.cancel(app) }
         }
-        // a new reserve shows (and applies) at once, even with the export off
-        scope.launch { config.map { it.reserveBytes }.distinctUntilChanged().collect { exporter.setReserveBytes(it) } }
         // tell the user when the queue grows past a step, and when the reserve is reached
         scope.launch {
             exporter.state.map { QueueEstimate.growthLevel(it.queuedBytes) }.distinctUntilChanged().collect { level ->
@@ -139,9 +137,7 @@ class TelegrafRuntime private constructor(context: Context) {
         },
         car = profile?.vehicle?.label?.takeIf { it.isNotBlank() } ?: t.car.trim(),
         profile = profile?.name.orEmpty(),
-        pointsPerSecond = t.pointsPerSecond,
         mode = t.mode,
-        reserveBytes = t.reserveMb * LineQueue.MB,
     )
 
     /** Label, unit and SGBD of a measurement id, from what the engine reads. */

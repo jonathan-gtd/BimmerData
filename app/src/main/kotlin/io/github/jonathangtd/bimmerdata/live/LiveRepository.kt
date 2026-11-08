@@ -338,6 +338,10 @@ internal class LiveDataProxy(private val scope: CoroutineScope) : LiveDataSource
     private val _status = MutableStateFlow(AcquisitionStatus())
     override val status: StateFlow<AcquisitionStatus> = _status.asStateFlow()
 
+    /** Every reading of the engine and of the phone sensors, in order (for the Telegraf export). */
+    private val _readings = MutableSharedFlow<List<Pair<String, Sample>>>(extraBufferCapacity = 8192, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    override val readings: SharedFlow<List<Pair<String, Sample>>> = _readings.asSharedFlow()
+
     private val _pauses = MutableSharedFlow<AcquisitionPause>(extraBufferCapacity = 16, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     override val pauses: SharedFlow<AcquisitionPause> = _pauses.asSharedFlow()
 
@@ -365,7 +369,9 @@ internal class LiveDataProxy(private val scope: CoroutineScope) : LiveDataSource
     }
 
     override fun putSensorSamples(fresh: Map<String, Sample>) {
-        if (fresh.isNotEmpty()) _samples.update { it + fresh }
+        if (fresh.isEmpty()) return
+        _samples.update { it + fresh }
+        _readings.tryEmit(fresh.entries.map { it.key to it.value })
     }
 
     private fun ecuOnly(list: List<Measurement>) = list.filterNot(PhoneSensors::isSensor)
@@ -377,6 +383,7 @@ internal class LiveDataProxy(private val scope: CoroutineScope) : LiveDataSource
         e.setPinnedMeasurements(pinned?.let(::ecuOnly))
         collectors = scope.launch {
             launch { e.samples.collect { fresh -> if (fresh.isNotEmpty()) _samples.update { it + fresh } } }
+            launch { e.readings.collect { _readings.tryEmit(it) } }
             launch { e.status.collect { _status.value = it } }
             launch { e.pauses.collect { _pauses.emit(it) } }
         }

@@ -31,7 +31,7 @@ class SettingsScreenshotTest {
     private fun capture(name: String, page: SettingsPage?) {
         val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
         AppSettings.get(activity).updateTelegraf {
-            it.copy(enabled = true, url = "http://192.168.1.10:8186/api/v2/write", car = "E90 330i", pointsPerSecond = 2, mode = ExportMode.AfterTrip)
+            it.copy(enabled = true, url = "http://192.168.1.10:8186/api/v2/write", car = "My car", mode = ExportMode.AfterTrip)
         }
         AppSettings.get(activity).updateRecording { it.copy(rowIntervalMs = 200, filePrefix = "e90") }
         AppSettings.get(activity).updateGps { it.copy(enabled = page == SettingsPage.Gps) }

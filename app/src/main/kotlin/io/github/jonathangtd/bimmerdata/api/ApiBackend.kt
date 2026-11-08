@@ -112,7 +112,6 @@ data class TelegrafView(
     /** A token / password is stored (encrypted) on the phone. */
     val secretSet: Boolean,
     val car: String,
-    val pointsPerSecond: Int,
     /** live or afterTrip */
     val mode: String,
     val state: TelegrafStateView,
@@ -142,7 +141,6 @@ data class TelegrafPatch(
     val enabled: Boolean? = null,
     val url: String? = null,
     val car: String? = null,
-    val pointsPerSecond: Int? = null,
     /** "live" or "afterTrip" */
     val mode: String? = null,
 )

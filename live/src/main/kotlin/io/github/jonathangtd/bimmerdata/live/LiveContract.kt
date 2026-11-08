@@ -5,6 +5,7 @@ package io.github.jonathangtd.bimmerdata.live
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.emptyFlow
 
 /*
@@ -79,6 +80,13 @@ interface LiveDataSource {
     /** Latest sample per [Measurement.id]. */
     val samples: StateFlow<Map<String, Sample>>
     val status: StateFlow<AcquisitionStatus>
+
+    /**
+     * Every reading as it is made, in order (one list per read group), for consumers that must
+     * not miss any value ([samples] is a state and skips intermediate values when its collector
+     * is slow). Default: derived from [samples] (enough for fakes and tests).
+     */
+    val readings: Flow<List<Pair<String, Sample>>> get() = samples.map { m -> m.entries.map { it.key to it.value } }
 
     /** Gaps in the reading caused by one-off operations on the shared cable (default: none). */
     val pauses: Flow<AcquisitionPause> get() = emptyFlow()

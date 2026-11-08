@@ -3,7 +3,7 @@
 <resources>
     <string name="veh_title">Véhicule</string>
     <string name="veh_none_title">Aucun véhicule</string>
-    <string name="veh_none_text">Branchez le câble K+DCAN, mettez le contact puis lancez la détection : tous les calculateurs de la voiture sont trouvés et leur mémoire de défauts est lue. La simulation montre une E90 de démonstration.</string>
+    <string name="veh_none_text">Puis lancez la détection : tous les calculateurs de la voiture sont trouvés et leur mémoire de défauts est lue.</string>
     <string name="veh_scan">Détecter le véhicule</string>
     <string name="veh_rescan">Détecter à nouveau</string>
     <string name="veh_read_faults">Lire les défauts</string>
@@ -64,7 +64,7 @@
     <string name="veh_msg_no_cable">Aucun câble K+DCAN trouvé. Branchez-le en USB-C OTG.</string>
     <string name="veh_msg_usb_denied">Accès USB refusé.</string>
     <string name="veh_msg_connect_failed">Échec de la connexion : %1$s</string>
-    <string name="veh_msg_scan_failed">Aucun calculateur n’a répondu (%1$s). Contact mis ? Bon mode (câble ou simulation) ?</string>
+    <string name="veh_msg_scan_failed">Aucun calculateur n’a répondu (%1$s). Le contact est-il mis ?</string>
     <string name="veh_msg_scan_cancelled">Détection annulée.</string>
     <string name="veh_msg_failed">Échec : %1$s</string>
     <string name="veh_msg_cleared">Mémoires de défauts effacées et relues.</string>

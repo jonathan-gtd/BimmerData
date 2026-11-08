@@ -23,11 +23,10 @@ enum class Scope(val id: String, val description: String) {
     Config("config", "Connect / disconnect, start and stop recordings, change app settings."),
 
     /**
-     * Reserved for fault memory and other diagnostic jobs. Not granted by any build yet: every
-     * route that writes to the car will also need a per-call confirmation on the phone and is
-     * refused while driving (see [CarWriteGuard]).
+     * Fault memory (read freely) and, after an explicit confirmation on the phone for every
+     * single call, fault clearing and EDIABAS jobs; refused while the car is moving ([DiagApi]).
      */
-    Diag("diag", "Reserved: fault memory and diagnostic jobs (not available yet).");
+    Diag("diag", "Read the fault memory; clear faults and run EDIABAS jobs, each one only after the user confirmed it on the phone (refused while the car is moving).");
 
     companion object {
         fun fromId(id: String): Scope? = entries.firstOrNull { it.id == id }

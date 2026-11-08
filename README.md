@@ -23,7 +23,8 @@ Supported EDIABAS concepts so far: BMW-FAST (0x010F). DS2, KWP2000\* and D-CAN a
 
 1. Copy your `EDIABAS\Ecu` folder to the phone, then **Import Ecu folder** and pick it
    (only `.prg` / `.grp` are copied into app storage; a re-import replaces them).
-2. Choose **USB cable** (K+DCAN plugged via OTG, ignition on) or **Simulation**, then **Connect**.
+2. Tap **Connect** and choose the **USB cable** (e.g. a K+DCAN-type FTDI cable via OTG), a
+   **Bluetooth adapter** (Deep OBD firmware) or the **Simulation**; ignition on for a real car.
 3. Pick an SGBD (e.g. `msv70.prg`; for a `.grp` use **Identify variant**), pick a job, enter
    arguments separated by `;` (e.g. `STATUS_MESSWERTBLOCK_LESEN` with `3;0x4402;0x4300`), **Run**.
 4. Results show every result set, JOB_STATUS, the job time and the telegram count; **Show raw

@@ -75,8 +75,14 @@ One table, `bimmerdata`:
 | `text` | `LSH_OFF` | text / state results (column created on the first one) |
 
 Only the measurements the app is reading are exported (what the phone or Android Auto shows,
-what is recorded to CSV, what the API asks for). **Points per second** (1–5) limits each
-measurement, whatever the read rate.
+what is recorded to CSV, what the API asks for), and **every reading is exported**, with its own
+time, at the read rate: Grafana gets the same data as the CSV. There is no points-per-second
+setting and no decimation; a value that was not read again is not sent twice.
+
+Load: about 22 read cycles/s on the cable × N measurements. With 10 measurements that is about
+220 points/s, ≈ 24 KB/s of line protocol, ≈ 2–3 KB/s once gzip-compressed on the phone (≈ 10 MB
+per hour of driving). Telegraf and TimescaleDB take that easily; batches of about 256 KB (raw)
+are closed and sent every ten seconds or so.
 
 **GPS position** (optional, Settings › GPS position, off by default): `ecu = 'gps'` with the ids
 `latitude`, `longitude` (degrees), `altitude` (m), `speed` (km/h), `bearing` (degrees, 0 = north)
@@ -131,8 +137,8 @@ Goal: a point read in the car reaches TimescaleDB, or stays somewhere you can se
   out of the upload loop, and **kept**: the page shows how many, with **Retry** (put them back in
   the queue, e.g. after fixing the server), **Export** (one `.lp.gz` file: `zcat` gives the line
   protocol back) and **Delete** (only on your request, with a confirmation).
-- No size limit: the queue may use all the free space of the phone **except a reserve**
-  (500 MB by default; 200 MB to 2 GB). When the reserve is reached, new points are **not queued**
+- No size limit: the queue may use all the free space of the phone **except a fixed reserve of
+  100 MB** kept for the phone (not a setting). When the reserve is reached, new points are **not queued**
   (and counted) instead of deleting old ones; a notification and a banner say so. A notification
   also tells when the queue grows past 100 MB, 500 MB, 1 GB…
 - Closed batches are **gzip-compressed** on the phone (line protocol compresses about 10×, much

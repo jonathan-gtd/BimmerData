@@ -22,7 +22,7 @@ import java.io.File
 import java.time.Instant
 
 /**
- * Sends a simulated 30 s session (3 measurements at 5 points/s, 450 points) to a real Telegraf
+ * Sends a simulated 30 s session (3 measurements read 20 times per second, every reading exported: 1800 points) to a real Telegraf
  * listener, "after the trip": the session is queued first, then uploaded on an unmetered network.
  * Runs only with BIMMERDATA_TELEGRAF_URL (and BIMMERDATA_TELEGRAF_TOKEN) set; the rows are then
  * checked in TimescaleDB by bd-scripts/set_e2e_run.sh.
@@ -42,18 +42,18 @@ class TelegrafEndToEndTest {
         val start = Instant.parse("2026-11-08T18:00:00Z").toEpochMilli()
 
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        val samples = MutableStateFlow<Map<String, Sample>>(emptyMap())
+        val samples = TestReadings()
         val config = MutableStateFlow(ExportConfig())
         val net = MutableStateFlow(NetworkKind.None)
-        val exporter = TelegrafExporter(scope, samples, ms::get, LineQueue(dir), config, net, clock = { start })
+        val exporter = TelegrafExporter(scope, samples.flow, ms::get, LineQueue(dir), config, net, clock = { start })
         exporter.start()
         try {
             runBlocking {
                 withTimeout(60_000) {
-                    config.value = ExportConfig(true, url, if (token.isEmpty()) TelegrafAuth.None else TelegrafAuth.Token(token), "e2e-test", 5, ExportMode.AfterTrip)
+                    config.value = ExportConfig(true, url, if (token.isEmpty()) TelegrafAuth.None else TelegrafAuth.Token(token), "e2e-test", ExportMode.AfterTrip)
                     assertEquals(WriteResult.Ok, exporter.test(config.value))
                     delay(100)
-                    // the trip: 20 reads/s (the car does about 22), 30 s
+                    // the trip: 20 reads/s (the car does about 22), 30 s; every reading is exported: 600 x 3 points
                     for (i in 0 until 30 * 20) {
                         val t = start + i * 50L
                         samples.value = mapOf(
@@ -63,14 +63,14 @@ class TelegrafEndToEndTest {
                         )
                         delay(2)
                     }
-                    while (exporter.state.value.queuedLines < 450) delay(10)
-                    assertEquals(450L, exporter.state.value.queuedLines)
+                    while (exporter.state.value.queuedLines < 1800) delay(10)
+                    assertEquals(1800L, exporter.state.value.queuedLines)
                     assertEquals(0L, exporter.state.value.sentLines)
                     // home Wi-Fi
                     net.value = NetworkKind.Unmetered
-                    while (exporter.state.value.sentLines < 450 && exporter.state.value.lastError == null) delay(20)
-                    assertEquals(450L, exporter.state.value.sentLines, exporter.state.value.lastError ?: "")
-                    println("e2e: 450 points sent, first ${Instant.ofEpochMilli(start)}")
+                    while (exporter.state.value.sentLines < 1800 && exporter.state.value.lastError == null) delay(20)
+                    assertEquals(1800L, exporter.state.value.sentLines, exporter.state.value.lastError ?: "")
+                    println("e2e: 1800 points sent, first ${Instant.ofEpochMilli(start)}")
                 }
             }
         } finally {

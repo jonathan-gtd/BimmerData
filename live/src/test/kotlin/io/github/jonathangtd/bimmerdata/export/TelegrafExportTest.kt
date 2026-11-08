@@ -55,13 +55,28 @@ class TelegrafExportTest {
     }
 
     @Test
-    fun `sampler limits points per second and skips old values`() {
-        val s = ExportSampler(pointsPerSecond = 2, notBeforeMs = 1000)
-        assertTrue(s.select(mapOf("a" to Sample(1.0, null, 500))).isEmpty()) // older than the start
-        assertEquals(1, s.select(mapOf("a" to Sample(1.0, null, 1000))).size)
-        assertTrue(s.select(mapOf("a" to Sample(1.0, null, 1000))).isEmpty()) // same sample again
-        assertTrue(s.select(mapOf("a" to Sample(1.0, null, 1400))).isEmpty()) // < 500 ms later
-        assertEquals(1, s.select(mapOf("a" to Sample(1.0, null, 1500))).size)
+    fun `every reading is exported once, old values never`() {
+        val s = ExportDedup(notBeforeMs = 1000)
+        assertTrue(s.select(listOf("a" to Sample(1.0, null, 500))).isEmpty()) // older than the start
+        assertEquals(1, s.select(listOf("a" to Sample(1.0, null, 1000))).size)
+        assertTrue(s.select(listOf("a" to Sample(1.0, null, 1000))).isEmpty()) // same reading again: no duplicate
+        assertEquals(1, s.select(listOf("a" to Sample(1.0, null, 1045))).size) // 45 ms later: kept (no rate limit)
+        assertEquals(2, s.select(listOf("a" to Sample(2.0, null, 1090), "b" to Sample(3.0, null, 1090))).size)
+        assertEquals(2, s.measurementCount)
+    }
+
+    @Test
+    fun `the exporter sends every reading at the read rate`(@TempDir dir: File) = FakeTelegraf().use { tg ->
+        exporterTest(dir) { exporter, samples, config, net ->
+            net.value = NetworkKind.Unmetered
+            config.value = ExportConfig(enabled = true, url = tg.url, car = "E90", mode = ExportMode.Live)
+            delay(50)
+            // 200 readings 45 ms apart (about 22 per second), emitted as fast as possible
+            for (t in 0 until 200) samples.value = mapOf(oil.id to Sample(80.0 + t, null, 2_000L + t * 45))
+            until("all sent") { exporter.state.value.sentLines == 200L }
+            assertEquals(200, tg.lines.size)
+            assertEquals(200, tg.lines.map { it.substringAfterLast(' ') }.toSet().size, "one point per reading, no duplicate")
+        }
     }
 
     // ---------------------------------------------------------------- queue
@@ -110,13 +125,13 @@ class TelegrafExportTest {
         override fun close() = server.stop(0)
     }
 
-    private fun exporterTest(dir: File, block: suspend (TelegrafExporter, MutableStateFlow<Map<String, Sample>>, MutableStateFlow<ExportConfig>, MutableStateFlow<NetworkKind>) -> Unit) {
+    private fun exporterTest(dir: File, block: suspend (TelegrafExporter, TestReadings, MutableStateFlow<ExportConfig>, MutableStateFlow<NetworkKind>) -> Unit) {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        val samples = MutableStateFlow<Map<String, Sample>>(emptyMap())
+        val samples = TestReadings()
         val config = MutableStateFlow(ExportConfig())
         val net = MutableStateFlow(NetworkKind.None)
         val exporter = TelegrafExporter(
-            scope, samples, { id -> if (id == oil.id) oil else null }, LineQueue(dir), config, net,
+            scope, samples.flow, { id -> if (id == oil.id) oil else null }, LineQueue(dir), config, net,
             batchPauseMs = 50, minBackoffMs = 50, maxBackoffMs = 200, clock = { 1_000 },
         )
         exporter.start()
@@ -136,7 +151,7 @@ class TelegrafExportTest {
     @Test
     fun `after the trip mode waits for an unmetered network and keeps original times`(@TempDir dir: File) = FakeTelegraf().use { tg ->
         exporterTest(dir) { exporter, samples, config, net ->
-            config.value = ExportConfig(enabled = true, url = tg.url, auth = TelegrafAuth.Token("secret"), car = "E90", pointsPerSecond = 5)
+            config.value = ExportConfig(enabled = true, url = tg.url, auth = TelegrafAuth.Token("secret"), car = "E90")
             delay(50)
             for (t in 0 until 10) {
                 samples.value = mapOf(oil.id to Sample(80.0 + t, null, 2_000L + t * 200))
@@ -194,7 +209,7 @@ class TelegrafExportTest {
     fun `test sends an empty write and reports the status`() = FakeTelegraf(status = 401).use { tg ->
         runBlocking {
             val scope = CoroutineScope(Dispatchers.Default)
-            val e = TelegrafExporter(scope, MutableStateFlow(emptyMap()), { null }, LineQueue(File(System.getProperty("java.io.tmpdir"), "bd-test-${System.nanoTime()}")),
+            val e = TelegrafExporter(scope, TestReadings().flow, { null }, LineQueue(File(System.getProperty("java.io.tmpdir"), "bd-test-${System.nanoTime()}")),
                 MutableStateFlow(ExportConfig()), MutableStateFlow(NetworkKind.None))
             assertTrue(e.test(ExportConfig(enabled = true, url = tg.url)) is WriteResult.AuthFailed)
             tg.status = 204

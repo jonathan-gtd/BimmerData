@@ -106,7 +106,7 @@ internal object OpenApi {
                 put("bearerAuth", buildJsonObject {
                     put("type", "http")
                     put("scheme", "bearer")
-                    put("description", "The token shown in BimmerData › Settings › Local API, sent as `Authorization: Bearer <token>`. Each operation also needs one scope (read, layout or config) that the user enables in Settings; see `x-required-scope`.")
+                    put("description", "The token shown in BimmerData › Settings › Local API, sent as `Authorization: Bearer <token>`. Each operation also needs one scope (read, layout, config or diag) that the user enables in Settings; see `x-required-scope`.")
                 })
             })
             put("schemas", schemas())
@@ -194,13 +194,14 @@ internal object OpenApi {
         "Live data" to "ECUs, measurements and live values. Values are only read while someone shows or requests them: the K-line is slow (≈ 10–40 reads/s in total), so request only what you need.",
         "Dashboard" to "Card layouts of the phone and of Android Auto, of the active profile. Changes are saved at once; Android Auto follows them live.",
         "Profiles" to "A profile is a car, its main ECUs and its own phone and Android Auto pages. One is active at a time: the dashboard routes act on it.",
-        "Connection" to "Connect to the car (USB K+DCAN cable) or to the built-in simulated ECU, and record CSV logs.",
+        "Connection" to "Connect to the car (USB cable or Deep OBD Bluetooth adapter) or to the built-in simulated car, and record CSV logs.",
         "Settings" to "App settings that may be changed remotely. API settings (enable, port, token, scopes) can only be changed on the phone.",
         "Export" to "Export of the live values to Telegraf (line protocol over HTTP), which writes them to TimescaleDB for Grafana. See docs/TELEGRAF.md in the BimmerData repository.",
+        DiagApi.TAG to "Fault memory and EDIABAS jobs (scope diag). Reading is free; clearing faults and running jobs need the user's confirmation on the phone for every call and are refused while the car is moving.",
     )
 
     private val INTRO = """
-BimmerData reads live data from BMW ECUs (E-series, K+DCAN cable) and shows it on card dashboards on the phone and in Android Auto. This API lets scripts and AI agents read values, build dashboard layouts and manage the configuration over the local network.
+BimmerData reads live data from BMW ECUs (E-series, through a USB cable or a Deep OBD Bluetooth adapter) and shows it on card dashboards on the phone and in Android Auto. This API lets scripts and AI agents read values, build dashboard layouts and manage the configuration over the local network.
 
 ## Getting started
 1. On the phone: Settings › Local API › enable, pick the scopes, copy the base URL and the token.
@@ -228,6 +229,7 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
     // ---------------------------------------------------------------- schemas
 
     private fun schemas(): JsonObject = buildJsonObject {
+        for ((name, schema) in DiagApi.schemas()) put(name, schema)
         put("Error", S.obj(
             "Error answer of every operation.", listOf("error"), null, null,
             "error" to S.obj(null, listOf("code", "message"), null, null,
@@ -405,11 +407,11 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
             "modifiedMs" to S.int(format = "int64"),
         ))
         put("TelegrafExport", S.obj(
-            "Telegraf export (secrets are never returned).", listOf("enabled", "url", "auth", "username", "secretSet", "car", "pointsPerSecond", "mode", "state"), false, null,
+            "Telegraf export (secrets are never returned).", listOf("enabled", "url", "auth", "username", "secretSet", "car", "mode", "state"), false, null,
             "enabled" to S.bool(), "url" to S.str("Telegraf listener URL.", "http://192.168.1.10:8186/api/v2/write"),
             "auth" to S.str("Authentication (phone only).", enum = listOf("none", "token", "basic")), "username" to S.str("User for basic auth."),
             "secretSet" to S.bool("A token / password is stored, encrypted, on the phone."), "car" to S.str("Value of the `car` tag."),
-            "pointsPerSecond" to S.int("At most this many points per measurement and second.", 1, 5), "mode" to S.str(enum = listOf("live", "afterTrip")),
+            "mode" to S.str("Every reading is exported with its own time, at the read rate. live: upload on any network; afterTrip: wait for an unmetered network.", enum = listOf("live", "afterTrip")),
             "state" to S.obj(
                 "Queue on the phone. A point is deleted only after Telegraf answered 2xx; nothing is deleted automatically.",
                 listOf("phase", "queuedPoints", "queuedBytes", "refusedPoints", "rejectedPoints", "blocked", "freeBytes", "reserveBytes", "sentPoints"), false, null,
@@ -418,7 +420,7 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
                 "refusedPoints" to S.int("Not queued because the phone reached its free-space reserve (the CSV recording still has them)."),
                 "rejectedPoints" to S.int("In batches Telegraf refused for good (HTTP 400), kept aside on the phone (retry or export there)."),
                 "blocked" to S.bool("The phone reached its free-space reserve: new points are not queued."),
-                "freeBytes" to S.int("Free space on the phone."), "reserveBytes" to S.int("Free space kept; queuing stops below it."),
+                "freeBytes" to S.int("Free space on the phone."), "reserveBytes" to S.int("Free space always kept (fixed, 100 MB); queuing stops below it."),
                 "sentPoints" to S.int("Since the app started."), "lastSuccessMs" to S.int(format = "int64"), "lastError" to S.str()),
         ))
         put("Settings", S.obj(
