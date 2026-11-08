@@ -7,10 +7,13 @@ import io.github.jonathangtd.bimmerdata.ediabas.EdInterfaceObd
 import io.github.jonathangtd.bimmerdata.ediabas.EdiabasNet
 import io.github.jonathangtd.bimmerdata.ediabas.EdiabasNetException
 import io.github.jonathangtd.bimmerdata.ediabas.ResultData
+import io.github.jonathangtd.bimmerdata.ediabas.sim.SimulatedKLine
+import io.github.jonathangtd.bimmerdata.live.InterfaceArbiter
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * One interpreter + one interface. Every EDIABAS call runs on a single dedicated thread (the
@@ -39,13 +42,22 @@ class DiagSession(ecuDir: File, val iface: EdInterfaceObd, val label: String) : 
 
     @Volatile private var abortRequested = false
 
+    /** A real cable is claimed from the live acquisition ([InterfaceArbiter]) until [close]. */
+    private val realCable = iface.port !is SimulatedKLine
+    private val cableClaimed = AtomicBoolean(false)
+
     init {
         ediabas.abortJobFunc = { abortRequested }
         ediabas.edInterfaceClass = iface
     }
 
-    /** Opens the port. Returns null on success, else an error text. */
-    suspend fun connect(): String? = withContext(dispatcher) {
+    /** Opens the port (pausing live acquisition on the same cable). Returns null on success, else an error text. */
+    suspend fun connect(): String? {
+        if (realCable && cableClaimed.compareAndSet(false, true)) InterfaceArbiter.acquireForDiag()
+        return openPort()
+    }
+
+    private suspend fun openPort(): String? = withContext(dispatcher) {
         try {
             if (iface.interfaceConnect()) null else "Interface connect failed"
         } catch (ex: Exception) {
@@ -115,7 +127,10 @@ class DiagSession(ecuDir: File, val iface: EdInterfaceObd, val label: String) : 
 
     override fun close() {
         cancel()
-        executor.execute { runCatching { ediabas.close() } }
+        executor.execute {
+            runCatching { ediabas.close() } // also closes the interface and its port
+            if (cableClaimed.compareAndSet(true, false)) InterfaceArbiter.releaseFromDiag()
+        }
         executor.shutdown()
     }
 

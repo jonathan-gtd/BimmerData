@@ -17,6 +17,8 @@ import java.util.concurrent.ConcurrentHashMap
  * - [measurements] loads the MESSWERTETAB of one SGBD on first use and keeps it.
  *
  * Measurement ids are "sgbd/0xNNNN" (lower-case SGBD name, upper-case hex id), e.g. "msv70/0x4402".
+ * The caches are dropped by themselves when [ecuDir] is replaced (its modification time changes,
+ * as after an ECU folder import), or by [invalidate].
  */
 class EdiabasMeasurementCatalog(
     val ecuDir: File,
@@ -28,7 +30,19 @@ class EdiabasMeasurementCatalog(
     private val missing = ConcurrentHashMap.newKeySet<String>()
     private val scanLock = Any()
 
+    /** Folder identity when the caches were filled: a re-import replaces the folder (new mtime). */
+    @Volatile private var dirStamp: Long = ecuDir.lastModified()
+
+    private fun checkFolder() {
+        val stamp = ecuDir.lastModified()
+        if (stamp != dirStamp) {
+            dirStamp = stamp
+            invalidate()
+        }
+    }
+
     override fun sgbdsWithMeasurements(): List<String> {
+        checkFolder()
         sgbdList?.let { return it }
         synchronized(scanLock) {
             sgbdList?.let { return it }
@@ -52,6 +66,7 @@ class EdiabasMeasurementCatalog(
 
     /** Parsed MESSWERTETAB of [sgbd] (name with or without extension, any case), null if none. */
     fun table(sgbd: String): MesswerteTab? {
+        checkFolder()
         val key = normalize(sgbd)
         tabs[key]?.let { return it }
         if (key in missing) return null
