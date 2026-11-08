@@ -6,12 +6,14 @@ package io.github.jonathangtd.bimmerdata.i18n
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
+import androidx.core.content.edit
 import androidx.core.net.toUri
 import android.provider.DocumentsContract
 import io.github.jonathangtd.bimmerdata.files.EcuImporter
 import io.github.jonathangtd.bimmerdata.live.EdiabasMeasurementCatalog
 import io.github.jonathangtd.bimmerdata.live.i18n.EcuTranslations
 import io.github.jonathangtd.bimmerdata.live.i18n.TranslationCsv
+import io.github.jonathangtd.bimmerdata.live.i18n.TranslationRefresh
 import io.github.jonathangtd.bimmerdata.live.i18n.TranslationTemplate
 import io.github.jonathangtd.bimmerdata.live.i18n.Translations
 import io.github.jonathangtd.bimmerdata.live.i18n.Translator
@@ -74,6 +76,7 @@ class TranslationRepository private constructor(context: Context) {
     init {
         loadCache(settings.state.value)
         translator.onMissing = { sgbd -> scope.launch { fetchOnDemand(sgbd) } }
+        scope.launch { autoRefresh() }
         // language or source changed: other cache folder / other files
         scope.launch {
             settings.state.map { it.effectiveLanguage to it.sourceKey() }.distinctUntilChanged().drop(1).collect {
@@ -126,6 +129,25 @@ class TranslationRepository private constructor(context: Context) {
         fetch(c, sgbd)
     }
 
+    private val refreshPrefs = app.getSharedPreferences("translations_refresh", Context.MODE_PRIVATE)
+
+    /**
+     * At start, at most once per day ([TranslationRefresh.IntervalMs]): asks every cached file
+     * again with its HTTP validators, so an unchanged file costs a 304 and no download. Without
+     * network the check fails quietly and runs again at the next start.
+     */
+    private suspend fun autoRefresh() {
+        val c = settings.state.value
+        val now = System.currentTimeMillis()
+        if (!c.enabled || !TranslationRefresh.isDue(refreshPrefs.getLong(K_LAST_CHECK, 0), now)) return
+        val targets = cachedSgbds()
+        if (targets.isEmpty()) return
+        var failed = false
+        for (s in targets) if (fetch(c, s, conditional = true) is FetchResult.Failed) failed = true
+        if (!failed) refreshPrefs.edit { putLong(K_LAST_CHECK, now) }
+        translator.retryMissing()
+    }
+
     /** Downloads every target again ([updateTargets]). */
     fun updateAll() {
         if (_state.value.updating) return
@@ -138,7 +160,7 @@ class TranslationRepository private constructor(context: Context) {
             if (c.enabled) {
                 for (s in updateTargets()) {
                     when (val r = fetch(c, s)) {
-                        FetchResult.Ok -> updated += s
+                        FetchResult.Ok, FetchResult.Unchanged -> updated += s
                         FetchResult.NotFound -> missing += s
                         is FetchResult.Failed -> errors += "${s.uppercase(Locale.ROOT)}: ${r.message}"
                     }
@@ -152,15 +174,35 @@ class TranslationRepository private constructor(context: Context) {
     private sealed interface FetchResult {
         data object Ok : FetchResult
         data object NotFound : FetchResult
+        /** Conditional request answered 304: the cached file is current. */
+        data object Unchanged : FetchResult
         data class Failed(val message: String) : FetchResult
     }
 
-    private suspend fun fetch(c: TranslationConfig, sgbd: String): FetchResult = fetchLock.withLock {
+    private fun validatorsFile(lang: String, sgbd: String) = File(cacheFile(lang, sgbd).path + ".etag")
+
+    /**
+     * Downloads (or reads from the folder) the file of [sgbd]. With [conditional], a cached file
+     * is asked with its validators and a 304 leaves it untouched.
+     */
+    private suspend fun fetch(c: TranslationConfig, sgbd: String, conditional: Boolean = false): FetchResult = fetchLock.withLock {
         val lang = c.effectiveLanguage
         val name = EdiabasMeasurementCatalog.normalize(sgbd)
+        var validators = TranslationRefresh.Validators()
         val text = try {
             when (c.source) {
-                TranslationSource.Url -> download(fileUrl(c.baseUrl, lang, name), c.token)
+                TranslationSource.Url -> {
+                    val known = if (conditional && cacheFile(lang, name).isFile) {
+                        TranslationRefresh.Validators.decode(runCatching { validatorsFile(lang, name).readText() }.getOrNull())
+                    } else {
+                        TranslationRefresh.Validators()
+                    }
+                    when (val d = download(fileUrl(c.baseUrl, lang, name), c.token, known)) {
+                        Download.NotModified -> return@withLock FetchResult.Unchanged
+                        Download.NotFound -> null
+                        is Download.Body -> d.text.also { validators = d.validators }
+                    }
+                }
                 TranslationSource.Folder -> readFolder(c.folderUri ?: throw IOException("No folder chosen"), lang, name)
             }
         } catch (_: FileNotFoundException) {
@@ -184,6 +226,8 @@ class TranslationRepository private constructor(context: Context) {
             file.delete()
             tmp.renameTo(file)
         }
+        val vf = validatorsFile(lang, name)
+        if (validators.isEmpty) vf.delete() else runCatching { vf.writeText(validators.encode()) }
         // still the same language? (the user may have switched during the download)
         if (settings.state.value.effectiveLanguage == lang) translator.put(EcuTranslations(name, lang, parsed.entries))
         _state.update { it.copy(notFound = it.notFound - name, lastError = null) }
@@ -192,22 +236,36 @@ class TranslationRepository private constructor(context: Context) {
 
     /** Removes the cached file of [sgbd] (current language). */
     fun forget(sgbd: String) {
-        cacheFile(settings.state.value.effectiveLanguage, sgbd).delete()
+        val lang = settings.state.value.effectiveLanguage
+        cacheFile(lang, sgbd).delete()
+        validatorsFile(lang, sgbd).delete()
         translator.remove(sgbd)
     }
 
-    private fun download(url: String, token: String): String? {
+    private sealed interface Download {
+        data object NotFound : Download
+        data object NotModified : Download
+        class Body(val text: String, val validators: TranslationRefresh.Validators) : Download
+    }
+
+    private fun download(url: String, token: String, known: TranslationRefresh.Validators): Download {
         val conn = URL(url).openConnection() as HttpURLConnection
         try {
             conn.connectTimeout = 10_000
             conn.readTimeout = 15_000
             conn.instanceFollowRedirects = true
+            conn.useCaches = false
             conn.setRequestProperty("Accept", "text/csv, text/plain, */*")
             conn.setRequestProperty("User-Agent", "BimmerData")
             if (token.isNotBlank()) conn.setRequestProperty("Authorization", "Bearer ${token.trim()}")
+            known.conditionalHeaders().forEach { (k, v) -> conn.setRequestProperty(k, v) }
             return when (val code = conn.responseCode) {
-                HttpURLConnection.HTTP_OK -> conn.inputStream.use { it.readBytes().toString(Charsets.UTF_8) }
-                HttpURLConnection.HTTP_NOT_FOUND -> null
+                HttpURLConnection.HTTP_OK -> Download.Body(
+                    conn.inputStream.use { it.readBytes().toString(Charsets.UTF_8) },
+                    TranslationRefresh.Validators(conn.getHeaderField("ETag"), conn.getHeaderField("Last-Modified")),
+                )
+                HttpURLConnection.HTTP_NOT_MODIFIED -> Download.NotModified
+                HttpURLConnection.HTTP_NOT_FOUND -> Download.NotFound
                 else -> throw IOException("HTTP $code")
             }
         } finally {
@@ -275,6 +333,8 @@ class TranslationRepository private constructor(context: Context) {
     private val coverageCache = java.util.concurrent.ConcurrentHashMap<String, Pair<String, TranslationTemplate.Coverage>>()
 
     companion object {
+        private const val K_LAST_CHECK = "last_check_ms"
+
         /** `<base>/<lang>/<sgbd>.csv`, the base URL with or without a trailing slash. */
         fun fileUrl(baseUrl: String, lang: String, sgbd: String): String =
             baseUrl.trim().trimEnd('/') + "/" + lang.lowercase(Locale.ROOT) + "/" + EdiabasMeasurementCatalog.normalize(sgbd) + ".csv"
