@@ -13,7 +13,8 @@ import kotlin.concurrent.withLock
 /**
  * A K+DCAN cable plugged into a simulated K-line, as a [SerialPort]: every written byte comes back
  * as echo (single-wire bus), and complete BMW-FAST requests with a valid checksum are answered by
- * [responder] after a delay, at the line's byte rate. With [realisticTiming] off every byte is
+ * [responder] after a delay, at the line's byte rate. A functional request may get several
+ * replies (one per ECU, see [VehicleSimulator.kLine]). With [realisticTiming] off every byte is
  * available immediately, which isolates the software cost for measurements.
  *
  * No threads: replies are scheduled at write time with a "visible from" timestamp per byte.
@@ -98,7 +99,8 @@ class SimulatedKLine(
     private fun assembleRequests() {
         while (pending.size >= 4) {
             val head = ByteArray(minOf(pending.size, 6)) { pending[it] }
-            if ((head[0].toInt() and 0xC0) != 0x80) { // not a BMW-FAST header: drop a byte
+            // BMW-FAST format byte: 0x80 | length (physical) or 0xC0 | length (functional address)
+            if ((head[0].toInt() and 0x80) != 0x80) { // not a BMW-FAST header: drop a byte
                 pending.removeAt(0)
                 continue
             }
