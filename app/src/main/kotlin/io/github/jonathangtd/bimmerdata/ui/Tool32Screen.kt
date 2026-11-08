@@ -83,10 +83,11 @@ fun Tool32Screen(vm: Tool32ViewModel = viewModel()) {
     var jobPicker by rememberSaveable { mutableStateOf(false) }
     val insets = WindowInsets.safeDrawing.asPaddingValues()
 
+    // The list is clipped below the status bar so scrolled content never runs under the clock/icons.
     LazyColumn(
-        modifier = Modifier.fillMaxSize().background(Cockpit.Background),
+        modifier = Modifier.fillMaxSize().background(Cockpit.Background).padding(top = insets.calculateTopPadding()),
         contentPadding = PaddingValues(
-            start = 16.dp, end = 16.dp, top = insets.calculateTopPadding() + 12.dp, bottom = insets.calculateBottomPadding() + 24.dp,
+            start = 16.dp, end = 16.dp, top = 12.dp, bottom = insets.calculateBottomPadding() + 24.dp,
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -451,8 +452,6 @@ private fun ResultSetCard(set: ResultSetUi) {
                             modifier = Modifier.weight(1f, fill = false),
                         )
                         e.unit?.let { Text("  $it", color = Cockpit.Muted, fontSize = 14.sp) }
-                        Spacer(Modifier.weight(1f))
-                        Text(e.type, color = Cockpit.Border, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
                     }
                 }
             }
