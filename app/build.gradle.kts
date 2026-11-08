@@ -69,8 +69,14 @@ dependencies {
     testImplementation(libs.compose.ui.test.manifest)
 }
 
+// Robolectric screenshot tests take most of the test time: they only run with -Pscreenshots
+// (UI changes, README pictures). Test classes run in parallel JVMs.
+val withScreenshots = providers.gradleProperty("screenshots").isPresent
+
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+    if (!withScreenshots) exclude("**/*ScreenshotTest*")
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 4).coerceIn(1, 6)
     // Optional: the user's own EDIABAS ECU folder, for tests that need real .PRG files.
     System.getenv("BIMMERDATA_ECU_DIR")?.let { environment("BIMMERDATA_ECU_DIR", it) }
     // Robolectric reaches into FileDescriptor internals (shared memory of recent Android SDKs)

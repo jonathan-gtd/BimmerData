@@ -25,6 +25,7 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 4).coerceIn(1, 6)
     System.getenv("BIMMERDATA_ECU_DIR")?.let { environment("BIMMERDATA_ECU_DIR", it) }
     System.getenv("BIMMERDATA_TRACE_DIR")?.let { environment("BIMMERDATA_TRACE_DIR", it) }
     // Optional end-to-end export test against a real Telegraf listener (deploy/telegraf/)

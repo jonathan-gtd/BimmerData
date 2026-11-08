@@ -24,6 +24,7 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 4).coerceIn(1, 6)
     // Optional: folder with the user's own EDIABAS ECU files, for tests that need real .PRG files.
     System.getenv("BIMMERDATA_ECU_DIR")?.let { environment("BIMMERDATA_ECU_DIR", it) }
     // Optional: folder with Tool32 traces (IFH.trc + api.trc) of the user's own car, for Tool32ReferenceTest.
