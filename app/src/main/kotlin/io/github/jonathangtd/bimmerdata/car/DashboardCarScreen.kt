@@ -298,6 +298,6 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
         private const val FALLBACK_IMAGE_PX = 192
 
         fun isConnected(c: LiveConnection) =
-            c is LiveConnection.Connected || c is LiveConnection.Paused || c is LiveConnection.Connecting
+            c is LiveConnection.Connected || c is LiveConnection.Connecting
     }
 }

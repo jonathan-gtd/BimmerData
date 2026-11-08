@@ -23,12 +23,13 @@ data class Garage(
     val currentId: String? = null,
     /** Last fault read per vehicle id. */
     val faults: Map<String, List<EcuFaults>> = emptyMap(),
+    /** Unused since the Faults tab shares the app's single connection; kept so old files still load. */
     val mode: LinkMode = LinkMode.Simulation,
 ) {
     val current: Vehicle? get() = vehicles.firstOrNull { it.id == currentId }
 }
 
-/** How the Faults tab reaches the car. */
+/** How the Faults tab reached the car before the shared connection (see [Garage.mode]). */
 enum class LinkMode { Usb, Simulation }
 
 /** JSON file in app storage (atomic writes). */

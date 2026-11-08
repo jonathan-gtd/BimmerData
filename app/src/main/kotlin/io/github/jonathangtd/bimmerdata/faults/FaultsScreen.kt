@@ -77,7 +77,7 @@ import io.github.jonathangtd.bimmerdata.live.vehicle.VehicleTables
 import io.github.jonathangtd.bimmerdata.live.vehicle.VehicleTree
 import io.github.jonathangtd.bimmerdata.ui.BarlowCondensed
 import io.github.jonathangtd.bimmerdata.ui.Cockpit
-import io.github.jonathangtd.bimmerdata.vehicle.LinkMode
+import io.github.jonathangtd.bimmerdata.ui.ConnectionPill
 import io.github.jonathangtd.bimmerdata.vehicle.VehicleRepository
 import io.github.jonathangtd.bimmerdata.vehicle.VehicleState
 import io.github.jonathangtd.bimmerdata.vehicle.VehicleTask
@@ -127,7 +127,7 @@ fun FaultsScreen() {
                     context.startActivity(Intent.createChooser(send, null))
                 },
                 onCancel = repo::cancel,
-                onMode = repo::setMode,
+                connectionBar = { ConnectionPill(Modifier.fillMaxWidth()) },
                 onSelectVehicle = repo::selectVehicle,
                 onRename = repo::renameVehicle,
                 onForget = repo::deleteVehicle,
@@ -161,7 +161,6 @@ internal fun VehicleOverview(
     onClearAll: () -> Unit,
     onShare: () -> Unit,
     onCancel: () -> Unit,
-    onMode: (LinkMode) -> Unit,
     onSelectVehicle: (String) -> Unit,
     onRename: (String, String) -> Unit,
     onForget: (String) -> Unit,
@@ -169,6 +168,8 @@ internal fun VehicleOverview(
     seriesChoices: () -> List<String>,
     onOpenEcu: (Int) -> Unit,
     onDismissMessage: () -> Unit,
+    /** The connection pill shown under the vehicle name. */
+    connectionBar: @Composable () -> Unit = {},
 ) {
     val vehicle = state.current
     val faults = state.currentFaults?.associateBy { it.address }
@@ -182,7 +183,7 @@ internal fun VehicleOverview(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item(key = "header") {
-            VehicleHeader(state, onMode, onSelectVehicle, onRename, onForget, onSeries, seriesChoices)
+            VehicleHeader(state, connectionBar, onSelectVehicle, onRename, onForget, onSeries, seriesChoices)
         }
         item(key = "actions") {
             FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -243,7 +244,7 @@ internal fun VehicleOverview(
 @Composable
 private fun VehicleHeader(
     state: VehicleState,
-    onMode: (LinkMode) -> Unit,
+    connectionBar: @Composable () -> Unit,
     onSelectVehicle: (String) -> Unit,
     onRename: (String, String) -> Unit,
     onForget: (String) -> Unit,
@@ -303,11 +304,8 @@ private fun VehicleHeader(
                 }
             }
         }
-        SegmentedTabs(
-            listOf(stringResource(R.string.veh_mode_usb), stringResource(R.string.veh_mode_sim)),
-            selected = if (state.garage.mode == LinkMode.Usb) 0 else 1,
-            onSelect = { if (!state.busy) onMode(if (it == 0) LinkMode.Usb else LinkMode.Simulation) },
-        )
+        // the app's single connection, shared with the dashboard and Tool32
+        connectionBar()
     }
 
     if (rename && vehicle != null) {

@@ -168,7 +168,6 @@ internal fun messageText(m: VehicleMessage): String {
         VehicleMessage.Kind.NoEcuFiles -> stringResource(R.string.veh_msg_no_ecu_files)
         VehicleMessage.Kind.NoCable -> stringResource(R.string.veh_msg_no_cable)
         VehicleMessage.Kind.UsbDenied -> stringResource(R.string.veh_msg_usb_denied)
-        VehicleMessage.Kind.CableBusy -> stringResource(R.string.veh_msg_cable_busy)
         VehicleMessage.Kind.ConnectFailed -> stringResource(R.string.veh_msg_connect_failed, d)
         VehicleMessage.Kind.ScanFailed -> stringResource(R.string.veh_msg_scan_failed, d)
         VehicleMessage.Kind.ScanCancelled -> stringResource(R.string.veh_msg_scan_cancelled)

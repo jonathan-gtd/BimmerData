@@ -12,8 +12,6 @@
     <string name="status_running">%1$s · %2$s lect/s</string>
     <string name="status_connecting">Connexion…</string>
     <string name="status_stopped">Non connecté</string>
-    <string name="conn_disconnected">Non connecté</string>
-    <string name="conn_paused">En pause · câble occupé</string>
     <string name="conn_failed">Échec · %1$s</string>
     <string name="conn_usb">Câble USB (K+DCAN)</string>
     <string name="conn_sim">Simulation</string>

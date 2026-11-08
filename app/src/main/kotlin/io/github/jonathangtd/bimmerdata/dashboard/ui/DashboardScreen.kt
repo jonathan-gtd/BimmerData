@@ -8,7 +8,8 @@ import android.content.Intent
 import androidx.activity.compose.BackHandler
 import io.github.jonathangtd.bimmerdata.live.LiveConnection
 import io.github.jonathangtd.bimmerdata.live.LiveMode
-import io.github.jonathangtd.bimmerdata.live.LivePermissions
+import io.github.jonathangtd.bimmerdata.settings.AppSettings
+import io.github.jonathangtd.bimmerdata.ui.ConnectionPillContent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -124,6 +125,7 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
     val connection by vm.connection.collectAsStateWithLifecycle()
     val index by vm.measurementIndex.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val appSettings by remember { AppSettings.get(context) }.state.collectAsStateWithLifecycle()
     val res = LocalResources.current
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
@@ -222,9 +224,9 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                 DashboardHeader(
                     title = dashboard.title(stringResource(R.string.app_name)),
                     onRename = { sheet = Sheet.RenameDashboard },
-                    status = status, rec = rec, format = renderer.format,
+                    status = status, rec = rec,
                     onRecord = vm::toggleRecording, onEdit = { vm.setEditing(true) },
-                    connection = connection, onConnect = vm::connect, onDisconnect = vm::disconnect,
+                    connection = connection, lastMode = appSettings.lastMode, onConnect = vm::connect, onDisconnect = vm::disconnect,
                 )
             }
             Spacer(Modifier.height(12.dp))
@@ -430,76 +432,28 @@ private fun addSheetOrMessage(res: Resources, t: Target, page: Page, col: Int?, 
     return Sheet.AddCard(t, page.id, col, row)
 }
 
+/**
+ * Title, recording and edit buttons, then the connection pill ([ConnectionPillContent]): a big
+ * "Connect" when disconnected, the colored state with the read rate when connected.
+ */
 @Composable
 internal fun DashboardHeader(
-    title: String, onRename: () -> Unit, status: AcquisitionStatus, rec: RecordingState, format: GaugeFormat,
+    title: String, onRename: () -> Unit, status: AcquisitionStatus, rec: RecordingState,
     onRecord: () -> Unit, onEdit: () -> Unit,
-    connection: LiveConnection, onConnect: (LiveMode) -> Unit, onDisconnect: () -> Unit,
+    connection: LiveConnection, lastMode: LiveMode?, onConnect: (LiveMode) -> Unit, onDisconnect: () -> Unit,
 ) {
-    val context = LocalContext.current
-    var menu by remember { mutableStateOf(false) }
-    // USB acquisition runs in a foreground service: ask for the notification permission first (Android 13+).
-    val notifPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { onConnect(LiveMode.Usb) }
-    fun connectUsb() {
-        if (LivePermissions.shouldRequestNotifications(context)) notifPermission.launch(LivePermissions.Notifications) else onConnect(LiveMode.Usb)
-    }
-    val statusText = when (connection) {
-        is LiveConnection.Disconnected -> stringResource(R.string.conn_disconnected)
-        is LiveConnection.Paused -> stringResource(R.string.conn_paused)
-        is LiveConnection.Failed -> stringResource(R.string.conn_failed, connection.message)
-        is LiveConnection.Connecting -> stringResource(R.string.status_connecting)
-        is LiveConnection.Connected -> stringResource(
-            R.string.status_running,
-            stringResource(if (connection.mode == LiveMode.Usb) R.string.conn_usb_short else R.string.conn_sim),
-            String.format(currentLocale(), "%.1f", status.cyclesPerSecond),
-        )
-    }
-    val dotColor = when (connection) {
-        is LiveConnection.Disconnected, is LiveConnection.Paused -> Cockpit.Muted
-        is LiveConnection.Failed -> Cockpit.Warning
-        else -> Color(StatusLine.color(status))
-    }
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             val renameLabel = stringResource(R.string.dashboard_rename)
             Text(
                 title, color = Cockpit.Text, fontFamily = BarlowCondensed,
                 fontWeight = FontWeight.SemiBold, fontSize = 22.sp, letterSpacing = 0.5.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(role = Role.Button, onClickLabel = renameLabel, onClick = onRename),
+                modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).clickable(role = Role.Button, onClickLabel = renameLabel, onClick = onRename),
             )
-            Box {
-                Row(
-                    Modifier.clip(RoundedCornerShape(8.dp)).clickable(role = Role.Button) { menu = true }.padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(Modifier.size(8.dp).background(dotColor, CircleShape))
-                    Spacer(Modifier.width(6.dp))
-                    Text(statusText, color = Cockpit.Muted, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text("  ▾", color = Cockpit.Muted, fontSize = 11.sp)
-                }
-                androidx.compose.material3.DropdownMenu(
-                    expanded = menu, onDismissRequest = { menu = false },
-                    containerColor = Cockpit.Card,
-                ) {
-                    androidx.compose.material3.DropdownMenuItem(
-                        text = { Text(stringResource(R.string.conn_usb), color = Cockpit.Text) },
-                        onClick = { menu = false; connectUsb() },
-                    )
-                    androidx.compose.material3.DropdownMenuItem(
-                        text = { Text(stringResource(R.string.conn_sim), color = Cockpit.Text) },
-                        onClick = { menu = false; onConnect(LiveMode.Simulation) },
-                    )
-                    if (connection !is LiveConnection.Disconnected) {
-                        androidx.compose.material3.DropdownMenuItem(
-                            text = { Text(stringResource(R.string.conn_disconnect), color = Cockpit.Text) },
-                            onClick = { menu = false; onDisconnect() },
-                        )
-                    }
-                }
-            }
+            RecordPill(rec, onRecord)
+            RoundIconButton(R.drawable.ic_edit, stringResource(R.string.edit), onClick = onEdit)
         }
-        RecordPill(rec, onRecord)
-        RoundIconButton(R.drawable.ic_edit, stringResource(R.string.edit), onClick = onEdit)
+        ConnectionPillContent(connection, status, lastMode, onConnect, onDisconnect, Modifier.fillMaxWidth())
     }
 }
 

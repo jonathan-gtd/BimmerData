@@ -68,6 +68,8 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.jonathangtd.bimmerdata.ediabas.EdInterfaceObd.FrameDirection
+import io.github.jonathangtd.bimmerdata.R
+import androidx.compose.ui.res.stringResource
 import java.util.Locale
 
 private val MinTouch = 48.dp
@@ -93,7 +95,7 @@ fun Tool32Screen(vm: Tool32ViewModel = viewModel()) {
     ) {
         item { Header(state) }
         state.message?.let { msg -> item { MessageBanner(msg, vm::dismissMessage) } }
-        item { ConnectionCard(state, vm::setMode, vm::connect, vm::disconnect) }
+        item { ConnectionCard(state) }
         item { EcuFilesCard(state, onImport = { pickFolder.launch(null) }, onCancel = vm::cancelImport) }
         item {
             JobCard(
@@ -134,7 +136,7 @@ fun Tool32Screen(vm: Tool32ViewModel = viewModel()) {
         PickerDialog(
             title = "Job",
             items = state.jobs,
-            emptyText = if (state.jobsLoading) "Loading jobs…" else "No jobs loaded (connect first).",
+            emptyText = if (state.jobsLoading) "Loading jobs…" else "No jobs (select an SGBD first).",
             onDismiss = { jobPicker = false },
             onPick = {
                 jobPicker = false
@@ -216,21 +218,10 @@ private fun SelectorRow(label: String, value: String?, placeholder: String, enab
 // ---- sections ----
 
 @Composable
-private fun Header(state: Tool32State) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
-            Text("BimmerData", color = Cockpit.Text, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
-            Text("Mini Tool32", color = Cockpit.Muted, fontSize = 14.sp)
-        }
-        val (color, text) = when (val c = state.connection) {
-            is ConnectionState.Connected -> Cockpit.Accent to "Online"
-            ConnectionState.Connecting -> Cockpit.Warning to "Connecting"
-            is ConnectionState.Failed -> Cockpit.Danger to "Error"
-            ConnectionState.Disconnected -> Cockpit.Muted to "Offline"
-        }
-        Dot(color)
-        Spacer(Modifier.width(8.dp))
-        Text(text, color = color, fontSize = 14.sp)
+private fun Header(@Suppress("UNUSED_PARAMETER") state: Tool32State) {
+    Column {
+        Text("BimmerData", color = Cockpit.Text, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+        Text("Mini Tool32", color = Cockpit.Muted, fontSize = 14.sp)
     }
 }
 
@@ -244,55 +235,24 @@ private fun MessageBanner(message: String, onDismiss: () -> Unit) {
     }
 }
 
+/** The app's single connection (shared with the dashboard and the faults) and the ignition state. */
 @Composable
-private fun ConnectionCard(state: Tool32State, onMode: (ConnectionMode) -> Unit, onConnect: () -> Unit, onDisconnect: () -> Unit) {
+private fun ConnectionCard(state: Tool32State) {
     CockpitCard {
         SectionLabel("Connection")
-        val modes = listOf(ConnectionMode.Usb to "USB cable", ConnectionMode.Simulation to "Simulation")
-        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-            modes.forEachIndexed { index, (mode, label) ->
-                SegmentedButton(
-                    selected = state.mode == mode,
-                    onClick = { onMode(mode) },
-                    shape = SegmentedButtonDefaults.itemShape(index, modes.size),
-                    modifier = Modifier.heightIn(min = MinTouch),
-                    enabled = !state.running,
-                    colors = SegmentedButtonDefaults.colors(
-                        activeContainerColor = Cockpit.Accent.copy(alpha = 0.16f), activeContentColor = Cockpit.Accent,
-                        inactiveContainerColor = Cockpit.Card, inactiveContentColor = Cockpit.Muted,
-                        activeBorderColor = Cockpit.Border, inactiveBorderColor = Cockpit.Border,
-                    ),
-                    icon = {},
-                ) { Text(label) }
+        ConnectionPill(Modifier.fillMaxWidth())
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.cp_ignition) + "  ", color = Cockpit.Muted, fontSize = 14.sp)
+            when (state.ignition) {
+                true -> Chip(stringResource(R.string.cp_ignition_on), ConnectionOk)
+                false -> Chip(stringResource(R.string.cp_ignition_off), Cockpit.Warning)
+                null -> Chip(stringResource(R.string.cp_ignition_unknown), Cockpit.Muted)
             }
         }
-        when (val c = state.connection) {
-            is ConnectionState.Connected -> {
-                Text(c.label, color = Cockpit.Text, fontSize = 15.sp)
-                val ign = state.ignition
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Ignition (DSR)  ", color = Cockpit.Muted, fontSize = 14.sp)
-                    when (ign) {
-                        true -> Chip("KL15 on", Cockpit.Accent)
-                        false -> Chip("KL15 off", Cockpit.Warning)
-                        null -> Chip("unknown", Cockpit.Muted)
-                    }
-                }
-            }
-            is ConnectionState.Failed -> Text(c.message, color = Cockpit.Danger, fontSize = 14.sp)
-            ConnectionState.Connecting -> Text("Connecting…", color = Cockpit.Warning, fontSize = 14.sp)
-            ConnectionState.Disconnected -> Text(
-                if (state.mode == ConnectionMode.Usb) "K+DCAN cable via USB-C OTG, ignition on." else "Simulated MSV70-like ECU with K-line timing.",
-                color = Cockpit.Muted, fontSize = 14.sp,
-            )
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (state.connection is ConnectionState.Connected) {
-                SecondaryButton("Disconnect", enabled = !state.running, onClick = onDisconnect, modifier = Modifier.weight(1f))
-            } else {
-                PrimaryButton("Connect", enabled = state.connection != ConnectionState.Connecting, onClick = onConnect, modifier = Modifier.weight(1f))
-            }
-        }
+        Text(
+            "Jobs run between two reads of the dashboard values, which go on.",
+            color = Cockpit.Muted, fontSize = 13.sp,
+        )
     }
 }
 
@@ -335,15 +295,14 @@ private fun JobCard(
     onCancel: () -> Unit,
     onResolve: () -> Unit,
 ) {
-    val connected = state.connection is ConnectionState.Connected
-    val canRun = connected && state.sgbd != null && state.job != null && !state.running && state.import == null
+    val canRun = state.sgbd != null && state.job != null && !state.running && state.import == null
     CockpitCard {
         SectionLabel("Job")
         SelectorRow("SGBD", state.sgbd, "Select ECU file", enabled = !state.running && state.import == null, onClick = onPickSgbd)
         if (state.sgbd?.endsWith(".grp", ignoreCase = true) == true) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Group file", color = Cockpit.Muted, fontSize = 13.sp, modifier = Modifier.weight(1f))
-                SecondaryButton("Identify variant", enabled = connected && !state.running, onClick = onResolve, color = Cockpit.Accent)
+                SecondaryButton("Identify variant", enabled = !state.running, onClick = onResolve, color = Cockpit.Accent)
             }
         }
         SelectorRow(

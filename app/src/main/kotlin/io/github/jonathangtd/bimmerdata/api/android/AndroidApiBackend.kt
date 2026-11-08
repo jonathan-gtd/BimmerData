@@ -55,7 +55,6 @@ class AndroidApiBackend(
             LiveConnection.Disconnected -> ConnectionInfo("disconnected")
             is LiveConnection.Connecting -> ConnectionInfo("connecting", mode(c.mode))
             is LiveConnection.Connected -> ConnectionInfo("connected", mode(c.mode), c.label)
-            is LiveConnection.Paused -> ConnectionInfo("paused", mode(c.mode), c.label, c.reason)
             is LiveConnection.Failed -> ConnectionInfo("failed", mode(c.mode), message = c.message)
         }
         return BackendStatus(

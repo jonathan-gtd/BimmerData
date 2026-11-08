@@ -76,9 +76,16 @@ class FaultsScreenshotTest {
 
     @Composable
     private fun Overview(state: VehicleState) = VehicleOverview(
-        state = state, onScan = {}, onReadFaults = {}, onClearAll = {}, onShare = {}, onCancel = {}, onMode = {},
+        state = state, onScan = {}, onReadFaults = {}, onClearAll = {}, onShare = {}, onCancel = {},
         onSelectVehicle = {}, onRename = { _, _ -> }, onForget = {}, onSeries = {}, seriesChoices = { emptyList() }, onOpenEcu = {},
         onDismissMessage = {},
+        connectionBar = {
+            io.github.jonathangtd.bimmerdata.ui.ConnectionPillContent(
+                io.github.jonathangtd.bimmerdata.live.LiveConnection.Connected(io.github.jonathangtd.bimmerdata.live.LiveMode.Usb, "FTDI"),
+                io.github.jonathangtd.bimmerdata.live.AcquisitionStatus(io.github.jonathangtd.bimmerdata.live.AcquisitionState.Running, 21.7),
+                io.github.jonathangtd.bimmerdata.live.LiveMode.Usb, {}, {},
+            )
+        },
     )
 
     @Test

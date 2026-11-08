@@ -767,7 +767,7 @@ class ApiService(
             Route(
                 "POST", "/api/v1/connect", RouteAccess.Needs(Scope.Config), "Connection", "connect",
                 "Connect to the car or to the simulation",
-                "`usb`: K+DCAN cable plugged into the phone (the phone may ask the user for USB permission once). `simulation`: built-in MSV70-like ECU with moving values, no car needed — ideal to try layouts. Waits up to `waitMs` for the connection to settle and returns the status.",
+                "`usb`: K+DCAN cable plugged into the phone (the phone may ask the user for USB permission once). `simulation`: built-in simulated E90 (MSV70 engine ECU with moving values, 14 ECUs with a few faults), no car needed — ideal to try layouts. Waits up to `waitMs` for the connection to settle and returns the status.",
                 body = Body(S.obj(null, emptyList(), false, null,
                     "mode" to S.str("Default: the default mode of the settings.", enum = listOf("usb", "simulation")),
                     "waitMs" to S.int(min = 0, max = 20000, default = 6000)), required = false,

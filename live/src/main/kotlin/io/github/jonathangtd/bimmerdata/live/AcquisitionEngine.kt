@@ -137,6 +137,7 @@ class AcquisitionEngine(
     private val ops = ArrayDeque<Op<*>>()
     private val opSignal = MutableStateFlow(0L)
     @Volatile private var currentOp: Op<*>? = null
+    @Volatile private var currentAccess: CableAccess? = null
     @Volatile private var opAbort = false
 
     private val _pauses = MutableSharedFlow<AcquisitionPause>(extraBufferCapacity = 16, onBufferOverflow = BufferOverflow.DROP_OLDEST)
@@ -244,6 +245,7 @@ class AcquisitionEngine(
         opAbort = false
         runCatching { iface.transmitCancel(false) }
         val access = CableAccess(ed, iface) { opAbort || abortRequested || op.cancelled }
+        currentAccess = access
         val sgbdBefore = ed.sgbdFileName
         val started = clock()
         exclusiveRuns++
@@ -253,6 +255,7 @@ class AcquisitionEngine(
             op.result.completeExceptionally(if (ex is CancellationException) CableUnavailableException("Cancelled") else ex)
         } finally {
             currentOp = null
+            currentAccess = null
             opAbort = false
             if (!abortRequested) runCatching { iface.transmitCancel(false) }
         }
@@ -311,7 +314,7 @@ class AcquisitionEngine(
         iface.transmitCancel(false)
         val ed = ediabas ?: EdiabasNet(listOf("EcuPath=${catalog.ecuDir.path}", config.ediabasConfig).filter { it.isNotBlank() }.joinToString(";")).also {
             it.edInterfaceClass = iface
-            it.abortJobFunc = { abortRequested || (currentOp != null && (opAbort || currentOp?.cancelled == true)) }
+            it.abortJobFunc = { abortRequested || (currentOp != null && currentAccess?.aborted == true) }
             ediabas = it
         }
         cycleTimes.clear()

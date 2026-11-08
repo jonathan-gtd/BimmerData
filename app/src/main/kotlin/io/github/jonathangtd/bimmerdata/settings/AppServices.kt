@@ -56,8 +56,7 @@ internal object AutoConnect {
         if (!AppSettings.get(app).state.value.autoConnectOnCable) return
         val repo = LiveRepository.get(app)
         val c = repo.connection.value
-        val usbBusy = (c is LiveConnection.Connected && c.mode == LiveMode.Usb) || (c is LiveConnection.Connecting && c.mode == LiveMode.Usb) ||
-            (c is LiveConnection.Paused && c.mode == LiveMode.Usb)
+        val usbBusy = (c is LiveConnection.Connected && c.mode == LiveMode.Usb) || (c is LiveConnection.Connecting && c.mode == LiveMode.Usb)
         if (usbBusy) return
         if (UsbCable.findCable(UsbCable.usbManager(app)) == null) return
         repo.connect(LiveMode.Usb)

@@ -7,20 +7,16 @@ import io.github.jonathangtd.bimmerdata.ediabas.EdInterfaceObd
 import io.github.jonathangtd.bimmerdata.ediabas.EdiabasNet
 import io.github.jonathangtd.bimmerdata.ediabas.EdiabasNetException
 import io.github.jonathangtd.bimmerdata.ediabas.ResultData
-import io.github.jonathangtd.bimmerdata.ediabas.sim.SimulatedKLine
-import io.github.jonathangtd.bimmerdata.live.InterfaceArbiter
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.withContext
-import java.io.File
-import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicBoolean
+import io.github.jonathangtd.bimmerdata.live.CableExecutor
+import java.util.Locale
 
 /**
- * One interpreter + one interface. Every EDIABAS call runs on a single dedicated thread (the
- * interpreter is not thread-safe); callers suspend. [cancel] may be called from any thread: it
- * aborts the job between opcodes and wakes up a pending receive.
+ * The mini Tool32 on the shared cable: every job is one [CableExecutor.exclusive] operation, run
+ * between two read cycles of the live acquisition (which goes on). [cancel] may be called from
+ * any thread: it aborts the running job between opcodes and wakes up a pending receive; the job
+ * then returns a [JobRun] with `cancelled` and the frames sent so far.
  */
-class DiagSession(ecuDir: File, val iface: EdInterfaceObd, val label: String) : AutoCloseable {
+class DiagSession(private val cable: CableExecutor, private val label: String = "Tool32") {
 
     class JobRun(
         val sgbd: String,
@@ -34,105 +30,59 @@ class DiagSession(ecuDir: File, val iface: EdInterfaceObd, val label: String) : 
         /** null when the job ran to the end. */
         val error: String?,
         val cancelled: Boolean,
+        /** Ignition (DSR of the cable) right after the job, null if unknown. */
+        val ignition: Boolean?,
     )
 
-    private val executor = Executors.newSingleThreadExecutor { r -> Thread(r, "ediabas-job").apply { isDaemon = true } }
-    private val dispatcher = executor.asCoroutineDispatcher()
-    private val ediabas = EdiabasNet("EcuPath=${ecuDir.path}")
+    @Volatile private var cancelRequested = false
+    @Volatile private var runningIface: EdInterfaceObd? = null
 
-    @Volatile private var abortRequested = false
-
-    /** A real cable is claimed from the live acquisition ([InterfaceArbiter]) until [close]. */
-    private val realCable = iface.port !is SimulatedKLine
-    private val cableClaimed = AtomicBoolean(false)
-
-    init {
-        ediabas.abortJobFunc = { abortRequested }
-        ediabas.edInterfaceClass = iface
-    }
-
-    /** Opens the port (pausing live acquisition on the same cable). Returns null on success, else an error text. */
-    suspend fun connect(): String? {
-        if (realCable && cableClaimed.compareAndSet(false, true)) InterfaceArbiter.acquireForDiag()
-        return openPort()
-    }
-
-    private suspend fun openPort(): String? = withContext(dispatcher) {
-        try {
-            if (iface.interfaceConnect()) null else "Interface connect failed"
-        } catch (ex: Exception) {
-            listOfNotNull(describe(ex), iface.lastConnectError).joinToString(" - ")
-        }
-    }
-
-    suspend fun readIgnition(): Boolean? = withContext(dispatcher) { iface.readDsr() }
-
-    /** Jobs of an SGBD (virtual job _JOBS, no ECU traffic). */
-    suspend fun listJobs(sgbd: String): List<String> = withContext(dispatcher) {
-        selectSgbd(sgbd)
-        ediabas.noInitForVJobs = true
-        try {
-            ediabas.executeJob("_JOBS")
-        } finally {
-            ediabas.noInitForVJobs = false
-        }
-        ediabas.resultSets!!.drop(1).mapNotNull { it["JOBNAME"]?.opData as? String }
-    }
+    /** Ignition state (DSR line of the K+DCAN cable); null if the interface cannot tell. */
+    suspend fun readIgnition(): Boolean? = cable.exclusive("$label: ignition") { a -> (a.iface as? EdInterfaceObd)?.readDsr() }
 
     /** Group file (.grp) -> variant file name, identified by talking to the ECU. */
-    suspend fun resolveVariant(groupFile: String): String = withContext(dispatcher) {
-        abortRequested = false
-        ediabas.resolveSgbdFile(groupFile.substringBeforeLast('.'))
-        ediabas.sgbdFileName
-    }
+    suspend fun resolveVariant(groupFile: String): String =
+        cable.exclusive("$label: identify ${name(groupFile)}") { a -> a.resolveGroup(groupFile) }
 
-    suspend fun runJob(sgbd: String, job: String, args: String): JobRun = withContext(dispatcher) {
-        abortRequested = false
-        selectSgbd(sgbd)
-        val frames = ArrayList<EdInterfaceObd.Frame>()
-        iface.frameListener = { frame -> if (frames.size < MaxFrames) frames.add(frame) }
-        iface.resetStats()
-        var error: String? = null
-        val start = System.nanoTime()
-        try {
-            ediabas.argString = args
-            ediabas.executeJob(job)
-        } catch (ex: Exception) {
-            val blocked = frames.lastOrNull { it.direction == EdInterfaceObd.FrameDirection.Error && it.text?.contains("SafetyGuard") == true }
-            error = when {
-                abortRequested -> "Cancelled"
-                blocked != null -> "${describe(ex)} - ${blocked.text}"
-                else -> describe(ex)
+    suspend fun runJob(sgbd: String, job: String, args: String): JobRun {
+        cancelRequested = false
+        return cable.exclusive("$label: ${name(sgbd)} $job") { a ->
+            val obd = a.iface as? EdInterfaceObd
+            a.abortWhen = { cancelRequested }
+            runningIface = obd
+            val frames = ArrayList<EdInterfaceObd.Frame>()
+            obd?.frameListener = { frame -> if (frames.size < MaxFrames) frames.add(frame) }
+            obd?.resetStats()
+            var error: String? = null
+            var sets: List<Map<String, ResultData>> = emptyList()
+            val start = System.nanoTime()
+            try {
+                sets = a.executeJob(sgbd, job, args)
+            } catch (ex: Exception) {
+                sets = a.ediabas.resultSets ?: emptyList()
+                val blocked = frames.lastOrNull { it.direction == EdInterfaceObd.FrameDirection.Error && it.text?.contains("SafetyGuard") == true }
+                error = when {
+                    a.aborted -> "Cancelled"
+                    blocked != null -> "${describe(ex)} - ${blocked.text}"
+                    else -> describe(ex)
+                }
+            } finally {
+                obd?.frameListener = null
+                runningIface = null
             }
-        } finally {
-            iface.frameListener = null
+            val elapsed = System.nanoTime() - start
+            val cancelled = a.aborted
+            val ignition = if (cancelled) null else runCatching { obd?.readDsr() }.getOrNull()
+            JobRun(sgbd, job, args, sets, elapsed, obd?.stats?.telegrams ?: 0, frames, start, error, cancelled, ignition)
         }
-        val elapsed = System.nanoTime() - start
-        JobRun(
-            sgbd, job, args, ediabas.resultSets ?: emptyList(), elapsed, iface.stats.telegrams, frames, start,
-            error, abortRequested,
-        )
     }
 
     fun cancel() {
-        abortRequested = true
-        iface.transmitCancel(true)
+        cancelRequested = true
+        runningIface?.let { runCatching { it.transmitCancel(true) } }
     }
 
-    private fun selectSgbd(sgbd: String) {
-        if (!ediabas.sgbdFileName.equals(sgbd, ignoreCase = true)) {
-            ediabas.sgbdFileName = sgbd
-        }
-    }
-
-    override fun close() {
-        cancel()
-        executor.execute {
-            runCatching { ediabas.close() } // also closes the interface and its port
-            if (cableClaimed.compareAndSet(true, false)) InterfaceArbiter.releaseFromDiag()
-        }
-        executor.shutdown()
-    }
+    private fun name(sgbd: String) = sgbd.substringBeforeLast('.').uppercase(Locale.ROOT)
 
     companion object {
         private const val MaxFrames = 4000

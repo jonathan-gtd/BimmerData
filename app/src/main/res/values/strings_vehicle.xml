@@ -10,8 +10,6 @@
     <string name="veh_clear_all">Clear all</string>
     <string name="veh_share">Share</string>
     <string name="veh_cancel">Cancel</string>
-    <string name="veh_mode_usb">Cable</string>
-    <string name="veh_mode_sim">Simulation</string>
     <string name="veh_menu">Vehicle menu</string>
     <string name="veh_back">Back</string>
 
@@ -68,7 +66,6 @@
     <string name="veh_msg_no_ecu_files">Import your EDIABAS Ecu folder first (Tool32 tab).</string>
     <string name="veh_msg_no_cable">No K+DCAN cable found. Plug it in via USB-C OTG.</string>
     <string name="veh_msg_usb_denied">USB permission denied.</string>
-    <string name="veh_msg_cable_busy">The mini Tool32 is using the cable: disconnect it first.</string>
     <string name="veh_msg_connect_failed">Connection failed: %1$s</string>
     <string name="veh_msg_scan_failed">No ECU answered (%1$s). Ignition on? Right cable or simulation?</string>
     <string name="veh_msg_scan_cancelled">Scan cancelled.</string>

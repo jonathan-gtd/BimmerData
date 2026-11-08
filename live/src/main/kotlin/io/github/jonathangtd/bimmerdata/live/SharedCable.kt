@@ -43,8 +43,15 @@ class CableAccess internal constructor(
 ) {
     internal val touched = HashSet<String>()
 
+    /**
+     * Extra abort condition of the operation (e.g. a Cancel button that wants the partial result
+     * back instead of cancelling the coroutine). Checked between opcodes; to wake up a pending
+     * receive also call [EdInterfaceBase.transmitCancel] (true) on [iface] from the other thread.
+     */
+    @Volatile var abortWhen: (() -> Boolean)? = null
+
     /** True once the operation was cancelled (the next interpreter call throws). */
-    val aborted: Boolean get() = abortFlag()
+    val aborted: Boolean get() = abortFlag() || abortWhen?.invoke() == true
 
     /** Selects an SGBD or group file, e.g. "msv70", "msv70.prg", "d_motor.grp". */
     fun selectSgbd(sgbd: String) {

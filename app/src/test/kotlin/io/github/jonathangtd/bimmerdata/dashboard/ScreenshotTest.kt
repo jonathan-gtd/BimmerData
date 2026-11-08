@@ -26,8 +26,11 @@ import io.github.jonathangtd.bimmerdata.dashboard.ui.SgbdStep
 import io.github.jonathangtd.bimmerdata.gauges.GaugeFeed
 import io.github.jonathangtd.bimmerdata.gauges.GaugeFormat
 import io.github.jonathangtd.bimmerdata.gauges.ValueHistory
+import io.github.jonathangtd.bimmerdata.live.AcquisitionState
 import io.github.jonathangtd.bimmerdata.live.AcquisitionStatus
 import io.github.jonathangtd.bimmerdata.live.LiveConnection
+import io.github.jonathangtd.bimmerdata.live.LiveMode
+import io.github.jonathangtd.bimmerdata.ui.ConnectionPillContent
 import io.github.jonathangtd.bimmerdata.live.RecordingState
 import io.github.jonathangtd.bimmerdata.live.Sample
 import io.github.jonathangtd.bimmerdata.live.SgbdInfo
@@ -76,14 +79,40 @@ class ScreenshotTest {
         Column(Modifier.fillMaxSize().background(Cockpit.Background).padding(horizontal = 16.dp)) {
             Spacer(Modifier.height(14.dp))
             DashboardHeader(
-                title = title, onRename = {}, status = AcquisitionStatus(), rec = RecordingState(), format = GaugeFormat(io.github.jonathangtd.bimmerdata.gauges.currentLocale()),
-                onRecord = {}, onEdit = {}, connection = LiveConnection.Disconnected, onConnect = {}, onDisconnect = {},
+                title = title, onRename = {}, status = AcquisitionStatus(), rec = RecordingState(),
+                onRecord = {}, onEdit = {}, connection = LiveConnection.Disconnected, lastMode = null, onConnect = {}, onDisconnect = {},
             )
             Spacer(Modifier.height(12.dp))
             SegmentedTabs(labels = listOf(androidx.compose.ui.res.stringResource(R.string.new_page, 1)), selected = 0, onSelect = {})
             Column(Modifier.fillMaxWidth().weight(1f)) { EmptyPage(onAdd = {}) }
         }
     }
+
+    /** Every state of the connection pill, top to bottom. */
+    @Composable
+    private fun Pills() {
+        val usb = LiveConnection.Connected(LiveMode.Usb, "FTDI")
+        Column(
+            Modifier.fillMaxSize().background(Cockpit.Background).padding(16.dp),
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(14.dp),
+        ) {
+            ConnectionPillContent(LiveConnection.Disconnected, AcquisitionStatus(), null, {}, {})
+            ConnectionPillContent(LiveConnection.Disconnected, AcquisitionStatus(), LiveMode.Usb, {}, {})
+            ConnectionPillContent(LiveConnection.Failed(LiveMode.Usb, "No FTDI cable found (VID 0403)."), AcquisitionStatus(), LiveMode.Usb, {}, {})
+            ConnectionPillContent(LiveConnection.Connecting(LiveMode.Usb), AcquisitionStatus(AcquisitionState.Connecting), LiveMode.Usb, {}, {})
+            ConnectionPillContent(usb, AcquisitionStatus(AcquisitionState.Running, 22.4), LiveMode.Usb, {}, {})
+            ConnectionPillContent(usb, AcquisitionStatus(AcquisitionState.Connecting), LiveMode.Usb, {}, {})
+            ConnectionPillContent(usb, AcquisitionStatus(AcquisitionState.Error, 0.0, 3, "msv70 block of 5: no response"), LiveMode.Usb, {}, {})
+            ConnectionPillContent(LiveConnection.Connected(LiveMode.Simulation, "Sim"), AcquisitionStatus(AcquisitionState.Running, 23.1), LiveMode.Simulation, {}, {})
+        }
+    }
+
+    @Test
+    fun connectionPills() = capture("connection_pills.png") { Pills() }
+
+    @Test
+    @Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
+    fun connectionPillsFrench() = capture("connection_pills_fr.png") { Pills() }
 
     @Test
     fun phoneFirstLaunch() = capture("phone_first_launch.png") { FirstLaunch("BimmerData") }

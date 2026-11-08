@@ -22,7 +22,6 @@ class ConnectCarScreen(carContext: CarContext, private val deps: DashboardDepend
         val c = deps.connection.value
         val current = when (c) {
             is LiveConnection.Connected -> c.mode
-            is LiveConnection.Paused -> c.mode
             is LiveConnection.Connecting -> c.mode
             else -> null
         }

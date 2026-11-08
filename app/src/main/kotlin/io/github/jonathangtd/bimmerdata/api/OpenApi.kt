@@ -240,10 +240,10 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
         put("Status", S.obj(
             "Connection, acquisition and recording state.", listOf("connection", "acquisition", "recording"), false, null,
             "connection" to S.obj(null, listOf("state"), false, null,
-                "state" to S.str("disconnected, connecting, connected, paused (the in-app Tool32 uses the cable), failed", enum = listOf("disconnected", "connecting", "connected", "paused", "failed")),
+                "state" to S.str("disconnected, connecting, connected, failed. One connection for the whole app: Tool32 and fault jobs run on it between two read cycles.", enum = listOf("disconnected", "connecting", "connected", "failed")),
                 "mode" to S.str("usb or simulation", enum = listOf("usb", "simulation")),
-                "label" to S.str("Interface name, e.g. \"Simulation (MSV70-like ECU)\""),
-                "message" to S.str("Why it failed or is paused."),
+                "label" to S.str("Interface name, e.g. \"Simulation (E90 with MSV70)\""),
+                "message" to S.str("Why it failed."),
             ),
             "acquisition" to S.obj(null, listOf("state", "readsPerSecond", "errorCount"), false, null,
                 "state" to S.str("Read loop: Stopped, Connecting, Running, Error", enum = listOf("Stopped", "Connecting", "Running", "Error")),

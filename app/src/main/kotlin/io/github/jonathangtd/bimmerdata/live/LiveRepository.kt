@@ -11,16 +11,24 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import io.github.jonathangtd.bimmerdata.ediabas.EdInterfaceObd
 import io.github.jonathangtd.bimmerdata.ediabas.sim.EcuSimulator
-import io.github.jonathangtd.bimmerdata.ediabas.sim.SimulatedKLine
+import io.github.jonathangtd.bimmerdata.ediabas.sim.VehicleSimulator
 import io.github.jonathangtd.bimmerdata.files.EcuImporter
+import io.github.jonathangtd.bimmerdata.live.vehicle.JobRunner
+import io.github.jonathangtd.bimmerdata.live.vehicle.SharedJobRunner
+import io.github.jonathangtd.bimmerdata.settings.AppSettings
+import io.github.jonathangtd.bimmerdata.settings.Settings
 import io.github.jonathangtd.bimmerdata.usb.UsbCable
 import io.github.jonathangtd.bimmerdata.usb.UsbFtdiSerialPort
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -28,40 +36,58 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
 
-/** How the live acquisition reaches the car. */
+/** How the app reaches the car. */
 enum class LiveMode { Usb, Simulation }
 
-/** Connection of the live acquisition (the read loop itself reports [AcquisitionStatus]). */
+/**
+ * The one connection of the app (cable or simulated car). While [Connected], the acquisition
+ * engine reads what the dashboard / Android Auto / recording need ([LiveDataSource.status] tells
+ * how that goes: reading, reconnecting, ECU not answering) and every one-off user of the cable
+ * (Tool32, faults, API) goes through [LiveRepository.exclusive].
+ */
 sealed interface LiveConnection {
     data object Disconnected : LiveConnection
     data class Connecting(val mode: LiveMode) : LiveConnection
     data class Connected(val mode: LiveMode, val label: String) : LiveConnection
-
-    /** The mini Tool32 holds the cable; acquisition resumes when it disconnects. */
-    data class Paused(val mode: LiveMode, val label: String, val reason: String) : LiveConnection
     data class Failed(val mode: LiveMode, val message: String) : LiveConnection
 }
 
+/** Mode of the connection, null when disconnected. */
+val LiveConnection.mode: LiveMode?
+    get() = when (this) {
+        LiveConnection.Disconnected -> null
+        is LiveConnection.Connecting -> mode
+        is LiveConnection.Connected -> mode
+        is LiveConnection.Failed -> mode
+    }
+
 /**
- * Process-wide owner of the live acquisition: [liveDataSource], [recorder] and [catalog] are
- * stable objects the UI can keep for the whole app life; [connect]/[disconnect] swap the
- * acquisition engine behind them.
+ * Process-wide **cable manager**: the single owner of the K+DCAN cable (or of the simulated car)
+ * for the whole app. [liveDataSource], [recorder] and [catalog] are stable objects the UI can keep
+ * for the whole app life; [connect]/[disconnect] swap the acquisition engine behind them.
  *
+ * - One connection, one [AcquisitionEngine], one interpreter. The dashboard, Android Auto and the
+ *   CSV recording read through the engine; Tool32, the vehicle scan / fault memory ([jobRunner])
+ *   and the REST API run their jobs with [exclusive]: each job is slipped in between two read
+ *   cycles and the reading goes on by itself (a long job leaves a pause line in the CSV). Nobody
+ *   waits for another user to "release" the cable.
+ * - [exclusive] connects first if needed, in the last mode the user chose (else the default mode).
  * - USB mode: K+DCAN cable through [UsbFtdiSerialPort]; the [AcquisitionService] foreground
  *   service keeps it running with the screen off and shows the ongoing notification.
- * - Simulation mode: MSV70-like simulated ECU with moving values ([EcuSimulator.liveValues]) on a
- *   simulated K-line with realistic timing; runs in-process without the foreground service
- *   (Android 14 only grants a connectedDevice service with a real device).
+ * - Simulation mode: a simulated E90 ([VehicleSimulator.e90]: 14 ECUs, MSV70-like engine ECU with
+ *   moving values) on a simulated K-line with realistic timing, kept for the app's life (cleared
+ *   faults stay cleared); runs in-process without the foreground service (Android 14 only grants
+ *   a connectedDevice service with a real device).
  *
- * Cable sharing with the mini Tool32: see [InterfaceArbiter] (a connected Tool32 session pauses
- * USB acquisition). All methods are non-blocking and may be called from the main thread.
+ * All methods except [exclusive] are non-blocking and may be called from the main thread.
  */
-class LiveRepository private constructor(context: Context) : InterfaceArbiter.CableUser {
+class LiveRepository private constructor(context: Context) : CableExecutor {
 
     private val app: Context = context.applicationContext
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val mutex = Mutex()
     private val importer = EcuImporter(app)
+    private val settings = AppSettings.get(app)
 
     private val edCatalog = EdiabasMeasurementCatalog(importer.ecuDir, File(app.cacheDir, "measurement_catalog.tsv"))
 
@@ -95,58 +121,19 @@ class LiveRepository private constructor(context: Context) : InterfaceArbiter.Ca
     private val _connection = MutableStateFlow<LiveConnection>(LiveConnection.Disconnected)
     val connection: StateFlow<LiveConnection> = _connection.asStateFlow()
 
-    val isConnected: Boolean get() = _connection.value is LiveConnection.Connected || _connection.value is LiveConnection.Paused
+    val isConnected: Boolean get() = _connection.value is LiveConnection.Connected
+
+    /** The simulated car keeps its state (cleared faults stay cleared) for the app's life. */
+    private val simulator by lazy { VehicleSimulator.e90(EcuSimulator(liveValues = true)) }
 
     // ---- guarded by mutex ----
     private var engine: AcquisitionEngine? = null
-    private var mode: LiveMode? = null
-    private var label: String = ""
-    private var connectJob: Job? = null
-
-    init {
-        InterfaceArbiter.liveUser = this
-    }
+    @Volatile private var connectJob: Job? = null
 
     /** Connects in [mode] (USB: asks for the USB permission if needed) and starts reading. */
     fun connect(mode: LiveMode) {
         connectJob?.cancel()
-        connectJob = scope.launch {
-            mutex.withLock {
-                shutdownEngine()
-                _connection.value = LiveConnection.Connecting(mode)
-                val (iface, name) = when (mode) {
-                    LiveMode.Simulation -> {
-                        val line = SimulatedKLine.withSimulator(EcuSimulator(liveValues = true), realisticTiming = true)
-                        EdInterfaceObd(line) to "Simulation (MSV70-like ECU)"
-                    }
-                    LiveMode.Usb -> {
-                        val usbManager = UsbCable.usbManager(app)
-                        val device = UsbCable.findCable(usbManager) ?: run {
-                            _connection.value = LiveConnection.Failed(mode, "No FTDI cable found (VID 0403). Plug the K+DCAN cable via USB-C OTG.")
-                            return@launch
-                        }
-                        if (!UsbCable.requestPermission(app, usbManager, device)) {
-                            _connection.value = LiveConnection.Failed(mode, "USB permission denied")
-                            return@launch
-                        }
-                        val port = UsbFtdiSerialPort(usbManager, device)
-                        EdInterfaceObd(port) to port.name
-                    }
-                }
-                val e = AcquisitionEngine(iface, edCatalog)
-                engine = e
-                this@LiveRepository.mode = mode
-                label = name
-                proxy.attach(e)
-                if (mode == LiveMode.Usb && InterfaceArbiter.diagUsingCable.value) {
-                    _connection.value = LiveConnection.Paused(mode, name, PausedReason)
-                } else {
-                    e.start()
-                    _connection.value = LiveConnection.Connected(mode, name)
-                }
-                if (mode == LiveMode.Usb) startService()
-            }
-        }
+        connectJob = scope.launch { connectNow(mode) }
     }
 
     /** Stops reading and recording and releases the cable. */
@@ -165,10 +152,66 @@ class LiveRepository private constructor(context: Context) : InterfaceArbiter.Ca
         if (csvRecorder.state.value.recording) csvRecorder.stop() else csvRecorder.start()
     }
 
+    /**
+     * Runs a one-off operation on the shared cable between two read cycles (see
+     * [AcquisitionEngine.exclusive]). Connects first when needed, in the last mode the user
+     * chose ([Settings.lastMode], else [Settings.defaultMode]).
+     *
+     * @throws CableUnavailableException with a readable reason when no connection can be made.
+     */
+    override suspend fun <T> exclusive(reason: String, block: (CableAccess) -> T): T = ensureEngine().exclusive(reason, block)
+
+    /** Jobs of the vehicle scan and fault memory on the shared cable. */
+    fun jobRunner(label: String = "Faults"): JobRunner = SharedJobRunner(this, label)
+
+    /** The running engine, connecting first if needed. */
+    private suspend fun ensureEngine(): AcquisitionEngine {
+        connectJob?.join() // a connection in progress
+        currentEngine()?.let { return it }
+        val s = settings.state.value
+        val job = scope.launch { connectNow(s.lastMode ?: s.defaultMode) }
+        connectJob = job
+        job.join()
+        currentEngine()?.let { return it }
+        throw CableUnavailableException((_connection.value as? LiveConnection.Failed)?.message ?: "Not connected")
+    }
+
+    private fun currentEngine(): AcquisitionEngine? =
+        if (_connection.value is LiveConnection.Connected) engine?.takeIf { it.isRunning } else null
+
+    private suspend fun connectNow(mode: LiveMode) {
+        mutex.withLock {
+            shutdownEngine()
+            _connection.value = LiveConnection.Connecting(mode)
+            settings.update { it.copy(lastMode = mode) }
+            val (iface, name) = when (mode) {
+                LiveMode.Simulation -> EdInterfaceObd(simulator.kLine(realisticTiming = true)) to SimulationLabel
+                LiveMode.Usb -> {
+                    val usbManager = UsbCable.usbManager(app)
+                    val device = UsbCable.findCable(usbManager) ?: run {
+                        _connection.value = LiveConnection.Failed(mode, NoCableMessage)
+                        return
+                    }
+                    if (!UsbCable.requestPermission(app, usbManager, device)) {
+                        _connection.value = LiveConnection.Failed(mode, UsbDeniedMessage)
+                        return
+                    }
+                    val port = UsbFtdiSerialPort(usbManager, device)
+                    EdInterfaceObd(port) to port.name
+                }
+            }
+            val e = AcquisitionEngine(iface, edCatalog)
+            engine = e
+            proxy.attach(e)
+            e.start()
+            _connection.value = LiveConnection.Connected(mode, name)
+            if (mode == LiveMode.Usb) startService()
+        }
+    }
+
     private suspend fun shutdownEngine() {
         val e = engine ?: return
         engine = null
-        mode = null
         if (csvRecorder.state.value.recording) csvRecorder.stop()
         proxy.detach()
         e.stopAndJoin()
@@ -184,31 +227,11 @@ class LiveRepository private constructor(context: Context) : InterfaceArbiter.Ca
         }
     }
 
-    // ---- InterfaceArbiter.CableUser ----
-
-    override suspend fun releaseCable() {
-        mutex.withLock {
-            val e = engine ?: return
-            if (mode != LiveMode.Usb) return
-            e.stopAndJoin()
-            _connection.value = LiveConnection.Paused(LiveMode.Usb, label, PausedReason)
-        }
-    }
-
-    override fun cableAvailable() {
-        scope.launch {
-            mutex.withLock {
-                val e = engine ?: return@launch
-                if (_connection.value !is LiveConnection.Paused) return@launch
-                e.start()
-                _connection.value = LiveConnection.Connected(LiveMode.Usb, label)
-            }
-        }
-    }
-
     companion object {
         private const val Tag = "LiveRepository"
-        const val PausedReason = "The cable is in use (Tool32 or fault memory)"
+        const val SimulationLabel = "Simulation (E90 with MSV70)"
+        const val NoCableMessage = "No FTDI cable found (VID 0403). Plug the K+DCAN cable via USB-C OTG."
+        const val UsbDeniedMessage = "USB permission denied"
 
         // holds only the application context
         @SuppressLint("StaticFieldLeak")
@@ -229,6 +252,9 @@ internal class LiveDataProxy(private val scope: CoroutineScope) : LiveDataSource
 
     private val _status = MutableStateFlow(AcquisitionStatus())
     override val status: StateFlow<AcquisitionStatus> = _status.asStateFlow()
+
+    private val _pauses = MutableSharedFlow<AcquisitionPause>(extraBufferCapacity = 16, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    override val pauses: SharedFlow<AcquisitionPause> = _pauses.asSharedFlow()
 
     @Volatile var requested: List<Measurement> = emptyList()
         private set
@@ -254,6 +280,7 @@ internal class LiveDataProxy(private val scope: CoroutineScope) : LiveDataSource
         collectors = scope.launch {
             launch { e.samples.collect { fresh -> if (fresh.isNotEmpty()) _samples.update { it + fresh } } }
             launch { e.status.collect { _status.value = it } }
+            launch { e.pauses.collect { _pauses.emit(it) } }
         }
     }
 

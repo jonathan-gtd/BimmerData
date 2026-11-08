@@ -12,27 +12,21 @@ import io.github.jonathangtd.bimmerdata.files.EcuImporter
 import io.github.jonathangtd.bimmerdata.ediabas.EdInterfaceObd
 import io.github.jonathangtd.bimmerdata.ediabas.ResultData
 import io.github.jonathangtd.bimmerdata.ediabas.ResultType
-import io.github.jonathangtd.bimmerdata.ediabas.sim.EcuSimulator
-import io.github.jonathangtd.bimmerdata.ediabas.sim.SimulatedKLine
-import io.github.jonathangtd.bimmerdata.usb.UsbCable
-import io.github.jonathangtd.bimmerdata.usb.UsbFtdiSerialPort
+import io.github.jonathangtd.bimmerdata.live.CableUnavailableException
+import io.github.jonathangtd.bimmerdata.live.LiveConnection
+import io.github.jonathangtd.bimmerdata.live.LiveRepository
+import io.github.jonathangtd.bimmerdata.live.OfflineSgbd
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Locale
-
-enum class ConnectionMode { Usb, Simulation }
-
-sealed interface ConnectionState {
-    data object Disconnected : ConnectionState
-    data object Connecting : ConnectionState
-    data class Connected(val label: String) : ConnectionState
-    data class Failed(val message: String) : ConnectionState
-}
 
 data class ImportUi(val filesDone: Int, val filesTotal: Int, val bytesDone: Long, val bytesTotal: Long, val current: String)
 
@@ -55,8 +49,7 @@ data class JobResultUi(
 data class RepeatUi(val done: Int, val total: Int, val avgMs: Double, val minMs: Double, val maxMs: Double, val avgTelegramMs: Double?)
 
 data class Tool32State(
-    val mode: ConnectionMode = ConnectionMode.Simulation,
-    val connection: ConnectionState = ConnectionState.Disconnected,
+    /** Ignition (DSR of the cable) as last read; null when unknown or disconnected. */
     val ignition: Boolean? = null,
     val ecuFiles: List<String> = emptyList(),
     val import: ImportUi? = null,
@@ -73,21 +66,44 @@ data class Tool32State(
     val message: String? = null,
 )
 
+/**
+ * The mini Tool32 screen. It has no connection of its own: jobs run on the app's single
+ * connection ([LiveRepository], connected on demand in the last mode) between two read cycles of
+ * the live acquisition, which goes on. The job list is read from the SGBD file, without the car.
+ */
 class Tool32ViewModel(application: Application) : AndroidViewModel(application) {
 
     private val importer = EcuImporter(application)
+    private val repo = LiveRepository.get(application)
+    private val session = DiagSession(repo)
+    private var offline: OfflineSgbd? = null
     private val _state = MutableStateFlow(Tool32State(ecuFiles = importer.importedFiles()))
     val state: StateFlow<Tool32State> = _state.asStateFlow()
 
-    private var session: DiagSession? = null
     private var importJob: Job? = null
     private var runJob: Job? = null
+
+    init {
+        // Ignition indicator: read once each time the shared connection comes up.
+        viewModelScope.launch {
+            repo.connection.collectLatest { c ->
+                if (c is LiveConnection.Connected) {
+                    val ign = runCatching { session.readIgnition() }.getOrNull()
+                    _state.update { it.copy(ignition = ign) }
+                } else {
+                    _state.update { it.copy(ignition = null) }
+                }
+            }
+        }
+    }
 
     // ---- ECU folder import ----
 
     fun importFolder(treeUri: Uri) {
         if (importJob?.isActive == true) return
-        disconnect() // the session reads files from the folder being replaced
+        cancelRun()
+        repo.disconnect() // the interpreter reads files from the folder being replaced
+        closeOffline()
         importJob = viewModelScope.launch {
             _state.update { it.copy(import = ImportUi(0, 0, 0, 0, "Listing files"), message = null) }
             try {
@@ -110,68 +126,6 @@ class Tool32ViewModel(application: Application) : AndroidViewModel(application) 
         importJob?.cancel()
     }
 
-    // ---- connection ----
-
-    fun setMode(mode: ConnectionMode) {
-        if (mode == _state.value.mode) return
-        disconnect()
-        _state.update { it.copy(mode = mode) }
-    }
-
-    fun connect() {
-        if (_state.value.connection is ConnectionState.Connecting) return
-        disconnect()
-        _state.update { it.copy(connection = ConnectionState.Connecting, message = null) }
-        viewModelScope.launch {
-            val app = getApplication<Application>()
-            val newSession = when (_state.value.mode) {
-                ConnectionMode.Simulation -> {
-                    val line = SimulatedKLine.withEcu(realisticTiming = true, respond = EcuSimulator()::respond)
-                    DiagSession(importer.ecuDir, EdInterfaceObd(line), "Simulation (MSV70-like ECU)")
-                }
-                ConnectionMode.Usb -> {
-                    val usbManager = UsbCable.usbManager(app)
-                    val device = UsbCable.findCable(usbManager)
-                    if (device == null) {
-                        fail("No FTDI cable found (VID 0403). Plug the K+DCAN cable via USB-C OTG.")
-                        return@launch
-                    }
-                    if (!UsbCable.requestPermission(app, usbManager, device)) {
-                        fail("USB permission denied")
-                        return@launch
-                    }
-                    val port = UsbFtdiSerialPort(usbManager, device)
-                    DiagSession(importer.ecuDir, EdInterfaceObd(port), port.name)
-                }
-            }
-            val error = newSession.connect()
-            if (error != null) {
-                newSession.close()
-                fail(error)
-                return@launch
-            }
-            session = newSession
-            _state.update { it.copy(connection = ConnectionState.Connected(newSession.label), ignition = newSession.readIgnition()) }
-            _state.value.sgbd?.let { loadJobs(it) }
-        }
-    }
-
-    private fun fail(message: String) {
-        _state.update { it.copy(connection = ConnectionState.Failed(message)) }
-    }
-
-    fun disconnect() {
-        runJob?.cancel()
-        session?.close()
-        session = null
-        _state.update {
-            it.copy(
-                connection = if (it.connection is ConnectionState.Failed) it.connection else ConnectionState.Disconnected,
-                ignition = null, running = false,
-            )
-        }
-    }
-
     // ---- SGBD and job selection ----
 
     fun selectSgbd(name: String) {
@@ -180,14 +134,10 @@ class Tool32ViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun loadJobs(sgbd: String) {
-        val s = session ?: run {
-            _state.update { it.copy(message = "Connect (USB or Simulation) to load the job list") }
-            return
-        }
         _state.update { it.copy(jobsLoading = true) }
         viewModelScope.launch {
             try {
-                val jobs = s.listJobs(sgbd)
+                val jobs = withContext(Dispatchers.IO) { offlineSgbd().jobs(sgbd) }
                 _state.update { st -> st.copy(jobs = jobs, job = st.job?.takeIf { it in jobs }) }
             } catch (ex: Exception) {
                 _state.update { it.copy(message = "Cannot read $sgbd: ${DiagSession.describe(ex)}") }
@@ -199,14 +149,16 @@ class Tool32ViewModel(application: Application) : AndroidViewModel(application) 
 
     /** For a group file: identify the variant with the ECU and switch to it. */
     fun resolveVariant() {
-        val s = session ?: return
         val group = _state.value.sgbd ?: return
+        if (_state.value.running) return
         runJob = viewModelScope.launch {
             _state.update { it.copy(running = true, message = null) }
             try {
-                val variant = s.resolveVariant(group)
+                val variant = session.resolveVariant(group)
                 _state.update { it.copy(message = "$group -> $variant") }
                 selectSgbd(variant)
+            } catch (ex: CancellationException) {
+                throw ex
             } catch (ex: Exception) {
                 _state.update { it.copy(message = "Identification failed: ${DiagSession.describe(ex)}") }
             } finally {
@@ -227,8 +179,8 @@ class Tool32ViewModel(application: Application) : AndroidViewModel(application) 
 
     // ---- running ----
 
+    /** Runs the job [times] times on the shared connection (connecting first if needed). */
     fun run(times: Int = 1) {
-        val s = session ?: return
         val st = _state.value
         val sgbd = st.sgbd ?: return
         val job = st.job ?: return
@@ -240,13 +192,14 @@ class Tool32ViewModel(application: Application) : AndroidViewModel(application) 
             var telegrams = 0L
             try {
                 for (i in 1..total) {
-                    val run = s.runJob(sgbd, job, st.args)
+                    val run = session.runJob(sgbd, job, st.args)
                     val ms = run.elapsedNanos / 1e6
                     durations.add(ms)
                     telegrams += run.telegrams
                     _state.update {
                         it.copy(
                             result = run.toUi(),
+                            ignition = run.ignition ?: it.ignition,
                             repeat = if (total > 1) RepeatUi(
                                 i, total, durations.average(), durations.min(), durations.max(),
                                 if (telegrams > 0) durations.sum() / telegrams else null,
@@ -255,7 +208,8 @@ class Tool32ViewModel(application: Application) : AndroidViewModel(application) 
                     }
                     if (run.error != null) break
                 }
-                _state.update { it.copy(ignition = s.readIgnition()) }
+            } catch (ex: CableUnavailableException) {
+                _state.update { it.copy(message = "Not connected: ${ex.message}") }
             } finally {
                 _state.update { it.copy(running = false) }
             }
@@ -263,12 +217,21 @@ class Tool32ViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun cancelRun() {
-        session?.cancel()
+        session.cancel()
+    }
+
+    @Synchronized
+    private fun offlineSgbd(): OfflineSgbd = offline ?: OfflineSgbd(importer.ecuDir).also { offline = it }
+
+    @Synchronized
+    private fun closeOffline() {
+        offline?.close()
+        offline = null
     }
 
     override fun onCleared() {
-        session?.close()
-        session = null
+        session.cancel()
+        closeOffline()
     }
 
     private fun DiagSession.JobRun.toUi(): JobResultUi {

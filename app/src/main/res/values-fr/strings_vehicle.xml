@@ -10,8 +10,6 @@
     <string name="veh_clear_all">Tout effacer</string>
     <string name="veh_share">Partager</string>
     <string name="veh_cancel">Annuler</string>
-    <string name="veh_mode_usb">Câble</string>
-    <string name="veh_mode_sim">Simulation</string>
     <string name="veh_menu">Menu du véhicule</string>
     <string name="veh_back">Retour</string>
 
@@ -65,7 +63,6 @@
     <string name="veh_msg_no_ecu_files">Importez d’abord votre dossier EDIABAS Ecu (onglet Tool32).</string>
     <string name="veh_msg_no_cable">Aucun câble K+DCAN trouvé. Branchez-le en USB-C OTG.</string>
     <string name="veh_msg_usb_denied">Accès USB refusé.</string>
-    <string name="veh_msg_cable_busy">Le mini Tool32 utilise le câble : déconnectez-le d’abord.</string>
     <string name="veh_msg_connect_failed">Échec de la connexion : %1$s</string>
     <string name="veh_msg_scan_failed">Aucun calculateur n’a répondu (%1$s). Contact mis ? Bon mode (câble ou simulation) ?</string>
     <string name="veh_msg_scan_cancelled">Détection annulée.</string>

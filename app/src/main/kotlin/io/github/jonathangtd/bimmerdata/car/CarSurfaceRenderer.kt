@@ -175,7 +175,6 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
         val c = connection
         val mode = when (c) {
             is LiveConnection.Connected -> c.mode
-            is LiveConnection.Paused -> return chrome.copy(statusText = context.getString(R.string.conn_paused), statusColor = StatusLine.WARNING)
             is LiveConnection.Failed -> return chrome.copy(statusText = context.getString(R.string.conn_failed, c.message), statusColor = StatusLine.DANGER)
             else -> return chrome
         }

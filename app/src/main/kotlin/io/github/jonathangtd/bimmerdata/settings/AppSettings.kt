@@ -18,9 +18,11 @@ import kotlinx.coroutines.flow.update
 data class Settings(
     /** Mode used when connecting without choosing (API `POST /connect`, future quick-connect). */
     val defaultMode: LiveMode = LiveMode.Usb,
-    /** Connect over USB as soon as the K+DCAN cable is plugged in. */
-    val autoConnectOnCable: Boolean = false,
+    /** Connect over USB as soon as the K+DCAN cable is plugged in (on by default). */
+    val autoConnectOnCable: Boolean = true,
     val api: ApiConfig = ApiConfig(),
+    /** Mode of the last connection the user made; null until the first one (the Connect pill then asks). */
+    val lastMode: LiveMode? = null,
 )
 
 data class ApiConfig(
@@ -56,7 +58,8 @@ class AppSettings private constructor(context: Context) {
         }
         return Settings(
             defaultMode = runCatching { LiveMode.valueOf(prefs.getString(K_MODE, null) ?: "") }.getOrDefault(LiveMode.Usb),
-            autoConnectOnCable = prefs.getBoolean(K_AUTO, false),
+            // new key: the first versions saved "false" as their default under K_AUTO_OLD
+            autoConnectOnCable = prefs.getBoolean(K_AUTO, true),
             api = ApiConfig(
                 enabled = prefs.getBoolean(K_API_ON, false),
                 port = prefs.getInt(K_PORT, ApiConfig.DEFAULT_PORT).takeIf { it in ApiConfig.PORT_RANGE } ?: ApiConfig.DEFAULT_PORT,
@@ -64,6 +67,7 @@ class AppSettings private constructor(context: Context) {
                 scopes = prefs.getStringSet(K_SCOPES, null)?.mapNotNull { Scope.fromId(it) }?.filter { it in ApiConfig.GRANTABLE }?.toSet()
                     ?: ApiConfig().scopes,
             ),
+            lastMode = prefs.getString(K_LAST_MODE, null)?.let { m -> LiveMode.entries.firstOrNull { it.name == m } },
         )
     }
 
@@ -78,6 +82,8 @@ class AppSettings private constructor(context: Context) {
             putInt(K_PORT, s.api.port)
             putString(K_TOKEN, s.api.token)
             putStringSet(K_SCOPES, s.api.scopes.filter { it in ApiConfig.GRANTABLE }.map { it.id }.toSet())
+            if (s.lastMode != null) putString(K_LAST_MODE, s.lastMode.name) else remove(K_LAST_MODE)
+            remove(K_AUTO_OLD)
         }
     }
 
@@ -88,7 +94,9 @@ class AppSettings private constructor(context: Context) {
 
     companion object {
         private const val K_MODE = "default_mode"
-        private const val K_AUTO = "auto_connect_cable"
+        private const val K_AUTO_OLD = "auto_connect_cable"
+        private const val K_AUTO = "auto_connect_cable_v2"
+        private const val K_LAST_MODE = "last_connect_mode"
         private const val K_API_ON = "api_enabled"
         private const val K_PORT = "api_port"
         private const val K_TOKEN = "api_token"

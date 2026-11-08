@@ -96,7 +96,7 @@ data class EcuInfo(val sgbd: String, val source: EcuSource)
 
 @Serializable
 data class ConnectionInfo(
-    /** disconnected, connecting, connected, paused, failed */
+    /** disconnected, connecting, connected, failed */
     val state: String,
     val mode: ConnectMode? = null,
     val label: String? = null,

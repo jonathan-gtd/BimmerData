@@ -87,7 +87,7 @@ class FakeApiBackend : ApiBackend {
         connection = ConnectionInfo("connecting", m)
         thread(isDaemon = true) {
             Thread.sleep(100)
-            connection = ConnectionInfo("connected", m, if (m == ConnectMode.Simulation) "Simulation (MSV70-like ECU)" else "FT232R")
+            connection = ConnectionInfo("connected", m, if (m == ConnectMode.Simulation) "Simulation (E90 with MSV70)" else "FT232R")
         }
     }
 

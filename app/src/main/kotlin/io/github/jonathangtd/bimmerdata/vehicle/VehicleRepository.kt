@@ -5,11 +5,9 @@ package io.github.jonathangtd.bimmerdata.vehicle
 
 import android.annotation.SuppressLint
 import android.content.Context
-import io.github.jonathangtd.bimmerdata.ediabas.EdInterfaceObd
-import io.github.jonathangtd.bimmerdata.ediabas.sim.EcuSimulator
-import io.github.jonathangtd.bimmerdata.ediabas.sim.VehicleSimulator
 import io.github.jonathangtd.bimmerdata.files.EcuImporter
-import io.github.jonathangtd.bimmerdata.live.InterfaceArbiter
+import io.github.jonathangtd.bimmerdata.live.CableUnavailableException
+import io.github.jonathangtd.bimmerdata.live.LiveRepository
 import io.github.jonathangtd.bimmerdata.live.vehicle.DetectedEcuSource
 import io.github.jonathangtd.bimmerdata.live.vehicle.EcuFaults
 import io.github.jonathangtd.bimmerdata.live.vehicle.EcuSummary
@@ -17,13 +15,12 @@ import io.github.jonathangtd.bimmerdata.live.vehicle.EdiabasJobRunner
 import io.github.jonathangtd.bimmerdata.live.vehicle.Fault
 import io.github.jonathangtd.bimmerdata.live.vehicle.FaultDetail
 import io.github.jonathangtd.bimmerdata.live.vehicle.FaultService
+import io.github.jonathangtd.bimmerdata.live.vehicle.JobRunner
 import io.github.jonathangtd.bimmerdata.live.vehicle.UserConfirmation
 import io.github.jonathangtd.bimmerdata.live.vehicle.Vehicle
 import io.github.jonathangtd.bimmerdata.live.vehicle.VehicleScanner
 import io.github.jonathangtd.bimmerdata.live.vehicle.VehicleTables
 import io.github.jonathangtd.bimmerdata.live.vehicle.ecuSummaries
-import io.github.jonathangtd.bimmerdata.usb.UsbCable
-import io.github.jonathangtd.bimmerdata.usb.UsbFtdiSerialPort
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,7 +53,7 @@ sealed interface VehicleTask {
 /** A message for the user; [error] ones are shown in the danger color. */
 data class VehicleMessage(val kind: Kind, val detail: String? = null) {
     enum class Kind {
-        NoEcuFiles, NoCable, UsbDenied, CableBusy, ConnectFailed, ScanFailed, ScanCancelled, ReadFailed, Cleared, ClearFailed,
+        NoEcuFiles, NoCable, UsbDenied, ConnectFailed, ScanFailed, ScanCancelled, ReadFailed, Cleared, ClearFailed,
         NewVehicle, Cancelled,
     }
 
@@ -88,12 +85,11 @@ data class VehicleState(
 
 /**
  * Process-wide owner of the Faults tab: the user's vehicles (persisted, several cars), vehicle
- * scans, fault memory read / detail / clear, through the USB cable or the simulated E90.
+ * scans, fault memory read / detail / clear.
  *
- * Cable sharing: an operation on the real cable claims it with [InterfaceArbiter.acquireForDiag]
- * (live acquisition pauses and closes its port), opens its own port for the duration of the
- * operation only, then gives it back ([InterfaceArbiter.releaseFromDiag]: live resumes). If the mini
- * Tool32 holds the cable the operation is refused. Simulation never touches the cable.
+ * Cable: the app's single connection ([LiveRepository], cable or simulated E90). Every job is
+ * slipped in between two read cycles of the live acquisition, which goes on; when nothing is
+ * connected the first job connects in the last mode the user chose.
  *
  * Implements [DetectedEcuSource] for the rest of the app (ECUs of the current vehicle).
  */
@@ -113,11 +109,7 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
         .distinctUntilChanged()
         .stateIn(scope, SharingStarted.Eagerly, _state.value.garage.current.ecuSummaries())
 
-    /** The simulated car keeps its state (cleared faults stay cleared) for the app's life. */
-    private val simulator by lazy { VehicleSimulator.e90(EcuSimulator(liveValues = true)) }
-
     @Volatile private var job: Job? = null
-    @Volatile private var runner: EdiabasJobRunner? = null
 
     private var tablesCache: Pair<Long, VehicleTables>? = null
 
@@ -129,8 +121,6 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
     }
 
     // ---- simple state changes ----
-
-    fun setMode(mode: LinkMode) = updateGarage { it.copy(mode = mode) }
 
     fun selectVehicle(id: String) = updateGarage { g -> if (g.vehicles.any { it.id == id }) g.copy(currentId = id) else g }
 
@@ -207,7 +197,7 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
         readAllFaults(runner, tables, vehicle)
     }
 
-    private suspend fun readAllFaults(runner: EdiabasJobRunner, tables: VehicleTables, vehicle: Vehicle) {
+    private suspend fun readAllFaults(runner: JobRunner, tables: VehicleTables, vehicle: Vehicle) {
         task(VehicleTask.ReadingFaults(0, vehicle.ecus.size, null))
         val faults = FaultService(runner, tables).readAll(vehicle) { p -> task(VehicleTask.ReadingFaults(p.done, p.total, p.ecuName)) }
         storeFaults(vehicle.id, faults)
@@ -258,9 +248,8 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
         message(VehicleMessage.Kind.Cleared, null)
     }
 
-    /** Stops the running operation (between telegrams). */
+    /** Stops the running operation (the job on the cable is aborted between telegrams). */
     fun cancel() {
-        runner?.cancel()
         job?.cancel()
     }
 
@@ -277,7 +266,7 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
     }
 
     /** Runs [block] with a connected runner; one operation at a time. */
-    private fun launchOperation(block: suspend (EdiabasJobRunner, VehicleTables) -> Unit) {
+    private fun launchOperation(block: suspend (JobRunner, VehicleTables) -> Unit) {
         if (job?.isActive == true) return
         job = scope.launch {
             mutex.withLock {
@@ -294,53 +283,22 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
         }
     }
 
-    private suspend fun withLink(block: suspend (EdiabasJobRunner, VehicleTables) -> Unit) {
+    private suspend fun withLink(block: suspend (JobRunner, VehicleTables) -> Unit) {
         if (importer.importedFiles().isEmpty()) {
             message(VehicleMessage.Kind.NoEcuFiles)
             return
         }
         val tables = withContext(Dispatchers.IO) { tables().also { it.vehicleSgbds } }
-        task(VehicleTask.Connecting)
-        when (_state.value.garage.mode) {
-            LinkMode.Simulation -> {
-                val r = EdiabasJobRunner(importer.ecuDir, EdInterfaceObd(simulator.kLine(realisticTiming = true)))
-                runWith(r, tables, block)
-            }
-            LinkMode.Usb -> {
-                if (InterfaceArbiter.diagUsingCable.value) {
-                    message(VehicleMessage.Kind.CableBusy)
-                    return
-                }
-                val usbManager = UsbCable.usbManager(app)
-                val device = UsbCable.findCable(usbManager) ?: run {
-                    message(VehicleMessage.Kind.NoCable)
-                    return
-                }
-                if (!UsbCable.requestPermission(app, usbManager, device)) {
-                    message(VehicleMessage.Kind.UsbDenied)
-                    return
-                }
-                InterfaceArbiter.acquireForDiag() // pauses USB live acquisition (its port is closed on return)
-                try {
-                    runWith(EdiabasJobRunner(importer.ecuDir, EdInterfaceObd(UsbFtdiSerialPort(usbManager, device))), tables, block)
-                } finally {
-                    InterfaceArbiter.releaseFromDiag() // live acquisition resumes
-                }
-            }
-        }
-    }
-
-    private suspend fun runWith(r: EdiabasJobRunner, tables: VehicleTables, block: suspend (EdiabasJobRunner, VehicleTables) -> Unit) {
-        runner = r
+        val live = LiveRepository.get(app)
+        if (!live.isConnected) task(VehicleTask.Connecting)
         try {
-            r.connect()?.let { error ->
-                message(VehicleMessage.Kind.ConnectFailed, error)
-                return
+            block(live.jobRunner("Faults"), tables)
+        } catch (ex: CableUnavailableException) {
+            when (ex.message) {
+                LiveRepository.NoCableMessage -> message(VehicleMessage.Kind.NoCable)
+                LiveRepository.UsbDeniedMessage -> message(VehicleMessage.Kind.UsbDenied)
+                else -> message(VehicleMessage.Kind.ConnectFailed, ex.message)
             }
-            block(r, tables)
-        } finally {
-            runner = null
-            r.closeAndJoin()
         }
     }
 

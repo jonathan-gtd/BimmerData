@@ -152,7 +152,6 @@ class AcquisitionService : Service() {
                 AcquisitionState.Error -> "No answer from the car"
                 AcquisitionState.Stopped -> "Live data stopped"
             }
-            is LiveConnection.Paused -> "Live data paused"
             is LiveConnection.Connecting -> "Connecting…"
             is LiveConnection.Failed -> "Connection failed"
             LiveConnection.Disconnected -> "Disconnected"
@@ -160,7 +159,6 @@ class AcquisitionService : Service() {
         val text = buildString {
             when (connection) {
                 is LiveConnection.Connected -> append(connection.label)
-                is LiveConnection.Paused -> append(connection.reason)
                 is LiveConnection.Failed -> append(connection.message)
                 else -> Unit
             }
