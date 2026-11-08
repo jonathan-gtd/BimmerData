@@ -75,7 +75,8 @@ internal object S {
 
 /** Builds `openapi.json` (OpenAPI 3.1) from the route table plus the shared schemas below. */
 internal object OpenApi {
-    fun document(routes: List<Route>, serverUrl: String?, appVersion: String): JsonObject = buildJsonObject {
+    /** [scheme] is used when [serverUrl] is null (`http` or `https`, as set on the phone). */
+    fun document(routes: List<Route>, serverUrl: String?, appVersion: String, scheme: String = "http"): JsonObject = buildJsonObject {
         put("openapi", "3.1.0")
         put("info", buildJsonObject {
             put("title", "BimmerData API")
@@ -86,7 +87,7 @@ internal object OpenApi {
         })
         put("servers", buildJsonArray {
             add(buildJsonObject {
-                put("url", serverUrl ?: "http://{host}:{port}")
+                put("url", serverUrl ?: "$scheme://{host}:{port}")
                 put("description", if (serverUrl != null) "The phone that served this document" else "The phone running BimmerData (address and port are shown in Settings › Local API)")
                 if (serverUrl == null) put("variables", buildJsonObject {
                     put("host", buildJsonObject { put("default", "192.168.1.20") })
@@ -201,7 +202,7 @@ BimmerData reads live data from BMW ECUs (E-series, K+DCAN cable) and shows it o
 
 ## Getting started
 1. On the phone: Settings › Local API › enable, pick the scopes, copy the base URL and the token.
-2. Send `Authorization: Bearer <token>` with every request (except this document).
+2. Send `Authorization: Bearer <token>` with every request (except this document). When HTTPS is on (Settings › Local API › HTTPS), use `https://` and trust the phone's own certificate: pin its public key (`curl --pinnedpubkey 'sha256//…'`) or trust the exported certificate file; both are shown on the phone.
 3. `GET /api/v1/status` — is the app connected? If not, `POST /api/v1/connect` with `{"mode":"simulation"}` (no car needed) or `{"mode":"usb"}` (needs scope `config`).
 4. Discover data: `GET /api/v1/ecus`, then `GET /api/v1/ecus/{sgbd}/measurements?q=temp`. A measurement id looks like `msv70/0x4402` (`<sgbd>/<key>`).
 5. Read values: `POST /api/v1/values/read` with `{"ids":["msv70/0x4402"]}` waits for fresh samples; add `"seconds":10` to sample for a while and get min / max / mean.
@@ -393,8 +394,11 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
             "defaultMode" to S.str("Mode used by `POST /connect` without a mode.", enum = listOf("usb", "simulation")),
             "autoConnectOnCable" to S.bool("Connect over USB as soon as the K+DCAN cable is plugged in."),
             "recordingFolder" to S.str("Where CSV recordings go (read-only).", "Documents/BimmerData/"),
-            "api" to S.obj("Read-only here: change them on the phone.", listOf("enabled", "port", "scopes"), false, null,
+            "api" to S.obj("Read-only here: change them on the phone.", listOf("enabled", "port", "scopes", "https"), false, null,
                 "enabled" to S.bool(), "port" to S.int(), "scopes" to S.arr(S.str(enum = Scope.entries.map { it.id })),
+                "https" to S.bool("HTTPS only, with the phone's self-signed certificate."),
+                "certificateSha256" to S.str("SHA-256 of the certificate to trust (HTTPS on).", "3F:A2:…"),
+                "publicKeyPin" to S.str("Server public-key pin for `curl --pinnedpubkey` (HTTPS on).", "sha256//…"),
             ),
         ))
     }

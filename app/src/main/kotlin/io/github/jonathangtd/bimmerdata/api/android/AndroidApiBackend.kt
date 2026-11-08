@@ -132,7 +132,12 @@ class AndroidApiBackend(
             defaultMode = mode(s.defaultMode),
             autoConnectOnCable = s.autoConnectOnCable,
             recordingFolder = RecordingStorage.describe(app),
-            api = ApiSettingsView(s.api.enabled, s.api.port, s.api.scopes.sortedBy { it.ordinal }.map { it.id }),
+            api = ApiRuntime.get(app).state.value.tls.let { tls ->
+                ApiSettingsView(
+                    s.api.enabled, s.api.port, s.api.scopes.sortedBy { it.ordinal }.map { it.id },
+                    https = s.api.https, certificateSha256 = tls?.certificateSha256, publicKeyPin = tls?.publicKeyPin,
+                )
+            },
         )
     }
 

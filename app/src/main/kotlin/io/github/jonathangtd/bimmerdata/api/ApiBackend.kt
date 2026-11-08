@@ -200,7 +200,17 @@ data class SettingsView(
 )
 
 @Serializable
-data class ApiSettingsView(val enabled: Boolean, val port: Int, val scopes: List<String>)
+data class ApiSettingsView(
+    val enabled: Boolean,
+    val port: Int,
+    val scopes: List<String>,
+    /** HTTPS only (self-signed BimmerData CA, see docs/API.md). */
+    val https: Boolean = false,
+    /** SHA-256 of the CA certificate to trust, `AB:CD:…` (HTTPS on). */
+    val certificateSha256: String? = null,
+    /** `sha256//…` public-key pin for `curl --pinnedpubkey` (HTTPS on). */
+    val publicKeyPin: String? = null,
+)
 
 data class SettingsPatch(val defaultMode: ConnectMode? = null, val autoConnectOnCable: Boolean? = null)
 
