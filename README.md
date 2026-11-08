@@ -21,7 +21,7 @@ Every release is signed with the same key. You can check an APK before installin
 
 ```sh
 apksigner verify --print-certs BimmerData-<version>.apk
-# Signer #1 certificate SHA-256 digest: f261fe6cc0acba09ffbb5caf9b96f6da947bce7bf5dc8c6568973dd3de8cd12c
+# V2 Signer: certificate SHA-256 digest: f261fe6cc0acba09ffbb5caf9b96f6da947bce7bf5dc8c6568973dd3de8cd12c
 ```
 
 The SHA-256 of each APK is published next to it in the release.
