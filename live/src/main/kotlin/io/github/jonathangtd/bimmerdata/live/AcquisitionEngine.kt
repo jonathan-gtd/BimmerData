@@ -7,18 +7,27 @@ import io.github.jonathangtd.bimmerdata.ediabas.EdInterfaceBase
 import io.github.jonathangtd.bimmerdata.ediabas.EdInterfaceObd
 import io.github.jonathangtd.bimmerdata.ediabas.EdiabasNet
 import io.github.jonathangtd.bimmerdata.ediabas.ResultData
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -51,13 +60,22 @@ import kotlin.coroutines.coroutineContext
  * [Config.reconnectAfterFailedCycles] times in a row, the interface is reconnected. A definition
  * the ECU refuses is split to find unsupported ids ([unsupported]); if none is found the block
  * size limit of that SGBD is halved (the ECU may accept fewer values than the SGBD).
+ *
+ * Shared cable ([CableExecutor]): the engine is the only owner of [iface] and of its interpreter.
+ * One-off operations ([exclusive]: Tool32, vehicle scan, fault memory, API) are queued and run on
+ * the worker thread between two read cycles: one operation per cycle while measurements are
+ * read, all of them in a row when nothing is read. Afterwards every fast-path block of an SGBD the
+ * operation selected is defined again (a job of the same SGBD may have redefined or cleared F0;
+ * other ECUs are covered by the 7F 21 31 "definition lost" detection and by restoring the
+ * communication parameters before each native read). An operation longer than
+ * [Config.pauseThresholdMs] while measurements are read is reported in [pauses].
  */
 class AcquisitionEngine(
     private val iface: EdInterfaceBase,
     private val catalog: EdiabasMeasurementCatalog,
     private val config: Config = Config(),
     private val clock: () -> Long = System::currentTimeMillis,
-) : LiveDataSource, AutoCloseable {
+) : LiveDataSource, CableExecutor, AutoCloseable {
 
     data class Config(
         /** 1..42: values per dynamic record (the SGBD refuses more than 42). */
@@ -77,6 +95,8 @@ class AcquisitionEngine(
         val jobIntervalFactor: Double = 2.0,
         /** Longest period the duration rule may give a job group. */
         val jobMaxIntervalMs: Long = 5000,
+        /** A one-off operation at least this long while measurements are read is reported in [pauses]. */
+        val pauseThresholdMs: Long = 1000,
     )
 
     private val _samples = MutableStateFlow<Map<String, Sample>>(emptyMap())
@@ -106,6 +126,25 @@ class AcquisitionEngine(
     @Volatile private var loopJob: Job? = null
     @Volatile private var abortRequested = false
     @Volatile private var closed = false
+
+    // ---- one-off operations (shared cable) ----
+    private class Op<T>(val reason: String, val block: (CableAccess) -> T) {
+        val result = CompletableDeferred<T>()
+        @Volatile var cancelled = false
+    }
+
+    private val opsLock = Any()
+    private val ops = ArrayDeque<Op<*>>()
+    private val opSignal = MutableStateFlow(0L)
+    @Volatile private var currentOp: Op<*>? = null
+    @Volatile private var opAbort = false
+
+    private val _pauses = MutableSharedFlow<AcquisitionPause>(extraBufferCapacity = 16, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    override val pauses: SharedFlow<AcquisitionPause> = _pauses.asSharedFlow()
+
+    /** Number of one-off operations run so far (tests, diagnostics). */
+    @Volatile var exclusiveRuns: Long = 0
+        private set
 
     // ---- worker thread state ----
     private var ediabas: EdiabasNet? = null
@@ -141,12 +180,90 @@ class AcquisitionEngine(
         }
     }
 
-    /** Stops the loop and releases the interface, asynchronously. */
+    /** Stops the loop and releases the interface, asynchronously. Queued one-off operations fail. */
     fun stop() {
         val job = loopJob ?: return
         abortRequested = true
         job.cancel()
         runCatching { iface.transmitCancel(true) }
+        failQueued("Disconnected")
+    }
+
+    // ---------------------------------------------------------------- shared cable
+
+    override suspend fun <T> exclusive(reason: String, block: (CableAccess) -> T): T {
+        val op = Op(reason, block)
+        synchronized(opsLock) {
+            if (closed || abortRequested || loopJob == null) throw CableUnavailableException("Not connected")
+            ops.addLast(op)
+        }
+        opSignal.update { it + 1 }
+        try {
+            return op.result.await()
+        } catch (ex: CancellationException) {
+            if (op.result.isCompleted) throw ex
+            op.cancelled = true
+            if (currentOp === op) abortCurrentOp()
+            throw ex
+        }
+    }
+
+    /** Aborts the running one-off operation, if any (between opcodes / pending receive). */
+    private fun abortCurrentOp() {
+        opAbort = true
+        runCatching { iface.transmitCancel(true) }
+    }
+
+    private fun failQueued(message: String) {
+        val pending = synchronized(opsLock) { ops.toList().also { ops.clear() } }
+        pending.forEach { it.result.completeExceptionally(CableUnavailableException(message)) }
+    }
+
+    private fun pollOp(): Op<*>? = synchronized(opsLock) {
+        while (ops.isNotEmpty()) {
+            val op = ops.removeFirst()
+            if (!op.cancelled) return@synchronized op
+            op.result.cancel()
+        }
+        null
+    }
+
+    private fun hasOps(): Boolean = synchronized(opsLock) { ops.isNotEmpty() }
+
+    /** Runs one queued operation (or all of them when [all]) on the worker thread. */
+    private fun runOps(ed: EdiabasNet, all: Boolean) {
+        while (true) {
+            val op = pollOp() ?: return
+            runOp(ed, op)
+            if (!all) return
+        }
+    }
+
+    private fun <T> runOp(ed: EdiabasNet, op: Op<T>) {
+        currentOp = op
+        opAbort = false
+        runCatching { iface.transmitCancel(false) }
+        val access = CableAccess(ed, iface) { opAbort || abortRequested || op.cancelled }
+        val sgbdBefore = ed.sgbdFileName
+        val started = clock()
+        exclusiveRuns++
+        try {
+            op.result.complete(op.block(access))
+        } catch (ex: Throwable) {
+            op.result.completeExceptionally(if (ex is CancellationException) CableUnavailableException("Cancelled") else ex)
+        } finally {
+            currentOp = null
+            opAbort = false
+            if (!abortRequested) runCatching { iface.transmitCancel(false) }
+        }
+        // The operation may have run jobs of an SGBD read on the fast path (e.g. its own
+        // STATUS_MESSWERTBLOCK_LESEN): define those blocks again before trusting a native decode.
+        if (!ed.sgbdFileName.equals(sgbdBefore, ignoreCase = true)) access.touched += EdiabasMeasurementCatalog.normalize(ed.sgbdFileName)
+        plan.forEach { if (it is BlockGroup && it.sgbd in access.touched) it.reader.invalidate() }
+        val ended = clock()
+        if (plan.isNotEmpty() && ended - started >= config.pauseThresholdMs) {
+            _pauses.tryEmit(AcquisitionPause(started, ended, op.reason))
+        }
     }
 
     /** [stop], then waits until the interface is released (e.g. before another user opens the cable). */
@@ -194,7 +311,7 @@ class AcquisitionEngine(
         iface.transmitCancel(false)
         val ed = ediabas ?: EdiabasNet(listOf("EcuPath=${catalog.ecuDir.path}", config.ediabasConfig).filter { it.isNotBlank() }.joinToString(";")).also {
             it.edInterfaceClass = iface
-            it.abortJobFunc = { abortRequested }
+            it.abortJobFunc = { abortRequested || (currentOp != null && (opAbort || currentOp?.cancelled == true)) }
             ediabas = it
         }
         cycleTimes.clear()
@@ -213,6 +330,7 @@ class AcquisitionEngine(
                         connectFailures++
                         lastError = err
                         _status.value = AcquisitionStatus(AcquisitionState.Error, 0.0, errorCount, err)
+                        failQueued(err) // one-off operations do not wait for a reconnection
                         waitOrChange(backoff(connectFailures))
                         continue
                     }
@@ -223,9 +341,15 @@ class AcquisitionEngine(
                 if (plan.isEmpty()) {
                     cycleTimes.clear()
                     _status.value = AcquisitionStatus(AcquisitionState.Running, 0.0, errorCount, idleMessage())
-                    effective.first { it != plannedFor }
+                    val sig = opSignal.value
+                    if (hasOps()) {
+                        runOps(ed, all = true) // nothing to read: run them back to back
+                        continue
+                    }
+                    merge(effective.filter { it != plannedFor }.map { }, opSignal.filter { it != sig }.map { }).first()
                     continue
                 }
+                runOps(ed, all = false) // one-off operation between two read cycles
                 val now = clock()
                 val due = plan.filter { it.retryAt <= now }
                 if (due.isEmpty()) {
@@ -270,6 +394,7 @@ class AcquisitionEngine(
             }
         } finally {
             disconnect()
+            if (abortRequested || closed) failQueued("Disconnected")
             _status.value = AcquisitionStatus(AcquisitionState.Stopped, 0.0, errorCount, null)
         }
     }
@@ -467,9 +592,11 @@ class AcquisitionEngine(
     private fun backoff(failures: Int): Long =
         (config.retryDelayMinMs shl (failures - 1).coerceIn(0, 16)).coerceAtMost(config.retryDelayMaxMs)
 
-    /** Waits [ms] or until the measurement set changes. */
+    /** Waits [ms], or until the measurement set changes or a one-off operation is queued. */
     private suspend fun waitOrChange(ms: Long) {
-        withTimeoutOrNull(ms) { effective.drop(1).first() }
+        val sig = opSignal.value
+        if (hasOps()) return
+        withTimeoutOrNull(ms) { merge(effective.drop(1).map { }, opSignal.filter { it != sig }.map { }).first() }
     }
 
     private fun markCycle() {

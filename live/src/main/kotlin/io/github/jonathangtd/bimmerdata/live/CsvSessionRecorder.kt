@@ -39,6 +39,11 @@ import java.util.concurrent.atomic.AtomicReference
  *   [staleAfterMs] (ECU not answering) or missing. State values are written as numbers; only
  *   results without a number are written as text. Cells with `;`, `"` or line breaks are quoted.
  * - [mark] writes its label (or "mark N") in the `marker` column of an immediate extra row.
+ * - Pause line: when a one-off operation (Tool32 job, fault read...) kept the shared cable for at
+ *   least a second ([LiveDataSource.pauses]), a row with every value cell empty is written at the
+ *   time the reading stopped, with `pause <duration> ms: <reason>` in the `marker` column, e.g.
+ *   `pause 1840 ms: Faults: E89X FS_LESEN_FUNKTIONAL`. No value was read between that row and the
+ *   next one. A marker starting with `pause ` and a number is always such a line.
  *
  * The columns are fixed at [start] (from [columns]); [pin] is called with them so the source
  * keeps reading them while recording, even if the dashboard shows another page.
@@ -114,7 +119,20 @@ class CsvSessionRecorder(
             writer.write("﻿")
             writer.write(header(cols))
             writer.write("\r\n")
-            merge(source.samples, markTrigger.map { source.samples.value }).collect { samples ->
+            merge(source.samples, markTrigger.map { source.samples.value }, source.pauses).collect { event ->
+                if (event is AcquisitionPause) {
+                    if (event.endMs < startedAt) return@collect
+                    val rowTime = maxOf(event.startMs, startedAt, lastRowTime)
+                    writer.write(row(cols, emptyMap(), rowTime, startedAt, pauseMarker(event)))
+                    writer.write("\r\n")
+                    lastRowTime = rowTime
+                    _state.update { it.copy(rows = it.rows + 1) }
+                    writer.flush()
+                    lastFlush = clock()
+                    return@collect
+                }
+                @Suppress("UNCHECKED_CAST")
+                val samples = event as Map<String, Sample>
                 val marker = pendingMarker.getAndSet(null)
                 val newest = cols.maxOfOrNull { samples[it.id]?.timestampMs ?: Long.MIN_VALUE } ?: Long.MIN_VALUE
                 val fresh = newest >= startedAt && newest > lastRowTime
@@ -175,6 +193,9 @@ class CsvSessionRecorder(
         private val FileTime: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss", Locale.ROOT)
 
         const val MimeType = "text/csv"
+
+        /** `marker` cell of a pause line: "pause 1840 ms: Tool32: MSV70 FS_LESEN". */
+        fun pauseMarker(p: AcquisitionPause): String = "pause ${p.durationMs.coerceAtLeast(0)} ms: ${p.reason}"
 
         /** bimmerdata_YYYYMMDD_HHMMSS.csv (local time). */
         fun fileName(timeMs: Long, zone: ZoneId = ZoneId.systemDefault()): String =

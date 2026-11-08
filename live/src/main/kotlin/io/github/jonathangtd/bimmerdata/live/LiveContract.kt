@@ -3,7 +3,9 @@
  */
 package io.github.jonathangtd.bimmerdata.live
 
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emptyFlow
 
 /*
  * Contract between the acquisition engine (producer) and the dashboard / Android Auto / logger
@@ -58,11 +60,22 @@ data class AcquisitionStatus(
     val message: String? = null,
 )
 
+/**
+ * The live reading stopped for a while because a one-off operation (Tool32 job, fault read...) had
+ * the cable: no sample between [startMs] and [endMs] (epoch ms). Reported only above a threshold.
+ */
+data class AcquisitionPause(val startMs: Long, val endMs: Long, val reason: String) {
+    val durationMs: Long get() = endMs - startMs
+}
+
 /** Producer side: reads the requested measurements in a loop while running. */
 interface LiveDataSource {
     /** Latest sample per [Measurement.id]. */
     val samples: StateFlow<Map<String, Sample>>
     val status: StateFlow<AcquisitionStatus>
+
+    /** Gaps in the reading caused by one-off operations on the shared cable (default: none). */
+    val pauses: Flow<AcquisitionPause> get() = emptyFlow()
 
     /** Replaces the set of measurements to read (e.g. those visible on the current page). */
     fun setMeasurements(measurements: List<Measurement>)
