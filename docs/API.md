@@ -66,7 +66,7 @@ A typical agent session:
 2. `GET /api/v1/status` – connected? If not, `POST /api/v1/connect` (`{"mode":"simulation"}` needs no car).
    `GET /api/v1/profiles` – which profile (car, main ECUs, pages) is active; a fresh install has
    none: `POST /api/v1/profiles` creates one. The dashboard routes act on the active profile.
-3. `GET /api/v1/ecus`, `GET /api/v1/ecus/msv70/measurements?q=temp` – find measurement ids.
+3. `GET /api/v1/ecus`, `GET /api/v1/ecus/<sgbd>/measurements?q=temp` – find measurement ids.
 4. `GET /api/v1/card-types` – what a card can be (a page is a `columns × rows` grid).
 5. `POST /api/v1/dashboard/car/pages`, `POST …/pages/{page}/cards` – build.
 6. `GET /api/v1/dashboard/car/pages/{page}/render.png` – look at the result, adjust with `PATCH`.
@@ -85,27 +85,27 @@ curl -s -H "$H" "$BD/status"
 curl -s -H "$H" -X POST "$BD/connect" -d '{"mode":"simulation"}'
 
 # Measurements of the DME, filtered
-curl -s -H "$H" "$BD/ecus/msv70/measurements?q=temp"
+curl -s -H "$H" "$BD/ecus/<sgbd>/measurements?q=temp"
 
 # Read two values now (waits for fresh samples)
-curl -s -H "$H" -X POST "$BD/values/read" -d '{"ids":["msv70/0x4402","msv70/0x4300"]}'
+curl -s -H "$H" -X POST "$BD/values/read" -d '{"ids":["<sgbd>/<id>","<sgbd>/<id2>"]}'
 
 # Sample for 10 s: series with min / max / mean
-curl -s -H "$H" -X POST "$BD/values/read" -d '{"ids":["msv70/0x4402"],"seconds":10}'
+curl -s -H "$H" -X POST "$BD/values/read" -d '{"ids":["<sgbd>/<id>"],"seconds":10}'
 
 # Keep reading for 5 minutes, poll the latest values, get the last minute of history
-curl -s -H "$H" -X POST "$BD/values/watch" -d '{"ids":["msv70/0x4402"],"seconds":300}'
-curl -s -H "$H" "$BD/values?ids=msv70/0x4402"
-curl -s -H "$H" "$BD/history?ids=msv70/0x4402&seconds=60"
+curl -s -H "$H" -X POST "$BD/values/watch" -d '{"ids":["<sgbd>/<id>"],"seconds":300}'
+curl -s -H "$H" "$BD/values?ids=<sgbd>/<id>"
+curl -s -H "$H" "$BD/history?ids=<sgbd>/<id>&seconds=60"
 
 # Live stream (Server-Sent Events)
-curl -N -H "$H" "$BD/stream?ids=msv70/0x4402,msv70/0x4300&intervalMs=250"
+curl -N -H "$H" "$BD/stream?ids=<sgbd>/<id>,<sgbd>/<id2>&intervalMs=250"
 
 # Layout: whole dashboard, a new car page, a card, a change, a picture (scope layout for writes)
 curl -s -H "$H" "$BD/dashboard" > dashboard-backup.json
 curl -s -H "$H" -X POST "$BD/dashboard/car/pages" -d '{"name":"Temps","columns":4,"rows":1}'
 curl -s -H "$H" -X POST "$BD/dashboard/car/pages/1/cards" \
-     -d '{"type":"Dial","measurementIds":["msv70/0x4402"],"title":"Oil","warnAbove":120}'
+     -d '{"type":"Dial","measurementIds":["<sgbd>/<id>"],"title":"Oil","warnAbove":120}'
 curl -s -H "$H" -X PATCH "$BD/dashboard/car/pages/1/cards/<cardId>" -d '{"warnAbove":125}'
 curl -s -H "$H" "$BD/dashboard/car/pages/1/render.png" -o page.png
 
@@ -308,7 +308,7 @@ Scope `diag` (off by default; Settings › Local API › Permissions › Diagnos
   1. if the car is moving (above 3 km/h, from a speed measurement the app reads or the phone
      GPS), the call is refused at once: `409 vehicle_moving`; unknown speed is not a refusal;
   2. the phone shows a dialog over any screen and a high-priority notification with **Allow** /
-     **Refuse** ("A client of the local API wants to clear the fault memory of DME (msv70)");
+     **Refuse** ("A client of the local API wants to clear the fault memory of DME (<sgbd>)");
   3. the HTTP call **blocks** until the answer, at most 60 s: `200` with the result once allowed,
      `403 refused_on_phone`, `408 confirmation_timeout` when nobody answered (refused),
      `503 confirmation_unavailable` when the phone cannot ask.
@@ -317,13 +317,13 @@ Scope `diag` (off by default; Settings › Local API › Permissions › Diagnos
   with the same safety guard at the interface: flashing, coding writes, security access and the
   programming session are blocked whatever the job. `FS_LOESCHEN*` are refused on `/diag/jobs`:
   use `/diag/faults/clear`.
-- ECUs are named by address (`0x12`), SGBD (`msv70`) or name (`DME`), as listed by
+- ECUs are named by address (`0x12`), SGBD (`<sgbd>`) or name (`DME`), as listed by
   `GET /diag/vehicle`.
 
 ```sh
 curl -s -H "Authorization: Bearer $T" "$B/diag/faults?ecu=0x12"
 curl -s -m 180 -X POST -H "Authorization: Bearer $T" -d '{"ecu":"0x12"}' "$B/diag/faults/clear"
-curl -s -m 180 -X POST -H "Authorization: Bearer $T" -d '{"sgbd":"msv70","job":"STATUS_OEL"}' "$B/diag/jobs"
+curl -s -m 180 -X POST -H "Authorization: Bearer $T" -d '{"sgbd":"<sgbd>","job":"STATUS_OEL"}' "$B/diag/jobs"
 ```
 
 ## Implementation notes

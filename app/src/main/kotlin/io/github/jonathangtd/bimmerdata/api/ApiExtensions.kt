@@ -31,7 +31,7 @@ sealed interface CarWrite {
     /** Short English sentence, for logs and API errors. */
     val summary: String
 
-    /** Clear the fault memory of [ecu] (display name, e.g. "DME (msv70)"), or of every ECU. */
+    /** Clear the fault memory of [ecu] (display name, e.g. "DME (<sgbd>)"), or of every ECU. */
     data class ClearFaults(val ecu: String?) : CarWrite {
         override val summary: String get() = if (ecu == null) "Clear the fault memory of every ECU" else "Clear the fault memory of $ecu"
     }

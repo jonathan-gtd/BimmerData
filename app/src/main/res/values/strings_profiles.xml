@@ -6,7 +6,7 @@
     <string name="profile_new">New profile</string>
     <string name="profile_create">Create a profile</string>
     <string name="profile_create_button">Create</string>
-    <string name="profile_create_hint">A profile is a car, its ECUs and its own pages, for example “E90 330i · Lambda” or “120d · Turbo”. Cards are then picked straight from the profile’s ECUs.</string>
+    <string name="profile_create_hint">A profile is a car, its ECUs and its own pages, for example “My car · Lambda” or “Daily · Turbo”. Cards are then picked straight from the profile’s ECUs.</string>
     <string name="profile_import">Import a profile</string>
     <string name="profile_edit">Edit profile</string>
     <string name="profile_duplicate">Duplicate</string>
@@ -19,7 +19,7 @@
     <string name="profile_deleted">Profile “%1$s” deleted</string>
     <string name="profile_actions">Actions for %1$s</string>
     <string name="profile_name">Name</string>
-    <string name="profile_name_placeholder">E90 330i · Lambda</string>
+    <string name="profile_name_placeholder">My car · Lambda</string>
     <string name="profile_name_required">Give the profile a name</string>
     <string name="profile_series">Series</string>
     <string name="profile_model">Model</string>

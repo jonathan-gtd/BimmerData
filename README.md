@@ -25,7 +25,7 @@ Supported EDIABAS concepts so far: BMW-FAST (0x010F). DS2, KWP2000\* and D-CAN a
    (only `.prg` / `.grp` are copied into app storage; a re-import replaces them).
 2. Tap **Connect** and choose the **USB cable** (e.g. a K+DCAN-type FTDI cable via OTG), a
    **Bluetooth adapter** (Deep OBD firmware) or the **Simulation**; ignition on for a real car.
-3. Pick an SGBD (e.g. `msv70.prg`; for a `.grp` use **Identify variant**), pick a job, enter
+3. Pick an SGBD (the `.prg` of an ECU of your car; for a `.grp` use **Identify variant**), pick a job, enter
    arguments separated by `;` (e.g. `STATUS_MESSWERTBLOCK_LESEN` with `3;0x4402;0x4300`), **Run**.
 4. Results show every result set, JOB_STATUS, the job time and the telegram count; **Show raw
    frames** lists the telegrams sent / echoed / received with timestamps; **Repeat** runs the job
@@ -82,8 +82,8 @@ folder) and are skipped when it is not set.
 Inspect an ECU file from the command line:
 
 ```sh
-./gradlew :ediabas:prgDump --args="/path/to/Ecu/MSV70.PRG"              # jobs and tables
-./gradlew :ediabas:prgDump --args="/path/to/Ecu/MSV70.PRG MESSWERTETAB" # one table
+./gradlew :ediabas:prgDump --args="/path/to/Ecu/<ECU>.PRG"              # jobs and tables
+./gradlew :ediabas:prgDump --args="/path/to/Ecu/<ECU>.PRG MESSWERTETAB" # one table
 ```
 
 ## Credits

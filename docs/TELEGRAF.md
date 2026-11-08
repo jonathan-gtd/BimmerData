@@ -37,7 +37,7 @@ Then on the phone, **Settings › Telegraf export**:
 
 1. **URL**: `http://<server>:8186/api/v2/write`
 2. **Authentication**: Token, the `BIMMERDATA_TOKEN` of `.env`
-3. **Car name**: e.g. `E90 330i` (tag `car`, to tell several cars apart)
+3. **Car name**: e.g. `My car` (tag `car`, to tell several cars apart)
 4. **Test**, then enable **Export to Telegraf**.
 
 In Grafana (`http://<server>:3000`, user `admin`), import
@@ -65,9 +65,9 @@ One table, `bimmerdata`:
 | Column | Example | From |
 |---|---|---|
 | `time` | `2026-11-08 18:00:00.25+00` | when the value was read in the car (not when it was uploaded), UTC |
-| `car` | `E90 330i` | the active profile's car (series and model), else Settings › Telegraf export › Car name |
-| `profile` | `E90 330i · Lambda` | the active profile (left out when there is none) |
-| `ecu` | `msv70`, `gps` | SGBD of the measurement; `gps` for the phone's position |
+| `car` | `My car` | the active profile's car (series and model), else Settings › Telegraf export › Car name |
+| `profile` | `My car · Lambda` | the active profile (left out when there is none) |
+| `ecu` | `<sgbd>`, `gps` | SGBD of the measurement; `gps` for the phone's position |
 | `id` | `0x4402`, `STATUS_OEL/STAT_PHY_NIVOEL_WERT`, `speed` | measurement key (same as the dashboard) |
 | `label` | `Oil temperature` | label shown in the app |
 | `unit` | `°C` | unit (left empty when there is none) |
@@ -107,7 +107,7 @@ Example query (5-second averages of the oil temperature):
 ```sql
 SELECT time_bucket('5 seconds', time) AS t, avg(value)
 FROM bimmerdata
-WHERE car = 'E90 330i' AND ecu = 'msv70' AND id = '0x4402' AND time > now() - interval '1 day'
+WHERE car = 'My car' AND ecu = '<sgbd>' AND id = '<id>' AND time > now() - interval '1 day'
 GROUP BY 1 ORDER BY 1;
 ```
 

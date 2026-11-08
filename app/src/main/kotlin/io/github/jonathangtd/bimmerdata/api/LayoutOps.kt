@@ -86,7 +86,7 @@ object LayoutOps {
         }
         card.measurementIds.forEachIndexed { i, id ->
             if (!id.contains('/') || id.startsWith('/') || id.endsWith('/')) {
-                issues += LayoutIssue("$path.measurementIds[$i]", "invalid_measurement_id", "'$id' is not a measurement id ('<sgbd>/<key>', e.g. 'msv70/0x4402'); see GET /api/v1/ecus/{sgbd}/measurements")
+                issues += LayoutIssue("$path.measurementIds[$i]", "invalid_measurement_id", "'$id' is not a measurement id ('<sgbd>/<key>', e.g. '<sgbd>/<id>'); see GET /api/v1/ecus/{sgbd}/measurements")
             }
         }
         if (card.colSpan < 1 || card.rowSpan < 1) issues += LayoutIssue(path, "invalid_span", "colSpan and rowSpan must be ≥ 1")

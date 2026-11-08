@@ -91,7 +91,7 @@ class AndroidDiagBackend(context: Context) : DiagBackend {
 
     // ---- helpers ----
 
-    /** ECU of the current vehicle by address ("0x12" / "12"), SGBD ("msv70") or name ("DME"). */
+    /** ECU of the current vehicle by address ("0x12" / "12"), SGBD ("<sgbd>") or name ("DME"). */
     private fun resolve(ecu: String): VehicleEcu {
         val v = vehicles.state.value.current ?: throw noVehicle()
         val key = ecu.trim()

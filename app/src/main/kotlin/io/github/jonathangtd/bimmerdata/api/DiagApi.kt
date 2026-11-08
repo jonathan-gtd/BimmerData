@@ -39,7 +39,7 @@ data class DiagEcuView(
     val address: String,
     val name: String,
     val description: String? = null,
-    /** Variant SGBD (ECU description file), e.g. "msv70"; null when unknown. */
+    /** Variant SGBD (ECU description file), e.g. "<sgbd>"; null when unknown. */
     val sgbd: String? = null,
     /** Result of the last fault read (ok, faults, noAnswer, error…); null before any read. */
     val status: String? = null,
@@ -74,7 +74,7 @@ interface DiagBackend {
     fun vehicle(): DiagVehicleView?
 
     /**
-     * Display name of the ECU [ecu] (address "0x12", SGBD "msv70" or ECU name), for the
+     * Display name of the ECU [ecu] (address "0x12", SGBD "<sgbd>" or ECU name), for the
      * confirmation on the phone. Throws [ApiException] 404 when the vehicle has no such ECU.
      */
     fun ecuName(ecu: String): String
@@ -113,7 +113,7 @@ class DiagApi(
             "Read the fault memory",
             "Reads the fault memory of every ECU of the vehicle, or of one (`ecu`), from the car: read-only, no confirmation needed. It may take a while (about 1 s per ECU); the live reading goes on between the jobs. With `cached=true`, answers the last read without talking to the car.",
             params = listOf(
-                Param("ecu", "query", "One ECU: address (`0x12`), SGBD (`msv70`) or name; absent = every ECU.", S.str(), required = false),
+                Param("ecu", "query", "One ECU: address (`0x12`), SGBD (`<sgbd>`) or name; absent = every ECU.", S.str(), required = false),
                 Param("cached", "query", "Answer the last read without talking to the car.", S.bool(default = false), required = false),
             ),
             reply = Reply(description = "Vehicle with its faults", schema = S.ref("DiagVehicle")),
@@ -127,7 +127,7 @@ class DiagApi(
             "POST", "/api/v1/diag/faults/clear", RouteAccess.Needs(Scope.Diag), TAG, "clearFaults",
             "Clear the fault memory (writes to the car)",
             "**Writes to the car.** Clears the fault memory of one ECU (`ecu`) or of every ECU (body `{}`), then reads it again. " + CONFIRM_TEXT,
-            body = Body(S.obj(null, emptyList(), false, null, "ecu" to S.str("Address (`0x12`), SGBD (`msv70`) or ECU name; absent = every ECU.")),
+            body = Body(S.obj(null, emptyList(), false, null, "ecu" to S.str("Address (`0x12`), SGBD (`<sgbd>`) or ECU name; absent = every ECU.")),
                 example = buildJsonObject { put("ecu", "0x12") }, required = false),
             reply = Reply(description = "Vehicle with its faults after the clear", schema = S.ref("DiagVehicle")),
             errors = CONFIRM_ERRORS + (404 to "No vehicle or no such ECU."),
@@ -145,17 +145,17 @@ class DiagApi(
             "**May write to the car.** Runs one job of an SGBD, like the in-app Tool32: the same safety guard blocks flashing, coding and security access at the interface whatever the job. " +
                 "Fault clearing has its own route (`/diag/faults/clear`). " + CONFIRM_TEXT,
             body = Body(S.obj(null, listOf("sgbd", "job"), false, null,
-                "sgbd" to S.str("SGBD (ECU file) name, e.g. `msv70`; a group file (`d_motor`) is resolved by talking to the ECU."),
+                "sgbd" to S.str("SGBD (ECU file) name, e.g. `<sgbd>`; a group file (`d_motor`) is resolved by talking to the ECU."),
                 "job" to S.str("Job name, e.g. `STATUS_OEL`."),
                 "args" to S.str("Job arguments, `;`-separated, as in Tool32.")),
-                example = buildJsonObject { put("sgbd", "msv70"); put("job", "STATUS_OEL") }),
+                example = buildJsonObject { put("sgbd", "<sgbd>"); put("job", "STATUS_OEL") }),
             reply = Reply(description = "Job results", schema = S.ref("DiagJob")),
             errors = CONFIRM_ERRORS + (400 to "Missing or invalid sgbd / job / args."),
         ) { call ->
             val b = call.bodyObject()
             b.allowOnly("sgbd", "job", "args")
             val sgbd = b.string("sgbd")?.trim()?.lowercase(Locale.ROOT)?.removeSuffix(".prg")?.removeSuffix(".grp")
-                ?.takeIf { NAME.matches(it) } ?: throw badRequest("'sgbd' must be an SGBD name such as msv70")
+                ?.takeIf { NAME.matches(it) } ?: throw badRequest("'sgbd' must be an SGBD name such as <sgbd>")
             val job = b.string("job")?.trim()?.uppercase(Locale.ROOT)?.takeIf { NAME.matches(it) } ?: throw badRequest("'job' must be a job name such as STATUS_OEL")
             if (job in CLEAR_JOBS) throw badRequest("Use POST /api/v1/diag/faults/clear to clear the fault memory")
             val args = b.string("args").orEmpty()
@@ -208,7 +208,7 @@ class DiagApi(
                 "symptom" to S.str(), "presence" to S.str(), "warning" to S.str())
             val ecu = S.obj("One ECU.", listOf("address", "name"), false, null,
                 "address" to S.str("Diagnostic address, hex.", "0x12"), "name" to S.str(example = "DME"), "description" to S.str(),
-                "sgbd" to S.str(example = "msv70"), "status" to S.str("Result of the last fault read; null before any read."),
+                "sgbd" to S.str(example = "<sgbd>"), "status" to S.str("Result of the last fault read; null before any read."),
                 "faults" to S.arr(fault), "message" to S.str(), "readAtMs" to S.int(format = "int64"))
             return mapOf(
                 "DiagVehicle" to S.obj("Detected vehicle (the VIN is never returned).", listOf("label", "ecus"), false, null,

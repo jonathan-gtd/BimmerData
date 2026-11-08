@@ -140,7 +140,7 @@
     <string name="empty_hint">Show any live value of any ECU of your car: engine, gearbox, climate, instrument cluster, body modules…</string>
     <string name="dashboard_name">Dashboard name</string>
     <string name="dashboard_rename">Rename dashboard</string>
-    <string name="dashboard_name_hint">Shown at the top, e.g. your car (“330i”). Leave empty to show BimmerData.</string>
+    <string name="dashboard_name_hint">Shown at the top, e.g. your car’s name. Leave empty to show BimmerData.</string>
     <string name="sgbd_search">Search an ECU: name or description</string>
     <string name="sgbd_detected">Detected in your car</string>
     <string name="sgbd_loading">Reading the ECU folder…</string>

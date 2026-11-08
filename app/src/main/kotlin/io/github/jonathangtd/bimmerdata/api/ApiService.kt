@@ -145,7 +145,7 @@ class ApiService(
         val found = ids.distinct().map { it to meta(it) }
         val unknown = found.filter { it.second == null }.map { it.first }
         if (unknown.isNotEmpty()) {
-            throw ApiException(404, "unknown_measurement", "Unknown measurement id(s): ${unknown.joinToString()}. Ids look like 'msv70/0x4402'; list them with GET /api/v1/ecus/{sgbd}/measurements",
+            throw ApiException(404, "unknown_measurement", "Unknown measurement id(s): ${unknown.joinToString()}. Ids look like '<sgbd>/<id>'; list them with GET /api/v1/ecus/{sgbd}/measurements",
                 JsonArray(unknown.map(::JsonPrimitive)))
         }
         return found.map { it.second!! }
@@ -274,7 +274,7 @@ class ApiService(
         val list = b.stringList("ecus") ?: return null
         if (list.size > Profiles.MAX_ECUS) throw invalidProfile("At most ${Profiles.MAX_ECUS} ECUs")
         val bad = list.filter { Profiles.normalizeEcus(listOf(it)).isEmpty() }
-        if (bad.isNotEmpty()) throw invalidProfile("Invalid ECU name(s): ${bad.joinToString()} (SGBD names such as 'msv70', see GET /api/v1/ecus)")
+        if (bad.isNotEmpty()) throw invalidProfile("Invalid ECU name(s): ${bad.joinToString()} (SGBD names such as '<sgbd>', see GET /api/v1/ecus)")
         return Profiles.normalizeEcus(list)
     }
 
@@ -332,7 +332,7 @@ class ApiService(
         val pageParam = Param("page", "path", "Page id, or its 0-based index in the page list.", S.str(), example = JsonPrimitive("0"))
         val profileParam = Param("profile", "path", "Profile id (see GET /api/v1/profiles).", S.str(), example = JsonPrimitive("a1b2c3d4e5"))
         val cardParam = Param("card", "path", "Card id (see the page's `cards`).", S.str(), example = JsonPrimitive("k3j4h5g6f7"))
-        val idsBody = "ids" to S.arr(S.str(example = "msv70/0x4402"), "Measurement ids (`<sgbd>/<key>`), at most 64.", 1, 64)
+        val idsBody = "ids" to S.arr(S.str(example = "<sgbd>/<id>"), "Measurement ids (`<sgbd>/<key>`), at most 64.", 1, 64)
         val layoutErrors = mapOf(404 to "Unknown page or card.", 409 to "Conflict: overlapping cards, page full, duplicate id.", 422 to "Invalid card or grid (details list each problem).", 400 to "Malformed body.")
 
         return listOf(
@@ -404,7 +404,7 @@ class ApiService(
                 "List the measurements of one ECU",
                 "All live values of the SGBD; `table` ones (MESSWERTETAB) are read fastest. Filter with `q` (case-insensitive, matches id, label, unit and result name).",
                 params = listOf(
-                    Param("sgbd", "path", "SGBD name from /ecus.", S.str(), example = JsonPrimitive("msv70")),
+                    Param("sgbd", "path", "SGBD name from /ecus.", S.str(), example = JsonPrimitive("<sgbd>")),
                     Param("q", "query", "Search text, e.g. `temp`, `lambda`, `°C`.", S.str(), example = JsonPrimitive("temp")),
                     Param("limit", "query", "Max results (default 200).", S.int(min = 1, max = 2000, default = 200)),
                     Param("offset", "query", "Skip this many results.", S.int(min = 0, default = 0)),
@@ -443,10 +443,10 @@ class ApiService(
                 "GET", "/api/v1/values", RouteAccess.Needs(Scope.Read), "Live data", "getValues",
                 "Latest values (no waiting)",
                 "Returns the latest sample of each id right away. Only measurements that someone reads (dashboard page on screen, Android Auto, recorder, API watch) stay fresh; others come back `stale` or `no_data`. Without `ids`, returns every measurement read right now. To make sure values are fresh, use POST /api/v1/values/read or a watch.",
-                params = listOf(Param("ids", "query", "Comma-separated measurement ids.", S.str(), required = false, example = JsonPrimitive("msv70/0x4402,msv70/0x4300"))),
+                params = listOf(Param("ids", "query", "Comma-separated measurement ids.", S.str(), required = false, example = JsonPrimitive("<sgbd>/<id>,<sgbd>/<id2>"))),
                 reply = Reply(description = "Values", schema = S.obj(null, listOf("values"), false, null, "values" to S.arr(S.ref("Value")), "connection" to S.str()),
                     example = buildJsonObject {
-                        putJsonArray("values") { addJsonObject { put("id", "msv70/0x4402"); put("label", "Öltemperatur"); put("unit", "°C"); put("value", 92.4); put("timestampMs", 1762606992000); put("ageMs", 180); put("status", "fresh") } }
+                        putJsonArray("values") { addJsonObject { put("id", "<sgbd>/<id>"); put("label", "Öltemperatur"); put("unit", "°C"); put("value", 92.4); put("timestampMs", 1762606992000); put("ageMs", 180); put("status", "fresh") } }
                         put("connection", "connected")
                     }),
             ) { call ->
@@ -465,7 +465,7 @@ class ApiService(
                 body = Body(S.obj(null, listOf("ids"), false, null, idsBody,
                     "seconds" to S.int("Sample for this many seconds (0 = just one fresh value each).", 0, 60, default = 0),
                     "timeoutMs" to S.int("How long to wait for fresh values.", 100, 15000, default = 4000)),
-                    example = buildJsonObject { putJsonArray("ids") { add("msv70/0x4402"); add("msv70/0x4300") }; put("seconds", 5) }),
+                    example = buildJsonObject { putJsonArray("ids") { add("<sgbd>/<id>"); add("<sgbd>/<id2>") }; put("seconds", 5) }),
                 reply = Reply(description = "Values (and series when seconds > 0)", schema = S.obj(null, listOf("values"), false, null,
                     "values" to S.arr(S.ref("Value")), "series" to S.arr(S.ref("Series"), "Only when seconds > 0."), "waitedMs" to S.int())),
                 errors = mapOf(400 to "Malformed body.", 404 to "Unknown measurement id (details lists them).", 409 to "Not connected."),
@@ -502,7 +502,7 @@ class ApiService(
                 "Adds `ids` to what the engine reads for `seconds` (default 300) without blocking. Calling it again extends the watch. Useful for scripts that poll GET /api/v1/values or collect GET /api/v1/history. Each extra measurement slows the others down, so watch only what you need.",
                 body = Body(S.obj(null, listOf("ids"), false, null, idsBody,
                     "seconds" to S.int("Watch duration.", 1, 3600, default = 300)),
-                    example = buildJsonObject { putJsonArray("ids") { add("msv70/0x4402") }; put("seconds", 600) }),
+                    example = buildJsonObject { putJsonArray("ids") { add("<sgbd>/<id>") }; put("seconds", 600) }),
                 reply = Reply(description = "Watch registered", schema = S.obj(null, listOf("ids", "expiresAtMs"), false, null,
                     "ids" to S.arr(S.str()), "expiresAtMs" to S.int(format = "int64"))),
                 errors = mapOf(404 to "Unknown measurement id."),
@@ -546,7 +546,7 @@ class ApiService(
             Route(
                 "GET", "/api/v1/stream", RouteAccess.Needs(Scope.Read), "Live data", "streamValues",
                 "Server-Sent Events stream of live values",
-                "`text/event-stream`. Events: `samples` (data: {\"t\":epochMs,\"values\":{id:{\"v\":number,\"text\":string,\"t\":epochMs}}}) with the samples that changed, at most every `intervalMs`; `status` (data: Status) every 5 s; comment lines `: ping` keep the connection alive. With `ids` the measurements are read for as long as the stream is open. At most 4 streams at once. Example: `curl -N -H 'Authorization: Bearer …' 'http://phone:8765/api/v1/stream?ids=msv70/0x4402'`.",
+                "`text/event-stream`. Events: `samples` (data: {\"t\":epochMs,\"values\":{id:{\"v\":number,\"text\":string,\"t\":epochMs}}}) with the samples that changed, at most every `intervalMs`; `status` (data: Status) every 5 s; comment lines `: ping` keep the connection alive. With `ids` the measurements are read for as long as the stream is open. At most 4 streams at once. Example: `curl -N -H 'Authorization: Bearer …' 'http://phone:8765/api/v1/stream?ids=<sgbd>/<id>'`.",
                 params = listOf(
                     Param("ids", "query", "Comma-separated measurement ids; omitted = everything read right now.", S.str(), required = false),
                     Param("intervalMs", "query", "Minimum time between `samples` events (default 250).", S.int(min = 50, max = 10000, default = 250)),
@@ -571,8 +571,8 @@ class ApiService(
                     putJsonArray("phonePages") { addJsonObject {
                         put("name", "Engine"); put("columns", 2); put("rows", 4)
                         putJsonArray("cards") {
-                            addJsonObject { put("type", "Dial"); putJsonArray("measurementIds") { add("msv70/0x4402") }; put("title", "Oil"); put("colSpan", 1); put("rowSpan", 2) }
-                            addJsonObject { put("type", "Trend"); putJsonArray("measurementIds") { add("msv70/0x4300") }; put("col", 1); put("rowSpan", 2) }
+                            addJsonObject { put("type", "Dial"); putJsonArray("measurementIds") { add("<sgbd>/<id>") }; put("title", "Oil"); put("colSpan", 1); put("rowSpan", 2) }
+                            addJsonObject { put("type", "Trend"); putJsonArray("measurementIds") { add("<sgbd>/<id2>") }; put("col", 1); put("rowSpan", 2) }
                         }
                     } }
                     putJsonArray("carPages") { addJsonObject { put("name", "Engine"); put("columns", 4); put("rows", 1); putJsonArray("cards") {} } }
@@ -713,7 +713,7 @@ class ApiService(
                 "With `col` and/or `row` the card goes exactly there (409 `card_overlap` / 422 `out_of_grid` otherwise, with the free cells in the message). Without them it takes the first free slot of its span (reading order). The answer is the stored card with its id; `warnings` flags measurement ids missing from the ECU folder.",
                 params = listOf(targetParam, pageParam),
                 body = Body(S.ref("Card"), example = buildJsonObject {
-                    put("type", "Dial"); putJsonArray("measurementIds") { add("msv70/0x4402") }; put("title", "Oil"); put("warnAbove", 120); put("colSpan", 1); put("rowSpan", 2)
+                    put("type", "Dial"); putJsonArray("measurementIds") { add("<sgbd>/<id>") }; put("title", "Oil"); put("warnAbove", 120); put("colSpan", 1); put("rowSpan", 2)
                 }),
                 reply = Reply(201, "The new card", S.obj(null, listOf("card"), false, null, "card" to S.ref("Card"), "warnings" to S.arr(S.str()))),
                 errors = layoutErrors,
@@ -818,14 +818,14 @@ class ApiService(
                 "Create a profile",
                 "Creates a profile and (unless `activate` is false) makes it the active one, so the phone and Android Auto show it at once. It starts with no page; give `copyFrom` to copy the pages of another profile. A name already used gets a \" (2)\" suffix.",
                 body = Body(S.obj(null, listOf("name"), false, null,
-                    "name" to S.str("Profile name (≤ ${Profiles.MAX_NAME_LENGTH}).", "E90 330i · Knock"),
-                    "series" to S.str("Car series (free text).", "E90"),
-                    "model" to S.str("Car model (free text).", "330i"),
+                    "name" to S.str("Profile name (≤ ${Profiles.MAX_NAME_LENGTH}).", "My car · Knock"),
+                    "series" to S.str("Car series (free text).", "<series>"),
+                    "model" to S.str("Car model (free text).", "<model>"),
                     "vehicleId" to S.str("Link to a car of the Faults tab (its short VIN): the app picks this profile when it reads that car's VIN at connection."),
-                    "ecus" to S.arr(S.str(example = "msv70"), "Main ECUs (SGBD names); the card picker opens on them.", 0, Profiles.MAX_ECUS),
+                    "ecus" to S.arr(S.str(example = "<sgbd>"), "Main ECUs (SGBD names); the card picker opens on them.", 0, Profiles.MAX_ECUS),
                     "copyFrom" to S.str("Id of a profile whose pages are copied."),
                     "activate" to S.bool("Make it the active profile (default true).")),
-                    example = buildJsonObject { put("name", "E90 330i · Knock"); put("series", "E90"); put("model", "330i"); putJsonArray("ecus") { add("msv70") } }),
+                    example = buildJsonObject { put("name", "My car · Knock"); put("series", "<series>"); put("model", "<model>"); putJsonArray("ecus") { add("<sgbd>") } }),
                 reply = Reply(201, "The new profile", S.ref("Profile")),
                 errors = mapOf(400 to "Malformed body.", 404 to "Unknown copyFrom profile.", 422 to "Invalid name, car or ECU list, or too many profiles."),
             ) { call ->
@@ -863,7 +863,7 @@ class ApiService(
                     "vehicleId" to S.str("Link to a car of the Faults tab; empty string removes the link."),
                     "ecus" to S.arr(S.str(), "Main ECUs (replaces the list).", 0, Profiles.MAX_ECUS),
                     "dashboard" to S.ref("Dashboard")),
-                    example = buildJsonObject { putJsonArray("ecus") { add("msv70"); add("egs") } }),
+                    example = buildJsonObject { putJsonArray("ecus") { add("<engine-sgbd>"); add("<gearbox-sgbd>") } }),
                 reply = Reply(description = "The profile", schema = S.ref("Profile")),
                 errors = mapOf(400 to "Malformed body.", 404 to "Unknown profile.", 422 to "Invalid field or layout (details: LayoutIssue[])."),
             ) { call ->
@@ -950,7 +950,7 @@ class ApiService(
             Route(
                 "POST", "/api/v1/connect", RouteAccess.Needs(Scope.Config), "Connection", "connect",
                 "Connect to the car or to the simulation",
-                "`usb`: K+DCAN cable plugged into the phone (the phone may ask the user for USB permission once). `bluetooth`: the Deep OBD Bluetooth adapter chosen in the phone's settings (paired on the phone). `simulation`: built-in simulated E90 (MSV70 engine ECU with moving values, 14 ECUs with a few faults), no car needed — ideal to try layouts. Waits up to `waitMs` for the connection to settle and returns the status.",
+                "`usb`: USB diagnostic cable plugged into the phone (the phone may ask the user for USB permission once). `bluetooth`: the Deep OBD Bluetooth adapter chosen in the phone's settings (paired on the phone). `simulation`: built-in simulated car (engine ECU with moving values, 14 ECUs with a few faults), no car needed — ideal to try layouts. Waits up to `waitMs` for the connection to settle and returns the status.",
                 body = Body(S.obj(null, emptyList(), false, null,
                     "mode" to S.str("Default: the last mode used (`lastMode` of the settings, what the phone's Connect button uses); 409 when no mode was ever chosen.", enum = listOf("usb", "bluetooth", "simulation")),
                     "waitMs" to S.int(min = 0, max = 20000, default = 6000)), required = false,
@@ -1082,7 +1082,7 @@ class ApiService(
                 "Change the Telegraf export",
                 "Changes `enabled`, `url`, `car` and / or `mode` (`live`: upload on any network; `afterTrip`: keep the points on the phone until an unmetered network such as home Wi-Fi). Authentication (`auth`, `username`, token, password) can only be changed on the phone: sending it answers 403.",
                 body = Body(S.obj(null, emptyList(), false, null,
-                    "enabled" to S.bool(), "url" to S.str(example = "http://192.168.1.10:8186/api/v2/write"), "car" to S.str(example = "E90 330i"),
+                    "enabled" to S.bool(), "url" to S.str(example = "http://192.168.1.10:8186/api/v2/write"), "car" to S.str(example = "My car"),
                     "mode" to S.str(enum = listOf("live", "afterTrip"))),
                     example = buildJsonObject { put("enabled", true); put("mode", "afterTrip") }),
                 reply = Reply(description = "Telegraf export after the change", schema = S.ref("TelegrafExport")),

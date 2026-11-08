@@ -6,7 +6,7 @@
     <string name="profile_new">Nouveau profil</string>
     <string name="profile_create">Créer un profil</string>
     <string name="profile_create_button">Créer</string>
-    <string name="profile_create_hint">Un profil, c’est une voiture, ses calculateurs et ses propres pages, par exemple « E90 330i · Lambda » ou « 120d · Turbo ». Les cartes se choisissent ensuite directement dans les calculateurs du profil.</string>
+    <string name="profile_create_hint">Un profil, c’est une voiture, ses calculateurs et ses propres pages, par exemple « Ma voiture · Lambda » ou « Quotidien · Turbo ». Les cartes se choisissent ensuite directement dans les calculateurs du profil.</string>
     <string name="profile_import">Importer un profil</string>
     <string name="profile_edit">Modifier le profil</string>
     <string name="profile_duplicate">Dupliquer</string>
@@ -19,7 +19,7 @@
     <string name="profile_deleted">Profil « %1$s » supprimé</string>
     <string name="profile_actions">Actions pour %1$s</string>
     <string name="profile_name">Nom</string>
-    <string name="profile_name_placeholder">E90 330i · Lambda</string>
+    <string name="profile_name_placeholder">Ma voiture · Lambda</string>
     <string name="profile_name_required">Donnez un nom au profil</string>
     <string name="profile_series">Série</string>
     <string name="profile_model">Modèle</string>

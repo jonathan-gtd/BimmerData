@@ -207,8 +207,8 @@ BimmerData reads live data from BMW ECUs (E-series, through a USB cable or a Dee
 1. On the phone: Settings › Local API › enable, pick the scopes, copy the base URL and the token.
 2. Send `Authorization: Bearer <token>` with every request (except this document). When HTTPS is on (Settings › Local API › HTTPS), use `https://` and trust the phone's own certificate: pin its public key (`curl --pinnedpubkey 'sha256//…'`) or trust the exported certificate file; both are shown on the phone.
 3. `GET /api/v1/status` — is the app connected? If not, `POST /api/v1/connect` with `{"mode":"simulation"}` (no car needed) or `{"mode":"usb"}` / `{"mode":"bluetooth"}` (needs scope `config`).
-4. Discover data: `GET /api/v1/ecus`, then `GET /api/v1/ecus/{sgbd}/measurements?q=temp`. A measurement id looks like `msv70/0x4402` (`<sgbd>/<key>`).
-5. Read values: `POST /api/v1/values/read` with `{"ids":["msv70/0x4402"]}` waits for fresh samples; add `"seconds":10` to sample for a while and get min / max / mean.
+4. Discover data: `GET /api/v1/ecus`, then `GET /api/v1/ecus/{sgbd}/measurements?q=temp`. A measurement id looks like `<sgbd>/<id>` (`<sgbd>/<key>`).
+5. Read values: `POST /api/v1/values/read` with `{"ids":["<sgbd>/<id>"]}` waits for fresh samples; add `"seconds":10` to sample for a while and get min / max / mean.
 
 ## Building dashboards
 - Layouts belong to **profiles** (a car, its main ECUs and its pages; `GET /api/v1/profiles`). The dashboard routes act on the active profile; `POST /api/v1/profiles/{profile}/activate` switches the phone and Android Auto to another one. A fresh install has no profile: `POST /api/v1/profiles` creates one (a `PUT /api/v1/dashboard` without profile creates one too).
@@ -249,7 +249,7 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
             "connection" to S.obj(null, listOf("state"), false, null,
                 "state" to S.str("disconnected, connecting, connected, failed. One connection for the whole app: Tool32 and fault jobs run on it between two read cycles.", enum = listOf("disconnected", "connecting", "connected", "failed")),
                 "mode" to S.str("usb (K+DCAN cable), bluetooth (Deep OBD adapter) or simulation", enum = listOf("usb", "bluetooth", "simulation")),
-                "label" to S.str("Interface name, e.g. \"Simulation (E90 with MSV70)\""),
+                "label" to S.str("Interface name, e.g. \"Simulation\""),
                 "message" to S.str("Why it failed."),
             ),
             "acquisition" to S.obj(null, listOf("state", "readsPerSecond", "errorCount"), false, null,
@@ -274,13 +274,13 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
         ))
         put("Ecu", S.obj(
             "An ECU description file (SGBD) that has live measurements.", listOf("sgbd", "source"), false, null,
-            "sgbd" to S.str("SGBD name, lower case, no extension.", "msv70"),
+            "sgbd" to S.str("SGBD name, lower case, no extension.", "<sgbd>"),
             "source" to S.str("`detected` = identified on the connected car; `catalog` = present in the imported ECU folder.", enum = listOf("detected", "catalog")),
         ))
         put("Measurement", S.obj(
             "A live value that can be read, logged or shown on a card.", listOf("id", "sgbd", "label", "unit", "source"), false, null,
-            "id" to S.str("Stable id used everywhere (cards, values, CSV): `<sgbd>/<key>`.", "msv70/0x4402"),
-            "sgbd" to S.str(example = "msv70"),
+            "id" to S.str("Stable id used everywhere (cards, values, CSV): `<sgbd>/<key>`.", "<sgbd>/<id>"),
+            "sgbd" to S.str(example = "<sgbd>"),
             "label" to S.str("Display label from the SGBD.", "Öltemperatur"),
             "unit" to S.str("Unit from the SGBD (may be empty).", "°C"),
             "min" to S.num("Plausible minimum, when known (gauge scales)."),
@@ -302,7 +302,7 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
         ))
         put("Value", S.obj(
             "Latest value of a measurement.", listOf("id", "status"), false, null,
-            "id" to S.str(example = "msv70/0x4402"),
+            "id" to S.str(example = "<sgbd>/<id>"),
             "label" to S.str(example = "Öltemperatur"),
             "unit" to S.str(example = "°C"),
             "value" to S.num("Numeric value (absent for text results or no data).", 92.4),
@@ -334,13 +334,13 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
         put("ProfileSummary", S.obj(
             "A profile without its pages.", listOf("id", "name", "active", "vehicle", "ecus"), false, null,
             "id" to S.str(example = "a1b2c3d4e5"),
-            "name" to S.str(example = "E90 330i · Lambda"),
+            "name" to S.str(example = "My car · Lambda"),
             "active" to S.bool("Shown on the phone and in Android Auto."),
             "vehicle" to S.obj(null, listOf("label"), false, null,
-                "series" to S.str(example = "E90"), "model" to S.str(example = "330i"),
+                "series" to S.str(example = "<series>"), "model" to S.str(example = "<model>"),
                 "vehicleId" to S.str("Linked car of the Faults tab (short VIN)."),
-                "label" to S.str("Series and model, as tagged on exported points.", "E90 330i")),
-            "ecus" to S.arr(S.str(example = "msv70"), "Main ECUs (SGBD names)."),
+                "label" to S.str("Series and model, as tagged on exported points.", "My car")),
+            "ecus" to S.arr(S.str(example = "<sgbd>"), "Main ECUs (SGBD names)."),
             "phonePages" to S.int("Number of phone pages."),
             "carPages" to S.int("Number of Android Auto pages."),
             "lastUsedMs" to S.int("Last time it was active, epoch ms.", format = "int64"),
@@ -348,11 +348,11 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
         put("Profile", S.obj(
             "A profile with its layout.", listOf("id", "name"), false, null,
             "id" to S.str(example = "a1b2c3d4e5"),
-            "name" to S.str(example = "E90 330i · Lambda"),
+            "name" to S.str(example = "My car · Lambda"),
             "vehicle" to S.obj(null, emptyList(), false, null,
-                "series" to S.str(example = "E90"), "model" to S.str(example = "330i"),
+                "series" to S.str(example = "<series>"), "model" to S.str(example = "<model>"),
                 "vehicleId" to S.str("Linked car of the Faults tab (short VIN).")),
-            "ecus" to S.arr(S.str(example = "msv70"), "Main ECUs (SGBD names): the card picker opens on them."),
+            "ecus" to S.arr(S.str(example = "<sgbd>"), "Main ECUs (SGBD names): the card picker opens on them."),
             "dashboard" to S.ref("Dashboard"),
             "lastUsedMs" to S.int("Last time it was active, epoch ms.", format = "int64"),
         ))
@@ -367,7 +367,7 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
         val cardProps = arrayOf(
             "id" to S.str("Unique id in the dashboard; omit when creating.", "k3j4h5g6f7"),
             "type" to S.ref("CardType"),
-            "measurementIds" to S.arr(S.str(example = "msv70/0x4402"), "Measurement ids shown by the card: 1 for most types, 1–4 for BipolarBar, 2–3 for MultiValue.", 1, 4),
+            "measurementIds" to S.arr(S.str(example = "<sgbd>/<id>"), "Measurement ids shown by the card: 1 for most types, 1–4 for BipolarBar, 2–3 for MultiValue.", 1, 4),
             "title" to S.str("Card title; default = the first measurement's label.", "Oil"),
             "channelLabels" to S.arr(S.str(), "Short label per measurement for multi-value cards (e.g. [\"B1\",\"B2\"]); default derived from the labels."),
             "min" to S.num("Scale minimum; default from the measurement or its unit."),
@@ -384,7 +384,7 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
         put("Card", S.obj(
             "A card placed on the grid: what it shows and where. Omitted optional fields = automatic.", listOf("type", "measurementIds"), false,
             buildJsonObject {
-                put("type", "Dial"); put("measurementIds", JsonArray(listOf(JsonPrimitive("msv70/0x4402"))))
+                put("type", "Dial"); put("measurementIds", JsonArray(listOf(JsonPrimitive("<sgbd>/<id>"))))
                 put("title", "Oil"); put("warnAbove", 120); put("col", 0); put("row", 0); put("colSpan", 1); put("rowSpan", 2)
             },
             *cardProps,
