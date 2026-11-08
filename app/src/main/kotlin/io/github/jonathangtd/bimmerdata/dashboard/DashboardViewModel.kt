@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -36,6 +36,8 @@ data class DashboardUi(
     val carPage: Int = 0,
     /** Last removed card, for "Undo". */
     val undo: Dashboard? = null,
+    /** A layout written elsewhere (REST API...) while the user was editing; see [DashboardSync]. */
+    val external: Dashboard? = null,
 ) {
     fun pageIndex(t: Target) = if (t == Target.Phone) phonePage else carPage
     fun currentPage(t: Target): Page? = dashboard?.pages(t)?.let { pages -> pages.getOrNull(pageIndex(t).coerceIn(0, (pages.size - 1).coerceAtLeast(0))) }
@@ -97,18 +99,35 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
     private val loadedSgbds = HashSet<String>()
     private val foreground = MutableStateFlow(false)
 
+    /** The layout this screen last loaded or wrote (see [DashboardSync]). */
+    @Volatile private var lastPersisted: Dashboard? = null
+
     init {
         viewModelScope.launch {
             val d = withContext(Dispatchers.IO) { store.load() }
+            lastPersisted = d
             _ui.update { it.copy(dashboard = d) }
+        }
+        // Follow layouts written elsewhere (REST API, ...), see DashboardSync.
+        viewModelScope.launch {
+            DashboardStore.saved.filterNotNull().collect { saved ->
+                _ui.update { ui ->
+                    val next = DashboardSync.onSaved(ui, saved, lastPersisted)
+                    if (next.dashboard === saved) lastPersisted = saved
+                    next
+                }
+            }
         }
         viewModelScope.launch {
             deps.liveDataSource.samples.collect { feed.update(it) }
         }
-        // Persist (debounced) after every change.
+        // Persist (debounced) after every own change; adopted external layouts are already on disk.
         viewModelScope.launch {
-            _ui.map { it.dashboard }.filterNotNull().distinctUntilChanged().drop(1).debounce(400).collect { d ->
+            _ui.map { it.dashboard }.filterNotNull().distinctUntilChanged().debounce(400).filter { it != lastPersisted }.collect { d ->
+                lastPersisted = d // before the write: its echo in DashboardStore.saved is then recognized as ours
                 withContext(Dispatchers.IO) { store.save(d) }
+                // our write is the newest on disk: a pending external layout has been replaced
+                if (DashboardStore.saved.value == d) _ui.update { DashboardSync.onOwnSave(it) }
             }
         }
         // Load catalog metadata for every SGBD referenced by the layout.
@@ -160,7 +179,15 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---- modes and navigation ----
 
-    fun setEditing(on: Boolean) = _ui.update { it.copy(editing = on, target = if (on) it.target else Target.Phone, undo = null) }
+    fun setEditing(on: Boolean) = _ui.update { ui ->
+        val next = ui.copy(editing = on, target = if (on) ui.target else Target.Phone, undo = null)
+        if (on) next else DashboardSync.onEditingDone(next, lastPersisted).also { if (it.dashboard !== next.dashboard) lastPersisted = it.dashboard }
+    }
+
+    /** Shows the layout written elsewhere during the edit (the draft goes to undo). */
+    fun acceptExternal() = _ui.update { ui ->
+        DashboardSync.accept(ui).also { if (it.dashboard !== ui.dashboard) lastPersisted = it.dashboard }
+    }
     fun setTarget(t: Target) = _ui.update { it.copy(target = t) }
     fun selectPage(t: Target, index: Int) = _ui.update { if (t == Target.Phone) it.copy(phonePage = index) else it.copy(carPage = index) }
 

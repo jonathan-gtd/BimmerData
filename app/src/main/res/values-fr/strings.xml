@@ -203,4 +203,6 @@
         <item quantity="other">%d valeurs</item>
     </plurals>
     <string name="car_empty_page">Aucune carte sur cette page. Ajoutez-en sur le téléphone : Modifier › Android Auto.</string>
+    <string name="external_change">La disposition a été modifiée ailleurs (par exemple par l’API web) pendant votre édition. Votre prochaine modification la remplacera.</string>
+    <string name="external_load">La charger</string>
 </resources>

@@ -152,6 +152,19 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
         }
     }
 
+    // A layout written elsewhere (REST API...) during an edit: offer it (see DashboardSync).
+    val external = ui.external
+    LaunchedEffect(external) {
+        if (external != null) {
+            snackbar.currentSnackbarData?.dismiss()
+            val r = snackbar.showSnackbar(
+                res.getString(R.string.external_change), actionLabel = res.getString(R.string.external_load),
+                withDismissAction = true, duration = SnackbarDuration.Indefinite,
+            )
+            if (r == SnackbarResult.ActionPerformed) vm.acceptExternal()
+        }
+    }
+
     // ---- import / export ----
     val saveFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         val json = vm.exportJson()

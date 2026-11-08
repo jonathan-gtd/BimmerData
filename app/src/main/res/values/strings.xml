@@ -199,4 +199,6 @@
         <item quantity="other">%d values</item>
     </plurals>
     <string name="car_empty_page">No cards on this page yet. Add them on the phone: Edit › Android Auto.</string>
+    <string name="external_change">The layout was changed elsewhere (e.g. the web API) while you were editing. Your next change will replace it.</string>
+    <string name="external_load">Load it</string>
 </resources>
