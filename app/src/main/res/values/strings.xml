@@ -1,4 +1,165 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">BimmerData</string>
+
+    <!-- Navigation -->
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_tool32">Tool32</string>
+    <string name="nav_faults">Faults</string>
+    <string name="faults_coming_title">Fault memory</string>
+    <string name="faults_coming_text">Reading and clearing the fault memory of every ECU is coming in a next version.</string>
+
+    <!-- Dashboard header -->
+    <string name="dash_title_live">%1$s Live</string>
+    <string name="status_live">Live</string>
+    <string name="status_running">%1$s · %2$s reads/s</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_stopped">Not connected</string>
+    <string name="status_error">Error</string>
+    <string name="rec_short">REC</string>
+    <string name="rec_start">Start recording</string>
+    <string name="rec_stop">Stop recording</string>
+    <string name="rec_label">Recording</string>
+    <string name="rec_marker">Marker</string>
+    <string name="rec_marker_added">Marker added</string>
+    <string name="edit">Edit</string>
+    <string name="done">Done</string>
+    <string name="empty_page">This page is empty. Tap Edit to add cards.</string>
+    <string name="edit_hint">Drag to move · corner to resize · tap to edit</string>
+
+    <!-- Editor -->
+    <string name="target_phone">Phone</string>
+    <string name="target_car">Android Auto</string>
+    <string name="layout">Layout</string>
+    <string name="grid_size">%1$d × %2$d</string>
+    <string name="grid">Grid</string>
+    <string name="pages">Pages</string>
+    <string name="more">More</string>
+    <string name="columns">Columns</string>
+    <string name="rows">Rows</string>
+    <string name="apply">Apply</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="undo">Undo</string>
+    <string name="close">Close</string>
+    <string name="back">Back</string>
+    <string name="add">Add</string>
+    <string name="save">Save</string>
+    <string name="rename">Rename</string>
+    <string name="move_up">Move up</string>
+    <string name="move_down">Move down</string>
+    <string name="grid_refused">Some cards do not fit in this grid.</string>
+    <string name="page_full">No room left on this page.</string>
+    <string name="car_max_cards">An Android Auto page holds at most 4 cards.</string>
+    <string name="size_refused">Not enough room for this size.</string>
+    <string name="card_deleted">Card deleted</string>
+    <string name="page_deleted">Page deleted</string>
+    <string name="add_card">Add card</string>
+    <string name="add_card_short">Card</string>
+    <string name="add_page">Add page</string>
+    <string name="page_name">Page name</string>
+    <string name="new_page">Page %1$d</string>
+    <string name="delete_page_confirm">Delete the page “%1$s” and its cards?</string>
+    <string name="last_page">A dashboard keeps at least one page.</string>
+    <plurals name="preset_drops">
+        <item quantity="one">%d card will be removed.</item>
+        <item quantity="other">%d cards will be removed.</item>
+    </plurals>
+    <string name="preset_phone_mockup">Classic: 2 dials, trims, 4 tiles</string>
+    <string name="preset_grid_2x2">2 × 2 grid</string>
+    <string name="preset_big_left">1 big left + 2 small</string>
+    <string name="preset_big_top">1 big on top + 2 small</string>
+    <string name="preset_grid_2x4">2 × 4 grid</string>
+    <string name="preset_grid_3x4">3 × 4 grid</string>
+    <string name="preset_stack_3">3 stacked</string>
+    <string name="preset_hero">Single hero card</string>
+    <string name="preset_car_four">4 cards in a row</string>
+    <string name="preset_three_columns">3 columns</string>
+
+    <!-- Card types -->
+    <string name="type_dial">Dial</string>
+    <string name="type_bipolar">Centered bars</string>
+    <string name="type_big">Big number</string>
+    <string name="type_trend">Trend</string>
+    <string name="type_multi">Side by side</string>
+    <string name="type_status">Status</string>
+    <string name="type_dial_desc">270° arc, e.g. oil temperature</string>
+    <string name="type_bipolar_desc">Centered on 0, e.g. fuel trims B1 / B2</string>
+    <string name="type_big_desc">Large value with session min / max</string>
+    <string name="type_trend_desc">Value and the last 45 seconds</string>
+    <string name="type_multi_desc">2 or 3 values, e.g. lambda B1 · B2</string>
+    <string name="type_status_desc">Text or state result</string>
+
+    <!-- Measurement picker -->
+    <string name="choose_type">Card type</string>
+    <string name="choose_sgbd">ECU (SGBD)</string>
+    <string name="search">Search</string>
+    <string name="no_sgbd">No ECU with a measurement table yet. Import your EDIABAS Ecu folder in Tool32.</string>
+    <string name="no_match">No measurement matches.</string>
+    <string name="selected_count">Selected: %1$d / %2$d</string>
+    <plurals name="measurements_count">
+        <item quantity="one">%d measurement</item>
+        <item quantity="other">%d measurements</item>
+    </plurals>
+
+    <!-- Card editor -->
+    <string name="edit_card">Card</string>
+    <string name="card_type">Type</string>
+    <string name="title">Title</string>
+    <string name="automatic">Automatic: %1$s</string>
+    <string name="scale">Scale</string>
+    <string name="min">Min</string>
+    <string name="max">Max</string>
+    <string name="warn_below">Warn below</string>
+    <string name="warn_above">Warn above</string>
+    <string name="thresholds">Warning thresholds</string>
+    <string name="decimals">Decimals</string>
+    <string name="size">Size</string>
+    <string name="width">Width</string>
+    <string name="height">Height</string>
+    <string name="measurements">Measurements</string>
+    <string name="short_label">Short label</string>
+    <string name="change">Change</string>
+    <string name="auto">auto</string>
+    <string name="decrease">Decrease</string>
+    <string name="increase">Increase</string>
+
+    <!-- Import / export -->
+    <string name="share_layout">Share layout</string>
+    <string name="export_file">Save to file</string>
+    <string name="import_file">Import from file</string>
+    <string name="reset_default">Reset to default</string>
+    <string name="reset_confirm">Replace your layout with the default one?</string>
+    <string name="import_ok">Layout imported</string>
+    <string name="import_failed">Import failed: %1$s</string>
+    <string name="export_ok">Layout saved</string>
+    <string name="share_subject">BimmerData layout</string>
+
+    <!-- Android Auto preview -->
+    <string name="page_x_of_y">page %1$d / %2$d</string>
+    <string name="car_preview_hint">Landscape preview of the car screen. Android Auto draws its own rail on the left.</string>
+    <string name="car_limits_hint">Android Auto pages stay easy to read while driving: up to 4 big cards, on 1 or 2 rows.</string>
+    <string name="fullscreen_preview">Full screen preview</string>
+
+    <!-- First-launch dashboard -->
+    <string name="default_page_engine">Engine</string>
+    <string name="default_page_mixture">Mixture</string>
+    <string name="default_page_temperatures">Temperatures</string>
+    <string name="default_oil">Oil</string>
+    <string name="default_coolant">Coolant</string>
+    <string name="default_fuel_trim">Fuel trim</string>
+    <string name="default_fuel_trim_short">Fuel trim ST</string>
+    <string name="default_rpm">RPM</string>
+    <string name="default_lambda">Lambda B1 · B2</string>
+    <string name="default_lambda_b1">Lambda B1</string>
+    <string name="default_lambda_b2">Lambda B2</string>
+    <string name="default_ignition">Advance cyl. 1</string>
+    <string name="default_load">Load</string>
+    <string name="default_intake_air">Intake air</string>
+    <string name="default_battery">Battery</string>
+    <string name="default_speed">Speed</string>
+    <string name="default_bank1">Bank 1</string>
+    <string name="default_bank2">Bank 2</string>
+    <string name="default_trim_b1">Trim B1</string>
+    <string name="default_trim_b2">Trim B2</string>
 </resources>

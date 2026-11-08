@@ -9,6 +9,10 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import io.github.jonathangtd.bimmerdata.R
 
 /** "Night cockpit" palette. */
 object Cockpit {
@@ -48,8 +52,21 @@ private val CockpitColors = darkColorScheme(
     onError = Cockpit.Background,
 )
 
-/** Tabular digits everywhere so values and timings do not jitter. */
-private fun TextStyle.tnum() = copy(fontFeatureSettings = "tnum")
+/** Barlow for text (SIL OFL 1.1, bundled in res/font). */
+val Barlow = FontFamily(
+    Font(R.font.barlow_regular, FontWeight.Normal),
+    Font(R.font.barlow_medium, FontWeight.Medium),
+    Font(R.font.barlow_semibold, FontWeight.SemiBold),
+)
+
+/** Barlow Semi Condensed for numbers and titles. */
+val BarlowCondensed = FontFamily(
+    Font(R.font.barlow_semi_condensed_medium, FontWeight.Medium),
+    Font(R.font.barlow_semi_condensed_semibold, FontWeight.SemiBold),
+)
+
+/** Barlow with tabular digits everywhere so values and timings do not jitter. */
+private fun TextStyle.tnum() = copy(fontFamily = Barlow, fontFeatureSettings = "tnum")
 
 private val CockpitTypography = Typography().let { t ->
     Typography(
