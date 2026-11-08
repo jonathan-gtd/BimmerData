@@ -398,15 +398,6 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
                 "MultiValue: 2–3 values side by side (lambda B1 · B2). Status: text or state result.",
             enum = GaugeType.entries.map { it.name },
         ))
-        put("Preset", S.obj(
-            "A ready-made arrangement of a page; applying it re-lays the cards in reading order into its slots (extra cards are dropped).", listOf("id", "target", "columns", "rows", "slots"), false, null,
-            "id" to S.str(example = "big_left"),
-            "target" to S.str(enum = listOf("phone", "car")),
-            "columns" to S.int(), "rows" to S.int(),
-            "slots" to S.arr(S.obj(null, listOf("col", "row", "colSpan", "rowSpan"), false, null,
-                "col" to S.int(), "row" to S.int(), "colSpan" to S.int(), "rowSpan" to S.int(),
-            )),
-        ))
         put("Recording", S.obj(
             "A CSV recording in Documents/BimmerData/ (made by this installation of the app).", listOf("name", "sizeBytes", "modifiedMs"), false, null,
             "name" to S.str(example = "bimmerdata_2026-11-08_14-03-12.csv"),

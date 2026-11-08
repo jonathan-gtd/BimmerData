@@ -348,7 +348,6 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
 
     fun undo() = _ui.update { ui -> ui.undo?.let { ui.copy(dashboard = it, undo = null) } ?: ui }
 
-    fun applyPreset(t: Target, pageId: String, preset: LayoutPreset) = editPage(t, pageId) { GridRules.applyPreset(it, preset) }
     fun setGrid(t: Target, pageId: String, columns: Int, rows: Int) = editPage(t, pageId) { GridRules.setGrid(it, columns, rows, GridLimits.of(t)) }
 
     fun addPage(t: Target, name: String) {

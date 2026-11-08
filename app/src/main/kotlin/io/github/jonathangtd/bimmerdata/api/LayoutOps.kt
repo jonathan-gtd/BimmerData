@@ -8,8 +8,6 @@ import io.github.jonathangtd.bimmerdata.gauges.TrendWindow
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.GridLimits
 import io.github.jonathangtd.bimmerdata.dashboard.GridRules
-import io.github.jonathangtd.bimmerdata.dashboard.LayoutPreset
-import io.github.jonathangtd.bimmerdata.dashboard.LayoutPresets
 import io.github.jonathangtd.bimmerdata.dashboard.Page
 import io.github.jonathangtd.bimmerdata.dashboard.Target
 import kotlinx.serialization.Serializable
@@ -123,21 +121,16 @@ object LayoutOps {
     fun findCard(page: Page, cardId: String): Card =
         page.card(cardId) ?: throw notFound("card_not_found", "No card '$cardId' on page '${page.id}' (cards: ${page.cards.joinToString { it.id }})")
 
-    fun findPreset(t: Target, id: String): LayoutPreset =
-        LayoutPresets.of(t).firstOrNull { it.id == id }
-            ?: throw notFound("preset_not_found", "No ${targetName(t)} preset '$id' (available: ${LayoutPresets.of(t).joinToString { it.id }})")
-
     private fun usedIds(d: Dashboard): Set<String> =
         (d.phonePages + d.carPages).flatMapTo(HashSet()) { p -> p.cards.map { it.id } + p.id }
 
     // ---------------------------------------------------------------- pages
 
-    fun addPage(d: Dashboard, t: Target, name: String, columns: Int?, rows: Int?, presetId: String?, position: Int?): Pair<Dashboard, Page> {
+    fun addPage(d: Dashboard, t: Target, name: String, columns: Int?, rows: Int?, position: Int?): Pair<Dashboard, Page> {
         if (name.isBlank()) throw badRequest("name must not be blank")
         val limits = GridLimits.of(t)
-        val preset = presetId?.let { findPreset(t, it) }
-        val cols = preset?.columns ?: columns ?: if (t == Target.Phone) 2 else 4
-        val rws = preset?.rows ?: rows ?: if (t == Target.Phone) 6 else 1
+        val cols = columns ?: if (t == Target.Phone) 2 else 4
+        val rws = rows ?: if (t == Target.Phone) 6 else 1
         if (cols !in 1..limits.maxColumns || rws !in 1..limits.maxRows) {
             throw ApiException(422, "invalid_grid", "A ${targetName(t)} page has 1..${limits.maxColumns} columns and 1..${limits.maxRows} rows (got $cols×$rws)")
         }
@@ -179,14 +172,6 @@ object LayoutOps {
     fun deletePage(d: Dashboard, t: Target, ref: String): Dashboard {
         val (_, page) = findPage(d, t, ref)
         return d.withPages(t, d.pages(t).filterNot { it.id == page.id })
-    }
-
-    fun applyPreset(d: Dashboard, t: Target, ref: String, presetId: String): Triple<Dashboard, Page, Int> {
-        val (_, page) = findPage(d, t, ref)
-        val preset = findPreset(t, presetId)
-        val dropped = GridRules.droppedByPreset(page, preset)
-        val result = GridRules.applyPreset(page, preset)
-        return Triple(d.updatePage(t, page.id) { result }, result, dropped)
     }
 
     // ---------------------------------------------------------------- cards

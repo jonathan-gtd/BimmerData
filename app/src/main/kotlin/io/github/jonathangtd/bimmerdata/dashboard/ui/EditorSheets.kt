@@ -88,8 +88,6 @@ import io.github.jonathangtd.bimmerdata.dashboard.CardSpecs
 import io.github.jonathangtd.bimmerdata.dashboard.DashboardViewModel
 import io.github.jonathangtd.bimmerdata.dashboard.GridLimits
 import io.github.jonathangtd.bimmerdata.dashboard.GridRules
-import io.github.jonathangtd.bimmerdata.dashboard.LayoutPreset
-import io.github.jonathangtd.bimmerdata.dashboard.LayoutPresets
 import io.github.jonathangtd.bimmerdata.dashboard.Page
 import io.github.jonathangtd.bimmerdata.dashboard.SgbdChoices
 import io.github.jonathangtd.bimmerdata.dashboard.Target
@@ -137,22 +135,6 @@ private fun typeDescription(type: GaugeType): String = stringResource(
         GaugeType.Trend -> R.string.type_trend_desc
         GaugeType.MultiValue -> R.string.type_multi_desc
         GaugeType.Status -> R.string.type_status_desc
-    },
-)
-
-@Composable
-private fun presetName(preset: LayoutPreset): String = stringResource(
-    when (preset.id) {
-        "phone_mockup" -> R.string.preset_phone_mockup
-        "grid_2x2" -> R.string.preset_grid_2x2
-        "big_left" -> R.string.preset_big_left
-        "big_top" -> R.string.preset_big_top
-        "grid_2x4" -> R.string.preset_grid_2x4
-        "grid_3x4" -> R.string.preset_grid_3x4
-        "stack_3" -> R.string.preset_stack_3
-        "car_four" -> R.string.preset_car_four
-        "three_columns" -> R.string.preset_three_columns
-        else -> R.string.preset_hero
     },
 )
 
@@ -690,85 +672,15 @@ private fun cardAspect(page: Page, target: Target, colSpan: Int, rowSpan: Int): 
     return ((colSpan * cw + (colSpan - 1) * gap) / (rowSpan * ch + (rowSpan - 1) * gap)).coerceIn(0.4f, 4f)
 }
 
-// ------------------------------------------------------------------ layout (grid size + presets)
-
-@Composable
-internal fun LayoutSheet(page: Page, target: Target, onDismiss: () -> Unit, onGrid: (Int, Int) -> Boolean, onPreset: (LayoutPreset) -> Unit) {
-    val limits = GridLimits.of(target)
-    var confirm by remember { mutableStateOf<LayoutPreset?>(null) }
-    CockpitSheet(onDismiss) {
-        Column(Modifier.fillMaxWidth().fillMaxHeight(0.85f)) {
-            SheetHeader(stringResource(R.string.layout))
-            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
-                SectionTitle(stringResource(R.string.grid))
-                Stepper(
-                    stringResource(R.string.columns), page.columns.toString(),
-                    onDecrease = { onGrid(page.columns - 1, page.rows) }, onIncrease = { onGrid(page.columns + 1, page.rows) },
-                    canDecrease = page.columns > 1, canIncrease = page.columns < limits.maxColumns,
-                    decreaseLabel = stringResource(R.string.decrease), increaseLabel = stringResource(R.string.increase),
-                )
-                Stepper(
-                    stringResource(R.string.rows), page.rows.toString(),
-                    onDecrease = { onGrid(page.columns, page.rows - 1) }, onIncrease = { onGrid(page.columns, page.rows + 1) },
-                    canDecrease = page.rows > 1, canIncrease = page.rows < limits.maxRows,
-                    decreaseLabel = stringResource(R.string.decrease), increaseLabel = stringResource(R.string.increase),
-                )
-                SectionTitle(stringResource(R.string.layout))
-                LayoutPresets.of(target).forEach { preset ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 64.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { if (GridRules.droppedByPreset(page, preset) > 0) confirm = preset else onPreset(preset) }
-                            .padding(horizontal = 8.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        PresetDiagram(preset, Modifier.width(if (target == Target.Car) 96.dp else 52.dp).height(if (target == Target.Car) 40.dp else 64.dp))
-                        Spacer(Modifier.width(16.dp))
-                        Text(presetName(preset), color = Cockpit.Text, fontSize = 15.sp, modifier = Modifier.weight(1f))
-                    }
-                }
-                Spacer(Modifier.height(16.dp))
-            }
-        }
-    }
-    confirm?.let { preset ->
-        ConfirmDialog(
-            text = pluralStringResource(R.plurals.preset_drops, GridRules.droppedByPreset(page, preset), GridRules.droppedByPreset(page, preset)),
-            confirm = stringResource(R.string.apply),
-            onConfirm = {
-                confirm = null
-                onPreset(preset)
-            },
-            onDismiss = { confirm = null },
-        )
-    }
-}
-
-@Composable
-private fun PresetDiagram(preset: LayoutPreset, modifier: Modifier) {
-    Canvas(modifier) {
-        val gap = 3.dp.toPx()
-        val cw = (size.width - gap * (preset.columns - 1)) / preset.columns
-        val ch = (size.height - gap * (preset.rows - 1)) / preset.rows
-        preset.slots.forEachIndexed { i, s ->
-            drawRoundRect(
-                color = if (i == 0) Cockpit.Accent.copy(alpha = 0.55f) else Cockpit.Border,
-                topLeft = Offset(s.col * (cw + gap), s.row * (ch + gap)),
-                size = Size(s.colSpan * cw + (s.colSpan - 1) * gap, s.rowSpan * ch + (s.rowSpan - 1) * gap),
-                cornerRadius = CornerRadius(3.dp.toPx()),
-            )
-        }
-    }
-}
-
 // ------------------------------------------------------------------ pages
 
 @Composable
 internal fun PagesSheet(
     pages: List<Page>,
+    target: Target,
     onDismiss: () -> Unit,
+    /** Changes the grid of a page; false when its cards do not fit. */
+    onGrid: (pageId: String, columns: Int, rows: Int) -> Boolean,
     onRename: (String, String) -> Unit,
     onMove: (Int, Int) -> Unit,
     onDelete: (String) -> Unit,
@@ -805,16 +717,34 @@ internal fun PagesSheet(
             )
         }
     }
-    renaming?.let { page ->
-        var name by remember(page.id) { mutableStateOf(page.name) }
+    renaming?.let { opened ->
+        // the page as it is now: the grid steppers apply at once
+        val page = pages.firstOrNull { it.id == opened.id } ?: opened
+        val limits = GridLimits.of(target)
+        var name by remember(opened.id) { mutableStateOf(opened.name) }
         AlertDialog(
             onDismissRequest = { renaming = null }, containerColor = Cockpit.Card,
-            title = { Text(stringResource(R.string.rename), color = Cockpit.Text) },
+            title = { Text(stringResource(R.string.page_settings), color = Cockpit.Text) },
             text = {
-                OutlinedTextField(
-                    value = name, onValueChange = { name = it.take(24) }, singleLine = true, label = { Text(stringResource(R.string.page_name)) },
-                    colors = fieldColors(),
-                )
+                Column {
+                    OutlinedTextField(
+                        value = name, onValueChange = { name = it.take(24) }, singleLine = true, label = { Text(stringResource(R.string.page_name)) },
+                        colors = fieldColors(),
+                    )
+                    SectionTitle(stringResource(R.string.grid), Modifier.padding(top = 12.dp))
+                    Stepper(
+                        stringResource(R.string.columns), page.columns.toString(),
+                        onDecrease = { onGrid(page.id, page.columns - 1, page.rows) }, onIncrease = { onGrid(page.id, page.columns + 1, page.rows) },
+                        canDecrease = page.columns > 1, canIncrease = page.columns < limits.maxColumns,
+                        decreaseLabel = stringResource(R.string.decrease), increaseLabel = stringResource(R.string.increase),
+                    )
+                    Stepper(
+                        stringResource(R.string.rows), page.rows.toString(),
+                        onDecrease = { onGrid(page.id, page.columns, page.rows - 1) }, onIncrease = { onGrid(page.id, page.columns, page.rows + 1) },
+                        canDecrease = page.rows > 1, canIncrease = page.rows < limits.maxRows,
+                        decreaseLabel = stringResource(R.string.decrease), increaseLabel = stringResource(R.string.increase),
+                    )
+                }
             },
             confirmButton = {
                 TextButton(onClick = { onRename(page.id, name); renaming = null }, modifier = Modifier.heightIn(min = MinTouch)) {

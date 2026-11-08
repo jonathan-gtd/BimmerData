@@ -67,7 +67,7 @@ A typical agent session:
    `GET /api/v1/profiles` – which profile (car, main ECUs, pages) is active; a fresh install has
    none: `POST /api/v1/profiles` creates one. The dashboard routes act on the active profile.
 3. `GET /api/v1/ecus`, `GET /api/v1/ecus/msv70/measurements?q=temp` – find measurement ids.
-4. `GET /api/v1/card-types`, `GET /api/v1/presets?target=car` – what a card / page can be.
+4. `GET /api/v1/card-types` – what a card can be (a page is a `columns × rows` grid).
 5. `POST /api/v1/dashboard/car/pages`, `POST …/pages/{page}/cards` – build.
 6. `GET /api/v1/dashboard/car/pages/{page}/render.png` – look at the result, adjust with `PATCH`.
 
@@ -103,7 +103,7 @@ curl -N -H "$H" "$BD/stream?ids=msv70/0x4402,msv70/0x4300&intervalMs=250"
 
 # Layout: whole dashboard, a new car page, a card, a change, a picture (scope layout for writes)
 curl -s -H "$H" "$BD/dashboard" > dashboard-backup.json
-curl -s -H "$H" -X POST "$BD/dashboard/car/pages" -d '{"name":"Temps","presetId":"car_four"}'
+curl -s -H "$H" -X POST "$BD/dashboard/car/pages" -d '{"name":"Temps","columns":4,"rows":1}'
 curl -s -H "$H" -X POST "$BD/dashboard/car/pages/1/cards" \
      -d '{"type":"Dial","measurementIds":["msv70/0x4402"],"title":"Oil","warnAbove":120}'
 curl -s -H "$H" -X PATCH "$BD/dashboard/car/pages/1/cards/<cardId>" -d '{"warnAbove":125}'
@@ -142,15 +142,13 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 | GET | `/api/v1/dashboard` | read | Whole layout |
 | PUT | `/api/v1/dashboard[?dryRun=true]` | layout | Replace the layout (strict validation) |
 | POST | `/api/v1/dashboard/validate` | read | Validate a layout without saving |
-| POST | `/api/v1/dashboard/reset` | layout | Restore the default layout |
+| POST | `/api/v1/dashboard/reset`, `/api/v1/dashboard/{target}/reset` | layout | Empty both sides / one side |
 | GET / POST | `/api/v1/dashboard/{target}/pages` | read / layout | List / add pages |
 | GET / PATCH / DELETE | `/api/v1/dashboard/{target}/pages/{page}` | read / layout | One page: get, rename / resize / move, delete |
 | POST | `/api/v1/dashboard/{target}/pages/{page}/cards` | layout | Add a card (exact cell or first free slot) |
 | PATCH / DELETE | `/api/v1/dashboard/{target}/pages/{page}/cards/{card}` | layout | Change (JSON merge patch) / delete a card |
-| POST | `/api/v1/dashboard/{target}/pages/{page}/preset` | layout | Re-lay a page out with a preset |
 | GET | `/api/v1/dashboard/{target}/pages/{page}/render.png` | read | PNG of a saved page |
 | POST | `/api/v1/dashboard/{target}/render` | read | PNG of a draft page (body = page) |
-| GET | `/api/v1/presets?target=` | read | Preset arrangements |
 | GET | `/api/v1/card-types` | read | Card types and measurement counts |
 | GET / POST | `/api/v1/profiles` | read / layout | Profiles and the active one / create a profile (optionally copying another's pages) |
 | GET / PUT / DELETE | `/api/v1/profiles/{profile}` | read / layout | One profile with its layout / change name, car, ECUs or layout / delete |

@@ -16,7 +16,6 @@ import io.github.jonathangtd.bimmerdata.profiles.ProfileVehicle
 import io.github.jonathangtd.bimmerdata.profiles.Profiles
 import io.github.jonathangtd.bimmerdata.dashboard.GridLimits
 import io.github.jonathangtd.bimmerdata.dashboard.DashboardReset
-import io.github.jonathangtd.bimmerdata.dashboard.LayoutPresets
 import io.github.jonathangtd.bimmerdata.dashboard.Page
 import io.github.jonathangtd.bimmerdata.dashboard.Target
 import io.github.jonathangtd.bimmerdata.gauges.GaugeType
@@ -334,7 +333,7 @@ class ApiService(
         val profileParam = Param("profile", "path", "Profile id (see GET /api/v1/profiles).", S.str(), example = JsonPrimitive("a1b2c3d4e5"))
         val cardParam = Param("card", "path", "Card id (see the page's `cards`).", S.str(), example = JsonPrimitive("k3j4h5g6f7"))
         val idsBody = "ids" to S.arr(S.str(example = "msv70/0x4402"), "Measurement ids (`<sgbd>/<key>`), at most 64.", 1, 64)
-        val layoutErrors = mapOf(404 to "Unknown page, card or preset.", 409 to "Conflict: overlapping cards, page full, duplicate id.", 422 to "Invalid card or grid (details list each problem).", 400 to "Malformed body.")
+        val layoutErrors = mapOf(404 to "Unknown page or card.", 409 to "Conflict: overlapping cards, page full, duplicate id.", 422 to "Invalid card or grid (details list each problem).", 400 to "Malformed body.")
 
         return listOf(
             // ------------------------------------------------------------ general
@@ -649,12 +648,11 @@ class ApiService(
             Route(
                 "POST", "/api/v1/dashboard/{target}/pages", RouteAccess.Needs(Scope.Layout), "Dashboard", "addPage",
                 "Add an empty page",
-                "Creates an empty page. Give a grid size, or `presetId` to take the grid of a preset (then add cards in reading order to fill its slots, or apply the preset after adding them). Defaults: phone 2×6, car 4×1.",
+                "Creates an empty page with a `columns × rows` grid (defaults: phone 2×6, car 4×1); then add cards, which fill the first free cells unless given a position.",
                 params = listOf(targetParam),
                 body = Body(S.obj(null, listOf("name"), false, null,
                     "name" to S.str("Page title.", "Temperatures"),
                     "columns" to S.int(min = 1, max = 4), "rows" to S.int(min = 1, max = 8),
-                    "presetId" to S.str("Take columns / rows from this preset (GET /api/v1/presets)."),
                     "position" to S.int("Insert at this index (default: last).", min = 0)),
                     example = buildJsonObject { put("name", "Temperatures"); put("columns", 2); put("rows", 3) }),
                 reply = Reply(201, "The new page", S.ref("Page")),
@@ -662,9 +660,9 @@ class ApiService(
             ) { call ->
                 val t = target(call)
                 val b = call.bodyObject()
-                b.allowOnly("name", "columns", "rows", "presetId", "position")
+                b.allowOnly("name", "columns", "rows", "position")
                 val page = editLayout { d ->
-                    LayoutOps.addPage(d, t, b.string("name") ?: throw badRequest("'name' is required"), b.int("columns"), b.int("rows"), b.string("presetId"), b.int("position"))
+                    LayoutOps.addPage(d, t, b.string("name") ?: throw badRequest("'name' is required"), b.int("columns"), b.int("rows"), b.int("position"))
                 }
                 ok(pageJson(page, backend.loadDashboard().pages(t).indexOfFirst { it.id == page.id }), 201)
             },
@@ -762,25 +760,6 @@ class ApiService(
                 val t = target(call)
                 editLayout { d -> LayoutOps.deleteCard(d, t, call.path("page"), call.path("card")) to Unit }
                 HttpResponse.Bytes(204, HttpServer.JSON, ByteArray(0))
-            },
-            Route(
-                "POST", "/api/v1/dashboard/{target}/pages/{page}/preset", RouteAccess.Needs(Scope.Layout), "Dashboard", "applyPreset",
-                "Re-lay a page out with a preset",
-                "Sets the page grid to the preset's and moves the cards, in reading order (top to bottom, left to right), into its slots. Cards beyond the number of slots are dropped (`droppedCards` says how many) — check GET /api/v1/presets first.",
-                params = listOf(targetParam, pageParam),
-                body = Body(S.obj(null, listOf("presetId"), false, null, "presetId" to S.str(example = "big_left")), example = buildJsonObject { put("presetId", "big_left") }),
-                reply = Reply(description = "The page after the preset", schema = S.obj(null, listOf("page", "droppedCards"), false, null, "page" to S.ref("Page"), "droppedCards" to S.int())),
-                errors = layoutErrors,
-            ) { call ->
-                val t = target(call)
-                val b = call.bodyObject()
-                b.allowOnly("presetId")
-                val presetId = b.string("presetId") ?: throw badRequest("'presetId' is required")
-                val (page, dropped) = editLayout { d ->
-                    val (nd, p, dropped) = LayoutOps.applyPreset(d, t, call.path("page"), presetId)
-                    nd to (p to dropped)
-                }
-                ok(buildJsonObject { put("page", pageJson(page)); put("droppedCards", dropped) })
             },
             Route(
                 "GET", "/api/v1/dashboard/{target}/pages/{page}/render.png", RouteAccess.Needs(Scope.Read), "Dashboard", "renderPage",
@@ -949,23 +928,6 @@ class ApiService(
             ) { call ->
                 val p = requireProfile(backend.profiles(), call.path("profile"))
                 ok(ApiJson.parseToJsonElement(ProfileJson.export(p)))
-            },
-            Route(
-                "GET", "/api/v1/presets", RouteAccess.Needs(Scope.Read), "Dashboard", "listPresets",
-                "Ready-made page arrangements",
-                "Presets per target with their grid and slots (cell rectangles in reading order).",
-                params = listOf(Param("target", "query", "`phone` or `car`; omitted = both.", S.str(enum = listOf("phone", "car")), required = false)),
-                reply = Reply(description = "Presets", schema = S.obj(null, listOf("presets"), false, null, "presets" to S.arr(S.ref("Preset")))),
-            ) { call ->
-                val targets = call.query("target")?.let { listOf(LayoutOps.parseTarget(it)) } ?: Target.entries
-                ok(buildJsonObject {
-                    put("presets", buildJsonArray {
-                        for (t in targets) for (p in LayoutPresets.of(t)) addJsonObject {
-                            put("id", p.id); put("target", LayoutOps.targetName(t)); put("columns", p.columns); put("rows", p.rows)
-                            putJsonArray("slots") { for (s in p.slots) addJsonObject { put("col", s.col); put("row", s.row); put("colSpan", s.colSpan); put("rowSpan", s.rowSpan) } }
-                        }
-                    })
-                })
             },
             Route(
                 "GET", "/api/v1/card-types", RouteAccess.Needs(Scope.Read), "Dashboard", "listCardTypes",

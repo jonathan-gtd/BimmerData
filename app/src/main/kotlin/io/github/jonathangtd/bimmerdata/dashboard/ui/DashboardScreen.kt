@@ -111,7 +111,6 @@ import io.github.jonathangtd.bimmerdata.profiles.ProfileRuntime
 internal sealed interface Sheet {
     data class EditCard(val target: Target, val pageId: String, val cardId: String) : Sheet
     data class AddCard(val target: Target, val pageId: String, val col: Int?, val row: Int?) : Sheet
-    data class Layout(val target: Target, val pageId: String) : Sheet
     data class Pages(val target: Target) : Sheet
     data object CarFullscreen : Sheet
     data class ConfirmReset(val target: Target) : Sheet
@@ -305,9 +304,6 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
             Spacer(Modifier.height(12.dp))
             if (ui.editing) {
                 EditorToolbar(
-                    onLayout = {
-                        vm.ensurePage(target, res.getString(R.string.new_page, 1))?.let { sheet = Sheet.Layout(target, it.id) }
-                    },
                     onPages = { sheet = Sheet.Pages(target) },
                     onAddCard = { addFirstOrNext(target) },
                     onShare = ::share,
@@ -427,23 +423,9 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                 )
             }
         }
-        is Sheet.Layout -> {
-            val page = dashboard.pages(s.target).firstOrNull { it.id == s.pageId }
-            if (page == null) {
-                sheet = null
-            } else {
-                LayoutSheet(
-                    page = page, target = s.target, onDismiss = { sheet = null },
-                    onGrid = { c, r -> vm.setGrid(s.target, page.id, c, r).also { if (!it) message(res.getString(R.string.grid_refused)) } },
-                    onPreset = { preset ->
-                        vm.applyPreset(s.target, page.id, preset)
-                        sheet = null
-                    },
-                )
-            }
-        }
         is Sheet.Pages -> PagesSheet(
-            pages = dashboard.pages(s.target), onDismiss = { sheet = null },
+            pages = dashboard.pages(s.target), target = s.target, onDismiss = { sheet = null },
+            onGrid = { id, c, r -> vm.setGrid(s.target, id, c, r).also { if (!it) message(res.getString(R.string.grid_refused)) } },
             onRename = { id, name -> vm.renamePage(s.target, id, name) },
             onMove = { from, to -> vm.movePage(s.target, from, to) },
             onDelete = { id ->
@@ -638,14 +620,13 @@ private fun EditorHeader(target: Target, onTarget: (Target) -> Unit, onDone: () 
 
 @Composable
 private fun EditorToolbar(
-    onLayout: () -> Unit, onPages: () -> Unit, onAddCard: () -> Unit,
+    onPages: () -> Unit, onAddCard: () -> Unit,
     onShare: () -> Unit, onSaveFile: () -> Unit, onImport: () -> Unit, onReset: () -> Unit,
     onRename: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         PillButton(stringResource(R.string.add_card_short), onClick = onAddCard, icon = R.drawable.ic_add, color = Cockpit.Accent, modifier = Modifier.weight(1f))
-        PillButton(stringResource(R.string.layout), onClick = onLayout, icon = R.drawable.ic_grid, modifier = Modifier.weight(1f))
         PillButton(stringResource(R.string.pages), onClick = onPages, icon = R.drawable.ic_pages, modifier = Modifier.weight(1f))
         Box {
             RoundIconButton(R.drawable.ic_more, stringResource(R.string.more), onClick = { menu = true }, background = Track)

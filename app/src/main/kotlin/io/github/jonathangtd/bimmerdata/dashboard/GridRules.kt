@@ -130,22 +130,8 @@ object GridRules {
                 }
             }
         }
-        // Keep the original card order (it is the reading / preset order).
+        // Keep the original card order (it is the reading order).
         val order = page.cards.map { it.id }
         return result.copy(cards = result.cards.sortedBy { order.indexOf(it.id) })
     }
-
-    /** Cards in reading order (top to bottom, left to right). */
-    fun readingOrder(page: Page): List<Card> = page.cards.sortedWith(compareBy({ it.row }, { it.col }))
-
-    /** Re-lays [page] out with [preset]: cards in reading order fill the preset slots, extra cards are dropped. */
-    fun applyPreset(page: Page, preset: LayoutPreset): Page {
-        val cards = readingOrder(page).zip(preset.slots) { card, slot ->
-            card.copy(col = slot.col, row = slot.row, colSpan = slot.colSpan, rowSpan = slot.rowSpan)
-        }
-        return page.copy(columns = preset.columns, rows = preset.rows, cards = cards)
-    }
-
-    /** How many cards [applyPreset] would drop. */
-    fun droppedByPreset(page: Page, preset: LayoutPreset): Int = (page.cards.size - preset.slots.size).coerceAtLeast(0)
 }

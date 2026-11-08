@@ -19,7 +19,7 @@ import java.util.Base64
 /** What a token may do. Each route needs one scope; the user picks the granted ones in Settings. */
 enum class Scope(val id: String, val description: String) {
     Read("read", "Read live values, ECUs, measurements, the dashboard layout, recordings and settings; render pages."),
-    Layout("layout", "Change the dashboard layout (pages and cards, presets)."),
+    Layout("layout", "Change the dashboard layout (pages, cards, profiles)."),
     Config("config", "Connect / disconnect, start and stop recordings, change app settings."),
 
     /**

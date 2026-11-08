@@ -197,31 +197,6 @@ class DashboardModelTest {
         assertEquals(4 to 2, limited.columns to limited.rows)
     }
 
-    // ---- presets ----
-
-    @Test
-    fun `presets are valid and respect the car limits`() {
-        (LayoutPresets.phone + LayoutPresets.car).forEach { preset ->
-            val cards = preset.slots.mapIndexed { i, s -> card("c$i", s.col, s.row, s.colSpan, s.rowSpan) }
-            val p = Page(name = preset.id, columns = preset.columns, rows = preset.rows, cards = cards)
-            assertTrue(GridRules.isValid(p), "preset ${preset.id}")
-            val limits = GridLimits.of(preset.target)
-            assertTrue(preset.columns <= limits.maxColumns && preset.rows <= limits.maxRows && preset.slots.size <= limits.maxCards, preset.id)
-        }
-    }
-
-    @Test
-    fun `applying a preset keeps reading order and drops extra cards`() {
-        val p = Msv70Example.create().phonePages[0]
-        val bigLeft = LayoutPresets.phone.first { it.id == "big_left" }
-        assertEquals(p.cards.size - 3, GridRules.droppedByPreset(p, bigLeft))
-        val applied = GridRules.applyPreset(p, bigLeft)
-        assertEquals(3, applied.cards.size)
-        assertEquals(GridRules.readingOrder(p).take(3).map { it.id }, applied.cards.map { it.id })
-        assertTrue(GridRules.isValid(applied))
-        assertEquals(1 to 2, applied.cards[0].let { it.colSpan to it.rowSpan })
-    }
-
     // ---- page helpers ----
 
     @Test
