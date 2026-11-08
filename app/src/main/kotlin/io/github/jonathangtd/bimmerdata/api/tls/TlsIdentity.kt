@@ -19,6 +19,7 @@ import java.util.Base64
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLEngine
 import javax.net.ssl.SSLServerSocket
+import javax.net.ssl.SSLSocket
 import javax.net.ssl.X509ExtendedKeyManager
 
 /** The CA and the server certificate with their keys (see [TlsCertificates]). */
@@ -69,6 +70,15 @@ val TLS_PROTOCOLS = listOf("TLSv1.3", "TLSv1.2")
 
 /** Restricts a server socket to [TLS_PROTOCOLS] and no client authentication. */
 fun SSLServerSocket.restrictToModernTls() {
+    val wanted = TLS_PROTOCOLS.filter { it in supportedProtocols }
+    check(wanted.isNotEmpty()) { "Neither TLS 1.3 nor TLS 1.2 is available" }
+    enabledProtocols = wanted.toTypedArray()
+    needClientAuth = false
+    wantClientAuth = false
+}
+
+/** Same restriction for a server-side [SSLSocket] layered on an accepted connection. */
+fun SSLSocket.restrictToModernTls() {
     val wanted = TLS_PROTOCOLS.filter { it in supportedProtocols }
     check(wanted.isNotEmpty()) { "Neither TLS 1.3 nor TLS 1.2 is available" }
     enabledProtocols = wanted.toTypedArray()

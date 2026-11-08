@@ -53,6 +53,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.jonathangtd.bimmerdata.R
+import io.github.jonathangtd.bimmerdata.net.LocalNetwork
+import io.github.jonathangtd.bimmerdata.settings.LocalNetworkBanner
+import io.github.jonathangtd.bimmerdata.settings.rememberLocalNetworkAccess
 import io.github.jonathangtd.bimmerdata.live.i18n.TranslationTemplate
 import io.github.jonathangtd.bimmerdata.live.i18n.TranslationType
 import io.github.jonathangtd.bimmerdata.live.i18n.Translations
@@ -182,10 +185,13 @@ private fun UrlFields(config: TranslationConfig, store: TranslationSettings) {
     var token by rememberSaveable(config.token) { mutableStateOf(config.token) }
     Field(url, { url = it }, stringResource(R.string.tr_url))
     Hint(stringResource(R.string.tr_url_hint))
+    val lan = rememberLocalNetworkAccess()
+    if (LocalNetwork.isLocalUrl(config.baseUrl)) LocalNetworkBanner(lan, stringResource(R.string.lan_translations_denied))
     Field(token, { token = it }, stringResource(R.string.tr_token), secret = true)
     Hint(stringResource(R.string.tr_token_hint))
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(stringResource(R.string.tr_apply), enabled = url.isNotBlank() && (url.trim() != config.baseUrl || token.trim() != config.token)) {
+            if (LocalNetwork.isLocalUrl(url) && !lan.granted) lan.request()
             store.update { it.copy(baseUrl = url.trim(), token = token.trim()) }
         }
         Button(stringResource(R.string.tr_url_default), enabled = config.baseUrl != TranslationConfig.DEFAULT_URL) {

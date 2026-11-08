@@ -3,6 +3,7 @@
  */
 package io.github.jonathangtd.bimmerdata.api.android
 
+import io.github.jonathangtd.bimmerdata.net.LocalNetwork
 import android.content.Context
 import io.github.jonathangtd.bimmerdata.api.AcquisitionInfo
 import io.github.jonathangtd.bimmerdata.api.ApiBackend
@@ -157,6 +158,7 @@ class AndroidApiBackend(
                 ApiSettingsView(
                     s.api.enabled, s.api.port, s.api.scopes.sortedBy { it.ordinal }.map { it.id },
                     https = s.api.https, certificateSha256 = tls?.certificateSha256, publicKeyPin = tls?.publicKeyPin,
+                    localNetworkAccess = LocalNetwork.state(app),
                 )
             },
             bluetoothAdapter = s.bluetooth.address?.let { BluetoothAdapterView(s.bluetooth.name, it) },
