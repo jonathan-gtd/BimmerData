@@ -245,6 +245,12 @@ class Tool32ViewModel(application: Application) : AndroidViewModel(application) 
         offline = null
     }
 
+    /** Screenshots only: shows [s] as it is, without running anything. */
+    @androidx.annotation.VisibleForTesting
+    internal fun showForScreenshot(s: Tool32State) {
+        _state.value = s
+    }
+
     override fun onCleared() {
         session.cancel()
         closeOffline()

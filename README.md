@@ -10,6 +10,33 @@ each user imports their own `EDIABAS\Ecu` folder.
 > Status: early development. A "mini Tool32" screen runs any job of any imported SGBD over a
 > K+DCAN cable (BMW-FAST on K-line) or against a built-in simulated ECU.
 
+## Screenshots
+
+Rendered from the app with the built-in simulation (demo data, English UI).
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/dashboard.png" width="250" alt="Card dashboard"><br><sub>Card dashboard: dials, bars, trends</sub></td>
+    <td align="center"><img src="docs/screenshots/card_picker.png" width="250" alt="Card picker"><br><sub>Picking a measurement of the profile's ECUs</sub></td>
+    <td align="center"><img src="docs/screenshots/profiles.png" width="250" alt="Profiles"><br><sub>Profiles: a car, its ECUs, its own pages</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/faults.png" width="250" alt="Fault memory of every ECU"><br><sub>Vehicle scan and fault memory of every ECU</sub></td>
+    <td align="center"><img src="docs/screenshots/fault_detail.png" width="250" alt="Fault details"><br><sub>Fault details, translated ECU texts</sub></td>
+    <td align="center"><img src="docs/screenshots/tool32.png" width="250" alt="Mini Tool32"><br><sub>Mini Tool32: any EDIABAS job</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/settings.png" width="250" alt="Settings"><br><sub>Settings</sub></td>
+    <td colspan="2"></td>
+  </tr>
+</table>
+
+**Android Auto**
+
+<img src="docs/screenshots/android_auto.png" width="100%" alt="Android Auto page">
+
+Pictures regenerated with [`tools/readme_screenshots.sh`](tools/readme_screenshots.sh).
+
 ## Hardware
 
 - K+DCAN USB cable (FTDI) over USB-C OTG — first target (E-series, K-line, BMW-FAST).
