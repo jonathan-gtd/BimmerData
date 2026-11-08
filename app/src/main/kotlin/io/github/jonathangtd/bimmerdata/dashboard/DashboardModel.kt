@@ -79,6 +79,8 @@ data class Card(
     val warnBelow: Double? = null,
     val warnAbove: Double? = null,
     val decimals: Int? = null,
+    /** Trend cards: seconds of history shown ([io.github.jonathangtd.bimmerdata.gauges.TrendWindow]); null = 45 s. */
+    val windowSeconds: Int? = null,
     val col: Int = 0,
     val row: Int = 0,
     val colSpan: Int = 1,

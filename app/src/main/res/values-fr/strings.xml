@@ -61,7 +61,6 @@
     <string name="page_name">Nom de la page</string>
     <string name="new_page">Page %1$d</string>
     <string name="delete_page_confirm">Supprimer la page « %1$s » et ses cartes ?</string>
-    <string name="last_page">Un tableau de bord garde au moins une page.</string>
     <plurals name="preset_drops">
         <item quantity="one">%d carte sera retirée.</item>
         <item quantity="many">%d cartes seront retirées.</item>
@@ -132,7 +131,6 @@
     <string name="export_file">Enregistrer dans un fichier</string>
     <string name="import_file">Importer un fichier</string>
     <string name="reset_default">Rétablir par défaut</string>
-    <string name="reset_confirm">Remplacer votre disposition par un tableau de bord vide (une page vide sur le téléphone et une dans Android Auto) ?</string>
     <string name="import_ok">Disposition importée</string>
     <string name="import_failed">Échec de l’import : %1$s</string>
     <string name="export_ok">Disposition enregistrée</string>

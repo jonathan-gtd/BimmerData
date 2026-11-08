@@ -6,8 +6,8 @@ package io.github.jonathangtd.bimmerdata.dashboard
 import io.github.jonathangtd.bimmerdata.gauges.GaugeType
 
 /**
- * First-launch layout: one empty page on the phone and one in Android Auto, nothing bound to a
- * particular ECU (the app works with any SGBD of any car; the user adds cards from the picker).
+ * First-launch layout: completely empty, no page on the phone nor in Android Auto (the app works
+ * with any SGBD of any car; the first "Add a card" creates the first page with the default grid).
  */
 object DefaultDashboard {
     /** Grid of a new phone page (portrait) and of a new Android Auto page (landscape, 4 big cards). */
@@ -15,7 +15,8 @@ object DefaultDashboard {
 
     fun carPage(name: String) = Page(name = name, columns = 4, rows = 1)
 
-    /** [pageName] names both first pages ("Page 1"). */
-    fun create(pageName: String = "Page 1"): Dashboard =
-        Dashboard(phonePages = listOf(phonePage(pageName)), carPages = listOf(carPage(pageName)))
+    fun create(): Dashboard = Dashboard()
+
+    /** A new page of [target] with its default grid. */
+    fun page(target: Target, name: String): Page = if (target == Target.Phone) phonePage(name) else carPage(name)
 }

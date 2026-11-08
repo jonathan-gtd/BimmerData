@@ -4,6 +4,7 @@
 package io.github.jonathangtd.bimmerdata.api
 
 import io.github.jonathangtd.bimmerdata.dashboard.GridLimits
+import io.github.jonathangtd.bimmerdata.gauges.TrendWindow
 import io.github.jonathangtd.bimmerdata.gauges.GaugeType
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -339,6 +340,7 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
             "warnBelow" to S.num("Card turns amber below this value."),
             "warnAbove" to S.num("Card turns amber above this value.", 120.0),
             "decimals" to S.int("Decimals shown, 0..4; default from the unit.", 0, 4),
+            "windowSeconds" to S.int("Trend cards: seconds of history shown by the curve, ${TrendWindow.MIN_SECONDS}..${TrendWindow.MAX_SECONDS}; default ${TrendWindow.DEFAULT_SECONDS}. Ignored by other card types.", TrendWindow.MIN_SECONDS.toLong(), TrendWindow.MAX_SECONDS.toLong(), 300),
             "col" to S.int("Left column, 0-based.", 0, 3, 0, 0),
             "row" to S.int("Top row, 0-based.", 0, 7, 0, 0),
             "colSpan" to S.int("Width in cells.", 1, 4, 1, 1),

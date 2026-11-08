@@ -17,21 +17,25 @@ object DashboardJson {
 
     fun encode(dashboard: Dashboard): String = json.encodeToString(Dashboard.serializer(), dashboard)
 
-    /** Parses and repairs [text]; throws [IllegalArgumentException] if it is not a dashboard. */
-    fun decode(text: String): Dashboard {
+    /**
+     * Parses and repairs [text]; throws [IllegalArgumentException] if it is not a dashboard. With
+     * [requirePages] (imported files) a layout without any page is refused, so a stray JSON file
+     * cannot wipe the user's pages; the app's own file may be empty (first launch, after a reset).
+     */
+    fun decode(text: String, requirePages: Boolean = true): Dashboard {
         val parsed = try {
             json.decodeFromString(Dashboard.serializer(), text)
         } catch (e: SerializationException) {
             throw IllegalArgumentException("Not a BimmerData dashboard: ${e.message}", e)
         }
         require(parsed.formatVersion <= Dashboard.FORMAT_VERSION) { "Dashboard format ${parsed.formatVersion} is newer than this app" }
-        require(parsed.phonePages.isNotEmpty() || parsed.carPages.isNotEmpty()) { "The dashboard has no pages" }
+        require(!requirePages || parsed.phonePages.isNotEmpty() || parsed.carPages.isNotEmpty()) { "The dashboard has no pages" }
         return sanitize(parsed)
     }
 
     /**
      * Makes an imported layout safe to show: grid sizes within limits, unique ids, cards inside
-     * the grid and not overlapping (cards that cannot be placed are dropped), at least one page.
+     * the grid and not overlapping (cards that cannot be placed are dropped). No page is valid.
      */
     fun sanitize(d: Dashboard): Dashboard {
         val seen = HashSet<String>()
@@ -54,7 +58,7 @@ object DashboardJson {
                 }
                 p
             }
-            return fixed.ifEmpty { listOf(Page(name = fallbackName, columns = if (target == Target.Phone) 2 else 4, rows = if (target == Target.Phone) 6 else 1)) }
+            return fixed
         }
         return Dashboard(
             formatVersion = Dashboard.FORMAT_VERSION,

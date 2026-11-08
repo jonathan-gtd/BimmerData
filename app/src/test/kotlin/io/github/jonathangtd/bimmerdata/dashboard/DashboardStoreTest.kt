@@ -18,12 +18,14 @@ import java.util.concurrent.TimeUnit
 class DashboardStoreTest {
     private val warnings = Collections.synchronizedList(ArrayList<String>())
 
-    private fun store(dir: File) = DashboardStore(File(dir, DashboardStore.FILE_NAME), { DefaultDashboard.create("Page 1") }, { msg, _ -> warnings += msg })
+    private fun store(dir: File) = DashboardStore(File(dir, DashboardStore.FILE_NAME), { DefaultDashboard.create() }, { msg, _ -> warnings += msg })
 
     @Test
     fun `first launch gives the empty default, a save is read back and published`(@TempDir dir: File) {
         val s = store(dir)
-        assertEquals(DefaultDashboard.create("Page 1").phonePages.map { it.name }, s.load().phonePages.map { it.name })
+        assertEquals(DefaultDashboard.create(), s.load())
+        assertTrue(s.save(Dashboard(name = "Empty")), "an empty layout is stored")
+        assertEquals(Dashboard(name = "Empty"), store(dir).load(), "and read back, name kept, no page added")
         val d = Msv70Example.create().copy(name = "330i")
         assertTrue(s.save(d))
         assertEquals(d, store(dir).load())
@@ -49,7 +51,7 @@ class DashboardStoreTest {
     fun `concurrent read-modify-write from two writers loses no update`(@TempDir dir: File) {
         val api = store(dir)
         val editor = store(dir)
-        api.save(DefaultDashboard.create("Page 1").copy(name = "0"))
+        api.save(Dashboard(phonePages = listOf(DefaultDashboard.phonePage("Page 1")), name = "0"))
         val pool = Executors.newFixedThreadPool(8)
         val start = CountDownLatch(1)
         repeat(400) { i ->

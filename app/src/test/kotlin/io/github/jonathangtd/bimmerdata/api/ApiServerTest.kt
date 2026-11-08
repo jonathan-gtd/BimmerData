@@ -361,9 +361,18 @@ class ApiServerTest {
         assertEquals(200, call("PATCH", "/api/v1/dashboard/car/pages/$pid", """{"name":"Renamed","position":0}""").status)
         assertEquals("Renamed", backend.dashboard.carPages[0].name)
         assertEquals(204, call("DELETE", "/api/v1/dashboard/car/pages/c1").status)
-        val last = call("DELETE", "/api/v1/dashboard/car/pages/0")
-        assertEquals(409, last.status)
-        assertEquals("last_page", last.errorCode)
+        // Deleting the last page leaves the side empty (valid); resets touch one side only.
+        val phoneBefore = backend.dashboard.phonePages
+        assertEquals(204, call("DELETE", "/api/v1/dashboard/car/pages/0").status)
+        assertTrue(backend.dashboard.carPages.isEmpty())
+        assertEquals(phoneBefore, backend.dashboard.phonePages)
+        assertEquals(201, call("POST", "/api/v1/dashboard/car/pages", """{"name":"Again"}""").status)
+        assertEquals(200, call("POST", "/api/v1/dashboard/car/reset").status)
+        assertTrue(backend.dashboard.carPages.isEmpty())
+        assertEquals(phoneBefore, backend.dashboard.phonePages, "car reset leaves the phone alone")
+        assertEquals(200, call("GET", "/api/v1/dashboard").status)
+        assertEquals(200, call("POST", "/api/v1/dashboard/reset").status)
+        assertTrue(backend.dashboard.phonePages.isEmpty() && backend.dashboard.carPages.isEmpty())
         assertEquals(6, call("GET", "/api/v1/card-types").json()["types"]!!.jsonArray.size)
     }
 

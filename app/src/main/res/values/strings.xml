@@ -61,7 +61,6 @@
     <string name="page_name">Page name</string>
     <string name="new_page">Page %1$d</string>
     <string name="delete_page_confirm">Delete the page “%1$s” and its cards?</string>
-    <string name="last_page">A dashboard keeps at least one page.</string>
     <plurals name="preset_drops">
         <item quantity="one">%d card will be removed.</item>
         <item quantity="other">%d cards will be removed.</item>
@@ -130,7 +129,6 @@
     <string name="export_file">Save to file</string>
     <string name="import_file">Import from file</string>
     <string name="reset_default">Reset to default</string>
-    <string name="reset_confirm">Replace your layout with an empty dashboard (one empty page on the phone and one in Android Auto)?</string>
     <string name="import_ok">Layout imported</string>
     <string name="import_failed">Import failed: %1$s</string>
     <string name="export_ok">Layout saved</string>

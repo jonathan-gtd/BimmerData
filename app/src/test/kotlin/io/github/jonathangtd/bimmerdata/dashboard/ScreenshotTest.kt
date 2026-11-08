@@ -73,7 +73,7 @@ class ScreenshotTest {
         save(bitmap, name)
     }
 
-    /** The dashboard as on first launch: header with the app name, one tab, the empty state. */
+    /** The dashboard as on first launch: header with the app name, no page, the empty state. */
     @Composable
     private fun FirstLaunch(title: String) {
         Column(Modifier.fillMaxSize().background(Cockpit.Background).padding(horizontal = 16.dp)) {
@@ -83,8 +83,7 @@ class ScreenshotTest {
                 onRecord = {}, onEdit = {}, connection = LiveConnection.Disconnected, lastMode = null, onConnect = {}, onDisconnect = {},
             )
             Spacer(Modifier.height(12.dp))
-            SegmentedTabs(labels = listOf(androidx.compose.ui.res.stringResource(R.string.new_page, 1)), selected = 0, onSelect = {})
-            Column(Modifier.fillMaxWidth().weight(1f)) { EmptyPage(onAdd = {}) }
+            Column(Modifier.fillMaxWidth().weight(1f)) { EmptyPage(onAdd = {}, onAddPage = {}) }
         }
     }
 
@@ -148,10 +147,18 @@ class ScreenshotTest {
     @Test
     fun carPages() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-        val empty = DefaultDashboard.create("Page 1").carPages[0]
+        save(CarScreen.render(context, Locale.ENGLISH, null, 0, 0, emptyMap(), StaticFeed(emptyMap()), AcquisitionStatus(), RecordingState()), "car_no_page.png")
+        val empty = DefaultDashboard.carPage("Page 1")
         save(CarScreen.render(context, Locale.ENGLISH, empty, 0, 1, emptyMap(), StaticFeed(emptyMap()), AcquisitionStatus(), RecordingState()), "car_empty.png")
         val example = Msv70Example.create().carPages[0]
         val feed = StaticFeed(mapOf(Msv70.OIL_TEMP to 104.0, Msv70.COOLANT_TEMP to 92.0, Msv70.STFT_B1 to 2.3, Msv70.STFT_B2 to -1.6, Msv70.RPM to 2350.0))
         save(CarScreen.render(context, Locale.ENGLISH, example, 0, 3, emptyMap(), feed, AcquisitionStatus(), RecordingState()), "car_msv70_example.png")
+    }
+
+    @Test
+    @Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
+    fun carNoPageFrench() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        save(CarScreen.render(context, Locale.FRANCE, null, 0, 0, emptyMap(), StaticFeed(emptyMap()), AcquisitionStatus(), RecordingState()), "car_no_page_fr.png")
     }
 }

@@ -66,7 +66,7 @@ class DashboardStore(
             else -> return null
         }
         return try {
-            DashboardJson.decode(source.readText(Charsets.UTF_8))
+            DashboardJson.decode(source.readText(Charsets.UTF_8), requirePages = false)
         } catch (e: Exception) {
             warn("Unreadable ${source.name}, using the default layout", e)
             null
@@ -109,7 +109,8 @@ class DashboardStore(
         val saved: StateFlow<Dashboard?> = _saved.asStateFlow()
 
 
-        fun defaultDashboard(context: Context): Dashboard = DefaultDashboard.create(context.getString(R.string.new_page, 1))
+        @Suppress("UNUSED_PARAMETER")
+        fun defaultDashboard(context: Context): Dashboard = DefaultDashboard.create()
 
     }
 }

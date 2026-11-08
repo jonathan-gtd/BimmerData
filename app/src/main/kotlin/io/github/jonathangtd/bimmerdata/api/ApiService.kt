@@ -9,6 +9,7 @@ import io.github.jonathangtd.bimmerdata.api.http.HttpServer
 import io.github.jonathangtd.bimmerdata.dashboard.Card
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.GridLimits
+import io.github.jonathangtd.bimmerdata.dashboard.DashboardReset
 import io.github.jonathangtd.bimmerdata.dashboard.LayoutPresets
 import io.github.jonathangtd.bimmerdata.dashboard.Page
 import io.github.jonathangtd.bimmerdata.dashboard.Target
@@ -278,7 +279,7 @@ class ApiService(
         val pageParam = Param("page", "path", "Page id, or its 0-based index in the page list.", S.str(), example = JsonPrimitive("0"))
         val cardParam = Param("card", "path", "Card id (see the page's `cards`).", S.str(), example = JsonPrimitive("k3j4h5g6f7"))
         val idsBody = "ids" to S.arr(S.str(example = "msv70/0x4402"), "Measurement ids (`<sgbd>/<key>`), at most 64.", 1, 64)
-        val layoutErrors = mapOf(404 to "Unknown page, card or preset.", 409 to "Conflict: overlapping cards, page full, last page, duplicate id.", 422 to "Invalid card or grid (details list each problem).", 400 to "Malformed body.")
+        val layoutErrors = mapOf(404 to "Unknown page, card or preset.", 409 to "Conflict: overlapping cards, page full, duplicate id.", 422 to "Invalid card or grid (details list each problem).", 400 to "Malformed body.")
 
         return listOf(
             // ------------------------------------------------------------ general
@@ -555,12 +556,22 @@ class ApiService(
             },
             Route(
                 "POST", "/api/v1/dashboard/reset", RouteAccess.Needs(Scope.Layout), "Dashboard", "resetDashboard",
-                "Restore the default layout",
-                "Replaces the layout with the app's default pages (MSV70 engine values). Consider GET /api/v1/dashboard first to keep a copy.",
+                "Empty both sides",
+                "Removes every page of the phone AND of Android Auto (the empty first-launch state); the dashboard name is kept. To empty one side only, use POST /api/v1/dashboard/{target}/reset. Consider GET /api/v1/dashboard first to keep a copy.",
                 reply = Reply(description = "The new layout", schema = S.ref("Dashboard")),
             ) {
-                val d = backend.defaultDashboard()
-                synchronized(layoutLock) { backend.saveDashboard(d) }
+                val d = editLayout { d -> DashboardReset.all(d).let { it to it } }
+                ok(dashboardJson(d))
+            },
+            Route(
+                "POST", "/api/v1/dashboard/{target}/reset", RouteAccess.Needs(Scope.Layout), "Dashboard", "resetTarget",
+                "Empty one side",
+                "Removes every page of `target` only (phone OR Android Auto); the other side and the dashboard name are not touched.",
+                params = listOf(targetParam),
+                reply = Reply(description = "The new layout", schema = S.ref("Dashboard")),
+            ) { call ->
+                val t = target(call)
+                val d = editLayout { d -> DashboardReset.target(d, t).let { it to it } }
                 ok(dashboardJson(d))
             },
             Route(
@@ -634,7 +645,7 @@ class ApiService(
             Route(
                 "DELETE", "/api/v1/dashboard/{target}/pages/{page}", RouteAccess.Needs(Scope.Layout), "Dashboard", "deletePage",
                 "Delete a page",
-                "Deletes the page and its cards. The last page of a target cannot be deleted (409).",
+                "Deletes the page and its cards. Deleting the last page leaves the target empty (no page), which is valid.",
                 params = listOf(targetParam, pageParam),
                 reply = Reply(204, "Deleted"),
                 errors = layoutErrors,
@@ -1044,7 +1055,7 @@ class ApiService(
             GaugeType.Dial to "270° arc with the value in the middle; for temperatures, rpm, pressures. Uses min / max for the scale and warnBelow / warnAbove for the amber zone.",
             GaugeType.BipolarBar to "Bars centred on 0, one row per measurement (1–4); for fuel trims per bank or other signed corrections. Scale ±25 by default.",
             GaugeType.BigNumber to "One big value with unit, label and the session min / max; good for a 2×2 hero card.",
-            GaugeType.Trend to "Value with a sparkline of the last minute; good for slowly changing values (temperatures, voltages).",
+            GaugeType.Trend to "Value with a curve of the last `windowSeconds` (5 s to 60 min, default 45 s); good for slowly changing values (temperatures, voltages).",
             GaugeType.MultiValue to "2–3 values side by side with short labels (lambda B1 · B2); use channelLabels to name them.",
             GaugeType.Status to "Text or state results (e.g. switch states, ECU text results).",
         )

@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import io.github.jonathangtd.bimmerdata.R
+import io.github.jonathangtd.bimmerdata.gauges.GaugeType
 import io.github.jonathangtd.bimmerdata.dashboard.Card
 import io.github.jonathangtd.bimmerdata.dashboard.CardSpecs
 import io.github.jonathangtd.bimmerdata.dashboard.GridRules
@@ -74,6 +75,8 @@ class GridActions(
     val onCardTap: (cardId: String) -> Unit,
     val onEmptyTap: (col: Int, row: Int) -> Unit,
     val onLongPress: () -> Unit,
+    /** Double tap outside the editor (trend cards: next time window). */
+    val onCardDoubleTap: ((cardId: String) -> Unit)? = null,
 )
 
 /**
@@ -234,8 +237,13 @@ private fun GridCard(
                 scaleX = if (lifted) 1.03f else 1f
                 scaleY = if (lifted) 1.03f else 1f
             }
-            .pointerInput(card.id, editing) {
+            .pointerInput(card.id, editing, card.type) {
                 detectTapGestures(
+                    onDoubleTap = if (!editing && card.type == GaugeType.Trend && actions.onCardDoubleTap != null) {
+                        { _ -> currentActions.onCardDoubleTap?.invoke(currentCard.id) }
+                    } else {
+                        null
+                    },
                     onTap = { if (editing) currentActions.onCardTap(currentCard.id) },
                     onLongPress = {
                         if (!editing) {

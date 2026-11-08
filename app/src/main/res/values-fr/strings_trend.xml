@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="trend_window">Durée affichée</string>
+    <string name="trend_window_other">Autre</string>
+    <string name="trend_window_seconds">Secondes</string>
+    <string name="trend_window_range">Entre %1$d s et %2$d min</string>
+    <string name="trend_window_hint">Jusqu’où remonte la courbe. Astuce : un double appui sur la carte du tableau de bord change la durée.</string>
+    <string name="trend_window_now">Courbe : %1$s</string>
+</resources>

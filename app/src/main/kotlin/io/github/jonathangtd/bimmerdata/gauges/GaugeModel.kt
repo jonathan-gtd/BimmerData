@@ -19,7 +19,7 @@ enum class GaugeType {
     /** Hero value with unit, label and the session min / max. */
     BigNumber,
 
-    /** Value with a sparkline of the last [GaugeRenderer.TREND_WINDOW_MS]. */
+    /** Value with a curve of the last [GaugeSpec.windowMs] (per card, see [TrendWindow]). */
     Trend,
 
     /** Two or three values side by side (lambda B1 · B2). */
@@ -50,6 +50,8 @@ class GaugeSpec(
     val warnBelow: Double?,
     val warnAbove: Double?,
     val channels: List<GaugeChannel>,
+    /** Time window of a [GaugeType.Trend] curve. */
+    val windowMs: Long = TrendWindow.DEFAULT_MS,
 ) {
     fun isWarning(value: Double): Boolean =
         !value.isNaN() && ((warnBelow != null && value < warnBelow) || (warnAbove != null && value > warnAbove))
@@ -86,6 +88,7 @@ class GaugeState {
 
     internal val path = Path()
     internal val fillPath = Path()
+    internal val trend = TrendDecimator()
 
     fun target(i: Int): Double = if (i < count) targets[i] else Double.NaN
     fun smoothed(i: Int): Double = if (i < count) smoothed[i] else Double.NaN

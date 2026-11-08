@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 /** The phone dashboard against layouts written elsewhere (REST API). */
 class DashboardSyncTest {
     private val mine = Msv70Example.create().copy(name = "mine")
-    private val theirs = DefaultDashboard.create("API").copy(name = "theirs")
+    private val theirs = Dashboard(phonePages = listOf(DefaultDashboard.phonePage("API")), carPages = listOf(DefaultDashboard.carPage("API")), name = "theirs")
 
     @Test
     fun `own writes are recognized and ignored`() {

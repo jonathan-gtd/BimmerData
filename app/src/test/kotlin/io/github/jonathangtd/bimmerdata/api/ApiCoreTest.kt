@@ -113,7 +113,7 @@ class ApiCoreTest {
             carPages = emptyList(),
         )
         val issues = LayoutOps.validate(d).map { it.path to it.code }
-        assertTrue(("carPages" to "no_pages") in issues, issues.toString())
+        assertFalse(issues.any { it.first == "carPages" }, "no page is valid: $issues")
         assertTrue(("phonePages[0].cards[1].id" to "duplicate_id") in issues)
         assertTrue(("phonePages[0].cards[1].measurementIds" to "measurement_count") in issues)
         assertTrue(("phonePages[0].cards[1]" to "out_of_grid") in issues)
