@@ -32,6 +32,11 @@ android {
     buildFeatures {
         compose = true
     }
+
+    // Robolectric screenshot tests (ScreenshotTest) need the merged resources and fonts.
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
@@ -55,12 +60,23 @@ dependencies {
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
+    // screenshot tests: JUnit 4 + Robolectric, run on the JUnit platform by the vintage engine
+    testImplementation(libs.junit4)
+    testRuntimeOnly(libs.junit.vintage.engine)
+    testImplementation(libs.robolectric)
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.compose.ui.test.junit4)
+    testImplementation(libs.compose.ui.test.manifest)
 }
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
     // Optional: the user's own EDIABAS ECU folder, for tests that need real .PRG files.
     System.getenv("BIMMERDATA_ECU_DIR")?.let { environment("BIMMERDATA_ECU_DIR", it) }
+    // Robolectric reaches into FileDescriptor internals (shared memory of recent Android SDKs)
+    jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED", "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED", "--add-opens=java.base/java.io=ALL-UNNAMED")
+    // ScreenshotTest writes its PNGs there (default: app/build/screenshots)
+    System.getenv("BIMMERDATA_SCREENSHOT_DIR")?.let { environment("BIMMERDATA_SCREENSHOT_DIR", it) }
     testLogging {
         events("passed", "skipped", "failed")
         showStandardStreams = true
