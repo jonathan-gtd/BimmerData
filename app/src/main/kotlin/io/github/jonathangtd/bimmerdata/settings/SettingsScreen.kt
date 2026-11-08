@@ -70,13 +70,12 @@ import io.github.jonathangtd.bimmerdata.api.ApiTokens
 import io.github.jonathangtd.bimmerdata.api.Scope
 import io.github.jonathangtd.bimmerdata.api.android.ApiRuntime
 import io.github.jonathangtd.bimmerdata.api.android.ApiRuntimeState
-import io.github.jonathangtd.bimmerdata.live.CsvFiles
 import io.github.jonathangtd.bimmerdata.live.LiveMode
 import io.github.jonathangtd.bimmerdata.ui.BarlowCondensed
 import io.github.jonathangtd.bimmerdata.ui.Cockpit
 import java.util.Locale
 
-/** Settings: connection, recording, local REST API and about. */
+/** Settings: connection, tools (Tool32), recording, Telegraf export, local REST API and about. */
 @Composable
 fun SettingsScreen() {
     val context = LocalContext.current
@@ -98,8 +97,11 @@ fun SettingsScreen() {
             )
         }
         item { ConnectionSection(settings, store) }
-        item { RecordingSection() }
+        item { ToolsSection() }
+        item { RecordingSection(settings.recording, store) }
+        item { TelegrafSection(settings.telegraf, store) }
         item { ApiSection(settings.api, api, store, runtime) }
+        // Translations section (R5): added with the translations feature, between the API and About.
         item { AboutSection() }
     }
 }
@@ -124,16 +126,6 @@ private fun ConnectionSection(settings: Settings, store: AppSettings) {
             checked = settings.autoConnectOnCable,
             onChange = { on -> store.update { it.copy(autoConnectOnCable = on) } },
         )
-    }
-}
-
-@Composable
-private fun RecordingSection() {
-    SettingsCard {
-        SectionLabel(stringResource(R.string.settings_section_recording))
-        InfoRow(stringResource(R.string.settings_rec_folder), CsvFiles.RelativePath, stringResource(R.string.settings_rec_folder_hint, CsvFiles.RelativePath))
-        InfoRow(stringResource(R.string.settings_rec_rate), null, stringResource(R.string.settings_rec_rate_value))
-        InfoRow(stringResource(R.string.settings_rec_columns), null, stringResource(R.string.settings_rec_columns_value))
     }
 }
 
@@ -248,6 +240,8 @@ private fun ApiSection(config: ApiConfig, state: ApiRuntimeState, store: AppSett
             SmallButton(stringResource(R.string.settings_share)) { share(context, line) }
         }
         Hint(stringResource(R.string.settings_api_background))
+        Divider()
+        ApiDocsRow(config, state)
     }
 
     if (confirmRegenerate) {
@@ -284,6 +278,8 @@ private fun AboutSection() {
         Hint(stringResource(R.string.settings_credit_fonts))
         Hint(stringResource(R.string.settings_credit_libs))
         Hint(stringResource(R.string.settings_trademark))
+        Divider()
+        LicensesBlock()
     }
 }
 
@@ -311,7 +307,7 @@ private fun share(context: Context, text: String) {
 // ---------------------------------------------------------------- building blocks
 
 @Composable
-private fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
+internal fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = Cockpit.Card,
@@ -323,25 +319,34 @@ private fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
 }
 
 @Composable
-private fun SectionLabel(text: String) {
+internal fun SectionLabel(text: String) {
     Text(text.uppercase(Locale.ROOT), color = Cockpit.Muted, fontSize = 12.sp, letterSpacing = 1.2.sp, fontWeight = FontWeight.Medium)
 }
 
 @Composable
-private fun Hint(text: String) {
+internal fun Hint(text: String) {
     Text(text, color = Cockpit.Muted, fontSize = 13.sp, lineHeight = 18.sp)
 }
 
 @Composable
-private fun Mono(text: String) {
+internal fun Mono(text: String) {
     Text(text, color = Cockpit.Text, fontSize = 14.sp, fontFamily = FontFamily.Monospace)
 }
 
+/** Coloured dot and a line of text (state of a service). */
 @Composable
-private fun Divider() = HorizontalDivider(color = Cockpit.Border, modifier = Modifier.padding(vertical = 2.dp))
+internal fun StatusLine(color: Color, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Box(Modifier.size(10.dp).background(color, CircleShape))
+        Text(text, color = Cockpit.Text, fontSize = 15.sp)
+    }
+}
 
 @Composable
-private fun InfoRow(title: String, value: String?, hint: String?) {
+internal fun Divider() = HorizontalDivider(color = Cockpit.Border, modifier = Modifier.padding(vertical = 2.dp))
+
+@Composable
+internal fun InfoRow(title: String, value: String?, hint: String?) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(title, color = Cockpit.Text, fontSize = 16.sp)
         value?.let { Mono(it) }
@@ -350,14 +355,14 @@ private fun InfoRow(title: String, value: String?, hint: String?) {
 }
 
 @Composable
-private fun Banner(text: String, color: Color) {
+internal fun Banner(text: String, color: Color) {
     Surface(color = color.copy(alpha = 0.10f), shape = RoundedCornerShape(10.dp), border = BorderStroke(1.dp, color.copy(alpha = 0.45f))) {
         Text(text, color = Cockpit.Text, fontSize = 13.sp, lineHeight = 18.sp, modifier = Modifier.padding(12.dp))
     }
 }
 
 @Composable
-private fun SwitchRow(title: String, hint: String?, checked: Boolean, onChange: (Boolean) -> Unit, enabled: Boolean = true) {
+internal fun SwitchRow(title: String, hint: String?, checked: Boolean, onChange: (Boolean) -> Unit, enabled: Boolean = true) {
     Row(
         Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(enabled = enabled, role = Role.Switch) { onChange(!checked) },
         verticalAlignment = Alignment.CenterVertically,
@@ -377,7 +382,7 @@ private fun SwitchRow(title: String, hint: String?, checked: Boolean, onChange: 
 }
 
 @Composable
-private fun <T> Segmented(options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Unit) {
+internal fun <T> Segmented(options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Unit) {
     Row(
         Modifier.fillMaxWidth().background(Cockpit.Background, RoundedCornerShape(10.dp)).padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(3.dp),
@@ -397,7 +402,7 @@ private fun <T> Segmented(options: List<Pair<T, String>>, selected: T, onSelect:
 }
 
 @Composable
-private fun SmallButton(text: String, enabled: Boolean = true, color: Color = Cockpit.Text, onClick: () -> Unit) {
+internal fun SmallButton(text: String, enabled: Boolean = true, color: Color = Cockpit.Text, onClick: () -> Unit) {
     OutlinedButton(
         onClick = onClick, enabled = enabled, modifier = Modifier.heightIn(min = 44.dp),
         shape = RoundedCornerShape(10.dp), border = BorderStroke(1.dp, if (enabled) color.copy(alpha = 0.6f) else Cockpit.Border),
@@ -406,7 +411,7 @@ private fun SmallButton(text: String, enabled: Boolean = true, color: Color = Co
 }
 
 @Composable
-private fun fieldColors() = OutlinedTextFieldDefaults.colors(
+internal fun fieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = Cockpit.Accent, unfocusedBorderColor = Cockpit.Border,
     focusedLabelColor = Cockpit.Accent, unfocusedLabelColor = Cockpit.Muted,
     focusedTextColor = Cockpit.Text, unfocusedTextColor = Cockpit.Text, cursorColor = Cockpit.Accent,

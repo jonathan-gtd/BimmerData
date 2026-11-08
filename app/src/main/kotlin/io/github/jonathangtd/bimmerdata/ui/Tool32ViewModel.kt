@@ -215,6 +215,22 @@ class Tool32ViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    /**
+     * Selects the ECU file of [sgbd] ("msv70", "MSV70.PRG"…) when Tool32 is opened from an ECU's
+     * detail; does nothing if it is already selected.
+     */
+    fun preselectSgbd(sgbd: String) {
+        val base = sgbd.substringBeforeLast('.').lowercase(Locale.ROOT)
+        val files = _state.value.ecuFiles
+        val file = files.firstOrNull { it.equals(sgbd, ignoreCase = true) }
+            ?: files.filter { it.substringBeforeLast('.').lowercase(Locale.ROOT) == base }.minByOrNull { if (it.endsWith(".prg", ignoreCase = true)) 0 else 1 }
+        if (file == null) {
+            _state.update { it.copy(message = "${base.uppercase(Locale.ROOT)} is not in the imported ECU files") }
+            return
+        }
+        if (_state.value.sgbd != file) selectSgbd(file)
+    }
+
     fun selectJob(job: String) = _state.update { it.copy(job = job, result = null, repeat = null) }
 
     fun setArgs(args: String) = _state.update { it.copy(args = args) }

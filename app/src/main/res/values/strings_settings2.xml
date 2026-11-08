@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings2_back">Back</string>
+    <string name="settings2_save">Save</string>
+
+    <!-- Tools -->
+    <string name="settings2_section_tools">Tools</string>
+    <string name="settings2_tool32_hint">Run any EDIABAS job of an ECU file and look at its results, raw frames and timings.</string>
+    <string name="settings2_ecu_jobs">Jobs (Tool32)</string>
+
+    <!-- Recording -->
+    <string name="settings2_rec_choose">Choose folder</string>
+    <string name="settings2_rec_default">Default folder</string>
+    <string name="settings2_rec_custom_hint">Folder chosen by you. If it is deleted or its access is removed, recordings go back to Documents/BimmerData/.</string>
+    <string name="settings2_rec_choose_failed">This folder cannot be used: %1$s</string>
+    <string name="settings2_rec_rows">Row rate</string>
+    <string name="settings2_rec_rows_all">Max</string>
+    <string name="settings2_rec_rows_hz">%1$d/s</string>
+    <string name="settings2_rec_rows_hint_all">One row per read cycle: the rate follows the reads/s shown on the dashboard.</string>
+    <string name="settings2_rec_rows_hint">Rows limited to %1$d/s, whatever the read rate. Markers always get their own row.</string>
+    <string name="settings2_rec_prefix">File name</string>
+    <string name="settings2_rec_prefix_hint">Letters, digits, - and _. Example: %1$s</string>
+
+    <!-- Telegraf export -->
+    <string name="settings2_section_telegraf">Telegraf export</string>
+    <string name="settings2_tg_enable">Export to Telegraf</string>
+    <string name="settings2_tg_enable_hint">Sends the live values to a Telegraf server, which stores them in TimescaleDB for Grafana. Setup: docs/TELEGRAF.md in the BimmerData repository.</string>
+    <string name="settings2_tg_url">Telegraf URL</string>
+    <string name="settings2_tg_url_error">Starts with http:// or https://</string>
+    <string name="settings2_tg_auth">Authentication</string>
+    <string name="settings2_tg_auth_none">None</string>
+    <string name="settings2_tg_auth_token">Token</string>
+    <string name="settings2_tg_auth_basic">Password</string>
+    <string name="settings2_tg_token">Token</string>
+    <string name="settings2_tg_user">User</string>
+    <string name="settings2_tg_password">Password</string>
+    <string name="settings2_tg_secret_stored">Stored encrypted on this phone. Leave empty to keep it.</string>
+    <string name="settings2_tg_secret_missing">Not set yet.</string>
+    <string name="settings2_tg_car">Car name</string>
+    <string name="settings2_tg_car_hint">Tag \"car\" of every point, to tell your cars apart in Grafana.</string>
+    <string name="settings2_tg_rate">Points per second</string>
+    <string name="settings2_tg_rate_hint">Per measurement, independent of the read rate.</string>
+    <string name="settings2_tg_mode">When to send</string>
+    <string name="settings2_tg_mode_after">After the trip</string>
+    <string name="settings2_tg_mode_live">Live</string>
+    <string name="settings2_tg_mode_after_hint">Points wait on the phone and are sent on Wi-Fi (an unmetered network), with their original times. Best for a server at home.</string>
+    <string name="settings2_tg_mode_live_hint">Sent within seconds on any network, mobile data included. Needs a server reachable from the road: prefer a VPN (WireGuard, Tailscale) and HTTPS over an open port.</string>
+    <string name="settings2_tg_test">Test</string>
+    <string name="settings2_tg_send">Send now</string>
+    <string name="settings2_tg_clear">Clear queue</string>
+    <string name="settings2_tg_clear_title">Delete the waiting points?</string>
+    <string name="settings2_tg_clear_text">%1$s points not sent yet will be lost.</string>
+    <string name="settings2_tg_testing">Testing…</string>
+    <string name="settings2_tg_test_ok">Telegraf answered: OK.</string>
+    <string name="settings2_tg_test_auth">Telegraf refused the token or password (%1$s).</string>
+    <string name="settings2_tg_test_failed">Failed: %1$s</string>
+    <string name="settings2_tg_queue">%1$s points waiting (%2$s) · %3$s sent</string>
+    <string name="settings2_tg_dropped">%1$s points lost (queue full or refused)</string>
+    <string name="settings2_tg_last_ok">Last upload: %1$s</string>
+    <string name="settings2_tg_last_error">Last error: %1$s</string>
+    <string name="settings2_tg_phase_off">Off</string>
+    <string name="settings2_tg_phase_idle">Up to date</string>
+    <string name="settings2_tg_phase_network">Waiting for a network</string>
+    <string name="settings2_tg_phase_unmetered">Waiting for Wi-Fi</string>
+    <string name="settings2_tg_phase_sending">Sending</string>
+    <string name="settings2_tg_phase_retrying">Server not reachable, retrying</string>
+    <string name="settings2_tg_phase_auth">Authentication failed: check the token or password</string>
+
+    <!-- API documentation -->
+    <string name="settings2_api_docs">View the API documentation</string>
+    <string name="settings2_api_docs_hint">Swagger UI, built into the app. While the API runs, browsers on the network can also open %1$s</string>
+    <string name="settings2_api_docs_title">API documentation</string>
+
+    <!-- About -->
+    <string name="settings2_licenses">Open-source licenses</string>
+    <string name="settings2_licenses_show">Show the list</string>
+    <string name="settings2_licenses_hide">Hide the list</string>
+</resources>

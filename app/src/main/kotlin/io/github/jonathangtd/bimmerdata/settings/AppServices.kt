@@ -10,13 +10,15 @@ import android.content.IntentFilter
 import android.hardware.usb.UsbManager
 import androidx.core.content.ContextCompat
 import io.github.jonathangtd.bimmerdata.api.android.ApiRuntime
+import io.github.jonathangtd.bimmerdata.export.TelegrafRuntime
 import io.github.jonathangtd.bimmerdata.live.LiveConnection
 import io.github.jonathangtd.bimmerdata.live.LiveMode
 import io.github.jonathangtd.bimmerdata.live.LiveRepository
 import io.github.jonathangtd.bimmerdata.usb.UsbCable
 
 /**
- * Process-wide services driven by the settings: the REST API server and the USB auto-connect.
+ * Process-wide services driven by the settings: the REST API server, the Telegraf export and the
+ * USB auto-connect.
  * Started once when the UI starts ([start] is idempotent).
  */
 object AppServices {
@@ -30,6 +32,7 @@ object AppServices {
         }
         val app = context.applicationContext
         ApiRuntime.get(app).start()
+        TelegrafRuntime.get(app).start()
         AutoConnect.register(app)
     }
 }

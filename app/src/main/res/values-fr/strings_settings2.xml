@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings2_back">Retour</string>
+    <string name="settings2_save">Enregistrer</string>
+
+    <!-- Tools -->
+    <string name="settings2_section_tools">Outils</string>
+    <string name="settings2_tool32_hint">Exécute n\'importe quel job EDIABAS d\'un fichier calculateur, avec ses résultats, ses trames brutes et ses temps.</string>
+    <string name="settings2_ecu_jobs">Jobs (Tool32)</string>
+
+    <!-- Recording -->
+    <string name="settings2_rec_choose">Choisir le dossier</string>
+    <string name="settings2_rec_default">Dossier par défaut</string>
+    <string name="settings2_rec_custom_hint">Dossier choisi par vous. S\'il est supprimé ou si son accès est retiré, les enregistrements repartent dans Documents/BimmerData/.</string>
+    <string name="settings2_rec_choose_failed">Ce dossier n\'est pas utilisable : %1$s</string>
+    <string name="settings2_rec_rows">Cadence des lignes</string>
+    <string name="settings2_rec_rows_all">Max</string>
+    <string name="settings2_rec_rows_hz">%1$d/s</string>
+    <string name="settings2_rec_rows_hint_all">Une ligne par cycle de lecture : la cadence suit les lectures/s affichées sur le tableau de bord.</string>
+    <string name="settings2_rec_rows_hint">Lignes limitées à %1$d/s, quelle que soit la cadence de lecture. Un repère a toujours sa ligne.</string>
+    <string name="settings2_rec_prefix">Nom des fichiers</string>
+    <string name="settings2_rec_prefix_hint">Lettres, chiffres, - et _. Exemple : %1$s</string>
+
+    <!-- Telegraf export -->
+    <string name="settings2_section_telegraf">Export Telegraf</string>
+    <string name="settings2_tg_enable">Exporter vers Telegraf</string>
+    <string name="settings2_tg_enable_hint">Envoie les valeurs en direct à un serveur Telegraf, qui les range dans TimescaleDB pour Grafana. Mise en place : docs/TELEGRAF.md dans le dépôt BimmerData.</string>
+    <string name="settings2_tg_url">URL de Telegraf</string>
+    <string name="settings2_tg_url_error">Commence par http:// ou https://</string>
+    <string name="settings2_tg_auth">Authentification</string>
+    <string name="settings2_tg_auth_none">Aucune</string>
+    <string name="settings2_tg_auth_token">Jeton</string>
+    <string name="settings2_tg_auth_basic">Mot de passe</string>
+    <string name="settings2_tg_token">Jeton</string>
+    <string name="settings2_tg_user">Identifiant</string>
+    <string name="settings2_tg_password">Mot de passe</string>
+    <string name="settings2_tg_secret_stored">Enregistré chiffré sur ce téléphone. Laissez vide pour le garder.</string>
+    <string name="settings2_tg_secret_missing">Pas encore renseigné.</string>
+    <string name="settings2_tg_car">Nom de la voiture</string>
+    <string name="settings2_tg_car_hint">Étiquette « car » de chaque point, pour distinguer vos voitures dans Grafana.</string>
+    <string name="settings2_tg_rate">Points par seconde</string>
+    <string name="settings2_tg_rate_hint">Par mesure, indépendamment de la cadence de lecture.</string>
+    <string name="settings2_tg_mode">Quand envoyer</string>
+    <string name="settings2_tg_mode_after">Après le trajet</string>
+    <string name="settings2_tg_mode_live">En direct</string>
+    <string name="settings2_tg_mode_after_hint">Les points attendent sur le téléphone et partent en Wi-Fi (réseau non facturé), avec leurs heures d\'origine. Idéal pour un serveur à la maison.</string>
+    <string name="settings2_tg_mode_live_hint">Envoyés en quelques secondes sur n\'importe quel réseau, données mobiles comprises. Il faut un serveur joignable depuis la route : préférez un VPN (WireGuard, Tailscale) et HTTPS à un port ouvert.</string>
+    <string name="settings2_tg_test">Tester</string>
+    <string name="settings2_tg_send">Envoyer</string>
+    <string name="settings2_tg_clear">Vider la file</string>
+    <string name="settings2_tg_clear_title">Supprimer les points en attente ?</string>
+    <string name="settings2_tg_clear_text">%1$s points pas encore envoyés seront perdus.</string>
+    <string name="settings2_tg_testing">Test en cours…</string>
+    <string name="settings2_tg_test_ok">Telegraf a répondu : OK.</string>
+    <string name="settings2_tg_test_auth">Telegraf refuse le jeton ou le mot de passe (%1$s).</string>
+    <string name="settings2_tg_test_failed">Échec : %1$s</string>
+    <string name="settings2_tg_queue">%1$s points en attente (%2$s) · %3$s envoyés</string>
+    <string name="settings2_tg_dropped">%1$s points perdus (file pleine ou refusés)</string>
+    <string name="settings2_tg_last_ok">Dernier envoi : %1$s</string>
+    <string name="settings2_tg_last_error">Dernière erreur : %1$s</string>
+    <string name="settings2_tg_phase_off">Désactivé</string>
+    <string name="settings2_tg_phase_idle">À jour</string>
+    <string name="settings2_tg_phase_network">En attente d\'un réseau</string>
+    <string name="settings2_tg_phase_unmetered">En attente du Wi-Fi</string>
+    <string name="settings2_tg_phase_sending">Envoi en cours</string>
+    <string name="settings2_tg_phase_retrying">Serveur injoignable, nouvel essai bientôt</string>
+    <string name="settings2_tg_phase_auth">Authentification refusée : vérifiez le jeton ou le mot de passe</string>
+
+    <!-- API documentation -->
+    <string name="settings2_api_docs">Voir la documentation de l\'API</string>
+    <string name="settings2_api_docs_hint">Swagger UI, intégré à l\'appli. Quand l\'API tourne, un navigateur du réseau peut aussi ouvrir %1$s</string>
+    <string name="settings2_api_docs_title">Documentation de l\'API</string>
+
+    <!-- About -->
+    <string name="settings2_licenses">Licences open source</string>
+    <string name="settings2_licenses_show">Afficher la liste</string>
+    <string name="settings2_licenses_hide">Masquer la liste</string>
+</resources>

@@ -42,6 +42,8 @@ class ApiService(
     private val backend: ApiBackend,
     private val access: () -> ApiAccess,
     extensions: List<ApiExtension> = emptyList(),
+    /** Files of the embedded Swagger UI ([ApiDocs.ASSETS]); null = not available. */
+    private val docsAssets: (String) -> ByteArray? = { null },
     private val clock: () -> Long = System::currentTimeMillis,
     private val sleep: (Long) -> Unit = { Thread.sleep(it) },
     private val log: (String, Throwable?) -> Unit = { _, _ -> },
@@ -288,6 +290,27 @@ class ApiService(
             ) { call ->
                 val host = call.request.header("host")?.takeIf { h -> h.isNotBlank() && h.all { it.isLetterOrDigit() || it in ".:-[]" } }
                 ok(OpenApi.document(routes, host?.let { "http://$it" }, backend.appVersion))
+            },
+            Route(
+                "GET", "/api/v1/docs", RouteAccess.Public, "General", "getDocs",
+                "Interactive documentation (Swagger UI)",
+                "Swagger UI for this API, embedded in the app (nothing is loaded from the internet). Open it in a browser; use \"Authorize\" with the token to try the operations. Public.",
+                reply = Reply(description = "HTML page", schema = S.str("HTML"), contentType = "text/html; charset=utf-8"),
+            ) {
+                HttpResponse.Bytes(200, "text/html; charset=utf-8", ApiDocs.html("/api/v1/docs/", specUrl = "/api/v1/openapi.json").toByteArray(Charsets.UTF_8), mapOf("Cache-Control" to "no-cache"))
+            },
+            Route(
+                "GET", "/api/v1/docs/{file}", RouteAccess.Public, "General", "getDocsFile",
+                "Swagger UI file",
+                "Script, style sheet and license files of the embedded Swagger UI (Apache-2.0). Public.",
+                params = listOf(Param("file", "path", "File name.", S.str(enum = ApiDocs.ASSETS.keys.toList()))),
+                reply = Reply(description = "File", schema = S.str("File content", format = "binary"), contentType = "application/octet-stream"),
+                errors = mapOf(404 to "Unknown file."),
+            ) { call ->
+                val name = call.path("file")
+                val type = ApiDocs.ASSETS[name] ?: throw notFound("not_found", "Unknown documentation file '$name'")
+                val bytes = docsAssets(name) ?: throw notFound("not_found", "The documentation files are not available")
+                HttpResponse.Bytes(200, type, bytes, mapOf("Cache-Control" to "max-age=86400"))
             },
             Route(
                 "GET", "/api/v1", RouteAccess.AnyToken, "General", "getIndex",
@@ -882,6 +905,55 @@ class ApiService(
                 b.allowOnly("defaultMode", "autoConnectOnCable")
                 val mode = b.string("defaultMode")?.let { m -> ConnectMode.entries.firstOrNull { it.name.equals(m, ignoreCase = true) } ?: throw badRequest("'defaultMode' must be usb or simulation") }
                 ok(ApiJson.encodeToJsonElement(backend.updateSettings(SettingsPatch(mode, b.bool("autoConnectOnCable")))))
+            },
+
+            // ------------------------------------------------------------ Telegraf export
+            Route(
+                "GET", "/api/v1/export/telegraf", RouteAccess.Needs(Scope.Config), "Export", "getTelegrafExport",
+                "Telegraf export settings and queue",
+                "Where live values are exported (phone → Telegraf → TimescaleDB → Grafana), and the state of the on-phone queue. The token / password is never returned.",
+                reply = Reply(description = "Telegraf export", schema = S.ref("TelegrafExport")),
+                errors = mapOf(501 to "Not available."),
+            ) { ok(ApiJson.encodeToJsonElement(backend.telegraf() ?: throw ApiException(501, "not_available", "The Telegraf export is not available"))) },
+            Route(
+                "PATCH", "/api/v1/export/telegraf", RouteAccess.Needs(Scope.Config), "Export", "updateTelegrafExport",
+                "Change the Telegraf export",
+                "Changes `enabled`, `url`, `car`, `pointsPerSecond` (1–5 points per measurement and second) and / or `mode` (`live`: upload on any network; `afterTrip`: keep the points on the phone until an unmetered network such as home Wi-Fi). Authentication (`auth`, `username`, token, password) can only be changed on the phone: sending it answers 403.",
+                body = Body(S.obj(null, emptyList(), false, null,
+                    "enabled" to S.bool(), "url" to S.str(example = "http://192.168.1.10:8186/api/v2/write"), "car" to S.str(example = "E90 330i"),
+                    "pointsPerSecond" to S.int(min = 1, max = 5), "mode" to S.str(enum = listOf("live", "afterTrip"))),
+                    example = buildJsonObject { put("enabled", true); put("mode", "afterTrip") }),
+                reply = Reply(description = "Telegraf export after the change", schema = S.ref("TelegrafExport")),
+                errors = mapOf(400 to "Unknown field or wrong value.", 403 to "Tried to change the authentication (phone only) or the config scope is not enabled.", 501 to "Not available."),
+            ) { call ->
+                val b = call.bodyObject()
+                listOf("auth", "username", "token", "password").firstOrNull { it in b }?.let {
+                    throw ApiException(403, "phone_only", "The Telegraf authentication can only be changed on the phone, in Settings › Telegraf export")
+                }
+                b.allowOnly("enabled", "url", "car", "pointsPerSecond", "mode")
+                val rate = b.int("pointsPerSecond")?.also { if (it !in 1..5) throw badRequest("'pointsPerSecond' must be 1..5") }
+                val mode = b.string("mode")?.also { if (it != "live" && it != "afterTrip") throw badRequest("'mode' must be live or afterTrip") }
+                val url = b.string("url")?.trim()?.also { u ->
+                    if (u.isNotEmpty() && !(u.startsWith("http://") || u.startsWith("https://"))) throw badRequest("'url' must start with http:// or https://")
+                }
+                ok(ApiJson.encodeToJsonElement(backend.updateTelegraf(TelegrafPatch(b.bool("enabled"), url, b.string("car"), rate, mode))))
+            },
+            Route(
+                "POST", "/api/v1/export/telegraf/test", RouteAccess.Needs(Scope.Config), "Export", "testTelegrafExport",
+                "Test the connection to Telegraf",
+                "Sends an empty write with the stored settings (nothing is stored on the server) and says whether Telegraf accepted it.",
+                reply = Reply(description = "Test result", schema = S.obj(null, listOf("ok", "message"), false, null, "ok" to S.bool(), "message" to S.str())),
+                errors = mapOf(501 to "Not available."),
+            ) { ok(ApiJson.encodeToJsonElement(backend.testTelegraf())) },
+            Route(
+                "POST", "/api/v1/export/telegraf/send", RouteAccess.Needs(Scope.Config), "Export", "sendTelegrafNow",
+                "Upload the waiting points now",
+                "Retries at once (also after an authentication error), as far as the mode and the network allow.",
+                reply = Reply(description = "Telegraf export", schema = S.ref("TelegrafExport")),
+                errors = mapOf(501 to "Not available."),
+            ) {
+                backend.sendTelegrafNow()
+                ok(ApiJson.encodeToJsonElement(backend.telegraf() ?: throw ApiException(501, "not_available", "The Telegraf export is not available")))
             },
         )
     }

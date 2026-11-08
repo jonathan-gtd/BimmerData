@@ -13,6 +13,7 @@ import io.github.jonathangtd.bimmerdata.ediabas.EdInterfaceObd
 import io.github.jonathangtd.bimmerdata.ediabas.sim.EcuSimulator
 import io.github.jonathangtd.bimmerdata.ediabas.sim.SimulatedKLine
 import io.github.jonathangtd.bimmerdata.files.EcuImporter
+import io.github.jonathangtd.bimmerdata.settings.AppSettings
 import io.github.jonathangtd.bimmerdata.usb.UsbCable
 import io.github.jonathangtd.bimmerdata.usb.UsbFtdiSerialPort
 import kotlinx.coroutines.CoroutineScope
@@ -84,12 +85,14 @@ class LiveRepository private constructor(context: Context) : InterfaceArbiter.Ca
     private val csvRecorder = CsvSessionRecorder(
         source = proxy,
         columns = { proxy.requested },
-        output = { name -> CsvFiles.create(app, name) { uri -> _lastRecording.value = uri } },
+        output = { name -> RecordingStorage.create(app, name) { uri -> _lastRecording.value = uri } },
         scope = scope,
         pin = proxy::setPinned,
+        fileNamer = { t -> CsvSessionRecorder.fileName(t, prefix = AppSettings.get(app).state.value.recording.filePrefix) },
+        minRowIntervalMs = { AppSettings.get(app).state.value.recording.rowIntervalMs },
     )
 
-    /** CSV logger of the live values, files in Documents/BimmerData/. */
+    /** CSV logger of the live values, files in the folder of Settings › Recording ([RecordingStorage]). */
     val recorder: SessionRecorder get() = csvRecorder
 
     private val _connection = MutableStateFlow<LiveConnection>(LiveConnection.Disconnected)

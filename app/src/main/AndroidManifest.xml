@@ -20,7 +20,8 @@
     <uses-permission android:name="androidx.car.app.ACCESS_SURFACE" />
 
     <!-- Local REST API (off by default, Settings › Local API): a server socket on the Wi-Fi / hotspot
-         addresses, and network callbacks to rebind when they change -->
+         addresses, and network callbacks to rebind when they change. Also used by the Telegraf
+         export (off by default, Settings › Telegraf export). -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
@@ -55,6 +56,12 @@
             android:name=".live.AcquisitionService"
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
+
+        <!-- Telegraf export: uploads the waiting points once a suitable network is there -->
+        <service
+            android:name=".export.TelegrafUploadJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <!-- Android Auto entry point. Exported without a permission: the host binds it, and
              BimmerCarAppService checks the host's signature (HostValidator). -->

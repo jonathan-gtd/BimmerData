@@ -67,15 +67,22 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.res.stringResource
+import io.github.jonathangtd.bimmerdata.R
+import io.github.jonathangtd.bimmerdata.dashboard.ui.RoundIconButton
 import io.github.jonathangtd.bimmerdata.ediabas.EdInterfaceObd.FrameDirection
 import java.util.Locale
 
 private val MinTouch = 48.dp
 
-/** "Mini Tool32": pick an SGBD and a job, run it, look at results, frames and timings. */
+/**
+ * "Mini Tool32": pick an SGBD and a job, run it, look at results, frames and timings. A
+ * secondary screen (Settings › Tools, or an ECU's detail with [initialSgbd] selected).
+ */
 @Composable
-fun Tool32Screen(vm: Tool32ViewModel = viewModel()) {
+fun Tool32Screen(vm: Tool32ViewModel = viewModel(), initialSgbd: String? = null, onBack: (() -> Unit)? = null) {
     val state by vm.state.collectAsStateWithLifecycle()
+    LaunchedEffect(initialSgbd) { initialSgbd?.let(vm::preselectSgbd) }
     val pickFolder = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) vm.importFolder(uri)
     }
@@ -91,7 +98,7 @@ fun Tool32Screen(vm: Tool32ViewModel = viewModel()) {
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item { Header(state) }
+        item { Header(state, onBack) }
         state.message?.let { msg -> item { MessageBanner(msg, vm::dismissMessage) } }
         item { ConnectionCard(state, vm::setMode, vm::connect, vm::disconnect) }
         item { EcuFilesCard(state, onImport = { pickFolder.launch(null) }, onCancel = vm::cancelImport) }
@@ -216,8 +223,12 @@ private fun SelectorRow(label: String, value: String?, placeholder: String, enab
 // ---- sections ----
 
 @Composable
-private fun Header(state: Tool32State) {
+private fun Header(state: Tool32State, onBack: (() -> Unit)?) {
     Row(verticalAlignment = Alignment.CenterVertically) {
+        if (onBack != null) {
+            RoundIconButton(R.drawable.ic_chevron_left, stringResource(R.string.settings2_back), onBack)
+            Spacer(Modifier.width(10.dp))
+        }
         Column(Modifier.weight(1f)) {
             Text("BimmerData", color = Cockpit.Text, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
             Text("Mini Tool32", color = Cockpit.Muted, fontSize = 14.sp)

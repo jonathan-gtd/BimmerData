@@ -16,8 +16,6 @@
     <string name="settings_section_recording">Enregistrement</string>
     <string name="settings_rec_folder">Dossier</string>
     <string name="settings_rec_folder_hint">Stockage interne › %1$s, visible dans l’app Fichiers et en USB.</string>
-    <string name="settings_rec_rate">Fréquence</string>
-    <string name="settings_rec_rate_value">Une ligne par cycle de lecture : la fréquence suit les lect/s affichées sur le tableau de bord. Moins de mesures à l’écran, des lignes plus rapides.</string>
     <string name="settings_rec_columns">Colonnes</string>
     <string name="settings_rec_columns_value">Toutes les mesures lues au démarrage de l’enregistrement.</string>
 

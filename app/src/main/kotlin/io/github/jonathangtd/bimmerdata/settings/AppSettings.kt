@@ -21,6 +21,8 @@ data class Settings(
     /** Connect over USB as soon as the K+DCAN cable is plugged in. */
     val autoConnectOnCable: Boolean = false,
     val api: ApiConfig = ApiConfig(),
+    val recording: RecordingConfig = RecordingConfig(),
+    val telegraf: TelegrafSettings = TelegrafSettings(),
 )
 
 data class ApiConfig(
@@ -64,6 +66,8 @@ class AppSettings private constructor(context: Context) {
                 scopes = prefs.getStringSet(K_SCOPES, null)?.mapNotNull { Scope.fromId(it) }?.filter { it in ApiConfig.GRANTABLE }?.toSet()
                     ?: ApiConfig().scopes,
             ),
+            recording = loadRecording(prefs),
+            telegraf = loadTelegraf(prefs),
         )
     }
 
@@ -78,10 +82,15 @@ class AppSettings private constructor(context: Context) {
             putInt(K_PORT, s.api.port)
             putString(K_TOKEN, s.api.token)
             putStringSet(K_SCOPES, s.api.scopes.filter { it in ApiConfig.GRANTABLE }.map { it.id }.toSet())
+            saveExtras(s)
         }
     }
 
     fun updateApi(transform: (ApiConfig) -> ApiConfig) = update { it.copy(api = transform(it.api)) }
+
+    fun updateRecording(transform: (RecordingConfig) -> RecordingConfig) = update { it.copy(recording = transform(it.recording)) }
+
+    fun updateTelegraf(transform: (TelegrafSettings) -> TelegrafSettings) = update { it.copy(telegraf = transform(it.telegraf)) }
 
     /** New random token: every client using the old one gets 401 from now on. */
     fun regenerateToken() = updateApi { it.copy(token = ApiTokens.generate()) }

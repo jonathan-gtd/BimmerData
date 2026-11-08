@@ -3,9 +3,7 @@
  */
 package io.github.jonathangtd.bimmerdata.api.android
 
-import android.content.ContentUris
 import android.content.Context
-import android.provider.MediaStore
 import io.github.jonathangtd.bimmerdata.api.AcquisitionInfo
 import io.github.jonathangtd.bimmerdata.api.ApiBackend
 import io.github.jonathangtd.bimmerdata.api.ApiSettingsView
@@ -19,19 +17,30 @@ import io.github.jonathangtd.bimmerdata.api.RecordingFile
 import io.github.jonathangtd.bimmerdata.api.RenderRequest
 import io.github.jonathangtd.bimmerdata.api.SettingsPatch
 import io.github.jonathangtd.bimmerdata.api.SettingsView
+import io.github.jonathangtd.bimmerdata.api.TelegrafPatch
+import io.github.jonathangtd.bimmerdata.api.TelegrafStateView
+import io.github.jonathangtd.bimmerdata.api.TelegrafTest
+import io.github.jonathangtd.bimmerdata.api.TelegrafView
+import io.github.jonathangtd.bimmerdata.export.ExportMode
+import io.github.jonathangtd.bimmerdata.export.TelegrafRuntime
+import io.github.jonathangtd.bimmerdata.export.WriteResult
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.DashboardStore
-import io.github.jonathangtd.bimmerdata.live.CsvFiles
 import io.github.jonathangtd.bimmerdata.live.LiveConnection
 import io.github.jonathangtd.bimmerdata.live.LiveMode
 import io.github.jonathangtd.bimmerdata.live.LiveRepository
 import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.MeasurementClient
 import io.github.jonathangtd.bimmerdata.live.RecordingState
+import io.github.jonathangtd.bimmerdata.live.RecordingStorage
 import io.github.jonathangtd.bimmerdata.live.Sample
 import io.github.jonathangtd.bimmerdata.settings.AppSettings
+import io.github.jonathangtd.bimmerdata.settings.SecretStore
+import io.github.jonathangtd.bimmerdata.settings.TelegrafAuthMode
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.StateFlow
 import java.io.InputStream
+import java.util.Locale
 
 /** The API's view of the app: live repository, dashboard store, renderers and settings. */
 class AndroidApiBackend(
@@ -113,40 +122,71 @@ class AndroidApiBackend(
     override fun stopRecording() = repo.recorder.stop()
     override fun addMarker(label: String) = repo.recorder.mark(label)
 
-    /** CSV files of Documents/BimmerData/ that this installation created (visible without storage permission). */
-    override fun recordings(): List<RecordingFile> = query().map { it.second }
+    /** CSV files of the recording folder (Settings › Recording), newest first. */
+    override fun recordings(): List<RecordingFile> = RecordingStorage.list(app).map { RecordingFile(it.name, it.sizeBytes, it.modifiedMs) }
 
-    private fun query(): List<Pair<Long, RecordingFile>> {
-        val uri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        val projection = arrayOf(MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DISPLAY_NAME, MediaStore.MediaColumns.SIZE, MediaStore.MediaColumns.DATE_MODIFIED)
-        val out = ArrayList<Pair<Long, RecordingFile>>()
-        runCatching {
-            app.contentResolver.query(uri, projection, "${MediaStore.MediaColumns.RELATIVE_PATH}=?", arrayOf(CsvFiles.RelativePath), null)?.use { c ->
-                while (c.moveToNext()) {
-                    val name = c.getString(1) ?: continue
-                    if (!name.endsWith(".csv", ignoreCase = true)) continue
-                    out += c.getLong(0) to RecordingFile(name, c.getLong(2), c.getLong(3) * 1000)
-                }
-            }
-        }
-        return out
-    }
-
-    override fun openRecording(name: String): InputStream? {
-        val id = query().firstOrNull { it.second.name == name }?.first ?: return null
-        val uri = ContentUris.withAppendedId(MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), id)
-        return runCatching { app.contentResolver.openInputStream(uri) }.getOrNull()
-    }
+    override fun openRecording(name: String): InputStream? = RecordingStorage.open(app, name)
 
     override fun settings(): SettingsView {
         val s = settingsStore.state.value
         return SettingsView(
             defaultMode = mode(s.defaultMode),
             autoConnectOnCable = s.autoConnectOnCable,
-            recordingFolder = CsvFiles.RelativePath,
+            recordingFolder = RecordingStorage.describe(app),
             api = ApiSettingsView(s.api.enabled, s.api.port, s.api.scopes.sortedBy { it.ordinal }.map { it.id }),
         )
     }
+
+    // ---- Telegraf export ----
+
+    private val telegrafRuntime by lazy { TelegrafRuntime.get(app) }
+
+    override fun telegraf(): TelegrafView {
+        val t = settingsStore.state.value.telegraf
+        val st = telegrafRuntime.state.value
+        val secrets = SecretStore.get(app)
+        return TelegrafView(
+            enabled = t.enabled,
+            url = t.url,
+            auth = t.authMode.name.lowercase(Locale.ROOT),
+            username = t.username,
+            secretSet = when (t.authMode) {
+                TelegrafAuthMode.None -> false
+                TelegrafAuthMode.Token -> secrets.has(SecretStore.TELEGRAF_TOKEN)
+                TelegrafAuthMode.Basic -> secrets.has(SecretStore.TELEGRAF_PASSWORD)
+            },
+            car = t.car,
+            pointsPerSecond = t.pointsPerSecond,
+            mode = if (t.mode == ExportMode.Live) "live" else "afterTrip",
+            state = TelegrafStateView(
+                phase = st.phase.name.replaceFirstChar { it.lowercase(Locale.ROOT) },
+                queuedPoints = st.queuedLines, queuedBytes = st.queuedBytes, droppedPoints = st.droppedLines, sentPoints = st.sentLines,
+                lastSuccessMs = st.lastSuccessMs, lastError = st.lastError,
+            ),
+        )
+    }
+
+    override fun updateTelegraf(patch: TelegrafPatch): TelegrafView {
+        settingsStore.updateTelegraf { t ->
+            t.copy(
+                enabled = patch.enabled ?: t.enabled,
+                url = patch.url ?: t.url,
+                car = patch.car ?: t.car,
+                pointsPerSecond = patch.pointsPerSecond ?: t.pointsPerSecond,
+                mode = when (patch.mode) { null -> t.mode; "live" -> ExportMode.Live; else -> ExportMode.AfterTrip },
+            )
+        }
+        return telegraf()
+    }
+
+    override fun testTelegraf(): TelegrafTest = when (val r = runBlocking { telegrafRuntime.test() }) {
+        WriteResult.Ok -> TelegrafTest(true, "Telegraf accepted the test write")
+        is WriteResult.AuthFailed -> TelegrafTest(false, "Authentication failed: ${r.message}")
+        is WriteResult.Rejected -> TelegrafTest(false, r.message)
+        is WriteResult.Retry -> TelegrafTest(false, "Not reachable: ${r.message}")
+    }
+
+    override fun sendTelegrafNow() = telegrafRuntime.sendNow()
 
     override fun updateSettings(patch: SettingsPatch): SettingsView {
         settingsStore.update { s ->

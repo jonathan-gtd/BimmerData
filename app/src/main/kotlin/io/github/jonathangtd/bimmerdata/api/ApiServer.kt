@@ -17,10 +17,11 @@ class ApiServer(
     backend: ApiBackend,
     access: () -> ApiAccess,
     extensions: List<ApiExtension> = emptyList(),
+    docsAssets: (String) -> ByteArray? = { null },
     private val log: (String, Throwable?) -> Unit = { _, _ -> },
     acceptPeer: (InetAddress) -> Boolean = LanPolicy::isAllowedPeer,
 ) {
-    val service = ApiService(backend, access, extensions, log = log)
+    val service = ApiService(backend, access, extensions, docsAssets = docsAssets, log = log)
     private val http = HttpServer(service::handle, acceptPeer = acceptPeer, log = log)
     private var ticker: ScheduledExecutorService? = null
 
