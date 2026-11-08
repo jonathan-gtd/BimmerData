@@ -199,7 +199,7 @@ internal fun faultReport(context: Context, res: Resources, vehicle: Vehicle, fau
             EcuFaultStatus.Error -> res.getString(R.string.veh_status_error) + (f.message?.let { " ($it)" } ?: "")
         }
         appendLine(String.format(Locale.ROOT, "%02X %s (%s): %s", ecu.address, ecu.name, ecu.sgbd ?: "?", status))
-        f?.faults?.forEach { fault ->
+        f?.faults?.map { io.github.jonathangtd.bimmerdata.live.i18n.Translations.shared.fault(ecu.sgbd, it) }?.forEach { fault ->
             append("   ").append(fault.codeHex).append(' ').append(fault.text.ifEmpty { res.getString(R.string.veh_fault_unknown) })
             fault.symptom?.let { append(" · ").append(it) }
             fault.presence?.let { append(" · ").append(it) }

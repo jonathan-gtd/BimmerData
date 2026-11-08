@@ -8,6 +8,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import io.github.jonathangtd.bimmerdata.i18n.ecuDescription
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -438,7 +439,10 @@ private fun EcuRow(ecu: VehicleEcu, faults: EcuFaults?, read: Boolean, onClick: 
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
             Text(ecu.name, color = Cockpit.Text, fontSize = 16.sp, fontFamily = BarlowCondensed, fontWeight = FontWeight.SemiBold, maxLines = 1)
-            val sub = listOfNotNull(ecu.sgbd?.uppercase() ?: stringResource(R.string.veh_ecu_unknown_variant), ecu.description).joinToString(" · ")
+            val translator = io.github.jonathangtd.bimmerdata.i18n.rememberTranslator()
+            val tv = io.github.jonathangtd.bimmerdata.i18n.translationVersion()
+            val description = androidx.compose.runtime.remember(ecu, tv) { translator.ecuDescription(ecu, null) }
+            val sub = listOfNotNull(ecu.sgbd?.uppercase() ?: stringResource(R.string.veh_ecu_unknown_variant), description).joinToString(" · ")
             Text(sub, color = if (ecu.sgbdAvailable) Cockpit.Muted else Cockpit.Warning, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Spacer(Modifier.width(8.dp))

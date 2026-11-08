@@ -33,3 +33,16 @@ tasks.test {
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
     }
 }
+
+// Translation template of one SGBD from your own ECU folder (see translations/README.md):
+// ./gradlew :live:translationTemplate -Psgbd=msv70 [-Plang=fr] [-Pmerge=translations/fr/msv70.csv] [-Pout=file.csv] [-PecuDir=...]
+tasks.register<JavaExec>("translationTemplate") {
+    group = "application"
+    description = "Writes the translation template (CSV) of an SGBD from the ECU folder"
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("io.github.jonathangtd.bimmerdata.live.i18n.TranslationTemplateToolKt")
+    workingDir = rootDir
+    System.getenv("BIMMERDATA_ECU_DIR")?.let { environment("BIMMERDATA_ECU_DIR", it) }
+    val names = listOf("sgbd", "lang", "merge", "out", "ecuDir")
+    args = names.mapNotNull { n -> project.findProperty(n)?.toString()?.let { "$n=$it" } } + "rootDir=${rootDir.path}"
+}

@@ -70,6 +70,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.jonathangtd.bimmerdata.ediabas.EdInterfaceObd.FrameDirection
 import io.github.jonathangtd.bimmerdata.R
 import androidx.compose.ui.res.stringResource
+import io.github.jonathangtd.bimmerdata.i18n.jobTexts
 import java.util.Locale
 
 private val MinTouch = 48.dp
@@ -84,6 +85,15 @@ fun Tool32Screen(vm: Tool32ViewModel = viewModel()) {
     var sgbdPicker by rememberSaveable { mutableStateOf(false) }
     var jobPicker by rememberSaveable { mutableStateOf(false) }
     val insets = WindowInsets.safeDrawing.asPaddingValues()
+    // Job descriptions and result labels, translated (see i18n).
+    val translator = io.github.jonathangtd.bimmerdata.i18n.rememberTranslator()
+    val tv = io.github.jonathangtd.bimmerdata.i18n.translationVersion()
+    val prgName = state.sgbd?.takeIf { it.endsWith(".prg", ignoreCase = true) }
+    val translations = io.github.jonathangtd.bimmerdata.i18n.TranslationRepository.get(androidx.compose.ui.platform.LocalContext.current)
+    val jobTexts by androidx.compose.runtime.produceState(emptyMap<String, String>(), prgName, tv) {
+        value = if (prgName == null) emptyMap() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { translations.jobTexts(prgName) }
+    }
+    val resultLabel: (String) -> String? = { name -> state.job?.let { job -> translator.resultLabel(prgName, job, name) } }
 
     // The list is clipped below the status bar so scrolled content never runs under the clock/icons.
     LazyColumn(
@@ -116,7 +126,7 @@ fun Tool32Screen(vm: Tool32ViewModel = viewModel()) {
                 item { SectionLabel("Raw frames (${result.frames.size})") }
                 items(result.frames) { FrameRow(it) }
             }
-            items(result.sets, key = { it.index }) { set -> ResultSetCard(set) }
+            items(result.sets, key = { it.index }) { set -> ResultSetCard(set, resultLabel) }
         }
     }
 
@@ -136,6 +146,7 @@ fun Tool32Screen(vm: Tool32ViewModel = viewModel()) {
         PickerDialog(
             title = "Job",
             items = state.jobs,
+            subtitle = { jobTexts[it.uppercase(Locale.ROOT)] },
             emptyText = if (state.jobsLoading) "Loading jobs…" else "No jobs (select an SGBD first).",
             onDismiss = { jobPicker = false },
             onPick = {
@@ -390,7 +401,7 @@ private fun FrameRow(frame: FrameUi) {
 }
 
 @Composable
-private fun ResultSetCard(set: ResultSetUi) {
+private fun ResultSetCard(set: ResultSetUi, label: (String) -> String? = { null }) {
     var expanded by rememberSaveable(set.index) { mutableStateOf(set.index != 0) }
     CockpitCard {
         Row(
@@ -405,6 +416,7 @@ private fun ResultSetCard(set: ResultSetUi) {
             set.entries.forEach { e ->
                 Column(Modifier.fillMaxWidth()) {
                     Text(e.name, color = Cockpit.Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    label(e.name)?.let { Text(it, color = Cockpit.Muted, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis) }
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
                             e.value, color = if (e.name == "JOB_STATUS") Cockpit.Accent else Cockpit.Text, fontSize = 16.sp,
@@ -419,10 +431,19 @@ private fun ResultSetCard(set: ResultSetUi) {
 }
 
 @Composable
-private fun PickerDialog(title: String, items: List<String>, emptyText: String, onDismiss: () -> Unit, onPick: (String) -> Unit) {
+private fun PickerDialog(
+    title: String,
+    items: List<String>,
+    emptyText: String,
+    onDismiss: () -> Unit,
+    onPick: (String) -> Unit,
+    /** Optional second line (job description); the search also looks into it. */
+    subtitle: (String) -> String? = { null },
+) {
     var query by rememberSaveable { mutableStateOf("") }
-    val filtered = remember(query, items) {
-        if (query.isBlank()) items else items.filter { it.contains(query.trim(), ignoreCase = true) }
+    val filtered = remember(query, items, subtitle) {
+        val q = query.trim()
+        if (q.isEmpty()) items else items.filter { it.contains(q, ignoreCase = true) || subtitle(it)?.contains(q, ignoreCase = true) == true }
     }
     val focus = remember { FocusRequester() }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
@@ -445,10 +466,10 @@ private fun PickerDialog(title: String, items: List<String>, emptyText: String, 
                 }
                 LazyColumn(Modifier.weight(1f)) {
                     items(filtered) { item ->
-                        Text(
-                            item, color = Cockpit.Text, fontSize = 16.sp, fontFamily = FontFamily.Monospace,
-                            modifier = Modifier.fillMaxWidth().heightIn(min = MinTouch).clickable { onPick(item) }.padding(horizontal = 8.dp, vertical = 12.dp),
-                        )
+                        Column(Modifier.fillMaxWidth().heightIn(min = MinTouch).clickable { onPick(item) }.padding(horizontal = 8.dp, vertical = 12.dp)) {
+                            Text(item, color = Cockpit.Text, fontSize = 16.sp, fontFamily = FontFamily.Monospace)
+                            subtitle(item)?.let { Text(it, color = Cockpit.Muted, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis) }
+                        }
                         HorizontalDivider(color = Cockpit.Border)
                     }
                 }

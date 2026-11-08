@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
@@ -134,6 +135,14 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _ui.map { it.dashboard?.measurementIds().orEmpty() }.distinctUntilChanged().collect { ids ->
                 ids.map { sgbdOf(it) }.distinct().forEach { loadSgbd(it) }
+            }
+        }
+        // Translations changed (language, downloaded file): labels again from the (translating) catalog.
+        viewModelScope.launch {
+            io.github.jonathangtd.bimmerdata.live.i18n.Translations.shared.version.drop(1).debounce(300).collect {
+                val again = loadedSgbds.toList()
+                loadedSgbds.clear()
+                again.forEach { loadSgbd(it) }
             }
         }
         // Ask the acquisition engine for what is on screen (shared with Android Auto, see MeasurementRequests).

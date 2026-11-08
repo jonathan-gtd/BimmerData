@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="tr_section">Translations</string>
+    <string name="tr_language">Language of the ECU texts</string>
+    <string name="tr_language_phone">Phone language (%1$s)</string>
+    <string name="tr_language_original">German (original texts)</string>
+    <string name="tr_language_hint">Measurement, fault and module texts come from your ECU files, in German. Their translations replace them everywhere in the app. Long-press a fault to see its original text.</string>
+    <string name="tr_disabled">Original texts: nothing is downloaded.</string>
+
+    <string name="tr_source">Source</string>
+    <string name="tr_source_url">URL</string>
+    <string name="tr_source_folder">Folder on the phone</string>
+    <string name="tr_url">Base URL</string>
+    <string name="tr_url_hint">Files are read from &lt;URL&gt;/&lt;language&gt;/&lt;ecu&gt;.csv. Default: the translations folder of the BimmerData repository on GitHub.</string>
+    <string name="tr_url_default">Default</string>
+    <string name="tr_token">Token (optional)</string>
+    <string name="tr_token_hint">Sent as “Authorization: Bearer …”, for a private repository or your own server.</string>
+    <string name="tr_apply">Apply</string>
+    <string name="tr_folder_pick">Choose a folder</string>
+    <string name="tr_folder_none">No folder chosen</string>
+    <string name="tr_folder_hint">The folder holds &lt;language&gt;/&lt;ecu&gt;.csv files, or &lt;ecu&gt;.csv files directly.</string>
+
+    <string name="tr_ecus">ECUs to translate</string>
+    <string name="tr_ecus_auto">Automatic</string>
+    <string name="tr_ecus_chosen">Chosen</string>
+    <string name="tr_ecus_auto_hint">The ECUs of your car, and every ECU whose texts you open (dashboard, faults, Tool32). A file is downloaded the first time, then works offline.</string>
+    <string name="tr_ecus_chosen_hint">Only these ECUs: SGBD names, separated by commas.</string>
+    <string name="tr_ecus_field">ECUs</string>
+    <string name="tr_ecus_use_detected">Use the ECUs of my car</string>
+
+    <string name="tr_update">Update</string>
+    <string name="tr_updating">Updating…</string>
+    <plurals name="tr_update_result">
+        <item quantity="one">%1$d file updated · %2$d without a translation file</item>
+        <item quantity="other">%1$d files updated · %2$d without a translation file</item>
+    </plurals>
+    <string name="tr_update_errors">Errors: %1$s</string>
+    <string name="tr_update_none">Nothing to update yet: no ECU detected or chosen.</string>
+
+    <string name="tr_stats_title">Loaded translations</string>
+    <string name="tr_stats_none">No translation loaded yet.</string>
+    <string name="tr_stats_line" tools:ignore="PluralsCandidate">%1$s: %2$d / %3$d measurements · %4$d / %5$d faults · %6$d / %7$d texts in total</string>
+    <string name="tr_stats_stale">%1$d to check: other German text in your ECU file, the original is shown</string>
+    <string name="tr_stats_no_sgbd" tools:ignore="PluralsCandidate">%1$s: %2$d texts (ECU file not imported)</string>
+
+    <string name="tr_export">Export for translation</string>
+    <string name="tr_export_hint">CSV template of this ECU made from your own file: every text with its German original, and the translations already known for the current language.</string>
+    <plurals name="tr_export_done">
+        <item quantity="one">%1$d line exported</item>
+        <item quantity="other">%1$d lines exported</item>
+    </plurals>
+    <string name="tr_export_failed">Export failed: %1$s</string>
+</resources>

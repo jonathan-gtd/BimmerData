@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tr_section">Traductions</string>
+    <string name="tr_language">Langue des textes des calculateurs</string>
+    <string name="tr_language_phone">Langue du téléphone (%1$s)</string>
+    <string name="tr_language_original">Allemand (textes d’origine)</string>
+    <string name="tr_language_hint">Les textes des mesures, des défauts et des modules viennent de vos fichiers calculateurs, en allemand. Leurs traductions les remplacent partout dans l’appli. Un appui long sur un défaut montre son texte d’origine.</string>
+    <string name="tr_disabled">Textes d’origine : rien n’est téléchargé.</string>
+
+    <string name="tr_source">Source</string>
+    <string name="tr_source_url">URL</string>
+    <string name="tr_source_folder">Dossier du téléphone</string>
+    <string name="tr_url">URL de base</string>
+    <string name="tr_url_hint">Les fichiers sont lus dans &lt;URL&gt;/&lt;langue&gt;/&lt;calculateur&gt;.csv. Par défaut : le dossier translations du dépôt BimmerData sur GitHub.</string>
+    <string name="tr_url_default">Par défaut</string>
+    <string name="tr_token">Jeton (facultatif)</string>
+    <string name="tr_token_hint">Envoyé en « Authorization: Bearer … », pour un dépôt privé ou votre propre serveur.</string>
+    <string name="tr_apply">Appliquer</string>
+    <string name="tr_folder_pick">Choisir un dossier</string>
+    <string name="tr_folder_none">Aucun dossier choisi</string>
+    <string name="tr_folder_hint">Le dossier contient des fichiers &lt;langue&gt;/&lt;calculateur&gt;.csv, ou directement des fichiers &lt;calculateur&gt;.csv.</string>
+
+    <string name="tr_ecus">Calculateurs à traduire</string>
+    <string name="tr_ecus_auto">Automatique</string>
+    <string name="tr_ecus_chosen">Choisis</string>
+    <string name="tr_ecus_auto_hint">Les calculateurs de votre voiture, et tous ceux dont vous ouvrez les textes (tableau de bord, défauts, Tool32). Le fichier est téléchargé la première fois, puis fonctionne hors ligne.</string>
+    <string name="tr_ecus_chosen_hint">Seulement ces calculateurs : noms des SGBD, séparés par des virgules.</string>
+    <string name="tr_ecus_field">Calculateurs</string>
+    <string name="tr_ecus_use_detected">Prendre ceux de ma voiture</string>
+
+    <string name="tr_update">Mettre à jour</string>
+    <string name="tr_updating">Mise à jour…</string>
+    <plurals name="tr_update_result">
+        <item quantity="one">%1$d fichier mis à jour · %2$d sans fichier de traduction</item>
+        <item quantity="many">%1$d fichiers mis à jour · %2$d sans fichier de traduction</item>
+        <item quantity="other">%1$d fichiers mis à jour · %2$d sans fichier de traduction</item>
+    </plurals>
+    <string name="tr_update_errors">Erreurs : %1$s</string>
+    <string name="tr_update_none">Rien à mettre à jour : aucun calculateur détecté ni choisi.</string>
+
+    <string name="tr_stats_title">Traductions chargées</string>
+    <string name="tr_stats_none">Aucune traduction chargée pour l’instant.</string>
+    <string name="tr_stats_line">%1$s : %2$d / %3$d mesures · %4$d / %5$d défauts · %6$d / %7$d textes en tout</string>
+    <string name="tr_stats_stale">%1$d à vérifier : autre texte allemand dans votre fichier calculateur, l’original est affiché</string>
+    <string name="tr_stats_no_sgbd">%1$s : %2$d textes (fichier calculateur non importé)</string>
+
+    <string name="tr_export">Exporter pour traduction</string>
+    <string name="tr_export_hint">Modèle CSV de ce calculateur, tiré de votre propre fichier : chaque texte avec son original allemand, et les traductions déjà connues pour la langue choisie.</string>
+    <plurals name="tr_export_done">
+        <item quantity="one">%1$d ligne exportée</item>
+        <item quantity="many">%1$d lignes exportées</item>
+        <item quantity="other">%1$d lignes exportées</item>
+    </plurals>
+    <string name="tr_export_failed">Échec de l’export : %1$s</string>
+</resources>
