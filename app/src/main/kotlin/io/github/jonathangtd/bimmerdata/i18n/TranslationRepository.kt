@@ -72,7 +72,11 @@ class TranslationRepository private constructor(context: Context) {
 
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state.asStateFlow()
+    private val refreshPrefs = app.getSharedPreferences("translations_refresh", Context.MODE_PRIVATE)
+    private val coverageCache = java.util.concurrent.ConcurrentHashMap<String, Pair<String, TranslationTemplate.Coverage>>()
 
+    // Every property is declared above: init starts work on other threads, which must never see
+    // a property that is not set yet (crash at start, "Lazy.getValue() on a null object").
     init {
         loadCache(settings.state.value)
         translator.onMissing = { sgbd -> scope.launch { fetchOnDemand(sgbd) } }
@@ -129,8 +133,6 @@ class TranslationRepository private constructor(context: Context) {
         fetch(c, sgbd)
     }
 
-    // Lazy: autoRefresh() is launched from init, which runs before the properties declared below it.
-    private val refreshPrefs by lazy { app.getSharedPreferences("translations_refresh", Context.MODE_PRIVATE) }
 
     /**
      * At start, at most once per day ([TranslationRefresh.IntervalMs]): asks every cached file
@@ -331,7 +333,6 @@ class TranslationRepository private constructor(context: Context) {
         TranslationTemplate.coverage(template, translator.table(sgbd, fetch = false)).also { coverageCache[sgbd] = key to it }
     }
 
-    private val coverageCache by lazy { java.util.concurrent.ConcurrentHashMap<String, Pair<String, TranslationTemplate.Coverage>>() }
 
     companion object {
         private const val K_LAST_CHECK = "last_check_ms"
