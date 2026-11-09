@@ -190,6 +190,12 @@ class GraphViewModel(app: Application) : AndroidViewModel(app) {
         )
     }
 
+    private val panelStates = HashMap<String, io.github.jonathangtd.bimmerdata.graph.ui.GraphPanelState>()
+
+    /** Time view and cursor of graph [g] on screen, kept across rotations (portrait / landscape layouts). */
+    fun panelState(g: Graph): io.github.jonathangtd.bimmerdata.graph.ui.GraphPanelState =
+        panelStates.getOrPut(g.id) { io.github.jonathangtd.bimmerdata.graph.ui.GraphPanelState(GraphView.of(g.windowSeconds)) }
+
     // ---- edits (written into the active profile, in order) ----
 
     private fun edit(transform: (List<Graph>) -> List<Graph>) {

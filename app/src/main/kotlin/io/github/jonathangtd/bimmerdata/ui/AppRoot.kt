@@ -3,7 +3,12 @@
  */
 package io.github.jonathangtd.bimmerdata.ui
 
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
@@ -91,7 +96,16 @@ fun AppRoot() {
         )
     }
     BackHandler(enabled = overlay != null) { overlay = null }
-    val barVisible = overlay == null && !(editing && tab == AppTab.Dashboard)
+    // Portrait everywhere, except the Graph tab which follows the phone (a wider time axis);
+    // FULL_USER respects the system auto-rotate setting. In landscape the graph takes the whole screen.
+    val activity = LocalActivity.current
+    val graphShown = overlay == null && tab == AppTab.Graph
+    SideEffect {
+        val wanted = if (graphShown) ActivityInfo.SCREEN_ORIENTATION_FULL_USER else ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        if (activity != null && activity.requestedOrientation != wanted) activity.requestedOrientation = wanted
+    }
+    val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val barVisible = overlay == null && !(editing && tab == AppTab.Dashboard) && !(graphShown && landscape)
     // REST API server and USB auto-connect follow the settings for the whole process life.
     val context = LocalContext.current
     LaunchedEffect(Unit) { AppServices.start(context) }

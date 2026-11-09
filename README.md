@@ -91,6 +91,8 @@ pages) on one time axis, live. Each profile has its own named graphs, kept with 
 - **Time**: the window works like the trend cards (5 s to 60 min, double-tap to switch); pinch to
   zoom, drag to look back (this pauses), **Live** to come back. A long press shows the values
   under the finger.
+- **Landscape**: the app stays in portrait, except this tab: turn the phone and the graph takes
+  the whole screen (legend and controls on the side), with the same pause, zoom and cursor.
 - **Colors and legend**: one color per value from a fixed palette (a value keeps its color when
   others are added or removed); tap a legend entry to hide or show its curve.
 - **No extra reads**: while the tab is on screen it reads the values of the graph shown, instead

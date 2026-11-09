@@ -156,6 +156,20 @@ class GraphScreenshotTest {
     }
 
     @Test
+    @Config(qualifiers = "fr-w891dp-h411dp-land-xxhdpi")
+    fun graphLandscape() {
+        SharedHistory.clear()
+        histories().forEach { (id, h) -> for (i in 0 until h.size) SharedHistory.add(id, h.timeAt(i), h.valueAt(i).toDouble()) }
+        val graph = Graphs.add(emptyList(), "Warm-up", specs.map { it.id }, id = "g").single().copy(windowSeconds = 300)
+        val format = GaugeFormat(Locale.FRANCE)
+        capture("graph_landscape_fr.png") {
+            Column(Modifier.fillMaxSize().background(Cockpit.Background).padding(8.dp)) {
+                GraphPanel(graph, specs, format, onToggle = {}, onWindow = {}, onAxes = {}, modifier = Modifier.fillMaxSize(), landscape = true, clock = { now })
+            }
+        }
+    }
+
+    @Test
     fun graphTab() = tab("graph_tab.png")
 
     @Test

@@ -4,6 +4,11 @@
 package io.github.jonathangtd.bimmerdata.graph.ui
 
 import android.graphics.RectF
+import android.content.res.Configuration
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,8 +21,6 @@ import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -138,7 +141,21 @@ fun GraphScreen(vm: GraphViewModel = viewModel()) {
         vm.ui.value.selected?.let { sheet = GraphSheet.Values(it.id) }
     }
 
-    Column(
+    val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val shown = ui.selected
+    if (landscape && shown != null && shown.series.isNotEmpty()) {
+        // Landscape (only this tab rotates): the graph alone, chart over the whole height.
+        val locale = currentLocale()
+        val format = remember(locale) { GaugeFormat(locale) }
+        val specs = remember(shown, ui.choices, index, format) { vm.specs(shown, ui, index, format) }
+        Box(Modifier.fillMaxSize().background(Cockpit.Background).windowInsetsPadding(WindowInsets.safeDrawing).padding(8.dp)) {
+            GraphPanel(
+                graph = shown, specs = specs, format = format,
+                onToggle = { vm.toggleHidden(shown.id, it) }, onWindow = { vm.setWindow(shown.id, it) }, onAxes = { vm.setAxes(shown.id, it) },
+                state = vm.panelState(shown), landscape = true, modifier = Modifier.fillMaxSize(),
+            )
+        }
+    } else Column(
         Modifier
             .fillMaxSize()
             .background(Cockpit.Background)
@@ -216,6 +233,7 @@ fun GraphScreen(vm: GraphViewModel = viewModel()) {
                         onToggle = { vm.toggleHidden(selected.id, it) },
                         onWindow = { vm.setWindow(selected.id, it) },
                         onAxes = { vm.setAxes(selected.id, it) },
+                        state = vm.panelState(selected),
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -313,15 +331,104 @@ private fun GraphEmpty(title: String, hint: String, action: String, onAction: ()
     }
 }
 
-/** The chart with its gestures, the legend and the controls (live / pause, window, axes). */
-@OptIn(ExperimentalLayoutApi::class)
+/**
+ * What the user did to a graph on screen: time view (window, pause, scroll) and cursor. Kept by the
+ * ViewModel per graph, so rotating the phone (portrait / landscape layouts) keeps a paused view.
+ */
+class GraphPanelState(initial: GraphView) {
+    var view by mutableStateOf(initial)
+    var cursorMs by mutableStateOf<Long?>(null)
+}
+
+/**
+ * The chart with its gestures, the legend and the controls (live / pause, window, axes). Portrait:
+ * stacked; [landscape]: the chart takes the height, legend and controls in a side column.
+ */
 @Composable
 internal fun GraphPanel(
     graph: Graph, specs: List<GraphSeriesSpec>, format: GaugeFormat,
     onToggle: (String) -> Unit, onWindow: (Int) -> Unit, onAxes: (GraphAxes) -> Unit,
     modifier: Modifier = Modifier,
+    state: GraphPanelState = remember(graph.id) { GraphPanelState(GraphView.of(graph.windowSeconds)) },
+    landscape: Boolean = false,
     /** Wall clock (the time of the readings); replaced by tests. */
     clock: () -> Long = System::currentTimeMillis,
+) {
+    // the stored window changed (editor, another screen): adopt it
+    LaunchedEffect(graph.windowSeconds) {
+        if (state.view.seconds != TrendWindow.seconds(graph.windowSeconds)) state.view = state.view.copy(spanMs = TrendWindow.ms(graph.windowSeconds))
+    }
+    if (landscape) {
+        Row(modifier.fillMaxSize()) {
+            GraphCanvas(graph, specs, format, state, onWindow, clock, Modifier.weight(1f).fillMaxHeight())
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.width(232.dp).fillMaxHeight()) {
+                Text(
+                    graph.name, color = Cockpit.Text, fontFamily = BarlowCondensed, fontWeight = FontWeight.SemiBold, fontSize = 18.sp,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp),
+                )
+                Box(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                    Legend(specs, state.cursorMs, format, onToggle, columns = 1)
+                }
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PlayButton(state, clock, Modifier.weight(1f))
+                    WindowButton(state, onWindow)
+                }
+                Spacer(Modifier.height(8.dp))
+                AxesToggle(graph.axes, onAxes)
+            }
+        }
+    } else {
+        Column(modifier.fillMaxWidth()) {
+            GraphCanvas(graph, specs, format, state, onWindow, clock, Modifier.fillMaxWidth().weight(1f))
+            Spacer(Modifier.height(10.dp))
+            Legend(specs, state.cursorMs, format, onToggle)
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                PlayButton(state, clock)
+                WindowButton(state, onWindow)
+                Spacer(Modifier.weight(1f))
+                AxesToggle(graph.axes, onAxes)
+            }
+            Text(
+                stringResource(if (state.view.live) R.string.graph_live_hint else R.string.graph_paused_hint),
+                color = Cockpit.Muted, fontSize = 12.sp, lineHeight = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun PlayButton(state: GraphPanelState, clock: () -> Long, modifier: Modifier = Modifier) {
+    if (state.view.live) {
+        PillButton(stringResource(R.string.graph_pause), onClick = { state.view = state.view.pause(clock()) }, icon = R.drawable.ic_pause, modifier = modifier)
+    } else {
+        PillButton(
+            stringResource(R.string.graph_live), onClick = { state.view = state.view.resume(); state.cursorMs = null }, icon = R.drawable.ic_play,
+            color = Cockpit.OnAccent, background = Cockpit.Accent, modifier = modifier,
+        )
+    }
+}
+
+@Composable
+private fun WindowButton(state: GraphPanelState, onWindow: (Int) -> Unit) {
+    PillButton(
+        TrendWindow.duration(state.view.seconds),
+        onClick = {
+            val next = TrendWindow.next(state.view.seconds)
+            state.view = state.view.copy(spanMs = next * 1000L)
+            onWindow(next)
+        },
+    )
+}
+
+/** The plot: drawn every frame from [SharedHistory]; pinch, scroll, long-press cursor, double tap. */
+@Composable
+private fun GraphCanvas(
+    graph: Graph, specs: List<GraphSeriesSpec>, format: GaugeFormat, state: GraphPanelState,
+    onWindow: (Int) -> Unit, clock: () -> Long, modifier: Modifier,
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current.density
@@ -331,121 +438,82 @@ internal fun GraphPanel(
         GraphRenderer(GaugeTheme.phone(context, density), format, GraphTexts(noData) { n -> res.getQuantityString(R.plurals.graph_more_axes, n, n) })
     }
     val frameClock = rememberFrameClock()
-    var view by remember(graph.id) { mutableStateOf(GraphView.of(graph.windowSeconds)) }
-    var cursorMs by remember(graph.id) { mutableStateOf<Long?>(null) }
     val lastTap = remember { mutableLongStateOf(0L) }
-    // the stored window changed (editor, another screen): adopt it
-    LaunchedEffect(graph.windowSeconds) {
-        val ms = TrendWindow.ms(graph.windowSeconds)
-        if (view.seconds != TrendWindow.seconds(graph.windowSeconds)) view = view.copy(spanMs = ms)
-    }
     val ids = specs.map { it.id }
     val rect = remember { RectF() }
     val description = stringResource(R.string.graph_cursor_desc, specs.joinToString(", ") { it.label })
-
-    Column(modifier.fillMaxWidth()) {
-        Canvas(
-            Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .semantics { contentDescription = description }
-                .pointerInput(graph.id) {
-                    val slop = viewConfiguration.touchSlop
-                    awaitEachGesture {
-                        val down = awaitFirstDown(requireUnconsumed = false)
-                        var mode = 0 // 0 undecided, 1 scroll, 2 pinch, 3 cursor
-                        var moved = Offset.Zero
-                        val startSeconds = view.seconds
-                        val longPressAt = down.uptimeMillis + viewConfiguration.longPressTimeoutMillis
-                        var lastUptime = down.uptimeMillis
-                        while (true) {
-                            val event = if (mode == 0) {
-                                withTimeoutOrNull((longPressAt - lastUptime).coerceAtLeast(1L)) { awaitPointerEvent() }
-                            } else {
-                                awaitPointerEvent()
-                            }
-                            event?.changes?.firstOrNull()?.let { lastUptime = it.uptimeMillis }
-                            val now = clock()
-                            if (event == null) {
-                                // long press: pause and show the values under the finger
-                                mode = 3
-                                view = view.pause(now)
-                                cursorMs = renderer.timeAt(down.position.x, view, now)
-                                continue
-                            }
-                            val pressed = event.changes.filter { it.pressed }
-                            if (pressed.isEmpty()) {
-                                if (mode == 0) {
-                                    // tap: hide the cursor; double tap: next window
-                                    if (now - lastTap.longValue < viewConfiguration.doubleTapTimeoutMillis) {
-                                        val next = TrendWindow.next(view.seconds)
-                                        view = view.copy(spanMs = next * 1000L)
-                                        onWindow(next)
-                                        lastTap.longValue = 0L
-                                    } else {
-                                        cursorMs = null
-                                        lastTap.longValue = now
-                                    }
-                                }
-                                break
-                            }
-                            if (pressed.size >= 2) {
-                                mode = 2
-                                val zoom = event.calculateZoom()
-                                val centroid = event.calculateCentroid(useCurrent = true)
-                                view = view.zoom(zoom, renderer.fractionAt(centroid.x), now)
-                                if (!view.live) view = view.pan(event.calculatePan().x / renderer.plotWidth, now, SharedHistory.oldestMs(ids))
-                                event.changes.forEach { it.consume() }
-                                continue
-                            }
-                            val change = pressed.first()
-                            val delta = change.positionChange()
-                            if (mode == 0) {
-                                moved += delta
-                                if (moved.getDistance() > slop) mode = 1
-                            }
-                            when (mode) {
-                                1 -> view = view.pan(delta.x / renderer.plotWidth, now, SharedHistory.oldestMs(ids))
-                                3 -> cursorMs = renderer.timeAt(change.position.x, view, now)
-                            }
-                            if (mode != 0) event.changes.forEach { it.consume() }
+    Canvas(
+        modifier
+            .semantics { contentDescription = description }
+            .pointerInput(graph.id, state) {
+                val slop = viewConfiguration.touchSlop
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    var mode = 0 // 0 undecided, 1 scroll, 2 pinch, 3 cursor
+                    var moved = Offset.Zero
+                    val startSeconds = state.view.seconds
+                    val longPressAt = down.uptimeMillis + viewConfiguration.longPressTimeoutMillis
+                    var lastUptime = down.uptimeMillis
+                    while (true) {
+                        val event = if (mode == 0) {
+                            withTimeoutOrNull((longPressAt - lastUptime).coerceAtLeast(1L)) { awaitPointerEvent() }
+                        } else {
+                            awaitPointerEvent()
                         }
-                        if (view.seconds != startSeconds) onWindow(view.seconds)
+                        event?.changes?.firstOrNull()?.let { lastUptime = it.uptimeMillis }
+                        val now = clock()
+                        if (event == null) {
+                            // long press: pause and show the values under the finger
+                            mode = 3
+                            state.view = state.view.pause(now)
+                            state.cursorMs = renderer.timeAt(down.position.x, state.view, now)
+                            continue
+                        }
+                        val pressed = event.changes.filter { it.pressed }
+                        if (pressed.isEmpty()) {
+                            if (mode == 0) {
+                                // tap: hide the cursor; double tap: next window
+                                if (now - lastTap.longValue < viewConfiguration.doubleTapTimeoutMillis) {
+                                    val next = TrendWindow.next(state.view.seconds)
+                                    state.view = state.view.copy(spanMs = next * 1000L)
+                                    onWindow(next)
+                                    lastTap.longValue = 0L
+                                } else {
+                                    state.cursorMs = null
+                                    lastTap.longValue = now
+                                }
+                            }
+                            break
+                        }
+                        if (pressed.size >= 2) {
+                            mode = 2
+                            val zoom = event.calculateZoom()
+                            val centroid = event.calculateCentroid(useCurrent = true)
+                            state.view = state.view.zoom(zoom, renderer.fractionAt(centroid.x), now)
+                            if (!state.view.live) state.view = state.view.pan(event.calculatePan().x / renderer.plotWidth, now, SharedHistory.oldestMs(ids))
+                            event.changes.forEach { it.consume() }
+                            continue
+                        }
+                        val change = pressed.first()
+                        val delta = change.positionChange()
+                        if (mode == 0) {
+                            moved += delta
+                            if (moved.getDistance() > slop) mode = 1
+                        }
+                        when (mode) {
+                            1 -> state.view = state.view.pan(delta.x / renderer.plotWidth, now, SharedHistory.oldestMs(ids))
+                            3 -> state.cursorMs = renderer.timeAt(change.position.x, state.view, now)
+                        }
+                        if (mode != 0) event.changes.forEach { it.consume() }
                     }
-                },
-        ) {
-            frameClock.value
-            rect.set(0f, 0f, size.width, size.height)
-            val frame = GraphFrame(specs, graph.axes, view, clock(), cursorMs)
-            drawIntoCanvas { renderer.draw(it.nativeCanvas, rect, frame, SharedHistory::history) }
-        }
-        Spacer(Modifier.height(10.dp))
-        Legend(specs, cursorMs, format, onToggle)
-        Spacer(Modifier.height(10.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (view.live) {
-                PillButton(stringResource(R.string.graph_pause), onClick = { view = view.pause(clock()) }, icon = R.drawable.ic_pause)
-            } else {
-                PillButton(
-                    stringResource(R.string.graph_live), onClick = { view = view.resume(); cursorMs = null }, icon = R.drawable.ic_play,
-                    color = Cockpit.OnAccent, background = Cockpit.Accent,
-                )
-            }
-            PillButton(
-                TrendWindow.duration(view.seconds),
-                onClick = {
-                    val next = TrendWindow.next(view.seconds)
-                    view = view.copy(spanMs = next * 1000L)
-                    onWindow(next)
-                },
-            )
-            Spacer(Modifier.weight(1f))
-            AxesToggle(graph.axes, onAxes)
-        }
-        Text(
-            stringResource(if (view.live) R.string.graph_live_hint else R.string.graph_paused_hint),
-            color = Cockpit.Muted, fontSize = 12.sp, lineHeight = 16.sp, modifier = Modifier.padding(top = 8.dp),
-        )
+                    if (state.view.seconds != startSeconds) onWindow(state.view.seconds)
+                }
+            },
+    ) {
+        frameClock.value
+        rect.set(0f, 0f, size.width, size.height)
+        val frame = GraphFrame(specs, graph.axes, state.view, clock(), state.cursorMs)
+        drawIntoCanvas { renderer.draw(it.nativeCanvas, rect, frame, SharedHistory::history) }
     }
 }
 
