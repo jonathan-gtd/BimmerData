@@ -318,15 +318,28 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---- layout edits; each returns false when refused so the UI can say why ----
 
+    /** The last refused edit was refused because the profile would pass [Dashboard.MAX_VALUES]. */
+    @Volatile var valueLimitHit = false
+        private set
+
     private inline fun editPage(t: Target, pageId: String, crossinline op: (Page) -> Page?): Boolean {
         var ok = false
+        var tooMany = false
         _ui.update { ui ->
+            ok = false
+            tooMany = false
             val d = ui.dashboard ?: return@update ui
             val page = d.pages(t).firstOrNull { it.id == pageId } ?: return@update ui
             val result = op(page) ?: return@update ui
+            val next = d.updatePage(t, pageId) { result }
+            if (Dashboard.exceedsValues(d, next)) {
+                tooMany = true
+                return@update ui
+            }
             ok = true
-            ui.copy(dashboard = d.updatePage(t, pageId) { result }, undo = null)
+            ui.copy(dashboard = next, undo = null)
         }
+        valueLimitHit = tooMany
         return ok
     }
 
@@ -403,6 +416,10 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
     /** Replaces the whole layout; returns null on success or the error message. */
     fun importJson(text: String): String? = try {
         val d = DashboardJson.decode(text)
+        val n = d.measurementIds().size
+        require(n <= Dashboard.MAX_VALUES) {
+            "This layout has $n values; a profile holds at most ${Dashboard.MAX_VALUES} (it is read whole at every cycle): split it into several profiles"
+        }
         _ui.update { it.copy(dashboard = d, phonePage = 0, carPage = 0, undo = it.dashboard) }
         null
     } catch (e: IllegalArgumentException) {

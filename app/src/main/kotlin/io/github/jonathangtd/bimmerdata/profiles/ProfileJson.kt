@@ -91,6 +91,7 @@ object ProfileJson {
         if (kind == null && ("phonePages" in obj || "carPages" in obj)) {
             // a layout file shared before profiles existed
             val d = DashboardJson.decode(text)
+            requireValueLimit(d)
             return ProfileExport(name = d.name ?: "", dashboard = d.copy(name = null))
         }
         require(kind == ProfileExport.KIND) { "Not a BimmerData profile (kind '$kind')" }
@@ -100,12 +101,21 @@ object ProfileJson {
             throw IllegalArgumentException("Not a BimmerData profile: ${ex.message}", ex)
         }
         require(e.formatVersion <= ProfileSet.FORMAT_VERSION) { "Profile format ${e.formatVersion} is newer than this app" }
+        requireValueLimit(e.dashboard)
         return e.copy(
             name = Profiles.cleanName(e.name),
             ecus = Profiles.normalizeEcus(e.ecus),
             dashboard = DashboardJson.sanitize(e.dashboard).copy(name = null),
             graphs = Graphs.sanitize(e.graphs),
         )
+    }
+
+    /** A profile file with more than [Dashboard.MAX_VALUES] values is refused, with how to fix it. */
+    private fun requireValueLimit(d: Dashboard) {
+        val n = d.measurementIds().size
+        require(n <= Dashboard.MAX_VALUES) {
+            "This profile has $n values; a profile holds at most ${Dashboard.MAX_VALUES} (it is read whole at every cycle): split it into several profiles"
+        }
     }
 
     /** Adds an exported profile as a new, active one (named [fallbackName] if it has no name). */

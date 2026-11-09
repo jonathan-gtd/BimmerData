@@ -132,4 +132,34 @@ class ApiCoreTest {
         assertEquals(4, page.rows)
         assertEquals("Q", page.name)
     }
+
+    @Test
+    fun `a profile holds at most 42 values`() {
+        val phone = io.github.jonathangtd.bimmerdata.dashboard.Target.Phone
+        // 14 MultiValue cards of 3 values on an 8x4 grid: 42 values, the limit
+        val cards = (0 until 14).map { i ->
+            Card(id = "c$i", type = GaugeType.MultiValue, measurementIds = (0 until 3).map { "msv70/${i * 3 + it}" }, col = i % 4, row = i / 4)
+        }
+        val full = Dashboard(phonePages = listOf(Page(id = "p", name = "P", columns = 4, rows = 8, cards = cards)))
+        assertTrue(LayoutOps.validate(full).isEmpty())
+        // a 43rd value is refused, a card reusing values already there is not
+        val e = assertThrows<ApiException> {
+            LayoutOps.addCard(full, phone, "p", Card(type = GaugeType.Dial, measurementIds = listOf("msv70/new")), explicitPosition = false)
+        }
+        assertEquals("too_many_values", e.code)
+        LayoutOps.addCard(full, phone, "p", Card(type = GaugeType.Trend, measurementIds = listOf("msv70/0")), explicitPosition = false)
+        // changing a card to a new value instead of one it had keeps the count
+        val swapped = cards[0].copy(measurementIds = listOf("msv70/new", "msv70/1", "msv70/2"))
+        LayoutOps.updateCard(full, phone, "p", "c0", swapped)
+        // a whole layout above the limit is reported
+        val over = full.updatePage(phone, "p") { it.copy(cards = it.cards + Card(id = "x", type = GaugeType.Dial, measurementIds = listOf("msv70/new"), col = 2, row = 3)) }
+        assertTrue(LayoutOps.validate(over).any { it.code == "too_many_values" })
+        // an older profile above the limit can still lose values
+        assertFalse(Dashboard.exceedsValues(over, full))
+        assertTrue(Dashboard.exceedsValues(full, over))
+        // a profile file above the limit is refused with how to fix it
+        val file = io.github.jonathangtd.bimmerdata.dashboard.DashboardJson.encode(over)
+        val err = assertThrows<IllegalArgumentException> { io.github.jonathangtd.bimmerdata.profiles.ProfileJson.parseExport(file) }
+        assertTrue(err.message!!.contains("43 values"), err.message)
+    }
 }

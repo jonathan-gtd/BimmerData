@@ -204,6 +204,11 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
   or leave the grid.
 - Card types: `Dial`, `BipolarBar` (1–4 measurements), `BigNumber`, `Trend`, `MultiValue`
   (2–3 measurements), `Status`; the others take exactly one measurement.
+- A profile holds at most **42 values** (distinct measurement ids over all its phone and Android
+  Auto pages; a value on several cards counts once). The whole profile is read at every cycle and
+  one ECU's dynamic block holds 42 values. A card, a layout or a profile file that would make more
+  is refused (`409 too_many_values`, `422 invalid_layout` with an issue `too_many_values`,
+  `422 invalid_profile_file`): split the values into several profiles.
 - Unknown JSON fields are rejected (400), so typos do not silently vanish.
 - Measurement ids that are not in the imported ECU folder are accepted but reported as
   `warnings` (the card shows "--" until the SGBD is imported).

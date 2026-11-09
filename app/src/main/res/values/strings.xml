@@ -51,6 +51,7 @@
     <string name="page_full">No room left on this page.</string>
     <string name="car_max_cards">An Android Auto page holds at most 4 cards.</string>
     <string name="size_refused">Not enough room for this size.</string>
+    <string name="profile_values_full">A profile holds at most %1$d values (it is read whole at every cycle). Remove some or create another profile.</string>
     <string name="card_deleted">Card deleted</string>
     <string name="page_deleted">Page deleted</string>
     <string name="add_card">Add card</string>

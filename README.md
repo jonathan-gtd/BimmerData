@@ -109,8 +109,10 @@ The K-line is slow, so a big profile reads slower: each value of an ECU's dynami
 about 1 ms per read cycle (measured on an MSV70: about 56 ms per cycle for 6 values, 100 ms for
 41), each other ECU one more telegram per cycle, each job about 100 ms. When a profile is too slow
 for what you look at, split it into smaller profiles (one per subject: knock, lambda, fuel...).
-One exception: an ECU with more than 42 values in the profile does not fit in one dynamic block;
-the app then reads only the page shown.
+A profile holds at most **42 values** (all its pages together, a value shown twice counts once):
+one ECU's dynamic block holds 42 values (its define telegram has a one-byte length, 2 + 6 bytes
+per value), and the app refuses a card or a profile file that would make more. A profile made by
+an older version with more values is still read, but only its page shown.
 
 ## Settings
 

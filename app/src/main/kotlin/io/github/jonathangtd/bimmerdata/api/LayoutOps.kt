@@ -73,7 +73,24 @@ object LayoutOps {
                 }
             }
         }
+        val values = d.measurementIds().size
+        if (values > Dashboard.MAX_VALUES) {
+            issues += LayoutIssue("", "too_many_values", "A profile holds at most ${Dashboard.MAX_VALUES} values (it is read whole at every cycle), this layout has $values: split it into several profiles")
+        }
         return issues
+    }
+
+    /**
+     * Refuses an edit from [before] to [after] that takes the profile past [Dashboard.MAX_VALUES]
+     * (an edit adding no value stays allowed, see [Dashboard.exceedsValues]).
+     */
+    fun requireValueLimit(before: Dashboard, after: Dashboard) {
+        if (Dashboard.exceedsValues(before, after)) {
+            throw ApiException(
+                409, "too_many_values",
+                "A profile holds at most ${Dashboard.MAX_VALUES} values (it is read whole at every cycle); this change would make ${after.measurementIds().size}. Remove values first, or create another profile",
+            )
+        }
     }
 
     /** Rules of a single card that do not depend on its page. */
@@ -202,7 +219,9 @@ object LayoutOps {
                 ?: throw ApiException(409, "no_free_slot", "No free ${c.colSpan}×${c.rowSpan} slot on page '${page.id}'; free cells: ${freeCells(page)}")
             c = c.copy(col = col, row = row)
         }
-        return d.updatePage(t, page.id) { it.copy(cards = it.cards + c) } to c
+        val next = d.updatePage(t, page.id) { it.copy(cards = it.cards + c) }
+        requireValueLimit(d, next)
+        return next to c
     }
 
     /** Replaces card [cardId] by [updated] (same id); it must still fit where it is placed. */
@@ -216,7 +235,9 @@ object LayoutOps {
         page.cards.firstOrNull { it.id != cardId && GridRules.overlaps(it, updated) }?.let {
             throw ApiException(409, "card_overlap", "${describe(updated)} overlaps ${describe(it)}; free cells: ${freeCells(page.copy(cards = page.cards.filterNot { c -> c.id == cardId }))}")
         }
-        return d.updatePage(t, page.id) { it.replace(updated) } to updated
+        val next = d.updatePage(t, page.id) { it.replace(updated) }
+        requireValueLimit(d, next)
+        return next to updated
     }
 
     fun deleteCard(d: Dashboard, t: Target, ref: String, cardId: String): Dashboard {

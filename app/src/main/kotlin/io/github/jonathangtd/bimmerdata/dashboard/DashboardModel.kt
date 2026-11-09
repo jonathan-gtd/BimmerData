@@ -47,6 +47,24 @@ data class Dashboard(
     companion object {
         const val FORMAT_VERSION = 1
         const val MAX_NAME_LENGTH = 40
+
+        /**
+         * Values (distinct measurement ids, phone and Android Auto pages) of one profile. The whole
+         * profile is read at every cycle, and one ECU's dynamic block holds at most 42 values (the
+         * define telegram, 2 + 6 bytes per value, must fit a one-byte length): a bigger profile
+         * would be slow, so it is split into several profiles.
+         */
+        const val MAX_VALUES = 42
+
+        /**
+         * True when an edit from [before] to [after] takes the profile past [MAX_VALUES]. An edit
+         * that adds no value stays allowed, so an older profile above the limit can still be
+         * tidied up.
+         */
+        fun exceedsValues(before: Dashboard, after: Dashboard): Boolean {
+            val n = after.measurementIds().size
+            return n > MAX_VALUES && n > before.measurementIds().size
+        }
     }
 }
 

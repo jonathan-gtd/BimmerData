@@ -389,7 +389,8 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                     card = card, page = page, target = s.target, vm = vm, renderer = renderer,index = index, frame = frame,
                     onDismiss = { sheet = null },
                     onSave = { updated ->
-                        if (vm.updateCard(s.target, page.id, updated)) sheet = null else message(res.getString(R.string.size_refused))
+                        if (vm.updateCard(s.target, page.id, updated)) sheet = null
+                        else message(if (vm.valueLimitHit) res.getString(R.string.profile_values_full, Dashboard.MAX_VALUES) else res.getString(R.string.size_refused))
                     },
                     onDelete = {
                         vm.deleteCard(s.target, page.id, card.id)
@@ -409,7 +410,13 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                     onConfirm = { type, ids ->
                         val card = newCard(type, ids, s.target, page, s.col, s.row)
                         if (!vm.addCard(s.target, page.id, card)) {
-                            message(res.getString(if (s.target == Target.Car && page.cards.size >= GridLimits.Car.maxCards) R.string.car_max_cards else R.string.page_full))
+                            message(
+                                when {
+                                    vm.valueLimitHit -> res.getString(R.string.profile_values_full, Dashboard.MAX_VALUES)
+                                    s.target == Target.Car && page.cards.size >= GridLimits.Car.maxCards -> res.getString(R.string.car_max_cards)
+                                    else -> res.getString(R.string.page_full)
+                                },
+                            )
                         }
                         sheet = null
                     },

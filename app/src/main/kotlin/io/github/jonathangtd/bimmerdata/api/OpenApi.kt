@@ -247,7 +247,7 @@ Clearing faults and running EDIABAS jobs (scope `diag`) and changing the CAN mod
         put("LayoutIssue", S.obj(
             "One problem of a layout.", listOf("path", "code", "message"), false, null,
             "path" to S.str("Where: e.g. `phonePages[0].cards[2].measurementIds`.", "phonePages[0].cards[2]"),
-            "code" to S.str("e.g. card_overlap, out_of_grid, measurement_count, invalid_grid, duplicate_id, too_many_cards, unknown_measurement (warning)."),
+            "code" to S.str("e.g. card_overlap, out_of_grid, measurement_count, invalid_grid, duplicate_id, too_many_cards, too_many_values (a profile holds at most ${io.github.jonathangtd.bimmerdata.dashboard.Dashboard.MAX_VALUES} values), unknown_measurement (warning)."),
             "message" to S.str("Explanation."),
         ))
         put("Status", S.obj(
