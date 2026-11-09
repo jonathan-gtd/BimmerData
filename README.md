@@ -102,13 +102,13 @@ pages) on one time axis, live. Each profile has its own named graphs, kept with 
 
 ## What is read
 
-The K-line is slow, so the app reads what you look at, and the **whole active profile** (every
-phone and Android Auto page) when that costs nothing more: the values of the other pages are in
-the same ECU's dynamic block (up to 42 values per ECU, read in one telegram either way). Then
-switching page shows current values at once, and the CSV recording and the Telegraf export get
-every value of the profile whatever the page shown. A profile whose other pages need another
-ECU, a job, or more than 42 values of one ECU is read page by page (the recording then keeps the
-values of the page shown when it started).
+The K-line is slow, so the app reads what you look at: each value of an ECU's dynamic block
+costs about 1 ms per read cycle (measured on an MSV70: about 56 ms per cycle for 6 values, 100 ms
+for 41). **While a CSV recording runs**, the app reads the **whole active profile** (every phone
+and Android Auto page) when its other pages are in the same ECU's dynamic block (up to 42
+values per ECU): the recording, and the Telegraf export, then have every value of the profile
+whatever the page shown. A profile whose other pages need another ECU, a job, or more than 42
+values of one ECU is recorded with the values of the page shown when the recording started.
 
 ## Settings
 

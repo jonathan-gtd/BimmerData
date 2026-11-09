@@ -167,19 +167,22 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
                 again.forEach { loadSgbd(it) }
             }
         }
-        // Ask the acquisition engine for what is on screen, or for the whole profile when that costs
-        // no extra read cycle (ReadScope): other pages stay current, the CSV and Telegraf get them.
-        // Shared with Android Auto, see MeasurementRequests.
+        // Ask the acquisition engine for what is on screen (shared with Android Auto, see
+        // MeasurementRequests): the fewer values, the faster each read cycle.
         viewModelScope.launch {
             combine(_ui, _index, foreground) { ui, index, fg ->
                 val pages = listOfNotNull(
                     ui.currentPage(Target.Phone),
                     if (ui.editing && ui.target == Target.Car) ui.currentPage(Target.Car) else null,
                 )
-                val visible = pages.flatMap { it.measurementIds() }.distinct().mapNotNull { index[it] }
-                val profile = ui.dashboard?.measurementIds().orEmpty().mapNotNull { index[it] }
-                io.github.jonathangtd.bimmerdata.live.ReadScope.select(profile, visible) to fg
+                pages.flatMap { it.measurementIds() }.distinct().mapNotNull { index[it] } to fg
             }.distinctUntilChanged().collect { (list, fg) -> deps.requestMeasurements(MeasurementClient.Phone, list, fg) }
+        }
+        // Every value of the profile, for the columns of a CSV recording (ProfileMeasurements).
+        viewModelScope.launch {
+            combine(_ui.map { it.dashboard }.distinctUntilChanged(), _index) { d, index ->
+                d?.measurementIds().orEmpty().mapNotNull { index[it] }
+            }.distinctUntilChanged().collect { io.github.jonathangtd.bimmerdata.live.ProfileMeasurements.current = it }
         }
     }
 

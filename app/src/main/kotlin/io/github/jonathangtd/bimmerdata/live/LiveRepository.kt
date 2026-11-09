@@ -120,7 +120,10 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
 
     private val csvRecorder = CsvSessionRecorder(
         source = proxy,
-        columns = { proxy.requested },
+        // what is read now, plus the rest of the profile when it fits in the same blocks: the
+        // recording then has every value of the profile whatever the page shown (pinned while
+        // recording; between recordings only the screen is read, see ReadScope)
+        columns = { ReadScope.select(ProfileMeasurements.current, proxy.requested) },
         output = { name -> RecordingStorage.create(app, name) { uri -> _lastRecording.value = uri } },
         scope = scope,
         pin = proxy::setPinned,

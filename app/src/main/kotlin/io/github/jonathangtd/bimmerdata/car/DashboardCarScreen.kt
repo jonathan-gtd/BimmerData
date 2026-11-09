@@ -192,12 +192,15 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
         }
     }
 
-    /** The page shown, or the whole profile when that costs no extra read cycle (ReadScope). */
+    /**
+     * The page shown (the fewer values, the faster each read cycle). The whole profile is kept in
+     * ProfileMeasurements for the columns of a CSV recording started while only the car is used.
+     */
     private fun requestMeasurements(c: CarContent) {
         val idx = index.value
-        val visible = c.page?.measurementIds().orEmpty().mapNotNull { idx[it] }
         val profile = currentDashboard?.measurementIds().orEmpty().mapNotNull { idx[it] }
-        deps.requestMeasurements(MeasurementClient.Car, io.github.jonathangtd.bimmerdata.live.ReadScope.select(profile, visible), foreground = true)
+        if (profile.isNotEmpty()) io.github.jonathangtd.bimmerdata.live.ProfileMeasurements.current = profile
+        deps.requestMeasurements(MeasurementClient.Car, c.page?.measurementIds().orEmpty().mapNotNull { idx[it] }, foreground = true)
     }
 
     /** Last layout of the active profile (phone and car pages). */

@@ -114,14 +114,7 @@ class GraphViewModel(app: Application) : AndroidViewModel(app) {
         // On screen: read the visible values of the graph shown (they are values of the cards).
         viewModelScope.launch {
             combine(_ui, _index, foreground) { ui, index, fg ->
-                if (!fg) {
-                    null
-                } else {
-                    // the graph's values, or the whole profile when that costs no extra read cycle
-                    val visible = ui.selected?.visibleIds().orEmpty().mapNotNull { index[it] }
-                    val profile = ui.choices.map { it.measurementId }.mapNotNull { index[it] }
-                    io.github.jonathangtd.bimmerdata.live.ReadScope.select(profile, visible)
-                }
+                if (!fg) null else ui.selected?.visibleIds().orEmpty().mapNotNull { index[it] }
             }.distinctUntilChanged().collect { list ->
                 if (list == null) deps.clearMeasurements(MeasurementClient.Graph)
                 else deps.requestMeasurements(MeasurementClient.Graph, list, foreground = true)
