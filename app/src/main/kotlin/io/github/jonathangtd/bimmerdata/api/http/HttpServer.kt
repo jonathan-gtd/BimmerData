@@ -39,10 +39,72 @@ class HttpRequest(
     val remote: InetAddress,
     /** True when the request came over TLS (HTTPS). */
     val secure: Boolean = false,
+    /**
+     * Body still on the socket, for the few routes that accept large uploads
+     * ([HttpServer]'s `streamedBodyLimit`): [body] is then empty and the handler reads this
+     * stream (at most [bodyLength] bytes) itself. Null for every other request.
+     */
+    val bodyStream: InputStream? = null,
+    /** Content-Length of the request. */
+    val bodyLength: Long = body.size.toLong(),
 ) {
     fun header(name: String): String? = headers[name.lowercase()]
     fun queryParam(name: String): String? = query[name]?.firstOrNull()
     fun bodyText(): String = String(body, Charsets.UTF_8)
+}
+
+/**
+ * The body of a streamed request: at most [length] bytes of the connection. `Expect: 100-continue`
+ * is answered on the first read only, so a request refused before (wrong token, bad name) is never
+ * sent by the client. [close] does not close the connection.
+ */
+internal class RequestBodyStream(
+    private val input: InputStream,
+    length: Long,
+    private val onFirstRead: () -> Unit,
+) : InputStream() {
+    @Volatile var remaining: Long = length
+        private set
+    var started = false
+        private set
+
+    private fun start() {
+        if (!started) {
+            started = true
+            onFirstRead()
+        }
+    }
+
+    override fun read(): Int {
+        val one = ByteArray(1)
+        return if (read(one, 0, 1) < 0) -1 else one[0].toInt() and 0xFF
+    }
+
+    override fun read(b: ByteArray, off: Int, len: Int): Int {
+        if (len == 0) return 0
+        if (remaining <= 0) return -1
+        start()
+        val n = input.read(b, off, minOf(len.toLong(), remaining).toInt())
+        if (n < 0) throw java.io.EOFException("Truncated body: $remaining bytes missing")
+        remaining -= n
+        return n
+    }
+
+    override fun available(): Int = minOf(input.available().toLong(), remaining).toInt()
+
+    override fun close() = Unit
+
+    /** Reads and drops what is left, up to [maxBytes]; true when the whole body was read. */
+    fun discard(maxBytes: Long): Boolean {
+        val buf = ByteArray(64 * 1024)
+        var dropped = 0L
+        while (remaining > 0 && dropped < maxBytes) {
+            val n = read(buf, 0, buf.size)
+            if (n < 0) break
+            dropped += n
+        }
+        return remaining <= 0
+    }
 }
 
 sealed class HttpResponse(val status: Int, val contentType: String, val headers: Map<String, String>) {
@@ -105,8 +167,14 @@ class HttpServer(
     /** Connections from other addresses are closed without an answer. */
     private val acceptPeer: (InetAddress) -> Boolean = { true },
     private val log: (String, Throwable?) -> Unit = { _, _ -> },
+    /**
+     * Upload routes: for a request (method, decoded path) that may carry a large body, the largest
+     * body accepted, or null for the normal in-memory body of at most [HttpLimits.maxBodyBytes].
+     * Such a body is not read by the server but handed to the handler as [HttpRequest.bodyStream].
+     */
+    private val streamedBodyLimit: (String, String) -> Long? = { _, _ -> null },
 ) {
-    private val sockets = Collections.synchronizedList(ArrayList<ServerSocket>())
+    private val sockets =Collections.synchronizedList(ArrayList<ServerSocket>())
     private val clients: MutableSet<Socket> = Collections.synchronizedSet(HashSet())
     private val slots = Semaphore(limits.maxConnections)
     private val streamSlots = Semaphore(limits.maxStreams)
@@ -392,18 +460,31 @@ class HttpServer(
                     return
                 }
                 served++
-                val keepAlive = wantsKeepAlive(head) && served < limits.maxRequestsPerConnection
                 val response = try {
                     handler(request)
                 } catch (e: Exception) {
                     log("Handler failed for ${request.method} ${request.path}", e)
                     HttpResponse.text(500, errorJson("internal_error", "Internal error"), JSON)
                 }
+                // a streamed body the handler did not read to the end leaves bytes on the socket
+                val upload = request.bodyStream as? RequestBodyStream
+                val bodyDone = upload == null || upload.remaining <= 0
+                val keepAlive = wantsKeepAlive(head) && served < limits.maxRequestsPerConnection && bodyDone
                 when (response) {
                     is HttpResponse.Bytes -> {
                         writeHead(output, response.status, response.contentType, response.headers, response.body.size.toLong(), keepAlive)
                         if (request.method != "HEAD") output.write(response.body)
                         output.flush()
+                        if (!bodyDone) {
+                            // Refused before the body was asked for (Expect: 100-continue): the client
+                            // sends nothing more. Else read a little of it, so that closing does not
+                            // reset the connection before the client has read the answer.
+                            if (upload.started || head.headers["expect"] == null) {
+                                socket.soTimeout = 2_000
+                                runCatching { upload.discard(UNREAD_BODY_DRAIN_BYTES) }
+                            }
+                            return
+                        }
                         if (!keepAlive) return
                     }
                     is HttpResponse.Stream -> {
@@ -486,18 +567,6 @@ class HttpServer(
         val length = head.headers["content-length"]?.let { v ->
             v.toLongOrNull()?.takeIf { it >= 0 } ?: throw HttpError(400, "bad_request", "Invalid Content-Length")
         } ?: 0L
-        if (length > limits.maxBodyBytes) throw HttpError(413, "body_too_large", "Request body larger than ${limits.maxBodyBytes} bytes")
-        if (length > 0 && head.headers["expect"]?.equals("100-continue", ignoreCase = true) == true) {
-            output.write("HTTP/1.1 100 Continue\r\n\r\n".toByteArray(Charsets.ISO_8859_1))
-            output.flush()
-        }
-        val body = ByteArray(length.toInt())
-        var read = 0
-        while (read < body.size) {
-            val n = input.read(body, read, body.size - read)
-            if (n < 0) throw HttpError(400, "bad_request", "Truncated body")
-            read += n
-        }
         val q = head.target.indexOf('?')
         val rawPath = if (q >= 0) head.target.substring(0, q) else head.target
         val rawQuery = if (q >= 0) head.target.substring(q + 1) else ""
@@ -519,6 +588,26 @@ class HttpServer(
                     throw HttpError(400, "bad_request", "Malformed query encoding")
                 }
             }
+        }
+        val expectContinue = length > 0 && head.headers["expect"]?.equals("100-continue", ignoreCase = true) == true
+        fun sendContinue() {
+            output.write("HTTP/1.1 100 Continue\r\n\r\n".toByteArray(Charsets.ISO_8859_1))
+            output.flush()
+        }
+        val streamLimit = if (length > 0) streamedBodyLimit(head.method, path) else null
+        if (streamLimit != null) {
+            if (length > streamLimit) throw HttpError(413, "body_too_large", "Request body larger than $streamLimit bytes")
+            val stream = RequestBodyStream(input, length) { if (expectContinue) sendContinue() }
+            return HttpRequest(head.method, path, query, head.headers, ByteArray(0), remote, secure, stream, length)
+        }
+        if (length > limits.maxBodyBytes) throw HttpError(413, "body_too_large", "Request body larger than ${limits.maxBodyBytes} bytes")
+        if (expectContinue) sendContinue()
+        val body = ByteArray(length.toInt())
+        var read = 0
+        while (read < body.size) {
+            val n = input.read(body, read, body.size - read)
+            if (n < 0) throw HttpError(400, "bad_request", "Truncated body")
+            read += n
         }
         return HttpRequest(head.method, path, query, head.headers, body, remote, secure)
     }
@@ -556,6 +645,9 @@ class HttpServer(
     companion object {
         const val JSON = "application/json; charset=utf-8"
 
+        /** At most this much of an upload the handler did not read is read before closing. */
+        private const val UNREAD_BODY_DRAIN_BYTES = 8L * 1024 * 1024
+
         /** `{"error":{"code":…,"message":…}}`, the error shape of the whole API. */
         fun errorJson(code: String, message: String): String =
             "{\"error\":{\"code\":\"" + escape(code) + "\",\"message\":\"" + escape(message) + "\"}}"
@@ -586,6 +678,8 @@ class HttpServer(
             422 -> "Unprocessable Content"
             429 -> "Too Many Requests"
             431 -> "Request Header Fields Too Large"
+            408 -> "Request Timeout"
+            507 -> "Insufficient Storage"
             500 -> "Internal Server Error"
             501 -> "Not Implemented"
             503 -> "Service Unavailable"
