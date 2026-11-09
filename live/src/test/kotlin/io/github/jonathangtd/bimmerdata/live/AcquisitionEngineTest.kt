@@ -82,8 +82,18 @@ class AcquisitionEngineTest {
         try {
             val fast = measure(engine, tableMeasurements(catalog), 3000)
             val fastStatus = engine.status.value
+            val stats = engine.readStats()
             val definitionsFast = sim.recordDefinitions
             engine.stopAndJoin()
+            // read statistics: one native block, defined once, plausible cycle times
+            println("read stats: ${stats.summary()}")
+            val block = stats.blocks.single()
+            assertEquals("Native", block.mode, stats.summary())
+            assertEquals(1L, block.defines)
+            assertTrue(block.reads > 10 && stats.cycles > 10, stats.summary())
+            assertTrue(stats.medianCycleMs in 10..150, stats.summary())
+            assertTrue(stats.p90CycleMs >= stats.medianCycleMs)
+            assertEquals(0, stats.errorCount)
             assertFalse(line.isOpen, "interface released after stop")
             assertEquals(AcquisitionState.Stopped, engine.status.value.state)
 

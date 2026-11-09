@@ -355,6 +355,12 @@ class AcquisitionEngine(
         failedCycles = 0
         var errorCount = 0
         var lastError: String? = null
+        statErrors = 0
+        statLastError = null
+        intervalCount = 0
+        totalCycles = 0
+        slowCycles = 0
+        lastCycleAt = 0
         var connectFailures = 0
         var unreachable: String? = null
         try {
@@ -421,6 +427,8 @@ class AcquisitionEngine(
                         failures++
                         errorCount++
                         lastError = "${group.label}: $error"
+                        statErrors = errorCount
+                        statLastError = lastError
                         group.failures++
                         group.retryAt = clock() + backoff(group.failures)
                         if (failure?.link == false && group is JobGroup) {
@@ -685,8 +693,35 @@ class AcquisitionEngine(
         withTimeoutOrNull(ms) { merge(effective.drop(1).map { }, opSignal.filter { it != sig }.map { }).first() }
     }
 
+    // ---- read statistics (ReadStats), engine thread; read approximately from other threads ----
+    private val intervals = LongArray(ReadStats.WINDOW)
+    @Volatile private var intervalCount = 0
+    @Volatile private var totalCycles = 0L
+    @Volatile private var slowCycles = 0L
+    private var lastCycleAt = 0L
+    @Volatile private var statErrors = 0
+    @Volatile private var statLastError: String? = null
+
+    /** How the read loop is doing (block modes, cycle times, errors) since connecting. */
+    fun readStats(): ReadStats {
+        val n = intervalCount.coerceAtMost(ReadStats.WINDOW)
+        val (median, p90) = ReadStats.percentiles(intervals.copyOf(n))
+        val blocks = plan.filterIsInstance<BlockGroup>().map { g ->
+            ReadStats.BlockStats(g.sgbd, g.reader.rows.size, g.reader.mode.name, g.reader.reads, g.reader.defines, g.reader.interpretedReason)
+        }
+        return ReadStats(blocks, totalCycles, slowCycles, median, p90, statErrors, statLastError)
+    }
+
     private fun markCycle() {
         val now = clock()
+        if (lastCycleAt > 0) {
+            val ms = now - lastCycleAt
+            intervals[intervalCount % ReadStats.WINDOW] = ms
+            intervalCount++
+            totalCycles++
+            if (ms > ReadStats.SLOW_MS) slowCycles++
+        }
+        lastCycleAt = now
         cycleTimes.addLast(now)
         while (cycleTimes.size > 2 && now - cycleTimes.first() > config.statusWindowMs) cycleTimes.removeFirst()
         while (cycleTimes.size > 500) cycleTimes.removeFirst()

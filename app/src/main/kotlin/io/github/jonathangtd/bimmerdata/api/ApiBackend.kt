@@ -179,6 +179,8 @@ data class AcquisitionInfo(
     val readsPerSecond: Double,
     val errorCount: Int,
     val message: String? = null,
+    /** Read loop statistics (block modes, cycle times), see ReadStats.summary. */
+    val stats: String? = null,
 )
 
 @Serializable

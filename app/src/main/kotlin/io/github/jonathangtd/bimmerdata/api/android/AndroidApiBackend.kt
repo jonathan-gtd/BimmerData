@@ -72,7 +72,7 @@ class AndroidApiBackend(
         }
         return BackendStatus(
             connection = connection,
-            acquisition = AcquisitionInfo(s.state.name, s.cyclesPerSecond, s.errorCount, s.message),
+            acquisition = AcquisitionInfo(s.state.name, s.cyclesPerSecond, s.errorCount, s.message, repo.readStats()?.summary()),
             measurementsRead = repo.requests.merged().map { it.id },
         )
     }

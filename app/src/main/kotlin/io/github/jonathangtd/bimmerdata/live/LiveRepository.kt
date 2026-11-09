@@ -149,6 +149,20 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
 
     // ---- guarded by mutex ----
     private var engine: AcquisitionEngine? = null
+
+    /** Read loop statistics of the current connection (null when not connected). */
+    fun readStats(): ReadStats? = engine?.takeIf { it.isRunning }?.readStats()
+
+    init {
+        // one line every 30 s while reading, to find out on the car why cycles are slow
+        // (adb logcat -s BimmerData.Read)
+        scope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(30_000)
+                readStats()?.takeIf { it.cycles > 0 }?.let { Log.i("BimmerData.Read", it.summary()) }
+            }
+        }
+    }
     @Volatile private var connectJob: Job? = null
 
     /**

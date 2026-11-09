@@ -257,6 +257,7 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
                 "readsPerSecond" to S.num("Complete read cycles per second over the last seconds.", 8.4),
                 "errorCount" to S.int("Read errors since connecting."),
                 "message" to S.str("Engine message, e.g. the ECU name."),
+                "stats" to S.str("Read loop statistics while connected: per dynamic block its read mode (Native: one telegram decoded by the app; Interpreted: the EDIABAS job every time), reads and definitions; cycle time median / 90th percentile, share of cycles over 150 ms, errors."),
             ),
             "recording" to S.ref("RecordingState"),
             "measurementsRead" to S.arr(S.str(), "Measurement ids read in each cycle right now (phone + Android Auto + recorder + API)."),
