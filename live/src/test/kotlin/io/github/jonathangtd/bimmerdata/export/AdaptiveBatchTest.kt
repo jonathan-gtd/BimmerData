@@ -151,7 +151,7 @@ class AdaptiveBatchTest {
         val readings = TestReadings()
         val exporter = TelegrafExporter(
             scope, readings.flow, { null }, LineQueue(dir, freeSpace = { Long.MAX_VALUE }), config, net,
-            batchPauseMs = 300, minBackoffMs = 20, maxBackoffMs = 100, clock = { 1_000 },
+            batchPauseMs = 300, minBackoffMs = 20, maxBackoffMs = 100, clock = { 1_000 }, maxBatchWaitMs = 3_000,
         )
         exporter.start()
         try {
@@ -168,7 +168,36 @@ class AdaptiveBatchTest {
                 }
             }
             assertEquals(100, tg.accepted.size, "every point once")
-            assertTrue(tg.batches.get() <= 8, "grouped into a few requests, not one per reading: ${tg.batches.get()}")
+            assertTrue(tg.batches.get() <= 2, "100 points per request, not one per reading: ${tg.batches.get()}")
+        } finally {
+            exporter.stop()
+            scope.cancel()
+        }
+    }
+
+    @Test
+    fun `a slow source still gets its few points out after the longest wait`(@TempDir dir: File) = SlowTelegraf(maxLines = 1_000_000).use { tg ->
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val config = MutableStateFlow(ExportConfig())
+        val net = MutableStateFlow(NetworkKind.Unmetered)
+        val readings = TestReadings()
+        val exporter = TelegrafExporter(
+            scope, readings.flow, { null }, LineQueue(dir, freeSpace = { Long.MAX_VALUE }), config, net,
+            batchPauseMs = 50, clock = { 1_000 }, maxBatchWaitMs = 600,
+        )
+        exporter.start()
+        try {
+            runBlocking {
+                withTimeout(10_000) {
+                    config.value = ExportConfig(enabled = true, url = tg.url, car = "E90", mode = ExportMode.Live)
+                    delay(100)
+                    for (i in 0 until 5) readings.value = mapOf("dme/0x4300" to io.github.jonathangtd.bimmerdata.live.Sample(90.0 + i, null, 2_000L + i * 10))
+                    delay(300)
+                    assertEquals(0, tg.accepted.size, "fewer than 100 points: still gathering")
+                    while (tg.accepted.size < 5) delay(10)
+                }
+            }
+            assertEquals(1, tg.batches.get(), "the 5 points go together once the longest wait is over")
         } finally {
             exporter.stop()
             scope.cancel()
@@ -183,7 +212,7 @@ class AdaptiveBatchTest {
         val net = MutableStateFlow(NetworkKind.Unmetered)
         val exporter = TelegrafExporter(
             scope, TestReadings().flow, { null }, LineQueue(dir, segmentBytes = 1_000_000, freeSpace = { Long.MAX_VALUE }), config, net,
-            batchPauseMs = 20, minBackoffMs = 20, maxBackoffMs = 100, clock = { 1_000 }, shrinkPauseMs = 10,
+            batchPauseMs = 20, minBackoffMs = 20, maxBackoffMs = 100, clock = { 1_000 }, shrinkPauseMs = 10, maxBatchWaitMs = 100,
         )
         exporter.start()
         try {

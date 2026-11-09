@@ -45,7 +45,7 @@ class TelegrafEndToEndTest {
         val samples = TestReadings()
         val config = MutableStateFlow(ExportConfig())
         val net = MutableStateFlow(NetworkKind.None)
-        val exporter = TelegrafExporter(scope, samples.flow, ms::get, LineQueue(dir), config, net, clock = { start })
+        val exporter = TelegrafExporter(scope, samples.flow, ms::get, LineQueue(dir), config, net, clock = { start }, maxBatchWaitMs = 500)
         exporter.start()
         try {
             runBlocking {

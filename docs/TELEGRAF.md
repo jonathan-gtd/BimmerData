@@ -140,6 +140,10 @@ Goal: a point read in the car reaches TimescaleDB, or stays somewhere you can se
   **HTTP 2xx** for its batch.
 - Network errors, timeouts, 5xx, 429, **404** and other temporary answers: the batch stays and is
   retried (2 s up to 5 min between tries). 401/403: it waits until the token or password is fixed.
+- **Few requests.** Live, a request carries at least 100 points, never more than one every 2 s
+  (so about 200 points at 100 values per second), and a point never waits more than 30 s (a slow
+  source, the end of a session). A backlog (after the trip, after an outage) goes batch after
+  batch without waiting.
 - **A slow server gets smaller batches.** A timeout, 413, 502, 503 or 504 (typically Telegraf's
   listener taking more than its 10 s behind a reverse proxy) halves the batch size, down to 50
   lines; only the lines of a batch that got a 2xx leave the phone (the rest of the batch file is

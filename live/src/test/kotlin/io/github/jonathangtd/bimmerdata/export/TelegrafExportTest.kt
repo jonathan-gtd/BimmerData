@@ -132,7 +132,7 @@ class TelegrafExportTest {
         val net = MutableStateFlow(NetworkKind.None)
         val exporter = TelegrafExporter(
             scope, samples.flow, { id -> if (id == oil.id) oil else null }, LineQueue(dir), config, net,
-            batchPauseMs = 50, minBackoffMs = 50, maxBackoffMs = 200, clock = { 1_000 },
+            batchPauseMs = 50, minBackoffMs = 50, maxBackoffMs = 200, clock = { 1_000 }, maxBatchWaitMs = 100,
         )
         exporter.start()
         try {

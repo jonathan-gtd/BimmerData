@@ -110,11 +110,12 @@ class TelegrafExporter(
     private val clientFactory: (ExportConfig) -> TelegrafClient = { TelegrafClient(it.url, it.auth) },
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val clock: () -> Long = System::currentTimeMillis,
-    /**
-     * Pause after a batch unless a backlog waits, so live points are grouped (about one POST per
-     * 2 s, not one per reading: new points arrive during every send).
-     */
+    /** Live: at most one request per this time (new points arrive during every send). */
     private val batchPauseMs: Long = 2_000,
+    /** Live: points per request; fewer are sent once the oldest waited [maxBatchWaitMs]. */
+    private val minBatchLines: Int = 100,
+    /** Live: longest a point waits on the phone for a request to fill up. */
+    private val maxBatchWaitMs: Long = 30_000,
     private val minBackoffMs: Long = 2_000,
     private val maxBackoffMs: Long = 300_000,
     /** Pause before retrying with a smaller batch. */
@@ -252,8 +253,21 @@ class TelegrafExporter(
 
     // ---------------------------------------------------------------- sender
 
+    /**
+     * Live: waits [batchPauseMs], then until [minBatchLines] points wait, a backlog appears or
+     * [maxBatchWaitMs] passed: few requests (one per 2 s at most, at least 100 points each when
+     * the car gives that many), and a slow source still gets its points out within 30 s.
+     */
+    private suspend fun gatherBatch() {
+        delay(batchPauseMs)
+        withTimeoutOrNull((maxBatchWaitMs - batchPauseMs).coerceAtLeast(0)) {
+            while (!queue.hasBacklog() && queue.lines() < minBatchLines) delay(GATHER_POLL_MS)
+        }
+    }
+
     private suspend fun sendLoop() {
         var backoff = minBackoffMs
+        var gathered = false
         while (scope.isActive) {
             val cfg = config.value
             val phase = when {
@@ -270,13 +284,18 @@ class TelegrafExporter(
                 continue
             }
             _state.update { it.copy(phase = ExportPhase.Sending) }
+            // Live: gather points first (a backlog is sent at once, batch after batch), then look
+            // at the settings and the network again before sending.
+            if (!gathered && !queue.hasBacklog()) {
+                gatherBatch()
+                gathered = true
+                continue
+            }
+            gathered = false
             when (val r = sendOne(cfg)) {
                 null -> Unit
                 WriteResult.Ok -> {
                     backoff = minBackoffMs
-                    // Live: the points read meanwhile go in the next batch. A backlog (closed
-                    // segments) is sent at once, batch after batch.
-                    if (!queue.hasBacklog()) delay(batchPauseMs)
                 }
                 is WriteResult.Rejected -> Unit
                 is WriteResult.AuthFailed -> authFailedFor = cfg
@@ -337,6 +356,9 @@ class TelegrafExporter(
     }
 
     companion object {
+        /** How often a gathering batch looks at the queue. */
+        const val GATHER_POLL_MS = 200L
+
         fun allowed(mode: ExportMode, network: NetworkKind): Boolean = when (mode) {
             ExportMode.Live -> network != NetworkKind.None
             ExportMode.AfterTrip -> network == NetworkKind.Unmetered

@@ -150,6 +150,10 @@ class LineQueue(
     @Synchronized
     fun isEmpty(): Boolean = segments.isEmpty() && (open?.lines ?: 0) == 0
 
+    /** Points waiting, closed segments and open one. */
+    @Synchronized
+    fun lines(): Long = segments.sumOf { it.lines.toLong() } + (open?.lines ?: 0)
+
     /** Closed segments wait (a backlog: after a trip, an outage...), not only the open one. */
     @Synchronized
     fun hasBacklog(): Boolean = segments.isNotEmpty()
