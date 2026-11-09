@@ -93,6 +93,10 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
     private var frameScheduled = false
     private var lastFrameMs = 0L
     private var lockFailures = 0
+    private val regions = ArrayList<Rect>()
+    private var lastRegionAt = 0L
+    private var loggedInvalid = false
+    private var logNextFrame = true
     private var frameTimeMs = 0f
     private var frames = 0
     private val messagePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -142,8 +146,33 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
     /** Called on the render thread when the host's surface keeps refusing to be drawn on. */
     @Volatile var onSurfaceBroken: (() -> Unit)? = null
 
-    fun setVisibleArea(rect: Rect) = handler.post { visibleArea.set(rect); requestFrame() }
-    fun setStableArea(rect: Rect) = handler.post { stableArea.set(rect); requestFrame() }
+    fun setVisibleArea(rect: Rect) = handler.post { visibleArea.set(rect); logNextFrame = true; requestFrame() }
+    fun setStableArea(rect: Rect) = handler.post {
+        stableArea.set(rect)
+        addRegion(rect)
+        requestFrame()
+    }
+
+    /**
+     * Android Auto sometimes reports two areas at once when the app goes from a small card to the
+     * main area (or back), in either order: e.g. the main area, then at the same millisecond the
+     * card it just left. Following the last one would leave the screen black. The host only shows
+     * the part of the surface where the app is, so every area of such a burst is drawn (the last
+     * on top): the one on screen is always right, the other one is out of view. The next single
+     * change goes back to one area.
+     */
+    private fun addRegion(rect: Rect) {
+        val now = SystemClock.uptimeMillis()
+        val burst = now - lastRegionAt <= BURST_MS && regions.isNotEmpty() && regions.last() != rect
+        val previous = regions.lastOrNull()
+        regions.clear()
+        if (burst && previous != null) {
+            regions += previous
+            Log.i(TAG, "Two areas at once ($previous, $rect): drawing both")
+        }
+        regions += Rect(rect)
+        lastRegionAt = now
+    }
 
     fun setNight(on: Boolean) = handler.post {
         if (on == night) return@post
@@ -304,7 +333,12 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
         var animating = false
         synchronized(surfaceLock) {
             val s = surface ?: return
-            if (!s.isValid) return
+            if (!s.isValid) {
+                if (!loggedInvalid) Log.w(TAG, "Car surface no longer valid, nothing drawn")
+                loggedInvalid = true
+                return
+            }
+            loggedInvalid = false
             lastFrameMs = SystemClock.uptimeMillis()
             // Software canvas on purpose: when the host drops its surface while a frame is in
             // flight, a hardware canvas aborts the whole process in libhwui ("getFrame() called on
@@ -323,6 +357,10 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
                 return
             }
             lockFailures = 0
+            if (logNextFrame) {
+                logNextFrame = false
+                Log.i(TAG, "Frame drawn, surface ${surfaceWidth}x$surfaceHeight, area $visibleArea")
+            }
             try {
                 val start = SystemClock.uptimeMillis()
                 canvas.drawColor(renderer.background)
@@ -340,8 +378,22 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
         if (animating) requestFrame()
     }
 
+    /** The dashboard in every area of the last burst (usually one), see [addRegion]. */
     private fun drawContent(canvas: Canvas): Boolean {
-        chooseArea(area)
+        if (regions.size < 2) {
+            chooseArea(area)
+            return drawIn(canvas)
+        }
+        var animating = false
+        for (r in regions) {
+            area.set(r)
+            animating = drawIn(canvas) || animating
+        }
+        return animating
+    }
+
+    /** The dashboard in [area]. */
+    private fun drawIn(canvas: Canvas): Boolean {
         val c = content ?: return false
         val frameNanos = SystemClock.elapsedRealtimeNanos()
         val page = c.page
@@ -407,6 +459,9 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
     companion object {
         private const val TAG = "CarSurfaceRenderer"
         const val FRAME_MS = 33L
+
+        /** Area changes closer than this are one burst (see addRegion). */
+        private const val BURST_MS = 150L
         private const val MESSAGE_COLOR = 0xFF8E97A3.toInt()
 
         /** Gauge track of the grid glyphs: the host draws them on its own grey, lighter than our cards. */

@@ -329,6 +329,7 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
     }
 
     override fun onSurfaceDestroyed(surfaceContainer: SurfaceContainer) {
+        Log.i(TAG, "Surface destroyed ${surfaceContainer.width}x${surfaceContainer.height}")
         renderer.setSurface(null, 0, 0)
     }
 
