@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Setup of the app through the local API (ECU files, Bluetooth adapter). -->
+<resources>
+    <string name="api2_confirm_can_mode">A client of the local API wants to change the CAN mode of the Bluetooth adapter to: %1$s. The adapter keeps this mode until it is changed again.</string>
+</resources>

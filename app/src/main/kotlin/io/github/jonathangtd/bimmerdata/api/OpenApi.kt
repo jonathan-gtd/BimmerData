@@ -153,7 +153,7 @@ internal object OpenApi {
                 put("required", b.required)
                 b.description?.let { put("description", it) }
                 put("content", buildJsonObject {
-                    put("application/json", buildJsonObject {
+                    put(b.contentType, buildJsonObject {
                         put("schema", b.schema)
                         b.example?.let { put("example", it) }
                     })
@@ -191,6 +191,7 @@ internal object OpenApi {
 
     private val TAGS = listOf(
         "General" to "Discovery and status.",
+        SetupRoutes.TAG to "Setting the app up without tapping the phone: which permissions the user still has to allow, and the EDIABAS ECU files (one file per upload, or the import of a folder put on the phone).",
         "Live data" to "ECUs, measurements and live values. Values are only read while someone shows or requests them: the K-line is slow (≈ 10–40 reads/s in total), so request only what you need.",
         "Dashboard" to "Card layouts of the phone and of Android Auto, of the active profile. Changes are saved at once; Android Auto follows them live.",
         "Profiles" to "A profile is a car, its main ECUs and its own phone and Android Auto pages. One is active at a time: the dashboard routes act on it.",
@@ -219,17 +220,22 @@ BimmerData reads live data from BMW ECUs (E-series, through a USB cable or a Dee
 - Look at what you built: `GET /api/v1/dashboard/{target}/pages/{page}/render.png` returns a PNG of the page drawn like on the phone or the car screen, with live values.
 - `{page}` is a page id or its 0-based index; `{target}` is `phone` or `car`.
 
+## Setting the app up
+An agent can set the app up without the user tapping anything, except what Android reserves to the user: `GET /api/v1/permissions` (what to ask the user to allow) → ECU files (`POST /api/v1/ecu-files/import-from-device` after an `adb push` of the Ecu folder, or `PUT /api/v1/ecu-files/{name}` file by file) → Bluetooth adapter (`GET /api/v1/bluetooth/devices`, `PUT /api/v1/bluetooth/adapter`) → Telegraf (`PATCH /api/v1/export/telegraf`, `PUT /api/v1/export/telegraf/auth`) → profiles and graphs (`POST /api/v1/profiles/import`, `…/graphs`) → `POST /api/v1/connect`. The API's own settings (enable, port, token, scopes, HTTPS) are read-only here.
+
 ## Errors
 Every error is `{"error":{"code":"…","message":"…","details":…}}` with a meaningful HTTP status (400 bad input, 401 no / wrong token, 403 scope not enabled, 404 unknown id, 409 conflict such as overlapping cards, 422 invalid layout, 429 rate limited).
 
 ## Safety
-The API never writes to ECUs. Diagnostic operations (fault memory) will need the `diag` scope, a confirmation on the phone for each call, and will be refused while driving.
+Clearing faults and running EDIABAS jobs (scope `diag`) and changing the CAN mode of the Bluetooth adapter (scope `config`) each need a confirmation by the user on the phone, for every call, and are refused while the car is moving.
 """.trim()
 
     // ---------------------------------------------------------------- schemas
 
     private fun schemas(): JsonObject = buildJsonObject {
         for ((name, schema) in DiagApi.schemas()) put(name, schema)
+        for ((name, schema) in SetupRoutes.schemas()) put(name, schema)
+        for ((name, schema) in ProfileGraphRoutes.schemas()) put(name, schema)
         put("Error", S.obj(
             "Error answer of every operation.", listOf("error"), null, null,
             "error" to S.obj(null, listOf("code", "message"), null, null,
@@ -356,6 +362,7 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
             "ecus" to S.arr(S.str(example = "<sgbd>"), "Main ECUs (SGBD names): the card picker opens on them."),
             "dashboard" to S.ref("Dashboard"),
             "lastUsedMs" to S.int("Last time it was active, epoch ms.", format = "int64"),
+            "graphs" to S.arr(S.ref("Graph"), "Graphs of the Graph tab (see /api/v1/profiles/{profile}/graphs)."),
         ))
         put("Page", S.obj(
             "One screen of cards on a columns × rows grid that fills the screen.", listOf("name", "columns", "rows"), false, null,
@@ -410,7 +417,7 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
         put("TelegrafExport", S.obj(
             "Telegraf export (secrets are never returned).", listOf("enabled", "url", "auth", "username", "secretSet", "car", "mode", "state"), false, null,
             "enabled" to S.bool(), "url" to S.str("Telegraf listener URL.", "http://192.168.1.10:8186/api/v2/write"),
-            "auth" to S.str("Authentication (phone only).", enum = listOf("none", "token", "basic")), "username" to S.str("User for basic auth."),
+            "auth" to S.str("Authentication, set with PUT /api/v1/export/telegraf/auth.", enum = listOf("none", "token", "basic")), "username" to S.str("User for basic auth."),
             "secretSet" to S.bool("A token / password is stored, encrypted, on the phone."), "car" to S.str("Value of the `car` tag."),
             "mode" to S.str("Every reading is exported with its own time, at the read rate. live: upload on any network; afterTrip: wait for an unmetered network.", enum = listOf("live", "afterTrip")),
             "state" to S.obj(
@@ -422,7 +429,8 @@ The API never writes to ECUs. Diagnostic operations (fault memory) will need the
                 "rejectedPoints" to S.int("In batches Telegraf refused for good (HTTP 400), kept aside on the phone (retry or export there)."),
                 "blocked" to S.bool("The phone reached its free-space reserve: new points are not queued."),
                 "freeBytes" to S.int("Free space on the phone."), "reserveBytes" to S.int("Free space always kept (fixed, 100 MB); queuing stops below it."),
-                "sentPoints" to S.int("Since the app started."), "lastSuccessMs" to S.int(format = "int64"), "lastError" to S.str()),
+                "sentPoints" to S.int("Since the app started."), "lastSuccessMs" to S.int(format = "int64"), "lastError" to S.str(),
+                "rejectedBatches" to S.int("Batches Telegraf refused for good (retry, download or delete them with …/telegraf/rejected).")),
         ))
         put("Settings", S.obj(
             "App settings.", listOf("autoConnectOnCable", "recordingFolder", "api"), false, null,

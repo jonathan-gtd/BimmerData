@@ -166,17 +166,7 @@ class DiagApi(
     )
 
     /** Refuses while the car moves, else asks on the phone; returns only when the user approved. */
-    internal fun authorize(request: CarWrite) {
-        backend.speedKmh()?.let { v ->
-            if (v > MAX_SPEED_KMH) throw ApiException(409, "vehicle_moving", "Refused: the car is moving (${"%.0f".format(Locale.ROOT, v)} km/h). ${request.summary} only when stopped.")
-        }
-        when (guard.authorize(request, confirmTimeoutMs)) {
-            CarWriteDecision.Approved -> Unit
-            CarWriteDecision.Rejected -> throw ApiException(403, "refused_on_phone", "The user refused on the phone: ${request.summary}")
-            CarWriteDecision.Timeout -> throw ApiException(408, "confirmation_timeout", "Nobody confirmed on the phone within ${confirmTimeoutMs / 1000} s: ${request.summary}")
-            CarWriteDecision.Unavailable -> throw ApiException(503, "confirmation_unavailable", "The phone cannot ask for a confirmation right now")
-        }
-    }
+    internal fun authorize(request: CarWrite) = confirmCarWrite(guard, request, confirmTimeoutMs, backend.speedKmh())
 
     private inline fun <reified T> ok(value: T): HttpResponse = json(200, ApiJson.encodeToJsonElement(value))
 
