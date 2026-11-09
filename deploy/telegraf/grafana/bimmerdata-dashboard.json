@@ -82,7 +82,7 @@
         "defaults": {
           "custom": {
             "lineWidth": 1,
-            "spanNulls": 30000,
+            "spanNulls": 5000,
             "showPoints": "never"
           }
         },
@@ -113,7 +113,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT time_bucket('$__interval', time) AS time, ecu || ' · ' || COALESCE(label, id) || COALESCE(' [' || unit || ']', '') AS metric, avg(value) AS value\nFROM bimmerdata\nWHERE $__timeFilter(time) AND car IN ($car) AND (ecu || '/' || id) IN ($measurement) AND value IS NOT NULL\nGROUP BY 1, 2\nORDER BY 1"
+          "rawSql": "-- Up to 3 h shown: every point as read (no averaging). Beyond: average per interval.\nSELECT time, metric, value FROM (\n  SELECT time, ecu || ' · ' || COALESCE(label, id) || COALESCE(' [' || unit || ']', '') AS metric, value\n  FROM bimmerdata\n  WHERE $__timeFilter(time) AND car IN ($car) AND (ecu || '/' || id) IN ($measurement) AND value IS NOT NULL\n    AND $__timeTo()::timestamptz - $__timeFrom()::timestamptz <= interval '3 hours'\n  UNION ALL\n  SELECT time_bucket('$__interval', time), ecu || ' · ' || COALESCE(label, id) || COALESCE(' [' || unit || ']', ''), avg(value)\n  FROM bimmerdata\n  WHERE $__timeFilter(time) AND car IN ($car) AND (ecu || '/' || id) IN ($measurement) AND value IS NOT NULL\n    AND $__timeTo()::timestamptz - $__timeFrom()::timestamptz > interval '3 hours'\n  GROUP BY 1, 2\n) s\nORDER BY 1"
         }
       ]
     },
@@ -138,7 +138,7 @@
         "defaults": {
           "custom": {
             "lineWidth": 1,
-            "spanNulls": 30000,
+            "spanNulls": 5000,
             "showPoints": "never",
             "fillOpacity": 10
           }
@@ -168,7 +168,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT time_bucket('$__interval', time) AS time, ecu || ' · ' || COALESCE(label, id) || COALESCE(' [' || unit || ']', '') AS metric, avg(value) AS value\nFROM bimmerdata\nWHERE $__timeFilter(time) AND car IN ($car) AND (ecu || '/' || id) = '$measurement' AND value IS NOT NULL\nGROUP BY 1, 2\nORDER BY 1"
+          "rawSql": "-- Up to 3 h shown: every point as read (no averaging). Beyond: average per interval.\nSELECT time, metric, value FROM (\n  SELECT time, ecu || ' · ' || COALESCE(label, id) || COALESCE(' [' || unit || ']', '') AS metric, value\n  FROM bimmerdata\n  WHERE $__timeFilter(time) AND car IN ($car) AND (ecu || '/' || id) = '$measurement' AND value IS NOT NULL\n    AND $__timeTo()::timestamptz - $__timeFrom()::timestamptz <= interval '3 hours'\n  UNION ALL\n  SELECT time_bucket('$__interval', time), ecu || ' · ' || COALESCE(label, id) || COALESCE(' [' || unit || ']', ''), avg(value)\n  FROM bimmerdata\n  WHERE $__timeFilter(time) AND car IN ($car) AND (ecu || '/' || id) = '$measurement' AND value IS NOT NULL\n    AND $__timeTo()::timestamptz - $__timeFrom()::timestamptz > interval '3 hours'\n  GROUP BY 1, 2\n) s\nORDER BY 1"
         }
       ]
     },
