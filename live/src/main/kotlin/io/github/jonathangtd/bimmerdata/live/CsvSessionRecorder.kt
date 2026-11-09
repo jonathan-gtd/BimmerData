@@ -8,6 +8,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,6 +62,13 @@ import java.util.concurrent.atomic.AtomicReference
  * flushed about every [flushIntervalMs], closed by [stop]. [start]/[stop]/[mark] never block.
  * [fileNamer] names the file from the start time; [minRowIntervalMs] (read at every row, 0 = one
  * row per sample batch) thins the rows out, markers always get their row.
+ *
+ * Order of pause lines: values and pauses come through two flows (and through a relay in the
+ * app), so the first values read after a pause may arrive before the pause itself. Before writing
+ * a row that follows a gap of at least [pauseGapMs] (the engine's pause threshold), the recorder
+ * writes the pauses already received and waits up to [pauseWaitMs] for one still on its way: the
+ * pause line always comes before the rows read after the pause. A pause with no row after it is
+ * written by a periodic tick.
  */
 class CsvSessionRecorder(
     private val source: LiveDataSource,
@@ -71,6 +83,8 @@ class CsvSessionRecorder(
     private val staleAfterMs: Long = 5000,
     private val fileNamer: (startMs: Long) -> String = { fileName(it, zone) },
     private val minRowIntervalMs: () -> Long = { 0 },
+    private val pauseGapMs: Long = 1000,
+    private val pauseWaitMs: Long = 400,
 ) : SessionRecorder {
 
     private val _state = MutableStateFlow(RecordingState())
@@ -129,9 +143,11 @@ class CsvSessionRecorder(
             writer.write("﻿")
             writer.write(header(cols))
             writer.write("\r\n")
-            merge(source.samples, markTrigger.map { source.samples.value }, source.pauses).collect { event ->
-                if (event is AcquisitionPause) {
-                    if (event.endMs < startedAt) return@collect
+            coroutineScope {
+                val pauses = Channel<AcquisitionPause>(Channel.UNLIMITED)
+                val relay = launch { source.pauses.collect { pauses.send(it) } }
+                fun writePause(event: AcquisitionPause) {
+                    if (event.endMs < startedAt) return
                     val rowTime = maxOf(event.startMs, startedAt, lastRowTime)
                     writer.write(row(cols, emptyMap(), rowTime, startedAt, pauseMarker(event)))
                     writer.write("\r\n")
@@ -139,25 +155,41 @@ class CsvSessionRecorder(
                     _state.update { it.copy(rows = it.rows + 1) }
                     writer.flush()
                     lastFlush = clock()
-                    return@collect
                 }
-                @Suppress("UNCHECKED_CAST")
-                val samples = event as Map<String, Sample>
-                val marker = pendingMarker.getAndSet(null)
-                val newest = cols.maxOfOrNull { samples[it.id]?.timestampMs ?: Long.MIN_VALUE } ?: Long.MIN_VALUE
-                val fresh = newest >= startedAt && newest > lastRowTime
-                if (!fresh && marker == null) return@collect
-                if (marker == null && lastRowTime != Long.MIN_VALUE && newest - lastRowTime < minRowIntervalMs()) return@collect
-                val rowTime = if (fresh) newest else maxOf(clock(), lastRowTime)
-                writer.write(row(cols, samples, rowTime, startedAt, marker))
-                writer.write("\r\n")
-                lastRowTime = rowTime
-                _state.update { it.copy(rows = it.rows + 1) }
-                val now = clock()
-                if (now - lastFlush >= flushIntervalMs || marker != null) {
-                    writer.flush()
-                    lastFlush = now
+                fun drainPauses() {
+                    while (true) writePause(pauses.tryReceive().getOrNull() ?: return)
                 }
+                val ticks = flow { while (true) { delay(PauseTickMs); emit(Tick) } }
+                merge(source.samples, markTrigger.map { source.samples.value }, ticks).collect { event ->
+                    if (event === Tick) {
+                        drainPauses()
+                        return@collect
+                    }
+                    drainPauses()
+                    @Suppress("UNCHECKED_CAST")
+                    val samples = event as Map<String, Sample>
+                    val marker = pendingMarker.getAndSet(null)
+                    val newest = cols.maxOfOrNull { samples[it.id]?.timestampMs ?: Long.MIN_VALUE } ?: Long.MIN_VALUE
+                    val fresh = newest >= startedAt && newest > lastRowTime
+                    if (!fresh && marker == null) return@collect
+                    if (marker == null && lastRowTime != Long.MIN_VALUE && newest - lastRowTime < minRowIntervalMs()) return@collect
+                    if (fresh && lastRowTime != Long.MIN_VALUE && newest - lastRowTime >= pauseGapMs) {
+                        // a gap: the pause that explains it may still be on its way
+                        withTimeoutOrNull(pauseWaitMs) { pauses.receive() }?.let(::writePause)
+                        drainPauses()
+                    }
+                    val rowTime = if (fresh) maxOf(newest, lastRowTime) else maxOf(clock(), lastRowTime)
+                    writer.write(row(cols, samples, rowTime, startedAt, marker))
+                    writer.write("\r\n")
+                    lastRowTime = rowTime
+                    _state.update { it.copy(rows = it.rows + 1) }
+                    val now = clock()
+                    if (now - lastFlush >= flushIntervalMs || marker != null) {
+                        writer.flush()
+                        lastFlush = now
+                    }
+                }
+                relay.cancel()
             }
         } catch (ex: java.io.IOException) {
             fail("Write error on $fileName: ${ex.message}")
@@ -204,6 +236,9 @@ class CsvSessionRecorder(
         private val FileTime: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss", Locale.ROOT)
 
         const val MimeType = "text/csv"
+
+        private object Tick
+        private const val PauseTickMs = 250L
 
         /** `marker` cell of a pause line: "pause 1840 ms: Tool32: MSV70 FS_LESEN". */
         fun pauseMarker(p: AcquisitionPause): String = "pause ${p.durationMs.coerceAtLeast(0)} ms: ${p.reason}"
@@ -253,6 +288,7 @@ class CsvSessionRecorder(
             scope = scope,
             pin = engine::setPinnedMeasurements,
             dispatcher = dispatcher,
+            pauseGapMs = engine.pauseThresholdMs,
         )
     }
 }
