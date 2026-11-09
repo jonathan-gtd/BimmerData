@@ -100,6 +100,16 @@ pages) on one time axis, live. Each profile has its own named graphs, kept with 
   the dashboard and Android Auto read (the last hour, while the app runs). Time with no reading
   shows as a gap in the curve.
 
+## What is read
+
+The K-line is slow, so the app reads what you look at, and the **whole active profile** (every
+phone and Android Auto page) when that costs nothing more: the values of the other pages are in
+the same ECU's dynamic block (up to 42 values per ECU, read in one telegram either way). Then
+switching page shows current values at once, and the CSV recording and the Telegraf export get
+every value of the profile whatever the page shown. A profile whose other pages need another
+ECU, a job, or more than 42 values of one ECU is read page by page (the recording then keeps the
+values of the page shown when it started).
+
 ## Settings
 
 - **Connection**: auto-connect on the cable, and the **Bluetooth adapter**: pick it among the paired

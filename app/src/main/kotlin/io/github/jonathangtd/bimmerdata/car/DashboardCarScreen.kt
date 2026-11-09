@@ -128,11 +128,13 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
         }
         lifecycleScope.launch {
             dashboard.filterNotNull().collect { d ->
-                d.carPages.flatMap { it.measurementIds() }.map { it.substringBefore('/').lowercase() }.distinct().forEach { loadSgbd(it) }
+                // every SGBD of the profile: the whole profile may be read (ReadScope)
+                d.measurementIds().map { it.substringBefore('/').lowercase() }.distinct().forEach { loadSgbd(it) }
             }
         }
         lifecycleScope.launch {
             combine(dashboard, pageIndex, index) { d, i, idx ->
+                currentDashboard = d
                 val pages = d?.carPages.orEmpty()
                 val page = pages.getOrNull(i.coerceIn(0, (pages.size - 1).coerceAtLeast(0)))
                 CarContent(
@@ -190,10 +192,16 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
         }
     }
 
+    /** The page shown, or the whole profile when that costs no extra read cycle (ReadScope). */
     private fun requestMeasurements(c: CarContent) {
-        val list = c.page?.measurementIds().orEmpty().mapNotNull { index.value[it] }
-        deps.requestMeasurements(MeasurementClient.Car, list, foreground = true)
+        val idx = index.value
+        val visible = c.page?.measurementIds().orEmpty().mapNotNull { idx[it] }
+        val profile = currentDashboard?.measurementIds().orEmpty().mapNotNull { idx[it] }
+        deps.requestMeasurements(MeasurementClient.Car, io.github.jonathangtd.bimmerdata.live.ReadScope.select(profile, visible), foreground = true)
     }
+
+    /** Last layout of the active profile (phone and car pages). */
+    @Volatile private var currentDashboard: io.github.jonathangtd.bimmerdata.dashboard.Dashboard? = null
 
     private suspend fun loadSgbd(sgbd: String) {
         if (sgbd.isEmpty() || !loadedSgbds.add(sgbd)) return
