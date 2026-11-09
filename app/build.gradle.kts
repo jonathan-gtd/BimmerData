@@ -14,7 +14,9 @@ android {
         applicationId = "io.github.jonathangtd.bimmerdata"
         minSdk = 29
         targetSdk = 37
-        versionCode = 4
+        // -PversionCode=N overrides it (Google Play uploads need a new code each time, see
+        // tools: the publishing script takes the last code on Play + 1)
+        versionCode = providers.gradleProperty("versionCode").orNull?.toInt() ?: 4
         versionName = "0.3.0"
     }
 
