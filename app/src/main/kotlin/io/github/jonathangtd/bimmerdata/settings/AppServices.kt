@@ -19,7 +19,7 @@ import io.github.jonathangtd.bimmerdata.usb.UsbCable
 
 /**
  * Process-wide services driven by the settings: the REST API server, the Telegraf export, the GPS
- * position and the USB auto-connect.
+ * position and the USB auto-connect; plus the history of read values shown by the Graph tab.
  * Started once when the UI starts ([start] is idempotent).
  */
 object AppServices {
@@ -37,6 +37,8 @@ object AppServices {
         io.github.jonathangtd.bimmerdata.gps.GpsRuntime.get(app).start()
         // profile of the identified car, check of the profile's ECUs, at each connection
         io.github.jonathangtd.bimmerdata.profiles.ProfileRuntime.start(app)
+        // history of every value read, for the Graph tab (no read of its own)
+        io.github.jonathangtd.bimmerdata.graph.SharedHistory.start(LiveRepository.get(app).liveDataSource)
         AutoConnect.register(app)
     }
 }

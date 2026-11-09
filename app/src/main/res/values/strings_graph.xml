@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_graph">Graph</string>
+    <string name="graphs">Graphs</string>
+    <string name="graph_new_name">Graph %1$d</string>
+    <string name="graph_add">New graph</string>
+    <string name="graph_place_phone">Phone · %1$s</string>
+    <string name="graph_place_car">Android Auto · %1$s</string>
+    <string name="graph_empty_title">No graph yet</string>
+    <string name="graph_empty_hint">A graph shows several values of your cards on one time axis, live, with pause, zoom and scrolling.</string>
+    <string name="graph_no_cards_title">No card yet</string>
+    <string name="graph_no_cards_hint">Graphs show the values of this profile’s cards. Add cards to the dashboard first.</string>
+    <string name="graph_open_dashboard">Open the dashboard</string>
+    <string name="graph_no_profile_hint">Graphs belong to a profile, like the dashboard pages. Create a profile first.</string>
+    <string name="graph_open_profiles">Open Profiles</string>
+    <string name="graph_values">Values</string>
+    <string name="graph_choose_values">Choose values</string>
+    <string name="graph_values_hint">Values of this profile’s cards (phone and Android Auto). Maximum per graph: %1$d.</string>
+    <string name="graph_live">Live</string>
+    <string name="graph_pause">Pause</string>
+    <string name="graph_live_hint">Pinch to zoom · drag to look back · long-press to read values</string>
+    <string name="graph_paused_hint">Paused · drag to scroll · pinch to zoom · tap to hide the cursor</string>
+    <string name="graph_overlay">Overlay</string>
+    <string name="graph_bands">Bands</string>
+    <string name="graph_no_data">No value read in this period</string>
+    <plurals name="graph_more_axes">
+        <item quantity="one">+%1$d axis not shown: see Bands</item>
+        <item quantity="other">+%1$d axes not shown: see Bands</item>
+    </plurals>
+    <string name="graph_edit">Edit graph</string>
+    <string name="graph_name">Graph name</string>
+    <string name="graph_color">Color of %1$s</string>
+    <string name="graph_remove_value">Remove %1$s</string>
+    <string name="graph_delete">Delete this graph</string>
+    <string name="graph_delete_confirm">Delete the graph “%1$s”?</string>
+    <string name="graph_not_on_card">no longer on a card</string>
+    <string name="graph_hidden">hidden</string>
+    <string name="graph_legend_hint">Tap a value in the legend to hide or show it.</string>
+    <string name="graph_window_hint">Time span shown when live. On the graph: pinch to change it, double-tap to switch.</string>
+    <string name="graph_values_none">No value: choose some below.</string>
+    <string name="graph_axes_mode">Axes</string>
+    <string name="graph_cursor_desc">Graph of %1$s</string>
+</resources>

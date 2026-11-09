@@ -822,7 +822,7 @@ internal fun CarFullscreenPreview(
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun TrendWindowSection(windowSeconds: Int?, onChange: (Int?) -> Unit) {
+internal fun TrendWindowSection(windowSeconds: Int?, hint: String = stringResource(R.string.trend_window_hint), onChange: (Int?) -> Unit) {
     val current = TrendWindow.seconds(windowSeconds)
     val quick = windowSeconds != null && windowSeconds in TrendWindow.QUICK
     var custom by remember { mutableStateOf(!quick) }
@@ -856,5 +856,5 @@ internal fun TrendWindowSection(windowSeconds: Int?, onChange: (Int?) -> Unit) {
             color = if (error) Cockpit.Warning else Cockpit.Muted, fontSize = 13.sp,
         )
     }
-    Text(stringResource(R.string.trend_window_hint), color = Cockpit.Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp))
+    Text(hint, color = Cockpit.Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp))
 }

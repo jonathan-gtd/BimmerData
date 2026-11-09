@@ -5,6 +5,8 @@ package io.github.jonathangtd.bimmerdata.profiles
 
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.DashboardJson
+import io.github.jonathangtd.bimmerdata.graph.Graph
+import io.github.jonathangtd.bimmerdata.graph.Graphs
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
@@ -12,8 +14,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /**
- * A profile as a file to share with other users: name, car (series and model only), ECUs and
- * pages. Never the VIN or the link to one of the user's cars ([ProfileVehicle.vehicleId]).
+ * A profile as a file to share with other users: name, car (series and model only), ECUs,
+ * pages and graphs. Never the VIN or the link to one of the user's cars ([ProfileVehicle.vehicleId]).
  */
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
@@ -25,6 +27,7 @@ data class ProfileExport(
     val model: String? = null,
     val ecus: List<String> = emptyList(),
     val dashboard: Dashboard = Dashboard(),
+    val graphs: List<Graph> = emptyList(),
 ) {
     companion object {
         const val KIND = "bimmerdata-profile"
@@ -57,6 +60,7 @@ object ProfileJson {
                 vehicle = Profiles.cleanVehicle(p.vehicle),
                 ecus = Profiles.normalizeEcus(p.ecus),
                 dashboard = DashboardJson.sanitize(p.dashboard).copy(name = null),
+                graphs = Graphs.sanitize(p.graphs),
             )
         }
         val active = parsed.activeId?.takeIf { id -> profiles.any { it.id == id } }
@@ -68,7 +72,7 @@ object ProfileJson {
         ProfileExport.serializer(),
         ProfileExport(
             name = p.name, series = p.vehicle.series, model = p.vehicle.model, ecus = p.ecus,
-            dashboard = p.dashboard.copy(name = null),
+            dashboard = p.dashboard.copy(name = null), graphs = p.graphs,
         ),
     )
 
@@ -100,6 +104,7 @@ object ProfileJson {
             name = Profiles.cleanName(e.name),
             ecus = Profiles.normalizeEcus(e.ecus),
             dashboard = DashboardJson.sanitize(e.dashboard).copy(name = null),
+            graphs = Graphs.sanitize(e.graphs),
         )
     }
 
@@ -107,6 +112,6 @@ object ProfileJson {
     fun importInto(set: ProfileSet, export: ProfileExport, nowMs: Long, fallbackName: String): Pair<ProfileSet, Profile> =
         Profiles.create(
             set, export.name.ifBlank { fallbackName }, ProfileVehicle(export.series, export.model), export.ecus,
-            nowMs, export.dashboard,
+            nowMs, export.dashboard, export.graphs,
         )
 }

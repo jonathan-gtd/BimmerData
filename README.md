@@ -26,8 +26,9 @@ Rendered from the app with the built-in simulation (demo data, English UI).
     <td align="center"><img src="docs/screenshots/tool32.png" width="250" alt="Mini Tool32"><br><sub>Mini Tool32: any EDIABAS job</sub></td>
   </tr>
   <tr>
+    <td align="center"><img src="docs/screenshots/graph.png" width="250" alt="Graph"><br><sub>Graph: several values on one time axis</sub></td>
     <td align="center"><img src="docs/screenshots/settings.png" width="250" alt="Settings"><br><sub>Settings</sub></td>
-    <td colspan="2"></td>
+    <td></td>
   </tr>
 </table>
 
@@ -78,6 +79,24 @@ Supported EDIABAS concepts so far: BMW-FAST (0x010F). DS2, KWP2000\* and D-CAN a
 
 Safety: the interface refuses flashing, coding writes, security access and the programming
 session before anything is sent to the car. Fault memory clear is allowed.
+
+## Graphs
+
+The **Graph** tab draws several values of the active profile's cards (phone and Android Auto
+pages) on one time axis, live. Each profile has its own named graphs, kept with the profile
+(export / import included).
+
+- **Axes**: values with the same unit share a vertical axis, the first two units get an axis
+  each (left and right); **Bands** gives every value its own band and scale on a common time axis.
+- **Time**: the window works like the trend cards (5 s to 60 min, double-tap to switch); pinch to
+  zoom, drag to look back (this pauses), **Live** to come back. A long press shows the values
+  under the finger.
+- **Colors and legend**: one color per value from a fixed palette (a value keeps its color when
+  others are added or removed); tap a legend entry to hide or show its curve.
+- **No extra reads**: while the tab is on screen it reads the values of the graph shown, instead
+  of the dashboard page. Off screen it reads nothing: the curves come from the history of what
+  the dashboard and Android Auto read (the last hour, while the app runs). Time with no reading
+  shows as a gap in the curve.
 
 ## Settings
 

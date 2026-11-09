@@ -112,16 +112,21 @@ class ValueHistory(
     fun rawCovers(fromMs: Long): Boolean = size > 0 && (!rawDropped || timeAt(0) <= fromMs)
 
     /**
-     * Sends the points from [fromMs] to now to [sink], oldest first, plus the last point before
-     * [fromMs] so a curve enters from the left edge. Raw samples when they reach back far enough,
-     * else the buckets: two points per bucket (its min and max, in the order they happened).
+     * Sends the points from [fromMs] to [toMs] (default: now) to [sink], oldest first, plus the
+     * last point before [fromMs] and the first one after [toMs], so a curve enters from the left
+     * edge and leaves by the right one. Raw samples when they reach back far enough, else the
+     * buckets: two points per bucket (its min and max, in the order they happened).
      */
-    fun forEachPoint(fromMs: Long, sink: PointSink) {
+    fun forEachPoint(fromMs: Long, sink: PointSink, toMs: Long = Long.MAX_VALUE) {
         if (size == 0) return
         if (rawCovers(fromMs)) {
             var i = firstIndexSince(fromMs)
             if (i > 0) i--
-            for (j in i until size) sink.point(timeAt(j), valueAt(j))
+            for (j in i until size) {
+                val t = timeAt(j)
+                sink.point(t, valueAt(j))
+                if (t > toMs) break
+            }
             return
         }
         if (bCount == 0) return
@@ -144,7 +149,52 @@ class ValueHistory(
             } else {
                 sink.point(t1, hi); sink.point(t2, lo)
             }
+            if (s > toMs) break
         }
+    }
+
+    /** Time of the oldest point kept (raw sample or bucket), or null when empty. */
+    val oldestTimestampMs: Long?
+        get() {
+            if (size == 0) return null
+            val raw = timeAt(0)
+            return if (bCount > 0) minOf(raw, bucketStartAt(0)) else raw
+        }
+
+    /**
+     * The value at [timeMs] for a cursor: the nearest raw sample within [maxGapMs] (out[0] = out[1]
+     * = its value), or, before the raw samples, the min / max of the nearest bucket within
+     * [maxGapMs] (out[0] = min, out[1] = max). False when nothing was read near that time.
+     */
+    fun valueNear(timeMs: Long, maxGapMs: Long, out: FloatArray): Boolean {
+        if (size == 0) return false
+        if (!rawDropped || timeMs >= timeAt(0) - maxGapMs) {
+            val i = firstIndexSince(timeMs)
+            var best = -1
+            var bestDt = Long.MAX_VALUE
+            for (j in intArrayOf(i - 1, i)) {
+                if (j !in 0 until size) continue
+                val dt = kotlin.math.abs(timeAt(j) - timeMs)
+                if (dt < bestDt) { bestDt = dt; best = j }
+            }
+            if (best >= 0 && bestDt <= maxGapMs) {
+                out[0] = valueAt(best); out[1] = out[0]
+                return true
+            }
+            if (!rawDropped || timeMs >= timeAt(0)) return false
+        }
+        var bestIdx = -1
+        var bestDt = Long.MAX_VALUE
+        for (j in 0 until bCount) {
+            val idx = (bHead + j) % bStart.size
+            val s = bStart[idx]
+            val dt = if (timeMs < s) s - timeMs else if (timeMs >= s + bucketMs) timeMs - (s + bucketMs - 1) else 0L
+            if (dt < bestDt) { bestDt = dt; bestIdx = idx }
+            if (s > timeMs) break
+        }
+        if (bestIdx < 0 || bestDt > maxGapMs) return false
+        out[0] = bMin[bestIdx]; out[1] = bMax[bestIdx]
+        return true
     }
 
     private fun bucketStartAt(j: Int): Long = bStart[(bHead + j) % bStart.size]

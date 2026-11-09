@@ -255,6 +255,38 @@ class ReadmeScreenshotTest {
     }
 
     @Test
+    fun graph() {
+        val demo = feed()
+        io.github.jonathangtd.bimmerdata.graph.SharedHistory.clear()
+        val shown = listOf(rpm, coolant, intake)
+        for (m in shown) {
+            val h = demo.history(m.id) ?: continue
+            for (i in 0 until h.size) io.github.jonathangtd.bimmerdata.graph.SharedHistory.add(m.id, h.timeAt(i), h.valueAt(i).toDouble())
+        }
+        val graph = io.github.jonathangtd.bimmerdata.graph.Graphs.add(emptyList(), "Warm-up", shown.map { it.id }, id = "g").single().copy(windowSeconds = 120)
+        val format = GaugeFormat(Locale.US)
+        val specs = shown.mapIndexed { i, m ->
+            io.github.jonathangtd.bimmerdata.graph.GraphSeriesSpec(
+                m.id, m.label, format.displayUnit(m.unit, m.label), 0, io.github.jonathangtd.bimmerdata.graph.GraphPalette.color(i),
+                io.github.jonathangtd.bimmerdata.graph.GraphRenderer.minSpan(m.min, m.max, m.unit),
+            )
+        }
+        capture("graph.png") {
+            Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+                Spacer(Modifier.height(14.dp))
+                Pill()
+                Spacer(Modifier.height(12.dp))
+                SegmentedTabs(labels = listOf("Warm-up", "Mixture", "Knock"), selected = 0, onSelect = {})
+                Spacer(Modifier.height(12.dp))
+                io.github.jonathangtd.bimmerdata.graph.ui.GraphPanel(
+                    graph, specs, format, onToggle = {}, onWindow = {}, onAxes = {}, modifier = Modifier.weight(1f).padding(bottom = 16.dp),
+                    clock = { demo.nowMs },
+                )
+            }
+        }
+    }
+
+    @Test
     fun cardPicker() = capture("card_picker.png") {
         val selected = remember { mutableStateListOf<String>() }
         Surface(color = Cockpit.Card, modifier = Modifier.fillMaxSize().padding(top = 40.dp)) {

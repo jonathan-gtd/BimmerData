@@ -42,4 +42,19 @@ class MeasurementRequestsTest {
         requests.clear(MeasurementClient.Car)
         assertEquals(listOf(listOf("water")), applied)
     }
+
+    @Test
+    fun `the Graph tab on screen replaces the dashboard page, and asks for nothing once closed`() {
+        // dashboard page shown, then the user opens the Graph tab: the dashboard goes to the background
+        requests.set(MeasurementClient.Phone, listOf(m("water"), m("oil")), foreground = false)
+        requests.set(MeasurementClient.Graph, listOf(m("rpm"), m("oil")), foreground = true)
+        assertEquals(listOf("rpm", "oil"), requests.merged().map { it.id })
+        // with Android Auto on screen too: both, car first
+        requests.set(MeasurementClient.Car, listOf(m("speed")), foreground = true)
+        assertEquals(listOf("speed", "rpm", "oil"), requests.merged().map { it.id })
+        // Graph tab closed (screen off): back to what the dashboard and the car read
+        requests.clear(MeasurementClient.Graph)
+        requests.clear(MeasurementClient.Car)
+        assertEquals(listOf("water", "oil"), requests.merged().map { it.id })
+    }
 }

@@ -5,6 +5,7 @@ package io.github.jonathangtd.bimmerdata.profiles
 
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.newId
+import io.github.jonathangtd.bimmerdata.graph.Graph
 import kotlinx.serialization.Serializable
 import java.util.Locale
 
@@ -40,6 +41,8 @@ data class Profile(
     val dashboard: Dashboard = Dashboard(),
     /** Last time it was the active profile (epoch ms), to pick between profiles of one car. */
     val lastUsedMs: Long = 0,
+    /** Graphs of the Graph tab: values of this profile's cards on a time axis. */
+    val graphs: List<Graph> = emptyList(),
 ) {
     /** The layout as the dashboard screens see it: named after the profile. */
     fun shownDashboard(): Dashboard = dashboard.copy(name = name)
@@ -103,12 +106,12 @@ object Profiles {
     /** Adds a profile and makes it active. */
     fun create(
         set: ProfileSet, name: String, vehicle: ProfileVehicle = ProfileVehicle(), ecus: List<String> = emptyList(),
-        nowMs: Long, dashboard: Dashboard = Dashboard(),
+        nowMs: Long, dashboard: Dashboard = Dashboard(), graphs: List<Graph> = emptyList(),
     ): Pair<ProfileSet, Profile> {
         require(set.profiles.size < MAX_PROFILES) { "At most $MAX_PROFILES profiles" }
         val p = Profile(
             name = uniqueName(set, name), vehicle = cleanVehicle(vehicle), ecus = normalizeEcus(ecus),
-            dashboard = dashboard.copy(name = null), lastUsedMs = nowMs,
+            dashboard = dashboard.copy(name = null), lastUsedMs = nowMs, graphs = graphs,
         )
         return set.copy(profiles = set.profiles + p, activeId = p.id) to p
     }
@@ -171,6 +174,15 @@ object Profiles {
         val hasContent = dashboard.phonePages.isNotEmpty() || dashboard.carPages.isNotEmpty() || !dashboard.name.isNullOrBlank()
         if (!hasContent) return set
         return create(set, dashboard.name?.takeIf { it.isNotBlank() } ?: defaultName, nowMs = nowMs, dashboard = dashboard).first
+    }
+
+    /**
+     * Changes the graphs of profile [profileId] only (its pages are left as they are, so the
+     * dashboard editor and the Graph tab never overwrite each other).
+     */
+    fun updateGraphs(set: ProfileSet, profileId: String, transform: (List<Graph>) -> List<Graph>): ProfileSet {
+        if (set.profile(profileId) == null) return set
+        return set.copy(profiles = set.profiles.map { if (it.id == profileId) it.copy(graphs = transform(it.graphs)) else it })
     }
 
     /** Profiles linked to the car [vehicleId], most recently used first. */

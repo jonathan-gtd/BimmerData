@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -56,12 +57,14 @@ import io.github.jonathangtd.bimmerdata.R
 import io.github.jonathangtd.bimmerdata.dashboard.ui.DashboardScreen
 import io.github.jonathangtd.bimmerdata.dashboard.ui.ProfilesScreen
 import io.github.jonathangtd.bimmerdata.faults.FaultsScreen
+import io.github.jonathangtd.bimmerdata.graph.ui.GraphScreen
 import io.github.jonathangtd.bimmerdata.settings.ApiDocsScreen
 import io.github.jonathangtd.bimmerdata.settings.AppServices
 import io.github.jonathangtd.bimmerdata.settings.SettingsScreen
 
 enum class AppTab(@param:DrawableRes val icon: Int, @param:StringRes val label: Int) {
     Dashboard(R.drawable.ic_dashboard, R.string.nav_dashboard),
+    Graph(R.drawable.ic_graph, R.string.nav_graph),
     Profiles(R.drawable.ic_profile, R.string.nav_profiles),
     Faults(R.drawable.ic_faults, R.string.nav_faults),
     Settings(R.drawable.ic_settings, R.string.nav_settings),
@@ -102,6 +105,7 @@ fun AppRoot() {
                     null -> holder.SaveableStateProvider(tab.name) {
                         when (tab) {
                             AppTab.Dashboard -> DashboardScreen(onEditingChange = { editing = it })
+                            AppTab.Graph -> GraphScreen()
                             AppTab.Profiles -> ProfilesScreen()
                             AppTab.Faults -> FaultsScreen()
                             AppTab.Settings -> SettingsScreen()
@@ -117,7 +121,7 @@ fun AppRoot() {
 }
 
 @Composable
-private fun BottomBar(selected: AppTab, onSelect: (AppTab) -> Unit) {
+internal fun BottomBar(selected: AppTab, onSelect: (AppTab) -> Unit) {
     Column(Modifier.fillMaxWidth().background(Cockpit.Background)) {
         HorizontalDivider(color = Cockpit.Card)
         Row(
@@ -149,8 +153,11 @@ private fun BottomBar(selected: AppTab, onSelect: (AppTab) -> Unit) {
                     }
                     Spacer(Modifier.height(3.dp))
                     Text(
-                        stringResource(t.label), fontSize = 12.sp, color = if (isSel) Cockpit.Text else Cockpit.Muted,
+                        stringResource(t.label), color = if (isSel) Cockpit.Text else Cockpit.Muted,
                         fontWeight = if (isSel) FontWeight.SemiBold else FontWeight.Medium, maxLines = 1,
+                        // five tabs: long labels ("Tableau de bord") shrink a little instead of being cut
+                        autoSize = TextAutoSize.StepBased(minFontSize = 9.sp, maxFontSize = 12.sp, stepSize = 0.5.sp),
+                        modifier = Modifier.padding(horizontal = 2.dp),
                     )
                 }
             }

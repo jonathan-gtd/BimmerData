@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_graph">Graphique</string>
+    <string name="graphs">Graphiques</string>
+    <string name="graph_new_name">Graphique %1$d</string>
+    <string name="graph_add">Nouveau graphique</string>
+    <string name="graph_place_phone">Téléphone · %1$s</string>
+    <string name="graph_place_car">Android Auto · %1$s</string>
+    <string name="graph_empty_title">Aucun graphique</string>
+    <string name="graph_empty_hint">Un graphique montre plusieurs valeurs de vos cartes sur un même axe de temps, en direct, avec pause, zoom et défilement.</string>
+    <string name="graph_no_cards_title">Aucune carte</string>
+    <string name="graph_no_cards_hint">Les graphiques montrent les valeurs des cartes de ce profil. Ajoutez d’abord des cartes au tableau de bord.</string>
+    <string name="graph_open_dashboard">Ouvrir le tableau de bord</string>
+    <string name="graph_no_profile_hint">Les graphiques appartiennent à un profil, comme les pages du tableau de bord. Créez d’abord un profil.</string>
+    <string name="graph_open_profiles">Ouvrir Profils</string>
+    <string name="graph_values">Valeurs</string>
+    <string name="graph_choose_values">Choisir les valeurs</string>
+    <string name="graph_values_hint">Valeurs des cartes de ce profil (téléphone et Android Auto). Maximum par graphique : %1$d.</string>
+    <string name="graph_live">Direct</string>
+    <string name="graph_pause">Pause</string>
+    <string name="graph_live_hint">Pincer pour zoomer · glisser pour remonter le temps · appui long pour lire les valeurs</string>
+    <string name="graph_paused_hint">En pause · glisser pour défiler · pincer pour zoomer · toucher pour masquer le curseur</string>
+    <string name="graph_overlay">Superposé</string>
+    <string name="graph_bands">Bandes</string>
+    <string name="graph_no_data">Aucune valeur lue sur cette période</string>
+    <plurals name="graph_more_axes">
+        <item quantity="one">+%1$d axe non affiché : voir Bandes</item>
+        <item quantity="many">+%1$d axes non affichés : voir Bandes</item>
+        <item quantity="other">+%1$d axes non affichés : voir Bandes</item>
+    </plurals>
+    <string name="graph_edit">Modifier le graphique</string>
+    <string name="graph_name">Nom du graphique</string>
+    <string name="graph_color">Couleur de %1$s</string>
+    <string name="graph_remove_value">Retirer %1$s</string>
+    <string name="graph_delete">Supprimer ce graphique</string>
+    <string name="graph_delete_confirm">Supprimer le graphique « %1$s » ?</string>
+    <string name="graph_not_on_card">n’est plus sur une carte</string>
+    <string name="graph_hidden">masquée</string>
+    <string name="graph_legend_hint">Touchez une valeur de la légende pour la masquer ou l’afficher.</string>
+    <string name="graph_window_hint">Durée affichée en direct. Sur le graphique : pincer pour la changer, double appui pour passer à la suivante.</string>
+    <string name="graph_values_none">Aucune valeur : choisissez-en ci-dessous.</string>
+    <string name="graph_axes_mode">Axes</string>
+    <string name="graph_cursor_desc">Graphique de %1$s</string>
+</resources>
