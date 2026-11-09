@@ -102,6 +102,9 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
     /** Measurements of the imported ECU folder plus the phone's GPS (call off the main thread: file I/O). */
     val catalog: MeasurementCatalog get() = sensorCatalog
 
+    /** The ECU files were changed outside the in-app import (REST API): forget the parsed catalog. */
+    fun ecuFilesChanged() = edCatalog.invalidate()
+
     private val proxy = LiveDataProxy(scope)
 
     /** Samples and status of the current acquisition; [LiveDataSource.setMeasurements] survives reconnects. */

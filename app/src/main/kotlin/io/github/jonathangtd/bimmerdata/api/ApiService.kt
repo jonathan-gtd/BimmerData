@@ -53,6 +53,9 @@ class ApiService(
     private val clock: () -> Long = System::currentTimeMillis,
     private val sleep: (Long) -> Unit = { Thread.sleep(it) },
     private val log: (String, Throwable?) -> Unit = { _, _ -> },
+    /** Asks the user on the phone before a write to the Bluetooth adapter (CAN mode); default: refused. */
+    private val guard: CarWriteGuard = CarWriteGuard.DenyAll,
+    private val confirmTimeoutMs: Long = DiagApi.DEFAULT_CONFIRM_TIMEOUT_MS,
 ) {
     val history = SampleHistory()
     val reads = ApiReads(backend::setApiMeasurements, clock)
@@ -60,10 +63,14 @@ class ApiService(
     private val layoutLock = Any()
     private val streams = AtomicInteger()
     private val watches = ArrayList<ApiReads.Lease>()
-    private val catalogCache = ConcurrentHashMap<String, Pair<Long, Map<String, Measurement>>>()
+    /** sgbd -> (time, ECU folder stamp, measurements by id). */
+    private val catalogCache = ConcurrentHashMap<String, Triple<Long, Long, Map<String, Measurement>>>()
     @Volatile var stopped = false
 
-    val routes: List<Route> = buildRoutes() + extensions.flatMap { ext ->
+    val routes: List<Route> = buildRoutes() +
+        ProfileGraphRoutes(backend, clock, ::meta).routes() +
+        SetupRoutes(backend, guard, confirmTimeoutMs, clock, ::meta, catalogCache::clear).routes() +
+        extensions.flatMap { ext ->
         ext.routes(ExtensionContext(backend, ext.guard)).onEach {
             require(it.access == RouteAccess.Needs(Scope.Diag)) { "Extension route ${it.method} ${it.path} must need the diag scope" }
             require(it.path.startsWith("/api/v1/diag/")) { "Extension routes live under /api/v1/diag/" }
@@ -99,6 +106,15 @@ class ApiService(
         }
     }
 
+    /**
+     * For the HTTP server: the largest body of [method] [path] when it is an upload route (the
+     * body is then streamed to the handler), null for every other request (1 MB in memory).
+     */
+    fun streamedBodyLimit(method: String, path: String): Long? {
+        val segments = path.trim('/').split('/')
+        return routes.firstOrNull { it.upload != null && it.method == method && it.match(segments) != null }?.upload?.maxBytes
+    }
+
     private fun authorize(req: HttpRequest, route: Route): ApiAccess? {
         if (route.access == RouteAccess.Public) return null
         val current = access()
@@ -130,9 +146,11 @@ class ApiService(
     private fun catalog(sgbd: String): Map<String, Measurement> {
         val key = sgbd.lowercase()
         val now = clock()
-        catalogCache[key]?.let { (at, map) -> if (now - at < 60_000) return map }
+        // a new ECU folder (import from the phone or the in-app import) makes the cache stale at once
+        val stamp = backend.ecuFiles?.ecuDir?.lastModified() ?: 0L
+        catalogCache[key]?.let { (at, folder, map) -> if (now - at < 60_000 && folder == stamp) return map }
         val map = runCatching { backend.measurements(key) }.getOrElse { emptyList() }.associateBy { it.id }
-        catalogCache[key] = now to map
+        catalogCache[key] = Triple(now, stamp, map)
         return map
     }
 
@@ -1056,7 +1074,7 @@ class ApiService(
             Route(
                 "PATCH", "/api/v1/settings", RouteAccess.Needs(Scope.Config), "Settings", "updateSettings",
                 "Change app settings",
-                "Changes `autoConnectOnCable` and / or `bluetoothConnectOnStart`. The Bluetooth adapter itself is chosen on the phone. The API settings (enable, port, token, scopes) can only be changed on the phone: sending `api` answers 403.",
+                "Changes `autoConnectOnCable` and / or `bluetoothConnectOnStart`. The Bluetooth adapter is chosen with PUT /api/v1/bluetooth/adapter; GPS, recording and translations have their own routes under /api/v1/settings/. The API settings (enable, port, token, scopes) can only be changed on the phone: sending `api` answers 403.",
                 body = Body(S.obj(null, emptyList(), false, null,
                     "autoConnectOnCable" to S.bool(), "bluetoothConnectOnStart" to S.bool()),
                     example = buildJsonObject { put("autoConnectOnCable", true) }),
@@ -1080,17 +1098,17 @@ class ApiService(
             Route(
                 "PATCH", "/api/v1/export/telegraf", RouteAccess.Needs(Scope.Config), "Export", "updateTelegrafExport",
                 "Change the Telegraf export",
-                "Changes `enabled`, `url`, `car` and / or `mode` (`live`: upload on any network; `afterTrip`: keep the points on the phone until an unmetered network such as home Wi-Fi). Authentication (`auth`, `username`, token, password) can only be changed on the phone: sending it answers 403.",
+                "Changes `enabled`, `url`, `car` and / or `mode` (`live`: upload on any network; `afterTrip`: keep the points on the phone until an unmetered network such as home Wi-Fi). The authentication (`auth`, `username`, token, password) is set with PUT /api/v1/export/telegraf/auth: sending it here answers 403.",
                 body = Body(S.obj(null, emptyList(), false, null,
                     "enabled" to S.bool(), "url" to S.str(example = "http://192.168.1.10:8186/api/v2/write"), "car" to S.str(example = "My car"),
                     "mode" to S.str(enum = listOf("live", "afterTrip"))),
                     example = buildJsonObject { put("enabled", true); put("mode", "afterTrip") }),
                 reply = Reply(description = "Telegraf export after the change", schema = S.ref("TelegrafExport")),
-                errors = mapOf(400 to "Unknown field or wrong value.", 403 to "Tried to change the authentication (phone only) or the config scope is not enabled.", 501 to "Not available."),
+                errors = mapOf(400 to "Unknown field or wrong value.", 403 to "Tried to change the authentication (use PUT /api/v1/export/telegraf/auth) or the config scope is not enabled.", 501 to "Not available."),
             ) { call ->
                 val b = call.bodyObject()
                 listOf("auth", "username", "token", "password").firstOrNull { it in b }?.let {
-                    throw ApiException(403, "phone_only", "The Telegraf authentication can only be changed on the phone, in Settings › Telegraf export")
+                    throw ApiException(403, "use_auth_route", "The Telegraf authentication is not changed here: use PUT /api/v1/export/telegraf/auth (write-only secrets)")
                 }
                 if ("pointsPerSecond" in b) throw badRequest("'pointsPerSecond' no longer exists: every reading is exported, at the read rate")
                 b.allowOnly("enabled", "url", "car", "mode")

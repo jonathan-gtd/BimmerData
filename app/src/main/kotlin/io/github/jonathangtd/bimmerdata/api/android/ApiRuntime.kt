@@ -154,7 +154,7 @@ class ApiRuntime private constructor(context: Context) {
         }
         stopServer()
         val diag = DiagApi(AndroidDiagBackend(app), PhoneConfirmGuard(app))
-        val s = ApiServer(backend, ::currentAccess, listOf(diag), docsAssets = ::docsAsset, log = { msg, e -> Log.w(TAG, msg, e) })
+        val s = ApiServer(backend, ::currentAccess, listOf(diag), docsAssets = ::docsAsset, log = { msg, e -> Log.w(TAG, msg, e) }, guard = PhoneConfirmGuard(app))
         try {
             s.start(addresses, api.port, identity?.sslContext())
             server = s

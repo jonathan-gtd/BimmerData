@@ -6,6 +6,7 @@ package io.github.jonathangtd.bimmerdata.api
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.Page
 import io.github.jonathangtd.bimmerdata.dashboard.Target
+import io.github.jonathangtd.bimmerdata.files.EcuFileStore
 import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.RecordingState
 import io.github.jonathangtd.bimmerdata.live.Sample
@@ -99,7 +100,57 @@ interface ApiBackend {
 
     /** Upload the waiting points now (also after an authentication error). */
     fun sendTelegrafNow() = Unit
+
+    /** Sets the authentication of the export (validated by the caller); secrets are stored encrypted. */
+    fun setTelegrafAuth(patch: TelegrafAuthPatch): TelegrafView = notAvailable("The Telegraf export")
+
+    /** Deletes the points waiting on the phone (they are not sent). */
+    fun clearTelegrafQueue(): Unit = notAvailable("The Telegraf export")
+
+    /** Puts the batches Telegraf refused back in the queue; returns how many. */
+    fun retryTelegrafRejected(): Int = notAvailable("The Telegraf export")
+
+    fun deleteTelegrafRejected(): Unit = notAvailable("The Telegraf export")
+
+    /** The refused batches as one gzip stream (line protocol), null when there is none. */
+    fun openTelegrafRejected(): InputStream? = null
+
+    // ---- setup of the app (see SetupRoutes) ----
+
+    /** The imported ECU files and the import from the device folder; null = not available. */
+    val ecuFiles: EcuFileStore? get() = null
+
+    /** Runtime permissions and system switches the app depends on. */
+    fun permissions(): List<PermissionView> = emptyList()
+
+    fun bluetooth(): BluetoothView = notAvailable("Bluetooth")
+
+    /** Paired devices (empty without the permission, see [BluetoothView.permission]). */
+    fun pairedDevices(): List<PairedDeviceView> = notAvailable("Bluetooth")
+
+    /** Chooses the paired device [address] (null = forget the adapter) and / or connect-on-start. */
+    fun selectBluetoothAdapter(address: String?, forget: Boolean, connectOnStart: Boolean?): BluetoothView = notAvailable("Bluetooth")
+
+    /** Reads the adapter (type, firmware, voltage, CAN mode); null when not connected over Bluetooth. Blocking. */
+    fun readBluetoothAdapter(): AdapterInfoView? = notAvailable("Bluetooth")
+
+    /** Writes the CAN mode [code] into the adapter (already confirmed by the user). Blocking. */
+    fun writeCanMode(code: Int): AdapterInfoView? = notAvailable("Bluetooth")
+
+    fun gps(): GpsView = notAvailable("The GPS position")
+    fun updateGps(enabled: Boolean?, intervalMs: Long?): GpsView = notAvailable("The GPS position")
+
+    fun recordingSettings(): RecordingSettingsView = notAvailable("The recording settings")
+    fun updateRecordingSettings(patch: RecordingSettingsPatch): RecordingSettingsView = notAvailable("The recording settings")
+
+    fun translations(): TranslationsView = notAvailable("Translations")
+    fun updateTranslations(patch: TranslationsPatch): TranslationsView = notAvailable("Translations")
+
+    /** Starts downloading every translation file again (asynchronous; follow [translations]). */
+    fun updateTranslationsNow(): TranslationsView = notAvailable("Translations")
 }
+
+internal fun notAvailable(what: String): Nothing = throw ApiException(501, "not_available", "$what is not available")
 
 /** Telegraf export as seen through the API (secrets are never returned). */
 @Serializable
@@ -135,6 +186,17 @@ data class TelegrafStateView(
     val sentPoints: Long,
     val lastSuccessMs: Long? = null,
     val lastError: String? = null,
+    /** Batches Telegraf refused for good, kept aside on the phone. */
+    val rejectedBatches: Int = 0,
+)
+
+/** New authentication of the Telegraf export; a null secret keeps the stored one, "" deletes it. */
+data class TelegrafAuthPatch(
+    /** none, token or basic */
+    val auth: String,
+    val username: String? = null,
+    /** Token (auth token) or password (auth basic). */
+    val secret: String? = null,
 )
 
 data class TelegrafPatch(

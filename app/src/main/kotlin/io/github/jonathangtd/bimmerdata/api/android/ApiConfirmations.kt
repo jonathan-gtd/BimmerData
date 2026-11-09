@@ -20,6 +20,7 @@ import io.github.jonathangtd.bimmerdata.R
 import io.github.jonathangtd.bimmerdata.api.CarWrite
 import io.github.jonathangtd.bimmerdata.api.CarWriteDecision
 import io.github.jonathangtd.bimmerdata.api.CarWriteGuard
+import io.github.jonathangtd.bimmerdata.ediabas.deepobd.CanMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -79,6 +80,16 @@ object ApiConfirmations {
         is CarWrite.RunJob ->
             if (request.args.isEmpty()) res.getString(R.string.fb3_confirm_job, request.job, request.sgbd)
             else res.getString(R.string.fb3_confirm_job_args, request.job, request.sgbd, request.args)
+        is CarWrite.AdapterCanMode -> res.getString(
+            R.string.api2_confirm_can_mode,
+            when (CanMode.fromCode(request.code)) {
+                CanMode.Auto -> res.getString(R.string.bt_can_auto)
+                CanMode.KLineOnly -> res.getString(R.string.bt_can_kline)
+                CanMode.DCan500 -> res.getString(R.string.bt_can_500)
+                CanMode.Can100 -> res.getString(R.string.bt_can_100)
+                null -> res.getString(R.string.bt_can_unknown, request.code)
+            },
+        )
     }
 
     private fun notify(app: Context, id: Int, request: CarWrite) {

@@ -38,8 +38,20 @@ class Param(
     val example: JsonElement? = null,
 )
 
-/** Documented request body. */
-class Body(val schema: JsonObject, val example: JsonElement? = null, val required: Boolean = true, val description: String? = null)
+/** Documented request body ([contentType] is JSON unless it is an upload). */
+class Body(
+    val schema: JsonObject,
+    val example: JsonElement? = null,
+    val required: Boolean = true,
+    val description: String? = null,
+    val contentType: String = "application/json",
+)
+
+/**
+ * A route that takes a large raw body (file upload): the server does not buffer it but hands it
+ * over as a stream ([Call.bodyStream]), up to [maxBytes] (other routes stay limited to 1 MB).
+ */
+class Upload(val maxBytes: Long)
 
 /** Documented success response. */
 class Reply(
@@ -67,6 +79,8 @@ class Route(
     val reply: Reply,
     /** Error statuses this route can answer, besides 401 / 403 / 429 which every protected route has. */
     val errors: Map<Int, String> = emptyMap(),
+    /** Set for upload routes: the body is streamed, not held in memory. */
+    val upload: Upload? = null,
     val handler: (Call) -> HttpResponse,
 ) {
     internal val segments: List<String> = path.trim('/').split('/')
@@ -108,6 +122,12 @@ class Call(val request: HttpRequest, private val pathParams: Map<String, String>
         "false", "0", "no" -> false
         else -> throw badRequest("Query parameter '$name' must be true or false")
     }
+
+    /** The raw body as a stream (upload routes get it straight from the socket). */
+    fun bodyStream(): java.io.InputStream = request.bodyStream ?: java.io.ByteArrayInputStream(request.body)
+
+    /** Length of the body (Content-Length). */
+    val bodyLength: Long get() = request.bodyLength
 
     /** The body as a JSON object; an empty body is `{}`. */
     fun bodyObject(): JsonObject {

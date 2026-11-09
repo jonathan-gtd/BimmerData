@@ -5,6 +5,7 @@ package io.github.jonathangtd.bimmerdata.api
 
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.Page
+import io.github.jonathangtd.bimmerdata.files.EcuFileStore
 import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.MeasurementSource
 import io.github.jonathangtd.bimmerdata.live.RecordingState
@@ -121,6 +122,86 @@ class FakeApiBackend : ApiBackend {
             bluetoothConnectOnStart = patch.bluetoothConnectOnStart ?: settings.bluetoothConnectOnStart,
         )
         return settings
+    }
+
+    // ---- setup routes ----
+
+    /** ECU file store of the test (null: not available, 501). */
+    var ecuStore: EcuFileStore? = null
+    override val ecuFiles: EcuFileStore? get() = ecuStore
+
+    var permissionList = listOf(
+        PermissionView("bluetoothConnect", "android.permission.BLUETOOTH_CONNECT", "runtime", "missing", true, "Bluetooth adapter", "Settings › Connection › Allow"),
+        PermissionView("notifications", "android.permission.POST_NOTIFICATIONS", "runtime", "granted", false, "Notifications", "Android settings"),
+        PermissionView("locationOn", null, "systemSetting", "off", false, "GPS", "Quick settings"),
+    )
+    override fun permissions() = permissionList
+
+    var bt = BluetoothView(permission = "granted", enabled = true, connectOnStart = false, connected = false)
+    var paired = listOf(
+        PairedDeviceView("Deep OBD BMW", "00:11:22:33:44:55", likelyAdapter = true, lowEnergyOnly = false, selected = false),
+        PairedDeviceView("Watch", "AA:BB:CC:DD:EE:FF", likelyAdapter = false, lowEnergyOnly = true, selected = false),
+    )
+    var adapterInfo = AdapterInfoView("Deep OBD", "0.12", voltage = 12.4, canMode = "auto", canModeCode = 0xFF, reachesKLine = true)
+    val canModeWrites = ArrayList<Int>()
+    override fun bluetooth() = bt
+    override fun pairedDevices() = if (bt.permission == "missing") emptyList() else paired.map { it.copy(selected = it.address == bt.adapter?.address) }
+    override fun selectBluetoothAdapter(address: String?, forget: Boolean, connectOnStart: Boolean?): BluetoothView {
+        val device = paired.firstOrNull { it.address == address }
+        bt = bt.copy(
+            adapter = if (forget) null else device?.let { BluetoothAdapterView(it.name, it.address) } ?: bt.adapter,
+            connectOnStart = connectOnStart ?: bt.connectOnStart,
+        )
+        return bt
+    }
+    override fun readBluetoothAdapter() = if (bt.connected) adapterInfo else null
+    override fun writeCanMode(code: Int): AdapterInfoView {
+        canModeWrites += code
+        adapterInfo = adapterInfo.copy(canModeCode = code, canMode = if (code == 0) "kLineOnly" else if (code == 1) "dCan500" else "auto", reachesKLine = code != 1)
+        return adapterInfo
+    }
+
+    var gpsView = GpsView(false, 1000, listOf(1000L, 2000L, 5000L, 10_000L), "missing", true, "off")
+    override fun gps() = gpsView
+    override fun updateGps(enabled: Boolean?, intervalMs: Long?): GpsView {
+        val on = enabled ?: gpsView.enabled
+        gpsView = gpsView.copy(enabled = on, intervalMs = intervalMs ?: gpsView.intervalMs, state = if (!on) "off" else if (gpsView.permission == "missing") "noPermission" else "idle")
+        return gpsView
+    }
+
+    var recordingView = RecordingSettingsView("Download/Car logs/", true, 0, listOf(0L, 100L, 200L, 500L, 1000L), "bimmerdata", "bimmerdata_20261109_100000.csv")
+    override fun recordingSettings() = recordingView
+    override fun updateRecordingSettings(patch: RecordingSettingsPatch): RecordingSettingsView {
+        recordingView = recordingView.copy(
+            folder = if (patch.useDefaultFolder) "Documents/BimmerData/" else recordingView.folder,
+            customFolder = recordingView.customFolder && !patch.useDefaultFolder,
+            rowIntervalMs = patch.rowIntervalMs ?: recordingView.rowIntervalMs,
+            filePrefix = patch.filePrefix?.ifEmpty { "bimmerdata" } ?: recordingView.filePrefix,
+        )
+        return recordingView
+    }
+
+    var translationToken = ""
+    var translationUpdates = 0
+    var translationsView = TranslationsView(
+        enabled = true, language = "", effectiveLanguage = "en", languages = listOf("de", "en", "fr"), source = "url",
+        baseUrl = "https://example.org/translations", defaultBaseUrl = "https://example.org/translations", tokenSet = false,
+        selection = "auto", chosen = emptyList(), cachedEcus = listOf("msv70"), updating = false,
+    )
+    override fun translations() = translationsView.copy(tokenSet = translationToken.isNotEmpty())
+    override fun updateTranslations(patch: TranslationsPatch): TranslationsView {
+        patch.token?.let { translationToken = it }
+        val lang = patch.language ?: translationsView.language
+        translationsView = translationsView.copy(
+            language = lang, enabled = lang != "de", effectiveLanguage = lang.ifEmpty { "en" },
+            source = patch.source ?: translationsView.source, baseUrl = patch.baseUrl ?: translationsView.baseUrl,
+            selection = patch.selection ?: translationsView.selection, chosen = patch.chosen ?: translationsView.chosen,
+        )
+        return translations()
+    }
+    override fun updateTranslationsNow(): TranslationsView {
+        translationUpdates++
+        return translations().copy(updating = true)
     }
 
     companion object {

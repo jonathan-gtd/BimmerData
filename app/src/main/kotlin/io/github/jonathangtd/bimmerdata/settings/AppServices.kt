@@ -40,6 +40,8 @@ object AppServices {
         // history of every value read, for the Graph tab (no read of its own)
         io.github.jonathangtd.bimmerdata.graph.SharedHistory.start(LiveRepository.get(app).liveDataSource)
         AutoConnect.register(app)
+        // folder the REST API imports ECU files from (adb push target)
+        io.github.jonathangtd.bimmerdata.files.EcuImportFolder.prepare(app)
     }
 }
 

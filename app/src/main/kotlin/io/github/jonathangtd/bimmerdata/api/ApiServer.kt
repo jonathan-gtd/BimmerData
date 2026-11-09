@@ -21,9 +21,11 @@ class ApiServer(
     docsAssets: (String) -> ByteArray? = { null },
     private val log: (String, Throwable?) -> Unit = { _, _ -> },
     acceptPeer: (InetAddress) -> Boolean = LanPolicy::isAllowedPeer,
+    /** Asks the user on the phone before a write to the Bluetooth adapter. */
+    guard: CarWriteGuard = CarWriteGuard.DenyAll,
 ) {
-    val service = ApiService(backend, access, extensions, docsAssets = docsAssets, log = log)
-    private val http = HttpServer(service::handle, acceptPeer = acceptPeer, log = log)
+    val service = ApiService(backend, access, extensions, docsAssets = docsAssets, log = log, guard = guard)
+    private val http = HttpServer(service::handle, acceptPeer = acceptPeer, log = log, streamedBodyLimit = service::streamedBodyLimit)
     private var ticker: ScheduledExecutorService? = null
 
     val port: Int get() = http.port

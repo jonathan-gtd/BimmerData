@@ -40,6 +40,27 @@ sealed interface CarWrite {
     data class RunJob(val sgbd: String, val job: String, val args: String) : CarWrite {
         override val summary: String get() = "Run the job $job of $sgbd" + if (args.isEmpty()) "" else " with \"$args\""
     }
+
+    /** Store the CAN mode [code] ([name]: auto, kLineOnly, dCan500) in the Deep OBD Bluetooth adapter. */
+    data class AdapterCanMode(val code: Int, val name: String) : CarWrite {
+        override val summary: String get() = "Change the CAN mode of the Bluetooth adapter to $name"
+    }
+}
+
+/**
+ * Refuses while the car moves (speed above [maxSpeedKmh]), else asks the user through [guard];
+ * returns only when the user approved, otherwise throws the matching [ApiException].
+ */
+internal fun confirmCarWrite(guard: CarWriteGuard, request: CarWrite, timeoutMs: Long, speedKmh: Double?, maxSpeedKmh: Double = DiagApi.MAX_SPEED_KMH) {
+    speedKmh?.let { v ->
+        if (v > maxSpeedKmh) throw ApiException(409, "vehicle_moving", "Refused: the car is moving (${"%.0f".format(java.util.Locale.ROOT, v)} km/h). ${request.summary} only when stopped.")
+    }
+    when (guard.authorize(request, timeoutMs)) {
+        CarWriteDecision.Approved -> Unit
+        CarWriteDecision.Rejected -> throw ApiException(403, "refused_on_phone", "The user refused on the phone: ${request.summary}")
+        CarWriteDecision.Timeout -> throw ApiException(408, "confirmation_timeout", "Nobody confirmed on the phone within ${timeoutMs / 1000} s: ${request.summary}")
+        CarWriteDecision.Unavailable -> throw ApiException(503, "confirmation_unavailable", "The phone cannot ask for a confirmation right now")
+    }
 }
 
 enum class CarWriteDecision { Approved, Rejected, Timeout, Unavailable }
