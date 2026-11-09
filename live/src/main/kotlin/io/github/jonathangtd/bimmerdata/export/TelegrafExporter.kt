@@ -110,7 +110,10 @@ class TelegrafExporter(
     private val clientFactory: (ExportConfig) -> TelegrafClient = { TelegrafClient(it.url, it.auth) },
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val clock: () -> Long = System::currentTimeMillis,
-    /** Pause after a batch when the queue is empty, so points are grouped (about one POST per 2 s). */
+    /**
+     * Pause after a batch unless a backlog waits, so live points are grouped (about one POST per
+     * 2 s, not one per reading: new points arrive during every send).
+     */
     private val batchPauseMs: Long = 2_000,
     private val minBackoffMs: Long = 2_000,
     private val maxBackoffMs: Long = 300_000,
@@ -271,7 +274,9 @@ class TelegrafExporter(
                 null -> Unit
                 WriteResult.Ok -> {
                     backoff = minBackoffMs
-                    if (queue.isEmpty()) delay(batchPauseMs)
+                    // Live: the points read meanwhile go in the next batch. A backlog (closed
+                    // segments) is sent at once, batch after batch.
+                    if (!queue.hasBacklog()) delay(batchPauseMs)
                 }
                 is WriteResult.Rejected -> Unit
                 is WriteResult.AuthFailed -> authFailedFor = cfg

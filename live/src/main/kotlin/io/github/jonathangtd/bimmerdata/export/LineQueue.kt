@@ -150,6 +150,10 @@ class LineQueue(
     @Synchronized
     fun isEmpty(): Boolean = segments.isEmpty() && (open?.lines ?: 0) == 0
 
+    /** Closed segments wait (a backlog: after a trip, an outage...), not only the open one. */
+    @Synchronized
+    fun hasBacklog(): Boolean = segments.isNotEmpty()
+
     /**
      * Appends [lines] (without line ends). Returns false, queuing nothing, when the storage would
      * go below [reserveBytes] (see [State.blocked]).

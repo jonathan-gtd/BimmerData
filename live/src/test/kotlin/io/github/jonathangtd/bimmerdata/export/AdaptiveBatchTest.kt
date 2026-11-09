@@ -119,6 +119,7 @@ class AdaptiveBatchTest {
     private class SlowTelegraf(private val maxLines: Int) : AutoCloseable {
         val accepted: MutableList<String> = Collections.synchronizedList(ArrayList())
         val refused = java.util.concurrent.atomic.AtomicInteger()
+        val batches = java.util.concurrent.atomic.AtomicInteger()
         val refusedSizes: MutableList<Int> = Collections.synchronizedList(ArrayList())
         private val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0).apply {
             createContext("/api/v2/write") { ex ->
@@ -130,6 +131,7 @@ class AdaptiveBatchTest {
                     refusedSizes += ls.size
                     ex.sendResponseHeaders(502, -1)
                 } else {
+                    batches.incrementAndGet()
                     accepted += ls
                     ex.sendResponseHeaders(204, -1)
                 }
@@ -139,6 +141,38 @@ class AdaptiveBatchTest {
         }
         val url = "http://127.0.0.1:${server.address.port}/api/v2/write"
         override fun close() = server.stop(0)
+    }
+
+    @Test
+    fun `live points are grouped - one request per pause, not one per reading`(@TempDir dir: File) = SlowTelegraf(maxLines = 1_000_000).use { tg ->
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val config = MutableStateFlow(ExportConfig())
+        val net = MutableStateFlow(NetworkKind.Unmetered)
+        val readings = TestReadings()
+        val exporter = TelegrafExporter(
+            scope, readings.flow, { null }, LineQueue(dir, freeSpace = { Long.MAX_VALUE }), config, net,
+            batchPauseMs = 300, minBackoffMs = 20, maxBackoffMs = 100, clock = { 1_000 },
+        )
+        exporter.start()
+        try {
+            runBlocking {
+                withTimeout(20_000) {
+                    config.value = ExportConfig(enabled = true, url = tg.url, car = "E90", mode = ExportMode.Live)
+                    delay(100)
+                    // 100 readings over about 1 s, like a car read at 100 values/s
+                    for (i in 0 until 100) {
+                        readings.value = mapOf("dme/0x4300" to io.github.jonathangtd.bimmerdata.live.Sample(90.0 + i, null, 2_000L + i * 10))
+                        delay(10)
+                    }
+                    while (tg.accepted.size < 100) delay(10)
+                }
+            }
+            assertEquals(100, tg.accepted.size, "every point once")
+            assertTrue(tg.batches.get() <= 8, "grouped into a few requests, not one per reading: ${tg.batches.get()}")
+        } finally {
+            exporter.stop()
+            scope.cancel()
+        }
     }
 
     @Test
