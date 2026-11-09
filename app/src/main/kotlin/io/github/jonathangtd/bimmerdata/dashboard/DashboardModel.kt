@@ -11,11 +11,11 @@ import java.util.UUID
 @Serializable
 enum class Target { Phone, Car }
 
-/** Grid size limits per target. Android Auto pages stay simple: few, big cards. */
+/** Grid size limits per target. Android Auto: a 4 x 2 grid, at most 8 cards (one per cell). */
 data class GridLimits(val maxColumns: Int, val maxRows: Int, val maxCards: Int) {
     companion object {
         val Phone = GridLimits(maxColumns = 4, maxRows = 8, maxCards = 32)
-        val Car = GridLimits(maxColumns = 4, maxRows = 2, maxCards = 4)
+        val Car = GridLimits(maxColumns = 4, maxRows = 2, maxCards = 8)
         fun of(target: Target) = if (target == Target.Phone) Phone else Car
     }
 }

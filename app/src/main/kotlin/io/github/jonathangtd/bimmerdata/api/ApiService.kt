@@ -649,8 +649,8 @@ class ApiService(
             Route(
                 "POST", "/api/v1/dashboard/car/from-phone", RouteAccess.Needs(Scope.Layout), "Dashboard", "carFromPhone",
                 "Android Auto = the phone's cards",
-                "Replaces every Android Auto page by the cards of the phone pages: one Android Auto page per 4 cards of a phone page, " +
-                    "in the phone's reading order (\"Engine\" with 8 cards gives \"Engine 1/2\" and \"Engine 2/2\"), one card per cell. " +
+                "Replaces every Android Auto page by the cards of the phone pages: one Android Auto page per 8 cards of a phone page on its 4 x 2 grid (both rows used from 4 cards on), " +
+                    "in the phone's reading order (\"Engine\" with 10 cards gives \"Engine 1/2\" and \"Engine 2/2\"), one card per cell." +
                     "Cards keep their type, values, title, thresholds and decimals. Run it after changing the phone pages when Android Auto " +
                     "must show the same cards as the phone (layout rule of this API, see the dashboard docs).",
                 reply = Reply(description = "The new layout", schema = S.ref("Dashboard")),

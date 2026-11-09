@@ -413,6 +413,15 @@ class ReadmeScreenshotTest {
     @Test
     fun androidAuto() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-        save(CarScreen.render(context, Locale.ENGLISH, carPage, 0, 2, index, feed(), running, RecordingState()), "android_auto.png")
+        // the phone page plus two cards, rebuilt for Android Auto as the app does (8 cards, 4 x 2)
+        val phone8 = phonePage.copy(
+            rows = 7,
+            cards = phonePage.cards + listOf(
+                card(GaugeType.BigNumber, listOf(load), "Load", 0, 6, decimals = 0),
+                card(GaugeType.BigNumber, listOf(battery), "Battery", 1, 6, decimals = 1),
+            ),
+        )
+        val car8 = io.github.jonathangtd.bimmerdata.dashboard.DashboardMirror.carFromPhone(Dashboard(phonePages = listOf(phone8))).carPages.first()
+        save(CarScreen.render(context, Locale.ENGLISH, car8, 0, 2, index, feed(), running, RecordingState()), "android_auto.png")
     }
 }

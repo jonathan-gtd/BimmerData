@@ -200,7 +200,7 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 
 ### Layout rules
 
-- Phone pages: up to 4 columns × 8 rows, 32 cards. Android Auto pages: up to 4 × 2, 4 cards.
+- Phone pages: up to 4 columns × 8 rows, 32 cards. Android Auto pages: up to 4 × 2, 8 cards.
 - A card covers `colSpan × rowSpan` cells from (`col`, `row`), 0-based; cards may not overlap
   or leave the grid.
 - Card types: `Dial`, `BipolarBar` (1–4 measurements), `BigNumber`, `Trend`, `MultiValue`
@@ -213,7 +213,7 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 - **Android Auto shows the same cards as the phone** (the order may differ): every card of the
   phone pages is on an Android Auto page, and Android Auto has no other card. After creating or
   changing phone pages, call `POST /api/v1/dashboard/car/from-phone`: it rebuilds the Android Auto
-  pages from the phone pages (4 cards per Android Auto page, "Engine 1/2", "Engine 2/2"…). For a
+  pages from the phone pages (up to 8 cards per Android Auto page on its 4 × 2 grid, "Engine 1/2", "Engine 2/2"…). For a
   profile file, build `carPages` the same way. The app does not refuse a layout that breaks the
   rule (older or shared profiles), but an agent must not create one.
 - Unknown JSON fields are rejected (400), so typos do not silently vanish.

@@ -49,7 +49,7 @@
     <string name="move_down">Descendre</string>
     <string name="grid_refused">Certaines cartes ne tiennent pas dans cette grille.</string>
     <string name="page_full">Plus de place sur cette page.</string>
-    <string name="car_max_cards">Une page Android Auto contient au plus 4 cartes.</string>
+    <string name="car_max_cards">Une page Android Auto contient au plus 8 cartes.</string>
     <string name="size_refused">Pas assez de place pour cette taille.</string>
     <string name="profile_values_full">Un profil contient au plus %1$d valeurs (il est lu en entier à chaque cycle). Retirez-en ou créez un autre profil.</string>
     <string name="card_deleted">Carte supprimée</string>

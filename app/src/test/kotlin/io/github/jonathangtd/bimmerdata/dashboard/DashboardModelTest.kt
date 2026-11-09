@@ -176,10 +176,12 @@ class DashboardModelTest {
     }
 
     @Test
-    fun `car pages hold at most four cards`() {
+    fun `car pages hold at most eight cards, one per cell of the 4 x 2 grid`() {
         val p = page(card("a", 0, 0), card("b", 1, 0), card("c", 2, 0), card("d", 3, 0), columns = 4, rows = 2)
-        assertNull(GridRules.add(p, card("e", 0, 1), GridLimits.Car))
-        assertNotNull(GridRules.add(p, card("e", 0, 1), GridLimits.Phone))
+        assertNotNull(GridRules.add(p, card("e", 0, 1), GridLimits.Car))
+        val full = (0 until 8).fold(page(columns = 4, rows = 2)) { acc, i -> GridRules.add(acc, card("c$i", i % 4, i / 4), GridLimits.Car)!! }
+        assertEquals(8, full.cards.size)
+        assertNull(GridRules.add(full, card("x", 0, 0), GridLimits.Car))
     }
 
     // ---- grid size ----

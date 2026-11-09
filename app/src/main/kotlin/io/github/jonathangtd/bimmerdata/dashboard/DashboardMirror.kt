@@ -7,9 +7,10 @@ package io.github.jonathangtd.bimmerdata.dashboard
  * Android Auto shows the same cards as the phone: [carFromPhone] rebuilds the Android Auto pages
  * from the phone pages (the owner's rule for his profiles, offered to everyone as an action).
  *
- * Each phone page becomes one Android Auto page per [GridLimits.Car] `maxCards` cards, in the
- * phone's reading order (row, then column), one card per cell on a single row: "Engine" with 8
- * cards gives "Engine 1/2" and "Engine 2/2". Cards keep everything but their id and place.
+ * Each phone page becomes one Android Auto page per [GridLimits.Car] `maxCards` (8) cards, in the
+ * phone's reading order (row, then column), one card per cell, using both rows of the 4 x 2 grid
+ * from 4 cards on ([gridFor]): "Engine" with 10 cards gives "Engine 1/2" (8 cards) and
+ * "Engine 2/2" (2 cards). Cards keep everything but their id and place.
  */
 object DashboardMirror {
     fun carFromPhone(d: Dashboard): Dashboard {
@@ -23,16 +24,25 @@ object DashboardMirror {
         val pages = d.phonePages.flatMap { page ->
             val chunks = page.cards.sortedWith(compareBy({ it.row }, { it.col })).chunked(GridLimits.Car.maxCards)
             chunks.mapIndexed { i, chunk ->
+                val (columns, rows) = gridFor(chunk.size)
                 Page(
                     id = fresh(),
                     name = if (chunks.size == 1) page.name else "${page.name} ${i + 1}/${chunks.size}",
-                    columns = chunk.size,
-                    rows = 1,
-                    cards = chunk.mapIndexed { c, card -> card.copy(id = fresh(), col = c, row = 0, colSpan = 1, rowSpan = 1) },
+                    columns = columns,
+                    rows = rows,
+                    cards = chunk.mapIndexed { c, card -> card.copy(id = fresh(), col = c % columns, row = c / columns, colSpan = 1, rowSpan = 1) },
                 )
             }
         }
         return d.copy(carPages = pages)
+    }
+
+    /** columns x rows for [n] cards: 1-3 on one row, 4 as 2 x 2, 5-6 as 3 x 2, 7-8 as 4 x 2. */
+    fun gridFor(n: Int): Pair<Int, Int> = when {
+        n <= 3 -> n.coerceAtLeast(1) to 1
+        n == 4 -> 2 to 2
+        n <= 6 -> 3 to 2
+        else -> 4 to 2
     }
 
     /** True when Android Auto has exactly the phone's cards (type and values), whatever the order. */
