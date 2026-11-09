@@ -309,6 +309,7 @@ internal fun TelegrafSection(t: TelegrafSettings, store: AppSettings) {
         val (color, phase) = when (state.phase) {
             ExportPhase.Off -> Cockpit.Muted to R.string.settings2_tg_phase_off
             ExportPhase.Idle -> Cockpit.Accent to R.string.settings2_tg_phase_idle
+            ExportPhase.Gathering -> Cockpit.Accent to R.string.settings2_tg_phase_gathering
             ExportPhase.WaitingForNetwork -> Cockpit.Warning to R.string.settings2_tg_phase_network
             ExportPhase.WaitingForUnmetered -> Cockpit.Warning to R.string.settings2_tg_phase_unmetered
             ExportPhase.Sending -> Cockpit.Accent to R.string.settings2_tg_phase_sending

@@ -54,6 +54,7 @@
     <string name="settings2_tg_last_error">Last error: %1$s</string>
     <string name="settings2_tg_phase_off">Off</string>
     <string name="settings2_tg_phase_idle">Up to date</string>
+    <string name="settings2_tg_phase_gathering">Grouping points (sent at 100 points, within 30 s)</string>
     <string name="settings2_tg_phase_network">Waiting for a network</string>
     <string name="settings2_tg_phase_unmetered">Waiting for Wi-Fi</string>
     <string name="settings2_tg_phase_sending">Sending</string>

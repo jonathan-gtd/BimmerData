@@ -54,6 +54,7 @@
     <string name="settings2_tg_last_error">Dernière erreur : %1$s</string>
     <string name="settings2_tg_phase_off">Désactivé</string>
     <string name="settings2_tg_phase_idle">À jour</string>
+    <string name="settings2_tg_phase_gathering">Regroupement des points (envoi à 100 points, sous 30 s)</string>
     <string name="settings2_tg_phase_network">En attente d\'un réseau</string>
     <string name="settings2_tg_phase_unmetered">En attente du Wi-Fi</string>
     <string name="settings2_tg_phase_sending">Envoi en cours</string>

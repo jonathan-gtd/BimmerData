@@ -77,11 +77,18 @@ class TelegrafRuntime private constructor(context: Context) {
         started = true
         registerNetworkCallback()
         exporter.start()
-        // schedule a background upload whenever points wait (and when the mode changes)
+        // A background upload only when the sender cannot send now (no suitable network, server
+        // retrying) and points wait: Android runs it once the network fits, even with the app
+        // closed. Never scheduled / cancelled at the rhythm of the live points.
         watcher = scope.launch {
-            combine(exporter.state.map { it.queuedLines > 0 }.distinctUntilChanged(), config) { waiting, cfg -> waiting to cfg }
-                .distinctUntilChanged()
-                .collect { (waiting, cfg) -> if (waiting && cfg.usable) TelegrafUploadJob.schedule(app, cfg.mode) else TelegrafUploadJob.cancel(app) }
+            combine(
+                exporter.state.map { it.queuedLines > 0 && it.phase.blocked }.distinctUntilChanged(),
+                config.map { it.usable to it.mode }.distinctUntilChanged(),
+            ) { blocked, cfg -> blocked to cfg }
+                .collect { (blocked, cfg) ->
+                    val (usable, mode) = cfg
+                    if (!usable) TelegrafUploadJob.cancel(app) else if (blocked) TelegrafUploadJob.schedule(app, mode)
+                }
         }
         // tell the user when the queue grows past a step, and when the reserve is reached
         scope.launch {
@@ -118,7 +125,7 @@ class TelegrafRuntime private constructor(context: Context) {
 
     fun clearQueue() = exporter.clearQueue()
 
-    /** Background job: upload everything; true when nothing is left. */
+    /** Background job: upload the backlog (not the live points); true when none is left. */
     suspend fun drain(): Boolean = exporter.drain()
 
     private fun toConfig(t: TelegrafSettings): ExportConfig {
@@ -207,10 +214,14 @@ class TelegrafUploadJob : JobService() {
     companion object {
         private const val JOB_ID = 0x7E1E
 
+        /** Schedules the upload, unless the same job is already scheduled or running (rescheduling would stop it). */
         fun schedule(context: Context, mode: ExportMode) {
             val js = context.getSystemService(JobScheduler::class.java) ?: return
+            val network = if (mode == ExportMode.AfterTrip) JobInfo.NETWORK_TYPE_UNMETERED else JobInfo.NETWORK_TYPE_ANY
+            val pending = runCatching { js.getPendingJob(JOB_ID) }.getOrNull()
+            if (pending != null && pending.networkType == network) return
             val info = JobInfo.Builder(JOB_ID, ComponentName(context, TelegrafUploadJob::class.java))
-                .setRequiredNetworkType(if (mode == ExportMode.AfterTrip) JobInfo.NETWORK_TYPE_UNMETERED else JobInfo.NETWORK_TYPE_ANY)
+                .setRequiredNetworkType(network)
                 .setBackoffCriteria(60_000, JobInfo.BACKOFF_POLICY_EXPONENTIAL)
                 .build()
             runCatching { js.schedule(info) }.onFailure { Log.w("TelegrafExport", "Cannot schedule the upload job", it) }

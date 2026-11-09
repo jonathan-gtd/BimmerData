@@ -57,7 +57,16 @@ data class ExportConfig(
     val usable: Boolean get() = enabled && TelegrafClient.isValidUrl(url)
 }
 
-enum class ExportPhase { Off, Idle, WaitingForNetwork, WaitingForUnmetered, Sending, Retrying, AuthFailed }
+enum class ExportPhase {
+    Off, Idle,
+
+    /** Live points are being grouped: sent at [TelegrafExporter] minBatchLines points or after maxBatchWaitMs. */
+    Gathering,
+    WaitingForNetwork, WaitingForUnmetered, Sending, Retrying, AuthFailed;
+
+    /** The sender cannot send now (network, server): a background job should take over the backlog. */
+    val blocked: Boolean get() = this == WaitingForNetwork || this == WaitingForUnmetered || this == Retrying
+}
 
 data class ExportState(
     val phase: ExportPhase = ExportPhase.Off,
@@ -92,6 +101,12 @@ data class ExportState(
  * [LineQueue] on disk (gzip) → [TelegrafClient] in batches, when [ExportConfig.mode] and the
  * [network] allow it. Times are the original sample times, so an upload after the trip lands
  * at the right place in Grafana.
+ *
+ * **One sender**: [sendLoop] is the only code that posts live points. Live, it groups them
+ * ([ExportPhase.Gathering]: at least [minBatchLines] points, at most one request per
+ * [batchPauseMs], no point waiting more than [maxBatchWaitMs]); a backlog of closed segments
+ * (after a trip, an outage) goes batch after batch. The background job ([drain]) only sends that
+ * backlog, never the live points. "Send now" ([kick]) skips the grouping once.
  *
  * **Nothing is ever lost on the phone side**: a batch is deleted only after a 2xx answer.
  * Network errors, 5xx, 404 and other temporary answers are retried with a growing pause (2 s to
@@ -160,11 +175,15 @@ class TelegrafExporter(
         queue.close()
     }
 
-    /** Asks the sender to try again now (e.g. after "Send now" or a settings change). */
+    /** "Send now": tries again at once, without waiting for a batch to fill up. */
     fun kick() {
         authFailedFor = null
+        sendNow = true
         wake.trySend(Unit)
     }
+
+    /** Set by [kick]: the next batch goes without gathering. */
+    @Volatile private var sendNow = false
 
     /** New free-space reserve; shown (and applied) at once. */
     fun setReserveBytes(bytes: Long) {
@@ -202,14 +221,16 @@ class TelegrafExporter(
     }
 
     /**
-     * Uploads the whole queue now, whatever the mode (used by the background job that Android
-     * only starts on an unmetered network). Returns true once the queue is empty.
+     * Background job (Android starts it on a suitable network, also with the app closed): sends
+     * the backlog of closed segments, whatever the mode, never the live points still being
+     * gathered (the sender does that). True once no backlog is left.
      */
     suspend fun drain(): Boolean = withContext(dispatcher) {
         val cfg = config.value
         if (!cfg.usable) return@withContext false
         while (isActive) {
-            when (sendOne(cfg) ?: return@withContext true) {
+            if (!queue.hasBacklog()) return@withContext true
+            when (sendOne(cfg, includeOpen = false) ?: return@withContext true) {
                 WriteResult.Ok, is WriteResult.Rejected -> Unit
                 else -> return@withContext false
             }
@@ -254,14 +275,19 @@ class TelegrafExporter(
     // ---------------------------------------------------------------- sender
 
     /**
-     * Live: waits [batchPauseMs], then until [minBatchLines] points wait, a backlog appears or
-     * [maxBatchWaitMs] passed: few requests (one per 2 s at most, at least 100 points each when
-     * the car gives that many), and a slow source still gets its points out within 30 s.
+     * Live: waits at least [batchPauseMs], then until [minBatchLines] points wait, but never more
+     * than [maxBatchWaitMs]: few requests (one per 2 s at most, at least 100 points each when the
+     * car gives that many), and a slow source still gets its points out within 30 s. A backlog
+     * appearing or "Send now" ends it at once. Measured on the monotonic clock.
      */
     private suspend fun gatherBatch() {
-        delay(batchPauseMs)
-        withTimeoutOrNull((maxBatchWaitMs - batchPauseMs).coerceAtLeast(0)) {
-            while (!queue.hasBacklog() && queue.lines() < minBatchLines) delay(GATHER_POLL_MS)
+        val start = System.nanoTime()
+        val poll = GATHER_POLL_MS.coerceAtMost(batchPauseMs.coerceAtLeast(10))
+        while (!sendNow && !queue.hasBacklog()) {
+            val waited = (System.nanoTime() - start) / 1_000_000
+            if (waited >= maxBatchWaitMs) break
+            if (waited >= batchPauseMs && queue.lines() >= minBatchLines) break
+            delay(poll)
         }
     }
 
@@ -283,15 +309,17 @@ class TelegrafExporter(
                 wake.receive()
                 continue
             }
-            _state.update { it.copy(phase = ExportPhase.Sending) }
             // Live: gather points first (a backlog is sent at once, batch after batch), then look
             // at the settings and the network again before sending.
-            if (!gathered && !queue.hasBacklog()) {
+            if (!gathered && !sendNow && !queue.hasBacklog()) {
+                _state.update { it.copy(phase = ExportPhase.Gathering) }
                 gatherBatch()
                 gathered = true
                 continue
             }
             gathered = false
+            sendNow = false
+            _state.update { it.copy(phase = ExportPhase.Sending) }
             when (val r = sendOne(cfg)) {
                 null -> Unit
                 WriteResult.Ok -> {
@@ -318,9 +346,12 @@ class TelegrafExporter(
     /** The last failure lowered [batchLimit] (the next try uses smaller batches). */
     private var shrunk = false
 
-    /** Sends the oldest batch; null when the queue is empty. Deletes it only on 2xx. */
-    private suspend fun sendOne(cfg: ExportConfig): WriteResult? = sendLock.withLock {
-        val batch = queue.next(includeOpen = true, maxLines = batchLimit) ?: return@withLock null
+    /**
+     * Sends the oldest batch (with [includeOpen], the live points gathered so far when there is
+     * no backlog); null when there is nothing to send. Deletes it only on 2xx. One at a time.
+     */
+    private suspend fun sendOne(cfg: ExportConfig, includeOpen: Boolean = true): WriteResult? = sendLock.withLock {
+        val batch = queue.next(includeOpen = includeOpen, maxLines = batchLimit) ?: return@withLock null
         val r = clientFactory(cfg).write(batch.body, gzipped = batch.gzip)
         shrunk = false
         when (r) {

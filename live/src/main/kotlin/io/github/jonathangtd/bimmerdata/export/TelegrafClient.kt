@@ -47,7 +47,8 @@ sealed interface WriteResult {
  * Posts line protocol to a Telegraf HTTP listener, e.g. `http://server:8186/api/v2/write`
  * (influxdb_v2_listener) or `http://server:8080/telegraf` (http_listener_v2). Queue batches are
  * already gzip data and are sent as-is with `Content-Encoding: gzip` (both listeners accept it);
- * other bodies over 1 KB are compressed here. Blocking; call it off the main thread.
+ * other bodies over 1 KB are compressed here. Connections are kept alive between requests.
+ * Blocking; call it off the main thread.
  */
 class TelegrafClient(
     private val url: String,
@@ -107,12 +108,15 @@ class TelegrafClient(
                 else -> WriteResult.Retry(detail)
             }
         } catch (e: SocketTimeoutException) {
+            conn.disconnect()
             return WriteResult.Retry(e.message ?: "Timeout", smaller = true)
         } catch (e: IOException) {
-            return WriteResult.Retry(e.message ?: e.javaClass.simpleName)
-        } finally {
             conn.disconnect()
+            return WriteResult.Retry(e.message ?: e.javaClass.simpleName)
         }
+        // No disconnect() after a complete answer: the body was read and closed, so the
+        // connection goes back to the pool and the next request reuses it (no new TCP / TLS
+        // handshake every 2 s).
     }
 
     /** Connection test: an empty write (nothing is stored). */
