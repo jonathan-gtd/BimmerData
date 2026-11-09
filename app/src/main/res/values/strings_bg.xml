@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Ongoing notification while BimmerData works in the background -->
+    <string name="bg_channel_name">Background activity</string>
+    <string name="bg_channel_description">Shown while BimmerData stays connected to the car, records or exports, even with the screen off.</string>
+    <string name="bg_title">BimmerData is running in the background</string>
+    <string name="bg_mode_usb">USB cable %1$s</string>
+    <string name="bg_mode_bluetooth">Bluetooth %1$s</string>
+    <string name="bg_mode_simulation">Simulation</string>
+    <string name="bg_connecting">connecting…</string>
+    <string name="bg_reads_per_second">%1$s reads/s</string>
+    <string name="bg_no_answer">no answer from the car</string>
+    <string name="bg_starting">starting</string>
+    <string name="bg_recording">Recording %1$s (%2$s rows)</string>
+    <string name="bg_telegraf_live">Telegraf live</string>
+    <string name="bg_profile">Profile %1$s</string>
+    <string name="bg_action_stop_recording">Stop recording</string>
+    <string name="bg_action_disconnect">Disconnect</string>
+
+    <!-- In-app notice under the connection pill -->
+    <string name="bg_notice">Keeps running in the background: %1$s</string>
+    <string name="bg_task_connection">connection</string>
+    <string name="bg_task_recording">recording</string>
+    <string name="bg_task_telegraf">Telegraf live</string>
+    <string name="bg_notice_more">What does it mean?</string>
+    <string name="bg_help_title">BimmerData keeps working</string>
+    <string name="bg_help_text">While BimmerData is connected to the car, it keeps reading, recording and exporting even when you leave the app or turn the screen off. A notification shows it (“BimmerData is running in the background”), with the read rate and the recording time.\n\nTo stop: Disconnect, from the connection pill or from the notification. Recording stops with the connection.</string>
+    <string name="bg_help_ok">OK</string>
+    <string name="bg_notifications_off">Notifications are off: nothing will show that BimmerData keeps working in the background.</string>
+    <string name="bg_notifications_allow">Allow</string>
+</resources>

@@ -10,6 +10,7 @@ import io.github.jonathangtd.bimmerdata.live.LiveConnection
 import io.github.jonathangtd.bimmerdata.live.LiveMode
 import io.github.jonathangtd.bimmerdata.settings.AppSettings
 import io.github.jonathangtd.bimmerdata.ui.ConnectionPillContent
+import io.github.jonathangtd.bimmerdata.live.LivePermissions
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -536,10 +537,15 @@ internal fun DashboardHeader(
                     Icon(painterResource(R.drawable.ic_chevron_down), contentDescription = null, tint = Cockpit.Muted, modifier = Modifier.size(22.dp))
                 }
             }
-            RecordPill(rec, onRecord)
+            // starting a recording: ask first for the notification that says it keeps running off screen
+            val context = LocalContext.current
+            val notifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { onRecord() }
+            RecordPill(rec) {
+                if (!rec.recording && LivePermissions.shouldRequestNotifications(context)) notifications.launch(LivePermissions.Notifications) else onRecord()
+            }
             RoundIconButton(R.drawable.ic_edit, stringResource(R.string.edit), onClick = onEdit)
         }
-        ConnectionPillContent(connection, status, lastMode, onConnect, onDisconnect, Modifier.fillMaxWidth())
+        ConnectionPillContent(connection, status, lastMode, onConnect, onDisconnect, Modifier.fillMaxWidth(), recording = rec.recording)
     }
 }
 

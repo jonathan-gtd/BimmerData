@@ -38,12 +38,12 @@ object LivePermissions {
         if (shouldRequestNotifications(context)) arrayOf(Notifications) else emptyArray()
 
     /**
-     * Runtime permissions still missing before connecting in [mode]: the notification for the
-     * foreground service (cable, Bluetooth) and BLUETOOTH_CONNECT (Android 12+) for Bluetooth.
+     * Runtime permissions still missing before connecting in [mode]: the notification of the
+     * foreground service (every mode, simulation included) and BLUETOOTH_CONNECT (Android 12+) for Bluetooth.
      * Connect anyway once the dialog is answered: without them the connection reports why.
      */
     fun missingFor(context: Context, mode: LiveMode): Array<String> = buildList {
-        if (mode != LiveMode.Simulation && shouldRequestNotifications(context)) add(Notifications)
+        if (shouldRequestNotifications(context)) add(Notifications)
         if (mode == LiveMode.Bluetooth && !BluetoothAccess.hasConnectPermission(context)) BluetoothAccess.connectPermission?.let(::add)
     }.toTypedArray()
 }
