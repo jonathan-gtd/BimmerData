@@ -15,7 +15,7 @@
     <string name="bt_allow">Autoriser</string>
     <string name="bt_off">Le Bluetooth est désactivé.</string>
     <string name="bt_connect_on_start">Se connecter à l\'adaptateur au démarrage de l\'appli</string>
-    <string name="bt_connect_on_start_hint">Pour un adaptateur qui reste branché dans la voiture. Sans câble ni adaptateur, l\'appli affiche simplement l\'erreur.</string>
+    <string name="bt_connect_on_start_hint">Pour un adaptateur qui reste branché dans la voiture. Si l\'adaptateur ne répond pas (pas dans la voiture, contact coupé), l\'appli reste déconnectée, sans erreur.</string>
     <string name="bt_pick_title">Appareils appairés</string>
     <string name="bt_pick_empty">Aucun appareil appairé. Appairez l\'adaptateur dans les réglages Bluetooth d\'Android.</string>
     <string name="bt_pick_obd">Ressemble à un adaptateur OBD</string>

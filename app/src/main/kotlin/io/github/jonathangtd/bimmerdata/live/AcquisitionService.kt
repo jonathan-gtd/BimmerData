@@ -87,11 +87,17 @@ class AcquisitionService : Service() {
             stopNow()
         }
         scope.launch {
+            var shown: Any? = null
             while (isActive) {
                 if (foreground) {
-                    runCatching { getSystemService(NotificationManager::class.java).notify(NotificationId, buildNotification()) }
+                    // re-post only when the text changes (it is checked at most once per second)
+                    val content = BackgroundWork.notification(snapshot(this@AcquisitionService), texts(this@AcquisitionService))
+                    if (content != shown) {
+                        shown = content
+                        runCatching { getSystemService(NotificationManager::class.java).notify(NotificationId, buildNotification(content)) }
+                    }
                 }
-                delay(1000) // at most one update per second (the recording time moves every second)
+                delay(1000)
             }
         }
     }
@@ -154,8 +160,9 @@ class AcquisitionService : Service() {
         }
     }
 
-    private fun buildNotification(): Notification {
-        val content = BackgroundWork.notification(snapshot(this), texts(this))
+    private fun buildNotification(
+        content: BackgroundNotification = BackgroundWork.notification(snapshot(this), texts(this)),
+    ): Notification {
         val open = packageManager.getLaunchIntentForPackage(packageName)?.let {
             PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }

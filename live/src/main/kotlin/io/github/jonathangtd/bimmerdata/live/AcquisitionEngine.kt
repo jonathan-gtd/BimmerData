@@ -97,7 +97,23 @@ class AcquisitionEngine(
         val jobMaxIntervalMs: Long = 5000,
         /** A one-off operation at least this long while measurements are read is reported in [pauses]. */
         val pauseThresholdMs: Long = 1000,
+        /**
+         * The interface never connected since [start]: stop after this many failed attempts and
+         * report [LinkState.Unreachable] (0 = keep trying). Once it connected, a lost link is
+         * always retried.
+         */
+        val firstConnectAttempts: Int = 0,
     )
+
+    /** Whether the interface connected since [start]. */
+    enum class LinkState {
+        /** Not connected yet, still trying. */
+        Pending,
+        /** Connected at least once since [start] (it may be reconnecting now). */
+        Up,
+        /** Never connected: gave up ([Config.firstConnectAttempts]) or stopped before; the loop is over. */
+        Unreachable,
+    }
 
     private val _samples = MutableStateFlow<Map<String, Sample>>(emptyMap())
     override val samples: StateFlow<Map<String, Sample>> = _samples.asStateFlow()
@@ -108,6 +124,11 @@ class AcquisitionEngine(
 
     private val _status = MutableStateFlow(AcquisitionStatus())
     override val status: StateFlow<AcquisitionStatus> = _status.asStateFlow()
+
+    private val _link = MutableStateFlow(LinkState.Pending)
+
+    /** First connection of the interface since [start] (the reason of an [LinkState.Unreachable] is in [status]). */
+    val link: StateFlow<LinkState> = _link.asStateFlow()
 
     private val _measurements = MutableStateFlow<List<Measurement>>(emptyList())
 
@@ -185,6 +206,7 @@ class AcquisitionEngine(
         check(!closed) { "engine closed" }
         if (loopJob?.isActive == true) return
         abortRequested = false
+        _link.value = LinkState.Pending
         _status.value = AcquisitionStatus(AcquisitionState.Connecting)
         val previous = loopJob
         loopJob = scope.launch {
@@ -334,6 +356,7 @@ class AcquisitionEngine(
         var errorCount = 0
         var lastError: String? = null
         var connectFailures = 0
+        var unreachable: String? = null
         try {
             while (true) {
                 coroutineContext.ensureActive()
@@ -346,10 +369,16 @@ class AcquisitionEngine(
                         lastError = err
                         _status.value = AcquisitionStatus(AcquisitionState.Error, 0.0, errorCount, err)
                         failQueued(err) // one-off operations do not wait for a reconnection
+                        if (_link.value == LinkState.Pending && config.firstConnectAttempts in 1..connectFailures) {
+                            unreachable = err // never reached: give up instead of "reconnecting" forever
+                            abortRequested = true
+                            return
+                        }
                         waitOrChange(backoff(connectFailures))
                         continue
                     }
                     connectFailures = 0
+                    _link.value = LinkState.Up
                 }
                 val wanted = effectiveNow()
                 if (wanted != plannedFor) replan(ed, wanted)
@@ -426,8 +455,9 @@ class AcquisitionEngine(
             }
         } finally {
             disconnect()
-            if (abortRequested || closed) failQueued("Disconnected")
-            _status.value = AcquisitionStatus(AcquisitionState.Stopped, 0.0, errorCount, null)
+            if (abortRequested || closed) failQueued(unreachable ?: "Disconnected")
+            _status.value = AcquisitionStatus(AcquisitionState.Stopped, 0.0, errorCount, unreachable)
+            if (_link.value == LinkState.Pending) _link.value = LinkState.Unreachable
         }
     }
 

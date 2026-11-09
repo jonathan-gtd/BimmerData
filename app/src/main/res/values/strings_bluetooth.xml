@@ -16,7 +16,7 @@
     <string name="bt_allow">Allow</string>
     <string name="bt_off">Bluetooth is off.</string>
     <string name="bt_connect_on_start">Connect to the adapter when the app starts</string>
-    <string name="bt_connect_on_start_hint">For an adapter that stays plugged in the car. Without a cable or adapter the app just shows the error.</string>
+    <string name="bt_connect_on_start_hint">For an adapter that stays plugged in the car. If the adapter does not answer (not in the car, ignition off), the app stays disconnected, without an error.</string>
     <string name="bt_pick_title">Paired devices</string>
     <string name="bt_pick_empty">No paired device. Pair the adapter in Android\'s Bluetooth settings.</string>
     <string name="bt_pick_obd">Looks like an OBD adapter</string>

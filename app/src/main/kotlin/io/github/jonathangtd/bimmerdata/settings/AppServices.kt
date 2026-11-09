@@ -69,7 +69,7 @@ internal object AutoConnect {
         if (!BluetoothAccess.hasConnectPermission(app)) return
         val repo = LiveRepository.get(app)
         if (repo.connection.value != LiveConnection.Disconnected) return
-        repo.connect(LiveMode.Bluetooth)
+        repo.connect(LiveMode.Bluetooth, automatic = true) // adapter not there: back to "Connect", no error
     }
 
     /** Returns true when it started a USB connection. */

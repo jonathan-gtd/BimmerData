@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -147,10 +148,16 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
     private var engine: AcquisitionEngine? = null
     @Volatile private var connectJob: Job? = null
 
-    /** Connects in [mode] (USB: asks for the USB permission if needed) and starts reading. */
-    fun connect(mode: LiveMode) {
+    /**
+     * Connects in [mode] (USB: asks for the USB permission if needed) and starts reading. The
+     * connection stays [LiveConnection.Connecting] until the cable or adapter actually answers;
+     * after [FirstConnectAttempts] failed tries it ends [LiveConnection.Failed], or quietly
+     * [LiveConnection.Disconnected] when [automatic] (connect at app start: the adapter is
+     * simply not there).
+     */
+    fun connect(mode: LiveMode, automatic: Boolean = false) {
         connectJob?.cancel()
-        connectJob = scope.launch { connectNow(mode) }
+        connectJob = scope.launch { connectNow(mode, automatic) }
     }
 
     /** Stops reading and recording and releases the cable. */
@@ -196,7 +203,7 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
     private fun currentEngine(): AcquisitionEngine? =
         if (_connection.value is LiveConnection.Connected) engine?.takeIf { it.isRunning } else null
 
-    private suspend fun connectNow(mode: LiveMode) {
+    private suspend fun connectNow(mode: LiveMode, automatic: Boolean = false) {
         mutex.withLock {
             shutdownEngine()
             _connection.value = LiveConnection.Connecting(mode)
@@ -233,10 +240,22 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
                     EdInterfaceObd(port) to bt.label!!
                 }
             }
-            val e = AcquisitionEngine(iface, edCatalog)
+            val e = AcquisitionEngine(iface, edCatalog, AcquisitionEngine.Config(firstConnectAttempts = FirstConnectAttempts))
             engine = e
             proxy.attach(e)
             e.start()
+            // "Connected" only once the cable / adapter answered: an adapter that is not there is
+            // not a connection that is "reconnecting"
+            if (e.link.first { it != AcquisitionEngine.LinkState.Pending } == AcquisitionEngine.LinkState.Unreachable) {
+                val why = e.status.value.message
+                shutdownEngine()
+                _connection.value = if (automatic) {
+                    LiveConnection.Disconnected
+                } else {
+                    LiveConnection.Failed(mode, why ?: unreachableMessage(name))
+                }
+                return
+            }
             _connection.value = LiveConnection.Connected(mode, name)
             startService() // every mode: the app says it keeps working in the background
         }
@@ -300,6 +319,9 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
     companion object {
         private const val Tag = "LiveRepository"
         const val SimulationLabel = "Simulation"
+        /** Tries before a connection that never answered is given up (Bluetooth: about 10 s each). */
+        const val FirstConnectAttempts = 3
+        fun unreachableMessage(name: String) = "$name does not answer"
         const val NoCableMessage = "No FTDI cable found (VID 0403). Plug the K+DCAN cable via USB-C OTG."
         const val UsbDeniedMessage = "USB permission denied"
         const val NoAdapterMessage = "No Bluetooth adapter chosen: pick it in Settings › Connection"
