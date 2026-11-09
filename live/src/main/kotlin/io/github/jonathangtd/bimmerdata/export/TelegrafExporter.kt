@@ -114,7 +114,16 @@ class TelegrafExporter(
     private val batchPauseMs: Long = 2_000,
     private val minBackoffMs: Long = 2_000,
     private val maxBackoffMs: Long = 300_000,
+    /** Pause before retrying with a smaller batch. */
+    private val shrinkPauseMs: Long = 500,
 ) {
+    /**
+     * Lines per batch ([BatchSizer]; Int.MAX_VALUE = whole segments): smaller when the server
+     * times out or answers 413 / 502-504, so a slow server gets small batches instead of the same
+     * too-big batch failing forever.
+     */
+    private val sizer = BatchSizer()
+    val batchLimit: Int get() = sizer.limit
     private val _state = MutableStateFlow(ExportState())
     val state: StateFlow<ExportState> = _state.asStateFlow()
 
@@ -134,7 +143,9 @@ class TelegrafExporter(
         jobs = listOf(
             scope.launch(dispatcher) { collectSamples() },
             scope.launch(dispatcher) { sendLoop() },
-            scope.launch { merge(config.drop(1), network.drop(1)).collect { wake.trySend(Unit) } },
+            // no drop(1): a change made before this collector starts must still wake the sender
+            // (one extra wake at start is harmless, the sender just looks again)
+            scope.launch { merge(config, network).collect { wake.trySend(Unit) } },
         )
     }
 
@@ -266,6 +277,12 @@ class TelegrafExporter(
                 is WriteResult.AuthFailed -> authFailedFor = cfg
                 is WriteResult.Retry -> {
                     _state.update { it.copy(phase = ExportPhase.Retrying) }
+                    // a smaller batch is worth trying at once (still with a short pause)
+                    if (r.smaller && shrunk) {
+                        shrunk = false
+                        delay(shrinkPauseMs)
+                        continue
+                    }
                     // wait, but wake up early when the settings or the network change
                     withTimeoutOrNull(backoff) { merge(config.drop(1), network.drop(1)).first() }
                     backoff = (backoff * 2).coerceAtMost(maxBackoffMs)
@@ -274,13 +291,18 @@ class TelegrafExporter(
         }
     }
 
+    /** The last failure lowered [batchLimit] (the next try uses smaller batches). */
+    private var shrunk = false
+
     /** Sends the oldest batch; null when the queue is empty. Deletes it only on 2xx. */
     private suspend fun sendOne(cfg: ExportConfig): WriteResult? = sendLock.withLock {
-        val batch = queue.next(includeOpen = true) ?: return@withLock null
+        val batch = queue.next(includeOpen = true, maxLines = batchLimit) ?: return@withLock null
         val r = clientFactory(cfg).write(batch.body, gzipped = batch.gzip)
+        shrunk = false
         when (r) {
             WriteResult.Ok -> {
                 queue.remove(batch)
+                sizer.ok()
                 _state.update { it.copy(sentLines = it.sentLines + batch.lines, lastSuccessMs = clock(), lastError = null) }
             }
             is WriteResult.Rejected -> {
@@ -288,7 +310,10 @@ class TelegrafExporter(
                 _state.update { it.copy(lastError = "Refused by the server, kept aside: ${r.message}") }
             }
             is WriteResult.AuthFailed -> _state.update { it.copy(lastError = "Authentication failed: ${r.message}") }
-            is WriteResult.Retry -> _state.update { it.copy(lastError = r.message) }
+            is WriteResult.Retry -> {
+                if (r.smaller) shrunk = sizer.tooBig(batch.lines)
+                _state.update { it.copy(lastError = r.message) }
+            }
         }
         refreshQueueState()
         r

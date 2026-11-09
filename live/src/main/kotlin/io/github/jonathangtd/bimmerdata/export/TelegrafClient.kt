@@ -5,6 +5,7 @@ package io.github.jonathangtd.bimmerdata.export
 
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.net.SocketTimeoutException
 import java.net.HttpURLConnection
 import java.net.URI
 import java.util.Base64
@@ -27,15 +28,16 @@ sealed interface WriteResult {
 
     /**
      * Anything that may work later: network error, timeout, 5xx, 429, 404 (wrong path or server
-     * not ready), other 4xx. The batch stays queued and is retried.
+     * not ready), other 4xx. The batch stays queued and is retried. [smaller]: the batch may be
+     * too big for the server (timeout, 413, 502, 503, 504): retry with fewer lines.
      */
-    data class Retry(val message: String) : WriteResult
+    data class Retry(val message: String, val smaller: Boolean = false) : WriteResult
 
     /** 401 / 403: wrong token or password; keep the batch, stop until the settings change. */
     data class AuthFailed(val message: String) : WriteResult
 
     /**
-     * 400 / 413 / 422: the server says this batch itself is wrong (bad line protocol, too big).
+     * 400 / 422: the server says this batch itself is wrong (bad line protocol).
      * It is moved aside (`rejected/`), never deleted automatically.
      */
     data class Rejected(val message: String) : WriteResult
@@ -100,9 +102,12 @@ class TelegrafClient(
             return when {
                 code in 200..299 -> WriteResult.Ok
                 code == 401 || code == 403 -> WriteResult.AuthFailed(detail)
-                code == 400 || code == 413 || code == 422 -> WriteResult.Rejected(detail)
+                code == 400 || code == 422 -> WriteResult.Rejected(detail)
+                code in SMALLER_CODES -> WriteResult.Retry(detail, smaller = true)
                 else -> WriteResult.Retry(detail)
             }
+        } catch (e: SocketTimeoutException) {
+            return WriteResult.Retry(e.message ?: "Timeout", smaller = true)
         } catch (e: IOException) {
             return WriteResult.Retry(e.message ?: e.javaClass.simpleName)
         } finally {
@@ -125,6 +130,9 @@ class TelegrafClient(
             require(!u.host.isNullOrBlank()) { "The URL has no host" }
             return u
         }
+
+        /** Answers after which a smaller batch may go through (too large, gateway / timeout errors). */
+        val SMALLER_CODES = setOf(408, 413, 502, 503, 504)
 
         fun isValidUrl(url: String): Boolean = runCatching { parse(url) }.isSuccess
 

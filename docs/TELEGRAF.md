@@ -19,7 +19,7 @@ Everything needed is in [deploy/telegraf/](../deploy/telegraf/):
 
 | File | What |
 |---|---|
-| `telegraf.conf` | `influxdb_v2_listener` input (token) → disk buffer → `postgresql` output (hypertable) |
+| `telegraf.conf` | `influxdb_v2_listener` input (token) → buffer → `postgresql` output (hypertable) |
 | `timescaledb.sql` | Optional: database, user and table by hand |
 | `docker-compose.yml`, `.env.example` | Telegraf + TimescaleDB + Grafana, for a fresh start |
 | `grafana/bimmerdata-dashboard.json` | Grafana dashboard to import (curves, table, map of the GPS track) |
@@ -48,9 +48,8 @@ In Grafana (`http://<server>:3000`, user `admin`), import
 Add the `[[inputs.influxdb_v2_listener]]` and `[[outputs.postgresql]]` sections of
 `telegraf.conf` to your configuration (keep `namepass = ["bimmerdata"]` so other metrics do not
 land in that database), with the environment variables `BIMMERDATA_TOKEN` and `PG_CONNECTION`.
-Also copy the `buffer_strategy`, `buffer_directory` and `metric_buffer_limit` lines of `[agent]`
-(see [No data lost](#no-data-lost)): the directory must exist, be writable by the `telegraf`
-user, and survive restarts (e.g. `/var/lib/telegraf/buffer`).
+Check `metric_buffer_limit` in `[agent]` (see [No data lost](#no-data-lost)), and read the
+note on the disk buffer there before turning it on.
 The PostgreSQL user needs the right to create tables in the schema, and the database needs the
 `timescaledb` extension (`CREATE EXTENSION timescaledb;`). Without TimescaleDB, remove the
 `create_hypertable` line: it then works with plain PostgreSQL.
@@ -141,7 +140,12 @@ Goal: a point read in the car reaches TimescaleDB, or stays somewhere you can se
   **HTTP 2xx** for its batch.
 - Network errors, timeouts, 5xx, 429, **404** and other temporary answers: the batch stays and is
   retried (2 s up to 5 min between tries). 401/403: it waits until the token or password is fixed.
-- A batch Telegraf refuses as invalid (**400**, 413, 422) is moved to `telegraf_queue/rejected/`,
+- **A slow server gets smaller batches.** A timeout, 413, 502, 503 or 504 (typically Telegraf's
+  listener taking more than its 10 s behind a reverse proxy) halves the batch size, down to 50
+  lines; only the lines of a batch that got a 2xx leave the phone (the rest of the batch file is
+  rewritten first, synced, then the old file is deleted). The size grows again after 10 batches
+  in a row went through, never back to a size that failed (tried again after 100 batches).
+- A batch Telegraf refuses as invalid (**400**, 422) is moved to `telegraf_queue/rejected/`,
   out of the upload loop, and **kept**: the page shows how many, with **Retry** (put them back in
   the queue, e.g. after fixing the server), **Export** (one `.lp.gz` file: `zcat` gives the line
   protocol back) and **Delete** (only on your request, with a confirmation).
@@ -158,26 +162,29 @@ Goal: a point read in the car reaches TimescaleDB, or stays somewhere you can se
 - Independently, the **CSV recording** is a complete local copy of what was recorded.
 
 **On the server**, Telegraf answers 204 as soon as the points are in its buffer, before they are
-in the database. With the default memory buffer, a database outage plus a Telegraf restart (or a
-crash) would lose them. The example `telegraf.conf` therefore sets:
+in the database. The example `telegraf.conf` keeps Telegraf's default **memory buffer**: the
+points are written every 10 s, and at a normal stop. They are lost only if Telegraf crashes
+(`kill -9`, power cut) before that write, or is restarted while the database is down, or if more
+than `metric_buffer_limit` points pile up during an outage (Telegraf then drops the oldest and
+logs it).
 
 ```toml
 [agent]
-  buffer_strategy = "disk"                       # points wait on disk, not only in memory
-  buffer_directory = "/var/lib/telegraf/buffer"  # persistent, writable by telegraf
-  metric_buffer_limit = 20000000                 # room for days of driving
+  metric_buffer_limit = 1000000                  # about 1 KB of memory per point
 
 [[outputs.postgresql]]
   startup_error_behavior = "retry"               # start even if the database is down
 ```
 
-The limit of the guarantee: a 204 means "received by Telegraf". With the disk buffer, the points
-then survive a Telegraf restart, a crash (`kill -9`) and a database outage. They are lost only if
-the server's disk itself is lost, or if more than `metric_buffer_limit` points pile up while the
-database is down (Telegraf then drops the oldest and logs it). In Docker the buffer is the
-`telegraf-buffer` volume of the compose file; if Telegraf cannot write there, it says so in
-`docker compose logs telegraf` (fix the owner of the volume to the `telegraf` user). The Docker
-stack itself was not run here (only Telegraf, PostgreSQL and TimescaleDB on Debian).
+**Disk buffer (optional).** `buffer_strategy = "disk"` with a persistent `buffer_directory` makes
+the points survive a crash and a restart during an outage too, but Telegraf 1.40 syncs every
+point to disk, once per output that receives it. Measured on a SATA SSD: about 9 ms per point
+with two outputs, so batches of 1000 points took more than the listener's 10 s and came back as
+502 through the reverse proxy. The app copes (smaller batches), but uploads are limited to about
+100-200 points per second. If you turn it on, make sure only the `bimmerdata` output receives
+these points (`namepass`), and raise `read_timeout` / `write_timeout` of the listener. In Docker
+the directory is the `telegraf-buffer` volume of the compose file. The Docker stack itself was
+not run here (only Telegraf, PostgreSQL and TimescaleDB on Debian).
 
 The token or password is stored encrypted with the Android Keystore and is never returned by the
 REST API. Everything else can also be read and changed through the API

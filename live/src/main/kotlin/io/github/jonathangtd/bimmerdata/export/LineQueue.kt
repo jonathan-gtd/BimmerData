@@ -6,6 +6,8 @@ package io.github.jonathangtd.bimmerdata.export
 import java.io.File
 import java.io.FileOutputStream
 import java.io.RandomAccessFile
+import java.io.ByteArrayOutputStream
+import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 
 /**
@@ -16,6 +18,11 @@ import java.util.zip.GZIPOutputStream
  *   is closed: gzip-compressed (about 10× smaller) into `seg-<n>-<lines>-<rawBytes>.lp.gz`, synced
  *   to disk (fsync), and only then the raw file is deleted. A closed segment is one upload batch,
  *   sent as-is with `Content-Encoding: gzip`.
+ * - A slow server can ask for smaller batches ([next] with `maxLines`): the first lines of the
+ *   oldest segment are sent; after the 2xx the rest is written as a new file of the same sequence
+ *   number (synced, then renamed) before the old file is deleted. A crash in between leaves two
+ *   files with one sequence number: at start the one with fewer lines (written after the 2xx) is
+ *   kept, so nothing is lost and nothing is sent twice.
  * - [remove] (after a 2xx) is the only way a batch is deleted. [reject] (HTTP 400: the server
  *   will never accept it) moves it to `rejected/`, where it stays until the user retries
  *   ([retryRejected]), exports or deletes it by hand.
@@ -54,8 +61,18 @@ class LineQueue(
         val reserveBytes: Long = DEFAULT_RESERVE_BYTES,
     )
 
-    /** One upload batch: a closed segment, gzip-compressed. */
-    class Batch internal constructor(internal val file: File, val body: ByteArray, val lines: Int) {
+    /**
+     * One upload batch: a closed segment, gzip-compressed, or only its first [lines] lines when
+     * [partial] (a smaller batch for a slow server).
+     */
+    class Batch internal constructor(
+        internal val file: File,
+        val body: ByteArray,
+        val lines: Int,
+        val partial: Boolean = false,
+        /** Raw bytes of the lines sent, when [partial]. */
+        internal val rawPrefix: Int = 0,
+    ) {
         /** [body] is gzip data (send it with `Content-Encoding: gzip`). */
         val gzip: Boolean get() = true
     }
@@ -84,9 +101,13 @@ class LineQueue(
         dir.listFiles { f -> f.isFile && f.name.endsWith(".tmp") }.orEmpty().forEach { it.delete() }
         val closed = dir.listFiles { f -> f.isFile && parseClosed(f.name) != null }.orEmpty()
         val closedSeqs = HashSet<Long>()
-        for (f in closed) {
-            val (seq, lines, raw) = parseClosed(f.name)!!
-            segments += Segment(f, seq, f.length(), lines, raw)
+        // Two files for one sequence number: a crash after a partial send was acknowledged and its
+        // rest written; the shorter one is that rest, the longer one still holds the sent lines.
+        for ((seq, files) in closed.groupBy { parseClosed(it.name)!!.first }) {
+            val keep = files.minBy { parseClosed(it.name)!!.second }
+            files.filter { it != keep }.forEach { it.delete() }
+            val (_, lines, raw) = parseClosed(keep.name)!!
+            segments += Segment(keep, seq, keep.length(), lines, raw)
             closedSeqs += seq
         }
         val raws = dir.listFiles { f -> f.isFile && parseOpen(f.name) != null }.orEmpty().sortedBy { parseOpen(it.name) }
@@ -158,20 +179,41 @@ class LineQueue(
         if ((open?.lines ?: 0) > 0) closeOpen()
     }
 
-    /** Oldest batch, or null. With [includeOpen], the open segment is closed and sent too. */
+    /**
+     * Oldest batch, or null. With [includeOpen], the open segment is closed and sent too. A
+     * segment of more than [maxLines] lines gives a partial batch of its first [maxLines] lines.
+     */
     @Synchronized
-    fun next(includeOpen: Boolean): Batch? {
+    fun next(includeOpen: Boolean, maxLines: Int = Int.MAX_VALUE): Batch? {
         if (segments.isEmpty() && includeOpen) seal()
         val seg = segments.firstOrNull() ?: return null
-        return Batch(seg.file, seg.file.readBytes(), seg.lines)
+        val limit = maxLines.coerceAtLeast(1)
+        if (seg.lines <= limit) return Batch(seg.file, seg.file.readBytes(), seg.lines)
+        val raw = gunzip(seg.file)
+        val end = endOfLine(raw, limit)
+        return Batch(seg.file, gzipBytes(raw, 0, end), limit, partial = true, rawPrefix = end)
     }
 
-    /** Telegraf answered 2xx for [batch]: the only way a queued point is deleted. */
+    /**
+     * Telegraf answered 2xx for [batch]: the only way a queued point is deleted. For a partial
+     * batch only its lines go: the rest of the segment is written to a new file first.
+     */
     @Synchronized
     fun remove(batch: Batch) {
         val i = segments.indexOfFirst { it.file == batch.file }
         if (i < 0) return
-        segments.removeAt(i).file.delete()
+        val seg = segments[i]
+        if (!batch.partial || batch.lines >= seg.lines) {
+            segments.removeAt(i).file.delete()
+            return
+        }
+        val raw = gunzip(seg.file)
+        val restLines = seg.lines - batch.lines
+        val restRaw = raw.size - batch.rawPrefix
+        val target = File(dir, closedName(seg.seq, restLines, restRaw.toLong()))
+        writeSynced(target, gzipBytes(raw, batch.rawPrefix, raw.size))
+        segments[i] = Segment(target, seg.seq, target.length(), restLines, restRaw.toLong())
+        seg.file.delete()
     }
 
     /**
@@ -287,6 +329,32 @@ class LineQueue(
         check(tmp.renameTo(target)) { "Cannot rename ${tmp.name}" }
         raw.delete()
         return Segment(target, seq, target.length(), lines, rawBytes)
+    }
+
+    private fun gunzip(f: File): ByteArray = GZIPInputStream(f.inputStream().buffered(), 64 * 1024).use { it.readBytes() }
+
+    private fun gzipBytes(data: ByteArray, from: Int, to: Int): ByteArray {
+        val out = ByteArrayOutputStream((to - from) / 8 + 64)
+        GZIPOutputStream(out, 64 * 1024).use { it.write(data, from, to - from) }
+        return out.toByteArray()
+    }
+
+    /** Index just after the [lines]-th line end of [data] (its length if it has fewer lines). */
+    private fun endOfLine(data: ByteArray, lines: Int): Int {
+        var n = 0
+        for (i in data.indices) if (data[i] == '\n'.code.toByte() && ++n == lines) return i + 1
+        return data.size
+    }
+
+    /** Writes [data] to [target] through a synced .tmp file and a rename. */
+    private fun writeSynced(target: File, data: ByteArray) {
+        val tmp = File(dir, target.name + ".tmp")
+        FileOutputStream(tmp).use { fos ->
+            fos.write(data)
+            fos.flush()
+            fos.fd.sync()
+        }
+        check(tmp.renameTo(target)) { "Cannot rename " + tmp.name }
     }
 
     private fun trimPartialLine(f: File) {

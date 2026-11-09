@@ -29,7 +29,7 @@ services:
       PG_CONNECTION: "host=timescaledb user=telegraf password=${PG_PASSWORD} dbname=bimmerdata sslmode=disable"
     volumes:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
-      # disk buffer (buffer_directory): points accepted from the phone survive a restart
+      # only for the optional disk buffer of telegraf.conf (buffer_directory)
       - telegraf-buffer:/var/lib/telegraf/buffer
     ports:
       - "8186:8186"
