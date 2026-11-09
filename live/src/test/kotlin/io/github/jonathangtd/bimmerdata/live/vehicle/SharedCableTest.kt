@@ -106,13 +106,15 @@ class SharedCableTest {
         val r = rig()
         try {
             r.startReading()
-            val defines = r.dme.recordDefinitions
-            // Tool32-style: the user's own STATUS_MESSWERTBLOCK_LESEN with another id list redefines F0
-            val sets = r.engine.exclusive("Tool32: MSV70 STATUS_MESSWERTBLOCK_LESEN") { a ->
-                a.executeJob("msv70", "STATUS_MESSWERTBLOCK_LESEN", "3;0x4600")
+            // Tool32-style: the user's own STATUS_MESSWERTBLOCK_LESEN with another id list redefines F0.
+            // Counted inside the operation: once it returns the engine may already define its block again.
+            val (sets, defines, afterJob) = r.engine.exclusive("Tool32: MSV70 STATUS_MESSWERTBLOCK_LESEN") { a ->
+                val before = r.dme.recordDefinitions
+                val out = a.executeJob("msv70", "STATUS_MESSWERTBLOCK_LESEN", "3;0x4600")
+                Triple(out, before, r.dme.recordDefinitions)
             }
             assertEquals("OKAY", sets.getOrNull(1)?.get("JOB_STATUS")?.opData)
-            assertEquals(defines + 1, r.dme.recordDefinitions, "the user's job defined F0 with one value")
+            assertEquals(defines + 1, afterJob, "the user's job defined F0 with one value")
             awaitUntil("block defined again") { r.dme.recordDefinitions >= defines + 1 + blockIds.size }
             val t = System.currentTimeMillis()
             awaitUntil("fresh samples after the redefinition") { r.measurements.all { (r.engine.samples.value[it.id]?.timestampMs ?: 0) >= t } }
@@ -121,6 +123,27 @@ class SharedCableTest {
             assertTrue(rpm in 500.0..7500.0, "rpm decoded with the right layout: $rpm")
             assertTrue(oil in -40.0..160.0, "oil temperature decoded with the right layout: $oil")
             assertTrue(r.engine.status.value.message!!.contains("native"), r.engine.status.value.message)
+        } finally {
+            r.engine.close()
+        }
+    }
+
+    @Test
+    fun `nothing else uses the cable while an operation runs`() = runBlocking {
+        val r = rig()
+        try {
+            r.startReading()
+            repeat(5) { i ->
+                val (sent, after) = r.engine.exclusive("exclusive check $i") { a ->
+                    val start = r.fake.requests.size
+                    a.executeJob("komb87", "IDENT")
+                    val sent = r.fake.requests.drop(start).toList()
+                    Thread.sleep(150) // the engine would have run several read cycles by now
+                    sent to r.fake.requests.drop(start).toList()
+                }
+                assertTrue(sent.isNotEmpty() && sent.all { target(it) == 0x60 }, "only the operation's KOMBI frames: ${sent.map { target(it) }}")
+                assertEquals(sent.size, after.size, "no frame from the engine while the operation holds the cable")
+            }
         } finally {
             r.engine.close()
         }

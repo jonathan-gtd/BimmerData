@@ -41,6 +41,9 @@ class SimulatedKLine(
 
     val writes: MutableList<ByteArray> = java.util.Collections.synchronizedList(ArrayList())
     val requests: MutableList<ByteArray> = java.util.Collections.synchronizedList(ArrayList())
+
+    /** Copy of [requests], safe to iterate while another thread keeps sending (the list itself is not). */
+    fun requestsSnapshot(): List<ByteArray> = synchronized(requests) { requests.toList() }
     @Volatile var checksumErrors: Int = 0
         private set
     @Volatile var baudRate: Int = 9600
