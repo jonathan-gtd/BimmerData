@@ -82,7 +82,7 @@ class SimulatedKLine(
     override fun write(data: ByteArray, offset: Int, length: Int) {
         checkOpen()
         val bytes = data.copyOfRange(offset, offset + length)
-        writes.add(bytes)
+        keepLast(writes, bytes)
         lock.withLock {
             val now = System.nanoTime()
             var t = maxOf(now, lineBusyUntil)
@@ -112,7 +112,7 @@ class SimulatedKLine(
             if (pending.size < telLength + 1) return
             val request = ByteArray(telLength + 1) { pending[it] }
             repeat(telLength + 1) { pending.removeAt(0) }
-            requests.add(request)
+            keepLast(requests, request)
             if (EdInterfaceBase.calcChecksumBmwFast(request, telLength) != request[telLength]) {
                 checksumErrors++
                 continue // the ECU ignores corrupted telegrams
@@ -205,5 +205,16 @@ class SimulatedKLine(
                 { request -> simulator.respond(request)?.let { listOf(Reply(it, simulator.responseDelayMs(request))) } ?: emptyList() },
                 realisticTiming,
             )
+    }
+}
+
+/** Frames kept by [SimulatedKLine]: the app may run the simulation for hours. */
+private const val MaxKeptFrames = 10_000
+
+private fun keepLast(list: MutableList<ByteArray>, frame: ByteArray) {
+    synchronized(list) {
+        list.add(frame)
+        val extra = list.size - MaxKeptFrames
+        if (extra > 0) list.subList(0, extra).clear()
     }
 }
