@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bg_channel_name">Activité en arrière-plan</string>
+    <string name="bg_channel_description">Affichée tant que BimmerData reste connecté à la voiture, enregistre ou exporte, même écran éteint.</string>
+    <string name="bg_title">BimmerData tourne en arrière-plan</string>
+    <string name="bg_mode_usb">Câble USB %1$s</string>
+    <string name="bg_mode_bluetooth">Bluetooth %1$s</string>
+    <string name="bg_mode_simulation">Simulation</string>
+    <string name="bg_connecting">connexion…</string>
+    <string name="bg_reads_per_second">%1$s lect./s</string>
+    <string name="bg_no_answer">pas de réponse de la voiture</string>
+    <string name="bg_starting">démarrage</string>
+    <string name="bg_recording">Enregistrement %1$s (%2$s lignes)</string>
+    <string name="bg_telegraf_live">Telegraf en direct</string>
+    <string name="bg_profile">Profil %1$s</string>
+    <string name="bg_action_stop_recording">Arrêter l’enregistrement</string>
+    <string name="bg_action_disconnect">Déconnecter</string>
+
+    <string name="bg_notice">Continue en arrière-plan : %1$s</string>
+    <string name="bg_task_connection">connexion</string>
+    <string name="bg_task_recording">enregistrement</string>
+    <string name="bg_task_telegraf">Telegraf en direct</string>
+    <string name="bg_notice_more">Qu’est-ce que ça veut dire ?</string>
+    <string name="bg_help_title">BimmerData continue de travailler</string>
+    <string name="bg_help_text">Tant que BimmerData est connecté à la voiture, il continue de lire, d’enregistrer et d’exporter même si vous quittez l’appli ou éteignez l’écran. Une notification l’indique (« BimmerData tourne en arrière-plan »), avec la cadence de lecture et la durée de l’enregistrement.\n\nPour arrêter : Déconnecter, depuis la pastille de connexion ou depuis la notification. L’enregistrement s’arrête avec la connexion.</string>
+    <string name="bg_help_ok">OK</string>
+    <string name="bg_notifications_off">Les notifications sont désactivées : rien n’indiquera que BimmerData continue en arrière-plan.</string>
+    <string name="bg_notifications_allow">Autoriser</string>
+</resources>

@@ -208,8 +208,10 @@ object PhoneSensorTexts {
  * position is recorded. If Android refuses the location type (e.g. started from the background),
  * it falls back to connectedDevice alone: the ECU reading must not depend on the GPS.
  */
-internal fun startAcquisitionForeground(service: Service, id: Int, notification: Notification) {
-    val base = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+internal fun startAcquisitionForeground(
+    service: Service, id: Int, notification: Notification,
+    base: Int = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE,
+) {
     val gps = AppSettings.get(service).state.value.gps.enabled && GpsRuntime.hasPermission(service)
     if (gps) {
         try {
