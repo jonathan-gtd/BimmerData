@@ -70,7 +70,12 @@ class BluetoothSppPort(
         if (device.type == BluetoothDevice.DEVICE_TYPE_LE) {
             throw IOException("$displayName is a Bluetooth LE device: only Bluetooth classic (SPP) adapters are supported")
         }
-        adapter.cancelDiscovery()
+        // A running discovery slows RFCOMM down, but cancelling it needs BLUETOOTH_SCAN, which the app
+        // does not ask for (it only connects to paired adapters): best effort only.
+        try {
+            adapter.cancelDiscovery()
+        } catch (_: SecurityException) {
+        }
         val s = connectSocket(device)
         failure = null
         lock.withLock {

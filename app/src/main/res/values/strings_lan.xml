@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lan_allow">Allow</string>
+    <string name="lan_app_settings">App settings</string>
+    <string name="lan_api_denied">Local network access is denied: the API is not reachable from the other devices of your network (only from this phone). Allow it, or in the app settings: Permissions › Nearby devices.</string>
+    <string name="lan_telegraf_denied">Local network access is denied: this Telegraf server is on your local network and cannot be reached. Allow it, or in the app settings: Permissions › Nearby devices.</string>
+    <string name="lan_test_denied">Not tested: local network access is denied.</string>
+    <string name="lan_translations_denied">Local network access is denied: this translation source is on your local network and cannot be reached.</string>
+</resources>

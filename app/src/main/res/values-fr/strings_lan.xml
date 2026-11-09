@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lan_allow">Autoriser</string>
+    <string name="lan_app_settings">Réglages de l’appli</string>
+    <string name="lan_api_denied">L’accès au réseau local est refusé : l’API n’est pas joignable depuis les autres appareils de votre réseau (seulement depuis ce téléphone). Autorisez-le, ou dans les réglages de l’appli : Autorisations › Appareils à proximité.</string>
+    <string name="lan_telegraf_denied">L’accès au réseau local est refusé : ce serveur Telegraf est sur votre réseau local et n’est pas joignable. Autorisez-le, ou dans les réglages de l’appli : Autorisations › Appareils à proximité.</string>
+    <string name="lan_test_denied">Pas de test : l’accès au réseau local est refusé.</string>
+    <string name="lan_translations_denied">L’accès au réseau local est refusé : cette source de traductions est sur votre réseau local et n’est pas joignable.</string>
+</resources>

@@ -48,7 +48,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.jonathangtd.bimmerdata.R
 import io.github.jonathangtd.bimmerdata.gauges.currentLocale
+import io.github.jonathangtd.bimmerdata.export.ExportMode
 import io.github.jonathangtd.bimmerdata.live.AcquisitionState
+import io.github.jonathangtd.bimmerdata.live.BackgroundSnapshot
+import io.github.jonathangtd.bimmerdata.live.BackgroundWork
+import io.github.jonathangtd.bimmerdata.live.RecordingState
 import io.github.jonathangtd.bimmerdata.live.AcquisitionStatus
 import io.github.jonathangtd.bimmerdata.live.LiveConnection
 import io.github.jonathangtd.bimmerdata.live.LiveMode
@@ -92,7 +96,11 @@ fun ConnectionPill(modifier: Modifier = Modifier) {
     val connection by repo.connection.collectAsStateWithLifecycle()
     val status by repo.liveDataSource.status.collectAsStateWithLifecycle()
     val s by settings.state.collectAsStateWithLifecycle()
-    ConnectionPillContent(connection, status, s.lastMode, onConnect = repo::connect, onDisconnect = repo::disconnect, modifier = modifier)
+    val rec by repo.recorder.state.collectAsStateWithLifecycle()
+    ConnectionPillContent(
+        connection, status, s.lastMode, onConnect = repo::connect, onDisconnect = repo::disconnect, modifier = modifier,
+        recording = rec.recording,
+    )
 }
 
 /**
@@ -113,6 +121,10 @@ fun ConnectionPillContent(
     onConnect: (LiveMode) -> Unit,
     onDisconnect: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Recording in progress: shown in the "keeps running in the background" notice. */
+    recording: Boolean = false,
+    /** Show that the app keeps working off screen while connected ([BackgroundNotice]). */
+    showBackgroundNotice: Boolean = true,
 ) {
     val context = LocalContext.current
     var pendingMode by remember { mutableStateOf<LiveMode?>(null) }
@@ -132,7 +144,8 @@ fun ConnectionPillContent(
     var menu by remember { mutableStateOf(false) }
     val tone = pillTone(connection, status)
 
-    Box(modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Box {
         when (connection) {
             LiveConnection.Disconnected, is LiveConnection.Failed -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 ConnectButton(
@@ -159,6 +172,17 @@ fun ConnectionPillContent(
                 MenuEntry(stringResource(R.string.cp_disconnect), null, Cockpit.Danger) { menu = false; onDisconnect() }
             }
         }
+    }
+    if (showBackgroundNotice) {
+        val tg = AppSettings.get(context).state.collectAsStateWithLifecycle().value.telegraf
+        val tasks = BackgroundWork.tasks(
+            BackgroundSnapshot(
+                connection, status, RecordingState(recording = recording),
+                telegrafLive = tg.enabled && tg.mode == ExportMode.Live && tg.url.isNotBlank(),
+            ),
+        )
+        BackgroundNotice(tasks)
+    }
     }
 }
 

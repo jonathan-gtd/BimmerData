@@ -12,7 +12,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ServiceInfo
 import android.hardware.usb.UsbManager
+import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
@@ -20,22 +22,35 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import io.github.jonathangtd.bimmerdata.R
+import io.github.jonathangtd.bimmerdata.export.ExportMode
+import io.github.jonathangtd.bimmerdata.profiles.ProfileStore
+import io.github.jonathangtd.bimmerdata.settings.AppSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /**
- * Foreground service (type connectedDevice) that keeps the USB or Bluetooth acquisition alive with
- * the screen off: ongoing notification with the state, cycles/s and recording state, and Stop /
- * Record actions. Started by [LiveRepository.connect] for a real car, stops itself when the repository
- * disconnects. Holds a partial wake lock while running so the read loop is not suspended.
+ * Foreground service that keeps BimmerData working with the screen off, and says so: it runs while
+ * a connection is open or being opened, in every mode (see [BackgroundWork]).
+ *
+ * Service type (Android 14+ needs one, and each type has its own prerequisites):
+ * - cable and Bluetooth: `connectedDevice` (prerequisite: the USB permission of the cable, or
+ *   BLUETOOTH_CONNECT);
+ * - simulation: `specialUse` on Android 14+ (no device, no network: none of the standard types fits a simulated
+ *   car; the app is not distributed on Play, the subtype is declared in the manifest);
+ * - plus `location` while the GPS position is recorded ([io.github.jonathangtd.bimmerdata.gps.startAcquisitionForeground]).
+ * The Telegraf export needs no type of its own: the live export only runs while connected, and the
+ * "after the trip" upload is a JobScheduler job.
+ *
+ * Ongoing, silent notification on its own channel, refreshed at most once a second: interface,
+ * read rate, recording time and rows, live export, active profile; actions Stop recording /
+ * Disconnect; a tap opens the app. Holds a partial wake lock so the read loop is not suspended.
  */
 class AcquisitionService : Service() {
 
@@ -68,51 +83,48 @@ class AcquisitionService : Service() {
         if (observing) return
         observing = true
         scope.launch {
-            combine(repo.connection, repo.liveDataSource.status, repo.recorder.state) { c, s, r -> Triple(c, s, r) }
-                .collectLatest { (connection, status, recording) ->
-                    if (connection is LiveConnection.Disconnected || connection is LiveConnection.Failed) {
-                        stopNow()
-                        return@collectLatest
-                    }
-                    if (foreground) {
-                        runCatching {
-                            getSystemService(NotificationManager::class.java).notify(NotificationId, buildNotification(connection, status, recording))
-                        }
-                    }
-                    delay(1000) // at most one notification update per second
+            repo.connection.first { !BackgroundWork.needsService(BackgroundSnapshot(it)) }
+            stopNow()
+        }
+        scope.launch {
+            while (isActive) {
+                if (foreground) {
+                    runCatching { getSystemService(NotificationManager::class.java).notify(NotificationId, buildNotification()) }
                 }
+                delay(1000) // at most one update per second (the recording time moves every second)
+            }
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ActionStop -> {
+            ActionDisconnect -> {
                 repo.disconnect()
                 if (!foreground) stopSelf()
                 return START_NOT_STICKY
             }
-            ActionRecord -> {
-                if (repo.isConnected) repo.toggleRecording()
+            ActionStopRecording -> {
+                if (repo.recorder.state.value.recording) repo.recorder.stop()
                 if (!foreground) stopSelf()
                 return START_NOT_STICKY
             }
         }
         // every startForegroundService() must be followed by startForeground(), even when already running
-        run {
-            try {
-                // connectedDevice, plus location while the GPS position is recorded
-                io.github.jonathangtd.bimmerdata.gps.startAcquisitionForeground(
-                    this, NotificationId,
-                    buildNotification(repo.connection.value, repo.liveDataSource.status.value, repo.recorder.state.value),
-                )
-                foreground = true
-                acquireWakeLock()
-                observe()
-            } catch (ex: Exception) {
-                // Android 14+: no USB permission any more, or started from the background
-                Log.w(Tag, "startForeground failed, acquisition continues without the service", ex)
-                stopSelf()
+        try {
+            // specialUse exists from Android 14; before, connectedDevice has no prerequisite
+            val base = if (repo.connection.value.mode == LiveMode.Simulation && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            } else {
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
             }
+            io.github.jonathangtd.bimmerdata.gps.startAcquisitionForeground(this, NotificationId, buildNotification(), base)
+            foreground = true
+            acquireWakeLock()
+            observe()
+        } catch (ex: Exception) {
+            // Android 14+: prerequisite missing (USB permission gone…) or started from the background
+            Log.w(Tag, "startForeground failed, the connection continues without the service", ex)
+            stopSelf()
         }
         return START_NOT_STICKY
     }
@@ -142,43 +154,27 @@ class AcquisitionService : Service() {
         }
     }
 
-    private fun buildNotification(connection: LiveConnection, status: AcquisitionStatus, recording: RecordingState): Notification {
-        val title = when (connection) {
-            is LiveConnection.Connected -> when (status.state) {
-                AcquisitionState.Running -> "Live data · " + String.format(Locale.ROOT, "%.1f", status.cyclesPerSecond) + " reads/s"
-                AcquisitionState.Connecting -> "Connecting to the car…"
-                AcquisitionState.Error -> "No answer from the car"
-                AcquisitionState.Stopped -> "Live data stopped"
-            }
-            is LiveConnection.Connecting -> "Connecting…"
-            is LiveConnection.Failed -> "Connection failed"
-            LiveConnection.Disconnected -> "Disconnected"
-        }
-        val text = buildString {
-            when (connection) {
-                is LiveConnection.Connected -> append(connection.label)
-                is LiveConnection.Failed -> append(connection.message)
-                else -> Unit
-            }
-            if (status.state == AcquisitionState.Error && status.message != null) append(" · ").append(status.message)
-            if (recording.recording) append(" · REC ").append(recording.rows).append(" rows")
-        }
+    private fun buildNotification(): Notification {
+        val content = BackgroundWork.notification(snapshot(this), texts(this))
         val open = packageManager.getLaunchIntentForPackage(packageName)?.let {
             PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }
         return NotificationCompat.Builder(this, ChannelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(title)
-            .setContentText(text)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setContentTitle(content.title)
+            .setContentText(content.text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(content.text))
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setSilent(true)
+            .setShowWhen(false)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .setContentIntent(open)
-            .addAction(0, if (recording.recording) "Stop recording" else "Record", actionIntent(ActionRecord, 1))
-            .addAction(0, "Stop", actionIntent(ActionStop, 2))
+            .apply {
+                if (content.canStopRecording) addAction(0, getString(R.string.bg_action_stop_recording), actionIntent(ActionStopRecording, 1))
+            }
+            .addAction(0, getString(R.string.bg_action_disconnect), actionIntent(ActionDisconnect, 2))
             .build()
     }
 
@@ -190,17 +186,53 @@ class AcquisitionService : Service() {
 
     companion object {
         private const val Tag = "AcquisitionService"
-        const val ChannelId = "live_acquisition"
+        /** Own channel: "Background activity", low importance (no sound, no heads-up). */
+        const val ChannelId = "background_activity"
+        private const val OldChannelId = "live_acquisition"
         const val NotificationId = 42
-        const val ActionStop = "io.github.jonathangtd.bimmerdata.live.STOP"
-        const val ActionRecord = "io.github.jonathangtd.bimmerdata.live.TOGGLE_RECORD"
+        const val ActionDisconnect = "io.github.jonathangtd.bimmerdata.live.DISCONNECT"
+        const val ActionStopRecording = "io.github.jonathangtd.bimmerdata.live.STOP_RECORDING"
 
         fun createChannel(context: Context) {
-            val channel = NotificationChannel(ChannelId, "Live data acquisition", NotificationManager.IMPORTANCE_LOW).apply {
-                description = "Shown while BimmerData reads live values from the car"
+            val nm = context.getSystemService(NotificationManager::class.java)
+            val channel = NotificationChannel(ChannelId, context.getString(R.string.bg_channel_name), NotificationManager.IMPORTANCE_LOW).apply {
+                description = context.getString(R.string.bg_channel_description)
                 setShowBadge(false)
+                setSound(null, null)
+                enableVibration(false)
             }
-            context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+            nm.createNotificationChannel(channel)
+            runCatching { nm.deleteNotificationChannel(OldChannelId) } // replaced by the channel above
+        }
+
+        /** Current state of what may run in the background. */
+        fun snapshot(context: Context): BackgroundSnapshot {
+            val repo = LiveRepository.get(context)
+            val tg = AppSettings.get(context).state.value.telegraf
+            return BackgroundSnapshot(
+                connection = repo.connection.value,
+                status = repo.liveDataSource.status.value,
+                recording = repo.recorder.state.value,
+                telegrafLive = tg.enabled && tg.mode == ExportMode.Live && tg.url.isNotBlank(),
+                profileName = ProfileStore.state.value?.active?.name,
+            )
+        }
+
+        fun texts(context: Context): BackgroundTexts = with(context) {
+            BackgroundTexts(
+                title = getString(R.string.bg_title),
+                modeUsb = getString(R.string.bg_mode_usb),
+                modeBluetooth = getString(R.string.bg_mode_bluetooth),
+                modeSimulation = getString(R.string.bg_mode_simulation),
+                connecting = getString(R.string.bg_connecting),
+                readsPerSecond = getString(R.string.bg_reads_per_second),
+                noAnswer = getString(R.string.bg_no_answer),
+                starting = getString(R.string.bg_starting),
+                recording = getString(R.string.bg_recording),
+                telegrafLive = getString(R.string.bg_telegraf_live),
+                profile = getString(R.string.bg_profile),
+                locale = resources.configuration.locales[0],
+            )
         }
     }
 }

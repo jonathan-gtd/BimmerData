@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -12,8 +14,39 @@ android {
         applicationId = "io.github.jonathangtd.bimmerdata"
         minSdk = 29
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
+    }
+
+    // Release signing key, kept OUTSIDE the repository (never committed): a properties file with
+    // storeFile / storePassword / keyAlias / keyPassword, by default
+    // ~/.config/bimmerdata/release.properties, or BIMMERDATA_RELEASE_PROPERTIES, or the
+    // BIMMERDATA_KEYSTORE / _STORE_PASSWORD / _KEY_ALIAS / _KEY_PASSWORD variables.
+    // Without them the release APK is built unsigned (it cannot be installed as is).
+    val releaseSigning: Map<String, String>? = run {
+        val env = System.getenv()
+        if (env["BIMMERDATA_KEYSTORE"] != null) {
+            return@run mapOf(
+                "storeFile" to env.getValue("BIMMERDATA_KEYSTORE"),
+                "storePassword" to env["BIMMERDATA_STORE_PASSWORD"].orEmpty(),
+                "keyAlias" to (env["BIMMERDATA_KEY_ALIAS"] ?: "bimmerdata"),
+                "keyPassword" to (env["BIMMERDATA_KEY_PASSWORD"] ?: env["BIMMERDATA_STORE_PASSWORD"].orEmpty()),
+            )
+        }
+        val file = File(env["BIMMERDATA_RELEASE_PROPERTIES"] ?: (System.getProperty("user.home") + "/.config/bimmerdata/release.properties"))
+        if (!file.isFile) return@run null
+        val props = Properties().apply { file.inputStream().use { load(it) } }
+        props.stringPropertyNames().associateWith { props.getProperty(it) }
+    }
+    signingConfigs {
+        if (releaseSigning != null) {
+            create("release") {
+                storeFile = file(releaseSigning.getValue("storeFile"))
+                storePassword = releaseSigning.getValue("storePassword")
+                keyAlias = releaseSigning.getValue("keyAlias")
+                keyPassword = releaseSigning.getValue("keyPassword")
+            }
+        }
     }
 
     buildTypes {
@@ -21,6 +54,11 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (releaseSigning != null) {
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                logger.warn("BimmerData: no release signing key found (~/.config/bimmerdata/release.properties): the release APK will be UNSIGNED.")
+            }
         }
     }
 

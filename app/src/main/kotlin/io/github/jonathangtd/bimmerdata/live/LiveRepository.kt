@@ -238,7 +238,7 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
             proxy.attach(e)
             e.start()
             _connection.value = LiveConnection.Connected(mode, name)
-            if (mode != LiveMode.Simulation) startService()
+            startService() // every mode: the app says it keeps working in the background
         }
     }
 

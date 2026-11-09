@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.jonathangtd.bimmerdata.R
+import io.github.jonathangtd.bimmerdata.net.LocalNetwork
 import io.github.jonathangtd.bimmerdata.api.android.ApiRuntimeState
 import io.github.jonathangtd.bimmerdata.export.ExportMode
 import io.github.jonathangtd.bimmerdata.export.ExportPhase
@@ -179,6 +180,8 @@ internal fun TelegrafSection(t: TelegrafSettings, store: AppSettings) {
     }
 
     val urlValid = url.isBlank() || TelegrafClient.isValidUrl(url)
+    val lan = rememberLocalNetworkAccess()
+    val urlOnLan = LocalNetwork.isLocalUrl(url.ifBlank { t.url })
     val secretName = if (t.authMode == TelegrafAuthMode.Basic) SecretStore.TELEGRAF_PASSWORD else SecretStore.TELEGRAF_TOKEN
     val secretStored = remember(secretVersion, secretName) { secrets.has(secretName) }
     val dirty = url.trim() != t.url || car.trim() != t.car || user.trim() != t.username || secret.isNotEmpty()
@@ -208,8 +211,12 @@ internal fun TelegrafSection(t: TelegrafSettings, store: AppSettings) {
             title = stringResource(R.string.settings2_tg_enable),
             hint = stringResource(R.string.settings2_tg_enable_hint),
             checked = t.enabled,
-            onChange = { on -> store.updateTelegraf { it.copy(enabled = on) } },
+            onChange = { on ->
+                if (on && urlOnLan && !lan.granted) lan.request()
+                store.updateTelegraf { it.copy(enabled = on) }
+            },
         )
+        if (urlOnLan) LocalNetworkBanner(lan, stringResource(R.string.lan_telegraf_denied))
         Divider()
         OutlinedTextField(
             value = url, onValueChange = { url = it.trim() },
@@ -259,7 +266,13 @@ internal fun TelegrafSection(t: TelegrafSettings, store: AppSettings) {
         val okText = stringResource(R.string.settings2_tg_test_ok)
         val authText = stringResource(R.string.settings2_tg_test_auth, "%s")
         val failText = stringResource(R.string.settings2_tg_test_failed, "%s")
+        val lanTestText = stringResource(R.string.lan_test_denied)
         SmallButton(stringResource(R.string.settings2_tg_test), enabled = !testing && TelegrafClient.isValidUrl(url)) {
+            if (urlOnLan && !lan.granted) {
+                testResult = lanTestText
+                lan.request()
+                return@SmallButton
+            }
             if (dirty) save()
             testing = true
             testResult = testing2

@@ -21,6 +21,8 @@
          notification (runtime permission on Android 13+) and a partial wake lock (screen off) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <!-- the same service in simulation mode (no device to justify connectedDevice) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <!-- Optional GPS position (Settings › GPS position, off by default): asked only when switched on;
          the acquisition service then also has the location type, so the position keeps coming
          with the screen off -->
@@ -40,6 +42,8 @@
          addresses, and network callbacks to rebind when they change. Also used by the Telegraf
          export (off by default, Settings › Telegraf export). -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 17: reach / be reached by devices of the local network (REST API, Telegraf on the LAN) -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
@@ -72,7 +76,13 @@
         <service
             android:name=".live.AcquisitionService"
             android:exported="false"
-            android:foregroundServiceType="connectedDevice|location" />
+            android:foregroundServiceType="connectedDevice|location|specialUse">
+            <!-- Simulation mode: a simulated car keeps being read / recorded with the screen off
+                 (no device and no network, so no standard type fits). -->
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Simulated car: live values read and recorded with the screen off, without any hardware (demo mode)" />
+        </service>
 
         <!-- Allow / Refuse buttons of the notification that confirms an API write to the car -->
         <receiver

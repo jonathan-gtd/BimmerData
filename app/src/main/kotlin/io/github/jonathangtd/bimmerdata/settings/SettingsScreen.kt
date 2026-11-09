@@ -48,6 +48,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -123,14 +124,30 @@ private fun ApiSection(config: ApiConfig, state: ApiRuntimeState, store: AppSett
     var portText by rememberSaveable(config.port) { mutableStateOf(config.port.toString()) }
     val portValue = portText.toIntOrNull()
     val portValid = portValue != null && portValue in ApiConfig.PORT_RANGE
+    val lan = rememberLocalNetworkAccess()
+    // Android 17: an API already enabled before this version needs the permission too: ask once per visit.
+    var lanAsked by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(config.enabled, lan.granted) {
+        if (config.enabled && !lan.granted && !lanAsked) {
+            lanAsked = true
+            lan.request()
+        }
+    }
 
     SettingsCard {
         SwitchRow(
             title = stringResource(R.string.settings_api_enable),
             hint = stringResource(R.string.settings_api_enable_hint),
             checked = config.enabled,
-            onChange = { on -> store.updateApi { it.copy(enabled = on) } },
+            onChange = { on ->
+                if (on && !lan.granted) {
+                    lanAsked = true
+                    lan.request()
+                }
+                store.updateApi { it.copy(enabled = on) }
+            },
         )
+        if (config.enabled) LocalNetworkBanner(lan, stringResource(R.string.lan_api_denied))
         Banner(stringResource(R.string.settings_api_warning), Cockpit.Warning)
         if (config.enabled) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
