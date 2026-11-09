@@ -13,8 +13,8 @@ enum class MeasurementClient { Phone, Car, Graph, Api }
 
 /**
  * Decides what the single acquisition engine reads when several screens show live values (the
- * phone dashboard and the Android Auto screen). The K-line is slow, so every extra measurement
- * lowers the refresh rate of the others: only what someone can see is read.
+ * phone dashboard and the Android Auto screen): what is on screen comes first in the read cycle,
+ * and [LiveRepository] adds the rest of the active profile ([ReadScope]).
  *
  * - Clients in the foreground (phone dashboard on screen, BimmerData shown in Android Auto) get
  *   the union of their measurements, in [MeasurementClient] order, without duplicates.

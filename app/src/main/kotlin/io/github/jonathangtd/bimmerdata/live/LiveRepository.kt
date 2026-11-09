@@ -113,8 +113,25 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
     /** Where the phone's own sensors (GPS) put their samples, next to the ECU ones. */
     val phoneSensors: PhoneSensorInput get() = proxy
 
-    /** What the phone dashboard and Android Auto want read; the engine reads their merge. */
-    val requests = MeasurementRequests(proxy::setMeasurements)
+    /**
+     * What the phone dashboard and Android Auto want read; the engine reads their merge, plus the
+     * rest of the active profile ([ReadScope]): the Telegraf export and the CSV recording then get
+     * every value of the profile whatever the page shown (the owner's choice over a faster read
+     * rate of the page shown; a profile too slow to read is split into several).
+     */
+    val requests = MeasurementRequests { visible ->
+        shown = visible
+        applyRequests()
+    }
+
+    @Volatile private var shown: List<Measurement>? = null
+
+    @Synchronized
+    private fun applyRequests() {
+        // nothing asked yet (no screen has started reading): keep it that way
+        val visible = shown ?: return
+        proxy.setMeasurements(ReadScope.select(ProfileMeasurements.current, visible))
+    }
 
     private val _lastRecording = MutableStateFlow<Uri?>(null)
 
@@ -123,9 +140,8 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
 
     private val csvRecorder = CsvSessionRecorder(
         source = proxy,
-        // what is read now, plus the rest of the profile when it fits in the same blocks: the
-        // recording then has every value of the profile whatever the page shown (pinned while
-        // recording; between recordings only the screen is read, see ReadScope)
+        // what is read now: the whole profile (ReadScope), pinned while recording, so the
+        // recording has every value of the profile whatever the page shown
         columns = { ReadScope.select(ProfileMeasurements.current, proxy.requested) },
         output = { name -> RecordingStorage.create(app, name) { uri -> _lastRecording.value = uri } },
         scope = scope,
@@ -157,6 +173,8 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
     fun readStats(): ReadStats? = engine?.takeIf { it.isRunning }?.readStats()
 
     init {
+        // a changed profile is read whole at once
+        scope.launch { ProfileMeasurements.flow.collect { applyRequests() } }
         // one line every 30 s while reading, to find out on the car why cycles are slow
         // (adb logcat -s BimmerData.Read)
         scope.launch {

@@ -6,7 +6,7 @@ package io.github.jonathangtd.bimmerdata.live
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-/** The whole profile is read when it costs no extra read cycle, else only the screen. */
+/** The whole profile is read, the screen first, unless an ECU would need two dynamic blocks. */
 class ReadScopeTest {
     private fun table(sgbd: String, id: Int) =
         Measurement("$sgbd/0x%04X".format(id), sgbd, "v$id", "", MeasurementSource.MeasurementTable(id, "STAT_$id"))
@@ -30,15 +30,10 @@ class ReadScopeTest {
     }
 
     @Test
-    fun `another ECU on another page would cost a telegram per cycle - screen only`() {
+    fun `another ECU and jobs on other pages are read too`() {
         val page = listOf(table("dme", 1))
-        assertEquals(ids(page), ids(ReadScope.select(profile = page + table("egs", 2), visible = page)))
-    }
-
-    @Test
-    fun `a job on another page would cost about 100 ms per cycle - screen only`() {
-        val page = listOf(table("dme", 1))
-        assertEquals(ids(page), ids(ReadScope.select(profile = page + job("dme", "STATUS_X"), visible = page)))
+        val rest = listOf(table("egs", 2), job("dme", "STATUS_X"))
+        assertEquals(ids(page + rest), ids(ReadScope.select(profile = rest + page, visible = page)))
     }
 
     @Test
@@ -51,9 +46,9 @@ class ReadScopeTest {
     }
 
     @Test
-    fun `a screen without ECU values does not start reading the ECU`() {
+    fun `a page without ECU values still reads the ECU values of the profile`() {
         val gpsPage = listOf(gps)
-        assertEquals(ids(gpsPage), ids(ReadScope.select(profile = gpsPage + table("dme", 1), visible = gpsPage)))
+        assertEquals(ids(gpsPage + table("dme", 1)), ids(ReadScope.select(profile = gpsPage + table("dme", 1), visible = gpsPage)))
     }
 
     @Test

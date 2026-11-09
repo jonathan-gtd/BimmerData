@@ -95,20 +95,22 @@ pages) on one time axis, live. Each profile has its own named graphs, kept with 
   the whole screen (legend and controls on the side), with the same pause, zoom and cursor.
 - **Colors and legend**: one color per value from a fixed palette (a value keeps its color when
   others are added or removed); tap a legend entry to hide or show its curve.
-- **No extra reads**: while the tab is on screen it reads the values of the graph shown, instead
-  of the dashboard page. Off screen it reads nothing: the curves come from the history of what
-  the dashboard and Android Auto read (the last hour, while the app runs). Time with no reading
-  shows as a gap in the curve.
+- **No extra reads**: a graph shows values of the profile, which is read whole (see
+  [What is read](#what-is-read)); the curves come from the history of these readings (the last
+  hour, while the app runs). Time with no reading shows as a gap in the curve.
 
 ## What is read
 
-The K-line is slow, so the app reads what you look at: each value of an ECU's dynamic block
-costs about 1 ms per read cycle (measured on an MSV70: about 56 ms per cycle for 6 values, 100 ms
-for 41). **While a CSV recording runs**, the app reads the **whole active profile** (every phone
-and Android Auto page) when its other pages are in the same ECU's dynamic block (up to 42
-values per ECU): the recording, and the Telegraf export, then have every value of the profile
-whatever the page shown. A profile whose other pages need another ECU, a job, or more than 42
-values of one ECU is recorded with the values of the page shown when the recording started.
+While connected, the app reads the **whole active profile** (every phone and Android Auto page),
+the page shown first: the screens, the graphs, the CSV recording and the Telegraf export have
+every value of the profile whatever the page shown, with no hole in the curves.
+
+The K-line is slow, so a big profile reads slower: each value of an ECU's dynamic block costs
+about 1 ms per read cycle (measured on an MSV70: about 56 ms per cycle for 6 values, 100 ms for
+41), each other ECU one more telegram per cycle, each job about 100 ms. When a profile is too slow
+for what you look at, split it into smaller profiles (one per subject: knock, lambda, fuel...).
+One exception: an ECU with more than 42 values in the profile does not fit in one dynamic block;
+the app then reads only the page shown.
 
 ## Settings
 
