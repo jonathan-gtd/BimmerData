@@ -1,0 +1,937 @@
+type;cle;de;traduction;statut
+ecu;;FRM_87 · SGBD fuer FRMFA-E87;FRM_87 · Module plancher FRMFA (E87);auto
+resultat;STATUS_BETR_H_FRMFA/STAT_BETRIEBSZEIT_FRMFA_WERT;Betriebsstunden FRMFA auslesen;Lire les heures de fonctionnement du FRMFA;auto
+resultat;STATUS_BETR_H_FUNKTIONEN/STAT_BETRIEBSZEIT_FL_WERT;Betr_h Fernlicht, E92/E93: Abbiegelicht;Heures de fonctionnement feux de route (E92/E93 : feux d'intersection);auto
+resultat;STATUS_BETR_H_FUNKTIONEN/STAT_BETRIEBSZEIT_AL_WERT;Betr_h Abblendlicht;Heures de fonctionnement feux de croisement;auto
+resultat;STATUS_BETR_H_FUNKTIONEN/STAT_BETRIEBSZEIT_SL_WERT;Betr_h Standlicht;Heures de fonctionnement feux de position;auto
+resultat;STATUS_BETR_H_FUNKTIONEN/STAT_BETRIEBSZEIT_NSW_WERT;Betr_h Nebelscheinwerfer;Heures de fonctionnement antibrouillards avant;auto
+resultat;STATUS_BETR_H_FUNKTIONEN/STAT_BETRIEBSZEIT_FRA_LINKS_WERT;Betr_h Fahrtrichtungsanzeiger links;Heures de fonctionnement clignotant gauche;auto
+resultat;STATUS_BETR_H_FUNKTIONEN/STAT_BETRIEBSZEIT_FRA_RECHTS_WERT;Betr_h Fahrtrichtungsanzeiger rechts;Heures de fonctionnement clignotant droit;auto
+resultat;STATUS_BETR_H_FUNKTIONEN/STAT_BETRIEBSZEIT_BREMSLICHT_STUFE_1_WERT;Betr_h Bremslicht Stufe 1;Heures de fonctionnement feux stop niveau 1;auto
+resultat;STATUS_BETR_H_FUNKTIONEN/STAT_BETRIEBSZEIT_BREMSLICHT_STUFE_2_WERT;Betr_h Bremslicht Stufe 2;Heures de fonctionnement feux stop niveau 2;auto
+resultat;STATUS_BETR_H_FUNKTIONEN/STAT_BETRIEBSZEIT_NSL_WERT;Betr_h Nebelschlusslicht;Heures de fonctionnement antibrouillard arrière;auto
+resultat;STATUS_BETR_H_FUNKTIONEN/STAT_BETRIEBSZEIT_RFL_WERT;Betr_h Rueckfahrlicht;Heures de fonctionnement feux de recul;auto
+resultat;STATUS_BETR_H_AMPERE/STAT_BETRIEBSZEIT_15A_20A_WERT;Betriebszeit mit 15A bis 20A;Durée de fonctionnement entre 15 et 20 A;auto
+resultat;STATUS_BETR_H_AMPERE/STAT_BETRIEBSZEIT_20A_25A_WERT;Betriebszeit mit 20A bis 25A;Durée de fonctionnement entre 20 et 25 A;auto
+resultat;STATUS_BETR_H_AMPERE/STAT_BETRIEBSZEIT_25A_28A_WERT;Betriebszeit mit 25A bis 28A;Durée de fonctionnement entre 25 et 28 A;auto
+resultat;STATUS_BETR_H_AMPERE/STAT_BETRIEBSZEIT_28A_31A_WERT;Betriebszeit mit 28A bis 31A;Durée de fonctionnement entre 28 et 31 A;auto
+resultat;STATUS_BETR_H_AMPERE/STAT_BETRIEBSZEIT_31A_34A_WERT;Betriebszeit mit 31A bis 34A;Durée de fonctionnement entre 31 et 34 A;auto
+resultat;STATUS_BETR_H_AMPERE/STAT_BETRIEBSZEIT_34A_37A_WERT;Betriebszeit mit 34A bis 37A;Durée de fonctionnement entre 34 et 37 A;auto
+resultat;STATUS_BETR_H_AMPERE/STAT_BETRIEBSZEIT_37A_40A_WERT;Betriebszeit mit 37A bis 40A;Durée de fonctionnement entre 37 et 40 A;auto
+resultat;STATUS_BETR_H_AMPERE/STAT_BETRIEBSZEIT_40A_WERT;Betriebszeit mit > 40A;Durée de fonctionnement au-delà de 40 A;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_SCHALTER_LICHT_1_EIN;Lichtschalterstellung 1 (Standlicht);Commodo d'éclairage position 1 (feux de position);auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_SCHALTER_LICHT_2_EIN;Lichtschalterstellung 2 (FLC);Commodo d'éclairage position 2 (allumage automatique);auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_KLEMME_15_EIN;Klemme 15 ein;Borne 15 (contact) mise;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_TASTER_WBL_EIN;Taster Warnblinklicht betaetigt;Bouton de détresse appuyé;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_TASTER_NSW_EIN;Taster Nebelscheinwerfer betaetigt;Bouton antibrouillards avant appuyé;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_TASTER_NSL_EIN;Taster Nebelschlussleuchte betaetigt;Bouton antibrouillard arrière appuyé;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_EINGANG_BLS_EIN;Bremslichtschalter ein;Contacteur de stop activé;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_TASTER_FH_FA_EIN;Taster Fensterheber Fahrertuer ein;Bouton lève-vitre porte conducteur appuyé;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_TASTER_FH_BF_EIN;Taster Fensterheber Fahrertuer ein;Bouton lève-vitre porte conducteur appuyé;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_EINGANG_R_GANG_EIN;Rueckwaertsgang ein;Marche arrière engagée;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_TASTER_IB_EIN;Taster Innenbeleuchtung ein;Bouton éclairage intérieur appuyé;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_SCHALTER_SL_EIN;Schalter Standlicht ein;Commodo feux de position allumé;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_SCHALTER_AL_EIN;Schalter Abblendlicht ein;Commodo feux de croisement allumé;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_SCHALTER_FLC_EIN;Schalter Fahrlichtkontrolle ein;Commodo allumage automatique des feux actif;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_SCHALTER_FRA_LINKS_TIPP_EIN;Tipp-Schalter Fahrtrichtungsanzeiger links ein;Commodo clignotant gauche, impulsion;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_SCHALTER_FRA_LINKS_DAUER_EIN;Dauer-Schalter Fahrtrichtungsanzeiger links ein;Commodo clignotant gauche, maintenu;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_SCHALTER_FRA_RECHTS_TIPP_EIN;Tipp-Schalter Fahrtrichtungsanzeiger rechts ein;Commodo clignotant droit, impulsion;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_SCHALTER_FRA_RECHTS_DAUER_EIN;Dauer-Schalter Fahrtrichtungsanzeiger rechts ein;Commodo clignotant droit, maintenu;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_TASTER_FH_FA_TIPP_EIN;Tipp-Taster Fensterheber Fahrertuer ein;Bouton lève-vitre porte conducteur, impulsion;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_TASTER_FH_FA_DAUER_EIN;Dauer-Taster Fensterheber Fahrertuer ein;Bouton lève-vitre porte conducteur, maintenu;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_TASTER_FH_BF_TIPP_EIN;Tipp-Taster Fensterheber Beifahrertuer ein;Bouton lève-vitre porte passager, impulsion;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_TASTER_FH_BF_DAUER_EIN;Dauer-Taster Fensterheber Beifahrertuer ein;Bouton lève-vitre porte passager, maintenu;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_SCHALTER_FL_EIN;Schalter Fernlicht ein;Commodo feux de route allumé;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_SCHALTER_LH_EIN;Taster Lichthupe ein;Appel de phares actionné;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_EINGANG_TK_VL_EIN;Tuerkontakt vorne links ein;Contacteur de porte avant gauche actif;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_EINGANG_TK_VR_EIN;Tuerkontakt vorne rechts ein;Contacteur de porte avant droite actif;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_EINGANG_TK_HL_EIN;Tuerkontakt hinten links ein;Contacteur de porte arrière gauche actif;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_EINGANG_TK_HR_EIN;Tuerkontakt hinten rechts ein;Contacteur de porte arrière droite actif;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_EINGANG_TK_FAT_EIN;Tuerkontakt Fahrertuer ein;Contacteur de porte conducteur actif;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_EINGANG_TK_BFT_EIN;Tuerkontakt Beifahrertuer ein;Contacteur de porte passager actif;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_EINGANG_TK_FATH_EIN;Tuerkontakt Fahrertuer hinten ein;Contacteur de porte arrière côté conducteur actif;auto
+resultat;STATUS_DIGITAL_INPUTS/STAT_EINGANG_TK_BFTH_EIN;Tuerkontakt Beifahrertuer hinten ein;Contacteur de porte arrière côté passager actif;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_SCHALTER_LICHT_1_WERT;Spannung Lichtschalterstellung 1 (Standlicht);Tension commodo d'éclairage position 1 (feux de position);auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_SCHALTER_LICHT_2_WERT;Spannung Lichtschalterstellung 2 (Abblendlicht);Tension commodo d'éclairage position 2 (feux de croisement);auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_TASTER_NSW_NSL_WERT;Spannung Taster Nebelscheinwerfer/-schlusslicht;Tension bouton antibrouillards avant / arrière;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_LWR_POTI_WERT;Spannung Poti LWR;Tension potentiomètre du correcteur de portée;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_BELADUNGSSENSOR_VORN_WERT;Spannung Sensor Hoehenstandsmesser vorne;Tension capteur de hauteur avant;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_BELADUNGSSENSOR_HINTEN_WERT;Spannung Sensor Hoehenstandsmesser hinten;Tension capteur de hauteur arrière;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_KLEMME_30A_WERT;Spannung Klemme 30A;Tension borne 30A;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_KLEMME_30B_WERT;Spannung Klemme 30B;Tension borne 30B;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_SCHALTER_FRA_LINKS_WERT;Spannung Schalter Blinker links;Tension commodo clignotant gauche;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_SCHALTER_FRA_RECHTS_WERT;Spannung Schalter Blinker rechts;Tension commodo clignotant droit;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_MOTOR_FH_LINKS_WERT;Spannung Motor Fensterheber links;Tension moteur lève-vitre gauche;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_MOTOR_FH_RECHTS_WERT;Spannung Motor Fensterheber rechts;Tension moteur lève-vitre droit;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_SCHALTER_FL_LH_WERT;Spannung Schalter Fernlicht / Lichthupe;Tension commodo feux de route / appel de phares;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_SCHALTER_FH_FA_WERT;Spannung Schalter Fensterheber Fahrerseite;Tension bouton lève-vitre côté conducteur;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_SCHALTER_FH_BF_WERT;Spannung Schalter Fensterheber Beifahrerseite;Tension bouton lève-vitre côté passager;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_SCHALTER_RFS_WERT;Spannung Schalter Rueckfahrscheinwerfer;Tension contacteur de feux de recul;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_KLEMME_15_WERT;Spannung Klemme 15;Tension borne 15;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_SENSOR_LWR_WERT;Spannungswert zur Diagnose fuer Spulenabriss;Tension de diagnostic de bobine coupée;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_BEHOERDEN_FZG_WERT;Spannung Eingang Behoerdenfahrzeug;Tension entrée véhicule d'administration;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_SPIEGELHEIZUNG_WERT;Spannung Spiegelheizung;Tension chauffage des rétroviseurs;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_FH_FA_WERT;Spannung FH FA;Tension lève-vitre conducteur;auto
+resultat;STATUS_ANALOG_INPUTS/STAT_SPANNUNG_FH_BF_WERT;Spannung FH BF;Tension lève-vitre passager;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_FL_LINKS_EIN;Fernlicht links, E92/E93: Abbiegelicht links;Feu de route gauche (E92/E93 : feu d'intersection gauche);auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_FL_RECHTS_EIN;Fernlicht rechts, E92/E93: Abbiegelicht rechts;Feu de route droit (E92/E93 : feu d'intersection droit);auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_AL_LINKS_EIN;Abblendlicht links;Feu de croisement gauche;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_AL_RECHTS_EIN;Abblendlicht rechts;Feu de croisement droit;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_BEGRL_LINKS_EIN;Begrenzungslicht links;Feu de position gauche;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_BEGRL_RECHTS_EIN;Begrenzungslicht rechts;Feu de position droit;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_NSW_LINKS_EIN;Nebelscheinwerfer links;Antibrouillard avant gauche;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_NSW_RECHTS_EIN;Nebelscheinwerfer rechts;Antibrouillard avant droit;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_FRA_LINKS_VORN_EIN;Fahrtrichtungsanzeiger links vorne;Clignotant avant gauche;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_FRA_RECHTS_VORN_EIN;Fahrtrichtungsanzeiger rechts vorne;Clignotant avant droit;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_FRA_LINKS_HINTEN_EIN;Fahrtrichtungsanzeiger links hinten;Clignotant arrière gauche;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_FRA_RECHTS_HINTEN_EIN;Fahrtrichtungsanzeiger rechts hinten;Clignotant arrière droit;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_BREMSLICHT_LINKS_EIN;Bremslicht links;Feu stop gauche;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_BREMSLICHT_MITTE_EIN;Bremslicht rechts;Feu stop droit;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_BREMSLICHT_RECHTS_EIN;Bremslicht mitte;Feu stop central;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_SL_BL_LINKS_1_EIN;Schlusslicht links 1, E92/E93: Tagfahrlicht links;Feu arrière gauche 1 (E92/E93 : feu de jour gauche);auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_SL_BL_RECHTS_1_EIN;Schlusslicht rechts 1, E92/E93: Tagfahrlicht rechts;Feu arrière droit 1 (E92/E93 : feu de jour droit);auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_SL_BL_LINKS_2_EIN;Schlusslicht links 2;Feu arrière gauche 2;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_SL_BL_RECHTS_2_EIN;Schlusslicht rechts 2;Feu arrière droit 2;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_KZL_EIN;Kennzeichenlicht;Éclairage de plaque;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_IBL_EIN;Innenbeleuchtung rechts;Éclairage intérieur droit;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_NSL_LINKS_EIN;Nebelschlusslicht links;Antibrouillard arrière gauche;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_NSL_RECHTS_EIN;Nebelschlusslicht rechts;Antibrouillard arrière droit;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_RFL_LINKS_EIN;Rueckfahrlicht links;Feu de recul gauche;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_RFL_RECHTS_EIN;Rueckfahrlicht rechts;Feu de recul droit;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_BFD_LINKS_EIN;Break-Force-Display links;Brake Force Display gauche;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_BFD_RECHTS_EIN;Break-Force-Display rechts;Brake Force Display droit;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_BEL_WBL_TASTE_EIN;Beleuchtung WBL-Taster;Éclairage du bouton de détresse;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_FLC_LED_EIN;LED Fahrtlichtkontrolle;LED de contrôle des feux;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_VORFELD_BEL_EIN;LED Vorfeldbeleuchtung;LED d'éclairage d'approche;auto
+resultat;STATUS_LAMPEN_DIGITAL/STAT_AUSGANG_KL58G_EIN;Klemme 58G;Borne 58g (éclairage des commandes);auto
+resultat;STATUS_SCHLOSSNUESSE/STAT_SCHALTNUSS_STELLUNG_NULL_EIN;Schaltnuesse in Stellung Neutral;Noix de serrure en position neutre;auto
+resultat;STATUS_SCHLOSSNUESSE/STAT_SCHALTNUSS_STELLUNG_ENTRIEGELN_EIN;Schaltnuesse in Stellung Entriegeln;Noix de serrure en position déverrouillage;auto
+resultat;STATUS_SCHLOSSNUESSE/STAT_SCHALTNUSS_STELLUNG_SICHERN_EIN;Schaltnuesse in Stellung Sichern;Noix de serrure en position condamnation;auto
+resultat;STATUS_SCHLOSSNUESSE/STAT_SCHALTNUSS_STELLUNG_UNGUELTIG_EIN;Schaltnuesse in Stellung Ungueltig;Noix de serrure en position non valide;auto
+resultat;STATUS_SCHLOSSNUESSE/STAT_SCHALTNUSS_STELLUNG_1_EIN;Schaltnuesse in Stellung 1;Noix de serrure en position 1;auto
+resultat;STATUS_SCHLOSSNUESSE/STAT_SCHALTNUSS_STELLUNG_2_EIN;Schaltnuesse in Stellung 2;Noix de serrure en position 2;auto
+resultat;STATUS_LWR_POSITION/STAT_STATUS_LWR_POSITION;Position der Schrittmotoren auslesen;Lire la position des moteurs pas à pas;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_FL_LINKS_WERT;Dimmwert Fernlicht links, E92/E93: Abbiegelicht links;Feu de route gauche (E92/E93 : feu d'intersection gauche) : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_FL_RECHTS_WERT;Dimmwert Fernlicht rechts, E92/E93: Abbiegelicht rechts;Feu de route droit (E92/E93 : feu d'intersection droit) : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_AL_LINKS_WERT;Dimmwert Abblendlicht links;Feu de croisement gauche : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_AL_RECHTS_WERT;Dimmwert Abblendlicht rechts;Feu de croisement droit : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_BEGRL_LINKS_WERT;Dimmwert Begrenzungslicht links;Feu de position gauche : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_BEGRL_RECHTS_WERT;Dimmwert Begrenzungslicht rechts;Feu de position droit : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_NSW_LINKS_WERT;Dimmwert Nebelscheinwerfer links;Antibrouillard avant gauche : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_NSW_RECHTS_WERT;Dimmwert Nebelscheinwerfer rechts;Antibrouillard avant droit : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_FRA_LINKS_VORN_WERT;Dimmwert Fahrtrichtungsanzeiger links vorne;Clignotant avant gauche : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_FRA_RECHTS_VORN_WERT;Dimmwert Fahrtrichtungsanzeiger rechts vorne;Clignotant avant droit : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_FRA_LINKS_HINTEN_WERT;Dimmwert Fahrtrichtungsanzeiger links hinten;Clignotant arrière gauche : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_FRA_RECHTS_HINTEN_WERT;Dimmwert Fahrtrichtungsanzeiger rechts hinten;Clignotant arrière droit : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_BREMSLICHT_LINKS_WERT;Dimmwert Bremslicht links;Feu stop gauche : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_BREMSLICHT_MITTE_WERT;Dimmwert Bremslicht rechts;Feu stop droit : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_BREMSLICHT_RECHTS_WERT;Dimmwert Bremslicht mitte;Feu stop central : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_SL_BL_LINKS_1_WERT;Dimmwert Schlusslicht links 1, E92/E93: Tagfahrlicht links;Feu arrière gauche 1 (E92/E93 : feu de jour gauche) : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_SL_BL_RECHTS_1_WERT;Dimmwert Schlusslicht rechts 1, E92/E93: Tagfahrlicht rechts;Feu arrière droit 1 (E92/E93 : feu de jour droit) : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_SL_BL_LINKS_2_WERT;Dimmwert Schlusslicht links 2;Feu arrière gauche 2 : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_SL_BL_RECHTS_2_WERT;Dimmwert Schlusslicht rechts 2;Feu arrière droit 2 : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_KZL_WERT;Dimmwert Kennzeichenlicht;Éclairage de plaque : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_IBL_WERT;Dimmwert Innenbeleuchtung rechts;Éclairage intérieur droit : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_NSL_LINKS_WERT;Dimmwert Nebelschlusslicht links;Antibrouillard arrière gauche : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_NSL_RECHTS_WERT;Dimmwert Nebelschlusslicht rechts;Antibrouillard arrière droit : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_RFL_LINKS_WERT;Dimmwert Rueckfahrlicht links;Feu de recul gauche : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_RFL_RECHTS_WERT;Dimmwert Rueckfahrlicht rechts;Feu de recul droit : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_BFD_LINKS_WERT;Dimmwert Break-Force-Display links;Brake Force Display gauche : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_BFD_RECHTS_WERT;Dimmwert Break-Force-Display rechts;Brake Force Display droit : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_BEL_WBL_TASTE_WERT;Dimmwert Beleuchtung WBL-Taster;Éclairage du bouton de détresse : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_FLC_LED_WERT;Dimmwert LED Fahrtlichtkontrolle;LED de contrôle des feux : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_VORFELD_BEL_WERT;Dimmwert LED Vorfeldbeleuchtung;LED d'éclairage d'approche : valeur de gradation;auto
+resultat;STATUS_DIMMWERT/STAT_AUSGANG_KL58G_WERT;Dimmwert Klemme 58G;Borne 58g (éclairage des commandes) : valeur de gradation;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_POL_L_WERT;Spannung Sensor Positionslicht links;Feu de position gauche : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_POL_R_WERT;Spannung Sensor Positionslicht rechts;Feu de position droit : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_AL_L_WERT;Spannung Sensor Abblendlicht links;Feu de croisement gauche : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_AL_R_WERT;Spannung Sensor Abblendlicht rechts;Feu de croisement droit : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_FL_L_WERT;Spannung Sensor Fernlicht links, E92/E93: Abbiegelicht links;Feu de route gauche (E92/E93 : feu d'intersection gauche) : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_FL_R_WERT;Spannung Sensor Fernlicht rechts, E92/E93: Abbiegelicht rechts;Feu de route droit (E92/E93 : feu d'intersection droit) : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_NSW_L_WERT;Spannung Sensor Nebelscheinwerfer links;Antibrouillard avant gauche : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_NSW_R_WERT;Spannung Sensor Nebelscheinwerfer rechts;Antibrouillard avant droit : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_1_SL_L_WERT;Spannung Sensor Standlicht 1 links, E92/E93: Tagfahrlicht links;Feu de stationnement gauche 1 (E92/E93 : feu de jour gauche) : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_1_SL_R_WERT;Spannung Sensor Standlicht 1 rechts, E92/E93: Tagfahrlicht rechts;Feu de stationnement droit 1 (E92/E93 : feu de jour droit) : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_2_SL_L_WERT;Spannung Sensor Standlicht 2 links;Feu de stationnement gauche 2 : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_2_SL_R_WERT;Spannung Sensor Standlicht 2 rechts;Feu de stationnement droit 2 : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_RFS_L_WERT;Spannung Sensor Rueckfahrscheinwerfer links;Feu de recul gauche : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_RFS_R_WERT;Spannung Sensor Rueckfahrscheinwerfer rechts;Feu de recul droit : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_NSL_L_WERT;Spannung Sensor Nebelschlusslicht links;Antibrouillard arrière gauche : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_NSL_R_WERT;Spannung Sensor Nebelschlusslicht rechts;Antibrouillard arrière droit : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_FRA_VL_WERT;Spannung Sensor Fahrtrichtungsanzeiger vorne links;Clignotant avant gauche : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_FRA_VR_WERT;Spannung Sensor Fahrtrichtungsanzeiger vorne rechts;Clignotant avant droit : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_FRA_HL_WERT;Spannung Sensor Fahrtrichtungsanzeiger hinten links;Clignotant arrière gauche : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_FRA_HR_WERT;Spannung Sensor Fahrtrichtungsanzeiger hinten rechts;Clignotant arrière droit : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_BL_L_WERT;Spannung Sensor Bremslicht links;Feu stop gauche : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_BL_R_WERT;Spannung Sensor Bremslicht rechts;Feu stop droit : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_KZL_WERT;Spannung Sensor Kennzeichenlicht;Éclairage de plaque : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_BL_M_WERT;Spannung Sensor Bremslicht mitte;Feu stop central : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_BFD_L_WERT;Spannung Sensor BFD links;Brake Force Display gauche : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_BFD_R_WERT;Spannung Sensor BFD rechts;Brake Force Display droit : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_IB_WERT;Spannung Sensor Innenbeleuchtung;Éclairage intérieur : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_KL_58G_WERT;Spannung Sensor Klemme 58G;Borne 58g (éclairage des commandes) : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_PWM_1_WERT;Spannung Sensor PWM 1;PWM 1 : tension du capteur;auto
+resultat;STATUS_SENSE_INPUTS/STAT_SENSE_PWM_2_WERT;Spannung Sensor PWM 2;PWM 2 : tension du capteur;auto
+resultat;STATUS_FENSTERHEBER/STAT_FA_FH_OFFEN_KOMPLETT;Fensterheber Fahrer komplett offen;Vitre conducteur complètement ouverte;auto
+resultat;STATUS_FENSTERHEBER/STAT_BF_FH_OFFEN_KOMPLETT;Fensterheber Beifahrer komplett offen;Vitre passager complètement ouverte;auto
+resultat;STATUS_FENSTERHEBER/STAT_FA_FH_GESCHLOSSEN;Fensterheber Fahrer geschlossen;Vitre conducteur fermée;auto
+resultat;STATUS_FENSTERHEBER/STAT_BF_FH_GESCHLOSSEN;Fensterheber Beifahrer geschlossen;Vitre passager fermée;auto
+resultat;STATUS_FENSTERHEBER/STAT_FA_FH_FAEHRT_EIN;Fensterheber Fahrer faehrt;Vitre conducteur en mouvement;auto
+resultat;STATUS_FENSTERHEBER/STAT_FA_FH_FAEHRT_AUF_EIN;Fensterheber Fahrer faehrt auf;Vitre conducteur en ouverture;auto
+resultat;STATUS_FENSTERHEBER/STAT_FA_FH_FAEHRT_ZU_EIN;Fensterheber Fahrer faehrt zu;Vitre conducteur en fermeture;auto
+resultat;STATUS_FENSTERHEBER/STAT_BF_FH_FAEHRT_EIN;Fensterheber Beifahrer faehrt;Vitre passager en mouvement;auto
+resultat;STATUS_FENSTERHEBER/STAT_BF_FH_FAEHRT_AUF_EIN;Fensterheber Beifahrer faehrt auf;Vitre passager en ouverture;auto
+resultat;STATUS_FENSTERHEBER/STAT_BF_FH_FAEHRT_ZU_EIN;Fensterheber Beifahrer faehrt zu;Vitre passager en fermeture;auto
+resultat;STATUS_FENSTERHEBER/STAT_FA_FH_EINGELERNT_EIN;Fensterheber Fahrer eingelernt;Lève-vitre conducteur initialisé;auto
+resultat;STATUS_FENSTERHEBER/STAT_BF_FH_EINGELERNT_EIN;Fensterheber Beifahrer eingelernt;Lève-vitre passager initialisé;auto
+resultat;STATUS_FENSTERHEBER/STAT_FA_FH_POSITION_WERT;Position Fensterheber Fahrer, nur bei eingelerntem FH;Position de la vitre conducteur (lève-vitre initialisé seulement);auto
+resultat;STATUS_FENSTERHEBER/STAT_BF_FH_POSITION_WERT;Position Fensterheber Beifahrer, nur bei eingelerntem FH;Position de la vitre passager (lève-vitre initialisé seulement);auto
+resultat;STATUS_WIEDERHOLZAEHLER/STAT_WIEDERHOLZAEHLER_ASP_BEIKLAPPEN_WERT;Wiederholzaehler Aussenspiegel Beiklappen auslesen;Lire le compteur de répétitions du rabattement des rétroviseurs;auto
+resultat;STATUS_WIEDERHOLZAEHLER/STAT_WIEDERHOLZAEHLER_VORFELDBELEUCHTUNG_WERT;Wiederholzaehler Vorfeldbeleuchtung auslesen;Lire le compteur de répétitions de l'éclairage d'approche;auto
+resultat;STATUS_VERBAU_SPIEGEL/STAT_SPIEGEL_LIN;LIN-Spiegel kodiert/verbaut;Rétroviseurs LIN codés / montés;auto
+resultat;STATUS_VERBAU_SPIEGEL/STAT_LIN_SCHALTER_BLOCK;LIN-Schalterblock kodiert/verbaut;Bloc de commandes LIN codé / monté;auto
+resultat;STATUS_POSITION_SPIEGEL/STAT_POS_SPIEGEL_FAHRER_HOR_WERT;Position Fahrerspiegel horizontal;Position horizontale du rétroviseur conducteur;auto
+resultat;STATUS_POSITION_SPIEGEL/STAT_POS_SPIEGEL_BEIFAHRER_HOR_WERT;Position Beifahrerspiegel horizontal;Position horizontale du rétroviseur passager;auto
+resultat;STATUS_POSITION_SPIEGEL/STAT_POS_SPIEGEL_FAHRER_VER_WERT;Position Fahrerspiegel vertikal;Position verticale du rétroviseur conducteur;auto
+resultat;STATUS_POSITION_SPIEGEL/STAT_POS_SPIEGEL_BEIFAHRER_VER_WERT;Position Beifahrerspiegel vertikal;Position verticale du rétroviseur passager;auto
+resultat;STATUS_SPIEGEL_TASTER/STAT_TASTER_LINKS_EIN;Taster nach links betaetigt;Bouton poussé à gauche;auto
+resultat;STATUS_SPIEGEL_TASTER/STAT_TASTER_RECHTS_EIN;Taster nach rechts betaetigt;Bouton poussé à droite;auto
+resultat;STATUS_SPIEGEL_TASTER/STAT_TASTER_OBEN_EIN;Taster nach oben betaetigt;Bouton poussé vers le haut;auto
+resultat;STATUS_SPIEGEL_TASTER/STAT_TASTER_UNTEN_EIN;Taster nach unten betaetigt;Bouton poussé vers le bas;auto
+resultat;STATUS_SPIEGEL_TASTER/STAT_SPIEGEL_AUSWAHL_FA_EIN;Fahrerspiegel auswaehlen;Sélection rétroviseur conducteur;auto
+resultat;STATUS_SPIEGEL_TASTER/STAT_SPIEGEL_AUSWAHL_BF_EIN;Beifahrerspiegel auswaehlen;Sélection rétroviseur passager;auto
+resultat;STATUS_WARNBLINKEN/STAT_WARNBLINKEN_EIN;Warnblinken aktiv;Feux de détresse actifs;auto
+resultat;STATUS_WARNBLINKEN/STAT_WARNBLINKEN_WERT_EIN;Warnblinken aktiv 1 bzw. 0;Feux de détresse actifs (1 ou 0);auto
+resultat;STATUS_KINDERSICHERUNG/STAT_TASTER_KINDERSICHERUNG_EIN;Taster fuer Kindersicherung betaetigt;Bouton de sécurité enfants appuyé;auto
+resultat;STATUS_KINDERSICHERUNG/STAT_KINDERSICHERUNG_AKTIV;Kindersicherung ein/aus;Sécurité enfants activée / désactivée;auto
+resultat;STATUS_KINDERSICHERUNG/STAT_KINDERSICHERUNG_EIN;Kindersicherung ein/aus;Sécurité enfants activée / désactivée;auto
+resultat;STATUS_SPIEGELHEIZUNG/STAT_SPIEGELHEIZUNG_TEXT_WERT;Wert fuer Spiegelheizung als Text;Chauffage des rétroviseurs (texte);auto
+resultat;STATUS_SPIEGELHEIZUNG/STAT_SPIEGELHEIZUNG_WERT;Wert fuer Spiegelheizung;Chauffage des rétroviseurs;auto
+resultat;STATUS_SPIEGEL_ABBLENDEN/STAT_SPIEGEL_ABBLENDEN_WERT;Wert fuer Spiegel abblenden von 0 bis 100;Obscurcissement du rétroviseur (0 à 100);auto
+resultat;STATUS_XENON_AL_EINSCHALTVERSUCHE/STAT_XENON_AL_EINSCHALTVERSUCHE;Xenon-AL-Einschaltversuche auslesen;Lire les tentatives d'allumage des feux de croisement xénon;auto
+resultat;STATUS_XENON_AL_EINSCHALTVERSUCHE/STAT_XENON_AL_L_RESTART_VERSUCHE;Xenon-AL-Einschaltrestartversuche links auslesen;Lire les tentatives de réallumage du feu de croisement xénon gauche;auto
+resultat;STATUS_XENON_AL_EINSCHALTVERSUCHE/STAT_XENON_AL_R_RESTART_VERSUCHE;Xenon-AL-Einschaltrestartversuche rechts auslesen;Lire les tentatives de réallumage du feu de croisement xénon droit;auto
+resultat;STATUS_INNENBELEUCHTUNG_DAUERAUS/STAT_INNENBELEUCHTUNG_DAUERAUS;Innenlicht daueraus geschaltet;Éclairage intérieur désactivé en permanence;auto
+resultat;STATUS_FH_SCHALTER/STAT_FH_SCHALTER_FAT_VORNE;FH-Schalter FAT vorne;Bouton lève-vitre porte conducteur avant;auto
+resultat;STATUS_FH_SCHALTER/STAT_FH_SCHALTER_FAT_HINTEN;FH-Schalter FAT hinten;Bouton lève-vitre porte conducteur arrière;auto
+resultat;STATUS_FH_SCHALTER/STAT_FH_SCHALTER_BFT_VORNE;FH-Schalter BFT vorne;Bouton lève-vitre porte passager avant;auto
+resultat;STATUS_FH_SCHALTER/STAT_FH_SCHALTER_BFT_HINTEN;FH-Schalter BFT hinten;Bouton lève-vitre porte passager arrière;auto
+resultat;STATUS_LWR_LESEN/STAT_KEINE_LWR;0 oder 1, ob LWR aktiv;Correcteur de portée actif (0 ou 1);auto
+resultat;STATUS_LWR_LESEN/STAT_DYN_LWR;0 oder 1, ob dynamisch LWR aktiv;Correcteur de portée dynamique actif (0 ou 1);auto
+resultat;STATUS_LWR_LESEN/STAT_AUT_LWR;0 oder 1, ob automatische LWR aktiv;Correcteur de portée automatique actif (0 ou 1);auto
+resultat;STATUS_LWR_LESEN/STAT_MAN_LWR;0 oder 1, ob manuelle LWR aktiv;Correcteur de portée manuel actif (0 ou 1);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_FL_LINKS_SHORT_CIRCUIT;Fernlicht links, E92/E93: Abbiegelicht links SHORT_CIRCUIT ja/nein;Feu de route gauche (E92/E93 : feu d'intersection gauche) : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_FL_RECHTS_SHORT_CIRCUIT;Fernlicht rechts, E92/E93: Abbiegelicht rechts SHORT_CIRCUIT ja/nein;Feu de route droit (E92/E93 : feu d'intersection droit) : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_AL_LINKS_SHORT_CIRCUIT;Abblendlicht links SHORT_CIRCUIT ja/nein;Feu de croisement gauche : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_AL_RECHTS_SHORT_CIRCUIT;Abblendlicht rechts SHORT_CIRCUIT ja/nein;Feu de croisement droit : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_BEGRL_LINKS_SHORT_CIRCUIT;Begrenzungslicht links SHORT_CIRCUIT ja/nein;Feu de position gauche : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_BEGRL_RECHTS_SHORT_CIRCUIT;Begrenzungslicht rechts SHORT_CIRCUIT ja/nein;Feu de position droit : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_NSW_LINKS_SHORT_CIRCUIT;Nebelscheinwerfer links SHORT_CIRCUIT ja/nein;Antibrouillard avant gauche : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_NSW_RECHTS_SHORT_CIRCUIT;Nebelscheinwerfer rechts SHORT_CIRCUIT ja/nein;Antibrouillard avant droit : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_FRA_LINKS_VORN_1_SHORT_CIRCUIT;Fahrtrichtungsanzeiger links vorne SHORT_CIRCUIT ja/nein;Clignotant avant gauche : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_FRA_RECHTS_VORN_1_SHORT_CIRCUIT;Fahrtrichtungsanzeiger rechts vorne SHORT_CIRCUIT ja/nein;Clignotant avant droit : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_FRA_LINKS_HINTEN_SHORT_CIRCUIT;Fahrtrichtungsanzeiger links hinten SHORT_CIRCUIT ja/nein;Clignotant arrière gauche : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_FRA_RECHTS_HINTEN_SHORT_CIRCUIT;Fahrtrichtungsanzeiger rechts hinten SHORT_CIRCUIT ja/nein;Clignotant arrière droit : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_BREMSLICHT_LINKS_SHORT_CIRCUIT;Bremslicht links SHORT_CIRCUIT ja/nein;Feu stop gauche : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_BREMSLICHT_RECHTS_SHORT_CIRCUIT;Bremslicht rechts SHORT_CIRCUIT ja/nein;Feu stop droit : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_BREMSLICHT_MITTE_SHORT_CIRCUIT;Bremslicht mitte SHORT_CIRCUIT ja/nein;Feu stop central : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_SL_BL_LINKS_1_SHORT_CIRCUIT;Schlusslicht 1 links, E92/E93: Tagfahrlicht links SHORT_CIRCUIT ja/nein;Feu arrière gauche 1 (E92/E93 : feu de jour gauche) : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_SL_BL_RECHTS_1_SHORT_CIRCUIT;Schlusslicht 1 rechts, E92/E93: Tagfahrlicht rechts SHORT_CIRCUIT ja/nein;Feu arrière droit 1 (E92/E93 : feu de jour droit) : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_SL_BL_LINKS_2_SHORT_CIRCUIT;Schlusslicht 2 links SHORT_CIRCUIT ja/nein;Feu arrière gauche 2 : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_SL_BL_RECHTS_2_SHORT_CIRCUIT;Schlusslicht 2 rechts SHORT_CIRCUIT ja/nein;Feu arrière droit 2 : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_KZL_SHORT_CIRCUIT;Kennzeichenlicht SHORT_CIRCUIT ja/nein;Éclairage de plaque : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_IB_SHORT_CIRCUIT;Innenbeleuchtung SHORT_CIRCUIT ja/nein;Éclairage intérieur : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_NSL_LINKS_SHORT_CIRCUIT;Nebelschlusslicht links SHORT_CIRCUIT ja/nein;Antibrouillard arrière gauche : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_NSL_RECHTS_SHORT_CIRCUIT;Nebelschlusslicht rechts SHORT_CIRCUIT ja/nein;Antibrouillard arrière droit : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_RFL_LINKS_SHORT_CIRCUIT;Rueckfahrlicht links SHORT_CIRCUIT ja/nein;Feu de recul gauche : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_RFL_RECHTS_SHORT_CIRCUIT;Rueckfahrlicht rechts SHORT_CIRCUIT ja/nein;Feu de recul droit : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_BFD_LINKS_SHORT_CIRCUIT;Brake-Force-Display links SHORT_CIRCUIT ja/nein;Brake Force Display gauche : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_BFD_RECHTS_SHORT_CIRCUIT;Brake-Force-Display rechts SHORT_CIRCUIT ja/nein;Brake Force Display droit : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_KLEMME_58G_SHORT_CIRCUIT;Klemme 58g SHORT_CIRCUIT ja/nein;Borne 58g (éclairage des commandes) : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_FLC_LED_SHORT_CIRCUIT;FLC LED SHORT_CIRCUIT ja/nein;LED de contrôle des feux (FLC) : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_VFB_SHORT_CIRCUIT;Vorfeldbeleuchtung SHORT_CIRCUIT ja/nein;Éclairage d'approche : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS/STAT_BEL_WBL_SHORT_CIRCUIT;Beleuchtung Warnblinktaster SHORT_CIRCUIT ja/nein;Éclairage du bouton de détresse : court-circuit oui/non;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_FL_LINKS_SHORT_CIRCUIT_WIEDERHOL;Fernlicht links, E92/E93: Abbiegelicht links SHORT_CIRCUIT_WIEDERHOL;Feu de route gauche (E92/E93 : feu d'intersection gauche) : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_FL_RECHTS_SHORT_CIRCUIT_WIEDERHOL;Fernlicht rechts, E92/E93: Abbiegelicht rechts SHORT_CIRCUIT_WIEDERHOL;Feu de route droit (E92/E93 : feu d'intersection droit) : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_AL_LINKS_SHORT_CIRCUIT_WIEDERHOL;Abblendlicht links SHORT_CIRCUIT_WIEDERHOL;Feu de croisement gauche : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_AL_RECHTS_SHORT_CIRCUIT_WIEDERHOL;Abblendlicht rechts SHORT_CIRCUIT_WIEDERHOL;Feu de croisement droit : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_BEGRL_LINKS_SHORT_CIRCUIT_WIEDERHOL;Begrenzungslicht links SHORT_CIRCUIT_WIEDERHOL;Feu de position gauche : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_BEGRL_RECHTS_SHORT_CIRCUIT_WIEDERHOL;Begrenzungslicht rechts SHORT_CIRCUIT_WIEDERHOL;Feu de position droit : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_NSW_LINKS_SHORT_CIRCUIT_WIEDERHOL;Nebelscheinwerfer links SHORT_CIRCUIT_WIEDERHOL;Antibrouillard avant gauche : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_NSW_RECHTS_SHORT_CIRCUIT_WIEDERHOL;Nebelscheinwerfer rechts SHORT_CIRCUIT_WIEDERHOL;Antibrouillard avant droit : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_FRA_LINKS_VORN_1_SHORT_CIRCUIT_WIEDERHOL;Fahrtrichtungsanzeiger links vorne SHORT_CIRCUIT_WIEDERHOL;Clignotant avant gauche : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_FRA_RECHTS_VORN_1_SHORT_CIRCUIT_WIEDERHOL;Fahrtrichtungsanzeiger rechts vorne SHORT_CIRCUIT_WIEDERHOL;Clignotant avant droit : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_FRA_LINKS_HINTEN_SHORT_CIRCUIT_WIEDERHOL;Fahrtrichtungsanzeiger links hinten SHORT_CIRCUIT_WIEDERHOL;Clignotant arrière gauche : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_FRA_RECHTS_HINTEN_SHORT_CIRCUIT_WIEDERHOL;Fahrtrichtungsanzeiger rechts hinten SHORT_CIRCUIT_WIEDERHOL;Clignotant arrière droit : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_BREMSLICHT_LINKS_SHORT_CIRCUIT_WIEDERHOL;Bremslicht links SHORT_CIRCUIT_WIEDERHOL;Feu stop gauche : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_BREMSLICHT_RECHTS_SHORT_CIRCUIT_WIEDERHOL;Bremslicht rechts SHORT_CIRCUIT_WIEDERHOL;Feu stop droit : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_BREMSLICHT_MITTE_SHORT_CIRCUIT_WIEDERHOL;Bremslicht mitte SHORT_CIRCUIT_WIEDERHOL;Feu stop central : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_SL_BL_LINKS_1_SHORT_CIRCUIT_WIEDERHOL;Schlusslicht 1 links, E92/E93: Tagfahrlicht links SHORT_CIRCUIT_WIEDERHOL;Feu arrière gauche 1 (E92/E93 : feu de jour gauche) : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_SL_BL_RECHTS_1_SHORT_CIRCUIT_WIEDERHOL;Schlusslicht 1 rechts, E92/E93: Tagfahrlicht rechts SHORT_CIRCUIT_WIEDERHOL;Feu arrière droit 1 (E92/E93 : feu de jour droit) : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_SL_BL_LINKS_2_SHORT_CIRCUIT_WIEDERHOL;Schlusslicht links 2 SHORT_CIRCUIT_WIEDERHOL;Feu arrière gauche 2 : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_SL_BL_RECHTS_2_SHORT_CIRCUIT_WIEDERHOL;Schlusslicht rechts 2 SHORT_CIRCUIT_WIEDERHOL;Feu arrière droit 2 : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_KZL_SHORT_CIRCUIT_WIEDERHOL;Kennzeichenlicht SHORT_CIRCUIT_WIEDERHOL;Éclairage de plaque : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_IB_SHORT_CIRCUIT_WIEDERHOL;Innenbeleuchtung SHORT_CIRCUIT_WIEDERHOL;Éclairage intérieur : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_NSL_LINKS_SHORT_CIRCUIT_WIEDERHOL;Nebelschlusslicht links SHORT_CIRCUIT_WIEDERHOL;Antibrouillard arrière gauche : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_NSL_RECHTS_SHORT_CIRCUIT_WIEDERHOL;Nebelschlusslicht rechts SHORT_CIRCUIT_WIEDERHOL;Antibrouillard arrière droit : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_RFL_LINKS_SHORT_CIRCUIT_WIEDERHOL;Rueckfahrlicht links SHORT_CIRCUIT_WIEDERHOL;Feu de recul gauche : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_RFL_RECHTS_SHORT_CIRCUIT_WIEDERHOL;Rueckfahrlicht rechts SHORT_CIRCUIT_WIEDERHOL;Feu de recul droit : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_BFD_LINKS_SHORT_CIRCUIT_WIEDERHOL;Brake-Force-Display links SHORT_CIRCUIT_WIEDERHOL;Brake Force Display gauche : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_BFD_RECHTS_SHORT_CIRCUIT_WIEDERHOL;Brake-Force-Display rechts SHORT_CIRCUIT_WIEDERHOL;Brake Force Display droit : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_KLEMME_58G_SHORT_CIRCUIT_WIEDERHOL;Klemme 58g SHORT_CIRCUIT_WIEDERHOL;Borne 58g (éclairage des commandes) : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_FLC_LED_SHORT_CIRCUIT_WIEDERHOL;FLC LED SHORT_CIRCUIT_WIEDERHOL;LED de contrôle des feux (FLC) : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_VFB_SHORT_CIRCUIT_WIEDERHOL;Vorfeldbeleuchtung SHORT_CIRCUIT_WIEDERHOL;Éclairage d'approche : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER/STAT_BEL_WBL_SHORT_CIRCUIT_WIEDERHOL;Beleuchtung Warnblinktaster SHORT_CIRCUIT_WIEDERHOL;Éclairage du bouton de détresse : répétitions de court-circuit;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_FL_LINKS_SHORT_CIRCUIT_COUNTER;Fernlicht links, E92/E93: Abbiegelicht links SHORT_CIRCUIT_COUNTER;Feu de route gauche (E92/E93 : feu d'intersection gauche) : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_FL_RECHTS_SHORT_CIRCUIT_COUNTER;Fernlicht rechts, E92/E93: Abbiegelicht rechts SHORT_CIRCUIT_COUNTER;Feu de route droit (E92/E93 : feu d'intersection droit) : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_AL_LINKS_SHORT_CIRCUIT_COUNTER;Abblendlicht links SHORT_CIRCUIT_COUNTER;Feu de croisement gauche : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_AL_RECHTS_SHORT_CIRCUIT_COUNTER;Abblendlicht rechts SHORT_CIRCUIT_COUNTER;Feu de croisement droit : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_BEGRL_LINKS_SHORT_CIRCUIT_COUNTER;Begrenzungslicht links SHORT_CIRCUIT_COUNTER;Feu de position gauche : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_BEGRL_RECHTS_SHORT_CIRCUIT_COUNTER;Begrenzungslicht rechts SHORT_CIRCUIT_COUNTER;Feu de position droit : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_NSW_LINKS_SHORT_CIRCUIT_COUNTER;Nebelscheinwerfer links SHORT_CIRCUIT_COUNTER;Antibrouillard avant gauche : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_NSW_RECHTS_SHORT_CIRCUIT_COUNTER;Nebelscheinwerfer rechts SHORT_CIRCUIT_COUNTER;Antibrouillard avant droit : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_FRA_LINKS_VORN_1_SHORT_CIRCUIT_COUNTER;Fahrtrichtungsanzeiger links vorne SHORT_CIRCUIT_COUNTER;Clignotant avant gauche : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_FRA_RECHTS_VORN_1_SHORT_CIRCUIT_COUNTER;Fahrtrichtungsanzeiger rechts vorne SHORT_CIRCUIT_COUNTER;Clignotant avant droit : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_FRA_LINKS_HINTEN_SHORT_CIRCUIT_COUNTER;Fahrtrichtungsanzeiger links hinten SHORT_CIRCUIT_COUNTER;Clignotant arrière gauche : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_FRA_RECHTS_HINTEN_SHORT_CIRCUIT_COUNTER;Fahrtrichtungsanzeiger rechts hinten SHORT_CIRCUIT_COUNTER;Clignotant arrière droit : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_BREMSLICHT_LINKS_SHORT_CIRCUIT_COUNTER;Bremslicht links SHORT_CIRCUIT_COUNTER;Feu stop gauche : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_BREMSLICHT_RECHTS_SHORT_CIRCUIT_COUNTER;Bremslicht rechts SHORT_CIRCUIT_COUNTER;Feu stop droit : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_BREMSLICHT_MITTE_SHORT_CIRCUIT_COUNTER;Bremslicht mitte SHORT_CIRCUIT_COUNTER;Feu stop central : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_SL_BL_LINKS_1_SHORT_CIRCUIT_COUNTER;Schlusslicht links 1, E92/E93: Tagfahrlicht links SHORT_CIRCUIT_COUNTER;Feu arrière gauche 1 (E92/E93 : feu de jour gauche) : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_SL_BL_RECHTS_1_SHORT_CIRCUIT_COUNTER;Schlusslicht rechts 1, E92/E93: Tagfahrlicht rechts SHORT_CIRCUIT_COUNTER;Feu arrière droit 1 (E92/E93 : feu de jour droit) : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_SL_BL_LINKS_2_SHORT_CIRCUIT_COUNTER;Schlusslicht links 2 SHORT_CIRCUIT_COUNTER;Feu arrière gauche 2 : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_SL_BL_RECHTS_2_SHORT_CIRCUIT_COUNTER;Schlusslicht rechts 2 SHORT_CIRCUIT_COUNTER;Feu arrière droit 2 : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_KZL_SHORT_CIRCUIT_COUNTER;Kennzeichenlicht SHORT_CIRCUIT_COUNTER;Éclairage de plaque : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_IB_SHORT_CIRCUIT_COUNTER;Innenbeleuchtung SHORT_CIRCUIT_COUNTER;Éclairage intérieur : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_NSL_LINKS_SHORT_CIRCUIT_COUNTER;Nebelschlusslicht links SHORT_CIRCUIT_COUNTER;Antibrouillard arrière gauche : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_NSL_RECHTS_SHORT_CIRCUIT_COUNTER;Nebelschlusslicht rechts SHORT_CIRCUIT_COUNTER;Antibrouillard arrière droit : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_RFL_LINKS_SHORT_CIRCUIT_COUNTER;Rueckfahrlicht links SHORT_CIRCUIT_COUNTER;Feu de recul gauche : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_RFL_RECHTS_SHORT_CIRCUIT_COUNTER;Rueckfahrlicht rechts SHORT_CIRCUIT_COUNTER;Feu de recul droit : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_BFD_LINKS_SHORT_CIRCUIT_COUNTER;Brake-Force-Display links SHORT_CIRCUIT_COUNTER;Brake Force Display gauche : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_BFD_RECHTS_SHORT_CIRCUIT_COUNTER;Brake-Force-Display rechts SHORT_CIRCUIT_COUNTER;Brake Force Display droit : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_KLEMME_58G_SHORT_CIRCUIT_COUNTER;Klemme 58g SHORT_CIRCUIT_COUNTER;Borne 58g (éclairage des commandes) : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_FLC_LED_SHORT_CIRCUIT_COUNTER;FLC LED SHORT_CIRCUIT_COUNTER;LED de contrôle des feux (FLC) : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_VFB_SHORT_CIRCUIT_COUNTER;Vorfeldbeleuchtung SHORT_CIRCUIT_COUNTER;Éclairage d'approche : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER/STAT_BEL_WBL_SHORT_CIRCUIT_COUNTER;Beleuchtung Warnblinktaster SHORT_CIRCUIT_COUNTER;Éclairage du bouton de détresse : compteur de courts-circuits;auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_FL_LINKS_SHORT_CIRCUIT_COUNTER_MAX;Fernlicht links, E92/E93: Abbiegelicht links SHORT_CIRCUIT_COUNTER_MAX;Feu de route gauche (E92/E93 : feu d'intersection gauche) : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_FL_RECHTS_SHORT_CIRCUIT_COUNTER_MAX;Fernlicht rechts, E92/E93: Abbiegelicht rechts SHORT_CIRCUIT_COUNTER_MAX;Feu de route droit (E92/E93 : feu d'intersection droit) : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_AL_LINKS_SHORT_CIRCUIT_COUNTER_MAX;Abblendlicht links SHORT_CIRCUIT_COUNTER_MAX;Feu de croisement gauche : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_AL_RECHTS_SHORT_CIRCUIT_COUNTER_MAX;Abblendlicht rechts SHORT_CIRCUIT_COUNTER_MAX;Feu de croisement droit : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_BEGRL_LINKS_SHORT_CIRCUIT_COUNTER_MAX;Begrenzungslicht links SHORT_CIRCUIT_COUNTER_MAX;Feu de position gauche : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_BEGRL_RECHTS_SHORT_CIRCUIT_COUNTER_MAX;Begrenzungslicht rechts SHORT_CIRCUIT_COUNTER_MAX;Feu de position droit : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_NSW_LINKS_SHORT_CIRCUIT_COUNTER_MAX;Nebelscheinwerfer links SHORT_CIRCUIT_COUNTER_MAX;Antibrouillard avant gauche : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_NSW_RECHTS_SHORT_CIRCUIT_COUNTER_MAX;Nebelscheinwerfer rechts SHORT_CIRCUIT_COUNTER_MAX;Antibrouillard avant droit : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_FRA_LINKS_VORN_1_SHORT_CIRCUIT_COUNTER_MAX;Fahrtrichtungsanzeiger links vorne SHORT_CIRCUIT_COUNTER_MAX;Clignotant avant gauche : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_FRA_RECHTS_VORN_1_SHORT_CIRCUIT_COUNTER_MAX;Fahrtrichtungsanzeiger rechts vorne SHORT_CIRCUIT_COUNTER_MAX;Clignotant avant droit : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_FRA_LINKS_HINTEN_SHORT_CIRCUIT_COUNTER_MAX;Fahrtrichtungsanzeiger links hinten SHORT_CIRCUIT_COUNTER_MAX;Clignotant arrière gauche : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_FRA_RECHTS_HINTEN_SHORT_CIRCUIT_COUNTER_MAX;Fahrtrichtungsanzeiger rechts hinten SHORT_CIRCUIT_COUNTER_MAX;Clignotant arrière droit : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_BREMSLICHT_LINKS_SHORT_CIRCUIT_COUNTER_MAX;Bremslicht links SHORT_CIRCUIT_COUNTER_MAX;Feu stop gauche : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_BREMSLICHT_RECHTS_SHORT_CIRCUIT_COUNTER_MAX;Bremslicht rechts SHORT_CIRCUIT_COUNTER_MAX;Feu stop droit : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_BREMSLICHT_MITTE_SHORT_CIRCUIT_COUNTER_MAX;Bremslicht mitte SHORT_CIRCUIT_COUNTER_MAX;Feu stop central : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_SL_BL_LINKS_1_SHORT_CIRCUIT_COUNTER_MAX;Schlusslicht links 1, E92/E93: Tagfahrlicht links SHORT_CIRCUIT_COUNTER_MAX;Feu arrière gauche 1 (E92/E93 : feu de jour gauche) : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_SL_BL_RECHTS_1_SHORT_CIRCUIT_COUNTER_MAX;Schlusslicht rechts 1, E92/E93: Tagfahrlicht rechts SHORT_CIRCUIT_COUNTER_MAX;Feu arrière droit 1 (E92/E93 : feu de jour droit) : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_SL_BL_LINKS_2_SHORT_CIRCUIT_COUNTER_MAX;Schlusslicht links 2 SHORT_CIRCUIT_COUNTER_MAX;Feu arrière gauche 2 : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_SL_BL_RECHTS_2_SHORT_CIRCUIT_COUNTER_MAX;Schlusslicht rechts 2 SHORT_CIRCUIT_COUNTER_MAX;Feu arrière droit 2 : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_KZL_SHORT_CIRCUIT_COUNTER_MAX;Kennzeichenlicht SHORT_CIRCUIT_COUNTER_MAX;Éclairage de plaque : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_IB_SHORT_CIRCUIT_COUNTER_MAX;Innenbeleuchtung SHORT_CIRCUIT_COUNTER_MAX;Éclairage intérieur : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_NSL_LINKS_SHORT_CIRCUIT_COUNTER_MAX;Nebelschlusslicht links SHORT_CIRCUIT_COUNTER_MAX;Antibrouillard arrière gauche : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_NSL_RECHTS_SHORT_CIRCUIT_COUNTER_MAX;Nebelschlusslicht rechts SHORT_CIRCUIT_COUNTER_MAX;Antibrouillard arrière droit : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_RFL_LINKS_SHORT_CIRCUIT_COUNTER_MAX;Rueckfahrlicht links SHORT_CIRCUIT_COUNTER_MAX;Feu de recul gauche : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_RFL_RECHTS_SHORT_CIRCUIT_COUNTER_MAX;Rueckfahrlicht rechts SHORT_CIRCUIT_COUNTER_MAX;Feu de recul droit : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_BFD_LINKS_SHORT_CIRCUIT_COUNTER_MAX;Brake-Force-Display links SHORT_CIRCUIT_COUNTER_MAX;Brake Force Display gauche : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_BFD_RECHTS_SHORT_CIRCUIT_COUNTER_MAX;Brake-Force-Display rechts SHORT_CIRCUIT_COUNTER_MAX;Brake Force Display droit : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_KLEMME_58G_SHORT_CIRCUIT_COUNTER_MAX;Klemme 58g SHORT_CIRCUIT_COUNTER_MAX;Borne 58g (éclairage des commandes) : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_FLC_LED_SHORT_CIRCUIT_COUNTER_MAX;FLC LED SHORT_CIRCUIT_COUNTER_MAX;LED de contrôle des feux (FLC) : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_VFB_SHORT_CIRCUIT_COUNTER_MAX;Vorfeldbeleuchtung SHORT_CIRCUIT_COUNTER_MAX;Éclairage d'approche : compteur de courts-circuits (max.);auto
+resultat;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX/STAT_BEL_WBL_SHORT_CIRCUIT_COUNTER_MAX;Beleuchtung Warnblinktaster SHORT_CIRCUIT_COUNTER_MAX;Éclairage du bouton de détresse : compteur de courts-circuits (max.);auto
+resultat;STATUS_REFERENZLAUF_ALC_SYSTEM/STAT_ALC_SYSTEM_REFERENZIERT_EIN;gibt an ob ALC-System fertig referenziert hat;Indique si le système de phares directionnels (ALC) a terminé son référencement;auto
+resultat;IDENT/ID_BMW_NR;BMW-Teilenummer;Numéro de pièce BMW;auto
+resultat;IDENT/ID_HW_NR;BMW-Hardwarenummer;Numéro de matériel BMW;auto
+resultat;IDENT/ID_COD_INDEX;Codier-Index;Indice de codage;auto
+resultat;IDENT/ID_DIAG_INDEX;Diagnose-Index;Indice de diagnostic;auto
+resultat;IDENT/ID_VAR_INDEX;Varianten-Index;Indice de variante;auto
+resultat;IDENT/ID_DATUM_JAHR;Herstelldatum (Jahr);Date de fabrication (année);auto
+resultat;IDENT/ID_DATUM_MONAT;Herstelldatum (Monat);Date de fabrication (mois);auto
+resultat;IDENT/ID_DATUM_TAG;Herstelldatum (Tag);Date de fabrication (jour);auto
+resultat;IDENT/ID_DATUM;Herstelldatum (TT.MM.JJJJ);Date de fabrication (JJ.MM.AAAA);auto
+resultat;IDENT/ID_LIEF_NR;Lieferanten-Nummer;Numéro fournisseur;auto
+resultat;IDENT/ID_LIEF_TEXT;Lieferanten-Text;Texte fournisseur;auto
+resultat;IDENT/ID_SW_NR_MCV;Softwarenummer (message catalogue version);Numéro de logiciel (version catalogue de messages);auto
+resultat;IDENT/ID_SW_NR_FSV;Softwarenummer (functional software version);Numéro de logiciel (version logiciel fonctionnel);auto
+resultat;IDENT/ID_SW_NR_OSV;Softwarenummer (operating system version);Numéro de logiciel (version système d'exploitation);auto
+resultat;IDENT/ID_SW_NR_RES;Softwarenummer (reserved - currently unused);Numéro de logiciel (réservé - actuellement non utilisé);auto
+resultat;IDENT/ID_SG_ADR;Steuergeraeteadresse;Adresse calculateur;auto
+resultat;PRUEFSTEMPEL_LESEN/BYTE1;BYTE1;BYTE1;auto
+resultat;PRUEFSTEMPEL_LESEN/BYTE2;BYTE2;BYTE2;auto
+resultat;PRUEFSTEMPEL_LESEN/BYTE3;BYTE3;BYTE3;auto
+resultat;SERIENNUMMER_LESEN/SERIENNUMMER;Seriennummer des Steuergeraets;Numéro de série du calculateur;auto
+resultat;ZIF_LESEN/ZIF_PROGRAMM_REFERENZ;PRGREF ProgrammReferenz;PRGREF Référence programme;auto
+resultat;ZIF_LESEN/ZIF_SG_KENNUNG;ZZZ;ZZZ;auto
+resultat;ZIF_LESEN/ZIF_PROJEKT;PPPxV;PPPxV;auto
+resultat;ZIF_LESEN/ZIF_PROGRAMM_STAND;BBxh;BBxh;auto
+resultat;ZIF_LESEN/ZIF_STATUS;Dateninhalt bei FF noch nicht beschrieben;Contenu des données FF non encore écrit;auto
+resultat;ZIF_LESEN/ZIF_BMW_HW;VMECUH*N vehicleManufacturerECUHardware*Number;VMECUH*N Numéro de matériel ECU du constructeur*;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_PROGRAMM_REFERENZ;PRGREFB ProgrammReferenzBackup;PRGREFB Référence programme de secours;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_SG_KENNUNG;ZZZ;ZZZ;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_PROJEKT;PPPxV;PPPxV;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_PROGRAMM_STAND;BBxh;BBxh;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_STATUS;Dateninhalt bei FF noch nicht beschrieben;Contenu des données FF non encore écrit;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_BMW_HW;VMECUH*NB vehicleManufECUHW*NumberBackup;VMECUH*NB Numéro de matériel ECU du constructeur* de secours;auto
+resultat;PHYSIKALISCHE_HW_NR_LESEN/PHYSIKALISCHE_HW_NR;Physikalische Hardware-Nummer;Numéro de matériel physique;auto
+resultat;HARDWARE_REFERENZ_LESEN/HARDWARE_REFERENZ;Hardware Referenz;Référence matériel;auto
+resultat;HARDWARE_REFERENZ_LESEN/HW_REF_SG_KENNUNG;ZZZ;ZZZ;auto
+resultat;HARDWARE_REFERENZ_LESEN/HW_REF_PROJEKT;PPPx;PPPx;auto
+resultat;HARDWARE_REFERENZ_LESEN/HW_REF_STATUS;Dateninhalt bei FF noch nicht beschrieben;Contenu des données FF non encore écrit;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REFERENZ;Daten Referenz;Référence données;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_SG_KENNUNG;ZZZ;ZZZ;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_PROJEKT;PPPxV;PPPxV;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_PROGRAMM_STAND;BBxh;BBxh;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_DATENSATZ;dxxxx;dxxxx;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_STATUS;Dateninhalt bei FF noch nicht beschrieben;Contenu des données FF non encore écrit;auto
+resultat;I_STUFE_LESEN/I_STEP_1;I Step 1;I-Stufe 1;auto
+resultat;I_STUFE_LESEN/I_STEP_2;I Step 2;I-Stufe 2;auto
+resultat;I_STUFE_LESEN/I_STEP_3;I Step 3;I-Stufe 3;auto
+resultat;READ_VARIANTE/VARIANTE_WERT;Variante als Wert;Variante (valeur);auto
+resultat;READ_VARIANTE/VARIANTEN_BEZEICHNUNG;Bezeichnung der Variante des Steuergeraetes;Nom de la variante du calculateur;auto
+resultat;READ_FVIN/FVIN;lange Fahrgestellnummer;Numéro de châssis long (VIN);auto
+resultat;CBD_ZEICHN_INDEX_LESEN_LEAR/CBD_ZEICHN_INDEX;Aenderungsindex;Indice de modification;auto
+resultat;VIN_SMC_LESEN/VIN_SMC_LINKS;Fahrgestellnummer 7-stellig fuer SMC links;Numéro de châssis à 7 caractères du SMC gauche;auto
+resultat;VIN_SMC_LESEN/VIN_SMC_LINKS_KONFIG;Konfigbyte Fahrgestellnummer fuer SMC links;Octet de configuration du numéro de châssis du SMC gauche;auto
+resultat;VIN_SMC_LESEN/VIN_SMC_RECHTS;Fahrgestellnummer 7-stellig fuer SMC rechts;Numéro de châssis à 7 caractères du SMC droit;auto
+resultat;VIN_SMC_LESEN/VIN_SMC_RECHTS_KONFIG;Konfigbyte Fahrgestellnummer fuer SMC rechts;Octet de configuration du numéro de châssis du SMC droit;auto
+resultat;ID_SMC_LESEN/SW_VERSION_SMC_LINKS;SW-Version fuer SMC links;Version logicielle du SMC gauche;auto
+resultat;ID_SMC_LESEN/HW_VERSION_SMC_LINKS;HW-Version fuer SMC links;Version matérielle du SMC gauche;auto
+resultat;ID_SMC_LESEN/CODING_INDEX_SMC_LINKS;Codierindex fuer SMC links;Indice de codage du SMC gauche;auto
+resultat;ID_SMC_LESEN/MCV_VERSION_SMC_LINKS;MCV-Version fuer SMC links;Version MCV du SMC gauche;auto
+resultat;ID_SMC_LESEN/SW_VERSION_SMC_RECHTS;SW-Version fuer SMC rechts;Version logicielle du SMC droit;auto
+resultat;ID_SMC_LESEN/HW_VERSION_SMC_RECHTS;HW-Version fuer SMC rechts;Version matérielle du SMC droit;auto
+resultat;ID_SMC_LESEN/CODING_INDEX_SMC_RECHTS;Codierindex fuer SMC rechts;Indice de codage du SMC droit;auto
+resultat;ID_SMC_LESEN/MCV_VERSION_SMC_RECHTS;MCV-Version fuer SMC rechts;Version MCV du SMC droit;auto
+resultat;*/SW_VERSION_GURTBRINGER;SW-Version fuer GURTBRINGER;Version logicielle du présentateur de ceinture;auto
+resultat;*/ID_BMW_NR_GURTBRINGER;BMW_Teilenummer fuer das GURTBRINGER;Référence BMW du présentateur de ceinture;auto
+resultat;*/CODING_INDEX_GURTBRINGER;Codierindex fuer GURTBRINGER;Indice de codage du présentateur de ceinture;auto
+resultat;*/MCV_VERSION_GURTBRINGER;Nummer Nachrichtenkatalog fuer das GURTBRINGER;Numéro du catalogue de messages du présentateur de ceinture;auto
+job;INITIALISIERUNG;Initialisierung und Kommunikationsparameter;Initialisation et paramètres de communication;auto
+job;INFO;Information SGBD;Information SGBD;auto
+job;DIAGNOSEPROTOKOLL_LESEN;Gibt die möglichen Diagnoseprotokolle;Affiche les protocoles de diagnostic possibles;auto
+job;DIAGNOSEPROTOKOLL_SETZEN;Wählt ein Diagnoseprotokoll aus;Sélectionner un protocole de diagnostic;auto
+job;IDENT;Identdaten;Données d'identification;auto
+job;FS_LESEN;Fehlerspeicher lesen (alle Fehler / Ort und Art);Lire la mémoire de défauts (tous les défauts / lieu et type);auto
+job;FS_LESEN_DETAIL;Fehlerspeicher lesen (ein Fehler / alle Details);Lire la mémoire de défauts (un défaut / tous les détails);auto
+job;FS_LOESCHEN;Fehlerspeicher loeschen;Effacer la mémoire de défauts;auto
+job;PRUEFSTEMPEL_LESEN;Auslesen des Pruefstempels;Lire le tampon de test;auto
+job;PRUEFSTEMPEL_SCHREIBEN;Beschreiben des Pruefstempels;Écrire le tampon de test;auto
+job;NORMALER_DATENVERKEHR;Sperren bzw. Freigeben des normalen Datenverkehrs;Verrouiller ou déverrouiller le trafic de données normal;auto
+job;DIAGNOSE_AUFRECHT;Diagnosemode des SG aufrecht erhalten;Maintenir le mode diagnostic du calculateur;auto
+job;FS_SPERREN;Sperren bzw. Freigeben des Fehlerspeichers;Verrouiller ou déverrouiller la mémoire de défauts;auto
+job;IS_LESEN;Infospeicher lesen (alle Info-Meldungen / Ort und Art);Lire la mémoire d'informations (tous les messages / emplacement et type);auto
+job;IS_LESEN_DETAIL;Infospeicher lesen (alle Info-Meldungen / Ort und Art);Lire la mémoire d'informations (tous les messages / emplacement et type);auto
+job;IS_LOESCHEN;Infospeicher loeschen;Effacer la mémoire d'informations;auto
+job;DIAGNOSE_ENDE;Diagnosemode des SG beenden;Quitter le mode diagnostic du calculateur;auto
+job;DIAGNOSE_MODE;SG in bestimmten Diagnosemode bringen;Mettre le calculateur en mode diagnostic spécifique;auto
+job;SLEEP_MODE;SG in Sleep-Mode versetzen;Mettre le calculateur en mode veille;auto
+job;SPEICHER_LESEN;Auslesen des Steuergeraete-Speichers;Lire la mémoire du calculateur;auto
+job;SPEICHER_SCHREIBEN;Beschreiben des Steuergeraete-Speichers;Écrire la mémoire du calculateur;auto
+job;ENERGIESPARMODE;Einstellen des Energiesparmodes;Régler le mode d'économie d'énergie;auto
+job;C_CI_LESEN;Codierindex lesen;Lire l'index de codage;auto
+job;C_FG_LESEN;Fahrgestellnummer lesen;Lire le numéro de châssis;auto
+job;C_FG_SCHREIBEN;Fahrgestellnummer schreiben;Écrire le numéro de châssis;auto
+job;C_FG_AUFTRAG;Fahrgestellnummer schreiben und ruecklesen;Écrire et relire le numéro de châssis;auto
+job;C_AEI_LESEN;Aenderungsindex der Codierdaten lesen;Lire l'index de modification des données de codage;auto
+job;C_AEI_SCHREIBEN;Aenderungsindex der Codierdaten schreiben;Écrire l'index de modification des données de codage;auto
+job;C_AEI_AUFTRAG;Aenderungsindex der Codierdaten schreiben und ruecklesen;Écrire et relire l'index de modification des données de codage;auto
+job;C_C_LESEN;Codierdaten lesen;Lire les données de codage;auto
+job;C_C_SCHREIBEN;Codierdaten schreiben;Écrire les données de codage;auto
+job;C_C_AUFTRAG;Codierdaten schreiben und ruecklesen;Écrire et relire les données de codage;auto
+job;SERIENNUMMER_LESEN;Hersteller Seriennummer lesen;Lire le numéro de série du fabricant;auto
+job;ZIF_LESEN;Auslesen des Zulieferinfofeldes;Lire le champ d'information du fournisseur;auto
+job;ZIF_BACKUP_LESEN;Auslesen des Backups des Zulieferinfofeldes;Lire la sauvegarde du champ d'information du fournisseur;auto
+job;PHYSIKALISCHE_HW_NR_LESEN;Auslesen der physikalischen Hardwarenummer;Lire le numéro de matériel physique;auto
+job;HARDWARE_REFERENZ_LESEN;Auslesen der Hardware Referenz;Lire la référence du matériel;auto
+job;DATEN_REFERENZ_LESEN;Auslesen der Daten Referenz;Lire la référence des données;auto
+job;FLASH_ZEITEN_LESEN;Auslesen der Flash Loeschzeit, Signaturtestzeit,;Lire le temps d'effacement Flash, le temps de test de signature,;auto
+job;FLASH_BLOCKLAENGE_LESEN;Auslesen des maximalen Blocklaenge beim Flashen;Lire la longueur de bloc maximale lors du flashage;auto
+job;AUTHENTISIERUNG_ZUFALLSZAHL_LESEN;Authentisierung Zufallszahl des SG lesen;Lire le nombre aléatoire d'authentification du calculateur;auto
+job;AUTHENTISIERUNG_START;Authentisierung pruefen;Vérifier l'authentification;auto
+job;FLASH_PROGRAMMIER_STATUS_LESEN;Programmierstatus des SG lesen;Lire l'état de programmation du calculateur;auto
+job;FLASH_SIGNATUR_PRUEFEN;Flash Signatur pruefen;Vérifier la signature Flash;auto
+job;STEUERGERAETE_RESET;Steuergeraete reset ausloesen;Déclencher le réinitialisation des calculateurs;auto
+job;FLASH_LOESCHEN;Flash loeschen;Effacer le Flash;auto
+job;FLASH_SCHREIBEN_ADRESSE;Vorbereitung fuer Flash schreiben;Préparation pour l'écriture du Flash;auto
+job;FLASH_SCHREIBEN;Flash Daten schreiben;Écrire les données Flash;auto
+job;FLASH_SCHREIBEN_ENDE;Flashprogrammierung abschliessen;Terminer la programmation Flash;auto
+job;AIF_LESEN;Auslesen des Anwender Informations Feldes;Lecture du champ d'informations utilisateur;auto
+job;AIF_SCHREIBEN;Schreiben des Anwender Informations Feldes;Écriture du champ d'informations utilisateur;auto
+job;PRUEFCODE_LESEN;Standard Pruefcode lesen fuer Kundendienst;Lire le code de test standard pour le service client;auto
+job;I_STUFE_LESEN;Auslesen der I-Stufe;Lire l'I-Stufe (niveau d'intégration);auto
+job;I_STUFE_SCHREIBEN;Beschreiben der I-Stufe;Écrire l'I-Stufe (niveau d'intégration);auto
+job;READ_CODIER_INDEX;KWP 2000: $21 ReadDataByLocalIdentifier;KWP 2000 : $21 ReadDataByLocalIdentifier;auto
+job;READ_VARIANTE;KWP 2000: $21 ReadDataByLocalIdentifier;KWP 2000 : $21 ReadDataByLocalIdentifier;auto
+job;STATUS_BETR_H_FRMFA;Status von PL2-FRMFA lesen;Lire l'état du FRMFA PL2;auto
+job;STEUERN_BETR_H_FRMFA_LOESCHEN;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;STATUS_BETR_H_FUNKTIONEN;Status von FRMFA lesen;Lire l'état du FRMFA;auto
+job;STEUERN_BETR_H_FUNKTIONEN_LOESCHEN;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;STATUS_BETR_H_AMPERE;Status von FRMFA lesen;Lire l'état du FRMFA;auto
+job;STEUERN_BETR_H_AMPERE;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;STATUS_DIGITAL_INPUTS;Auslesen der Stati von den digitalen Eingaengen;Lire l'état des entrées numériques;auto
+job;STATUS_ANALOG_INPUTS;Auslesen der Stati von den analogen Eingaengen;Lire l'état des entrées analogiques;auto
+job;STATUS_LAMPEN_DIGITAL;Status von FRMFA lesen;Lire l'état du FRMFA;auto
+job;STATUS_SCHLOSSNUESSE;Auslesen der Stati von den Schlossnuessen;Lire l'état des noix de serrure;auto
+job;STEUERN_LAMPEN_DIGITAL;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;STEUERN_LAMPEN_PWM;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;STATUS_DIMMWERT;Status von FRMFA lesen;Lire l'état du FRMFA;auto
+job;STATUS_SENSE_INPUTS;Auslesen der Sensewerte der einzelnen Lampen;Lire les mesures de chaque lampe;auto
+job;STATUS_FENSTERHEBER;Status von PL2-FRMFA lesen;Lire l'état du FRMFA PL2;auto
+job;STEUERN_FENSTERHEBER;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;STEUERN_FENSTERHEBER_EINLERNEN;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;STEUERN_FENSTERHEBER_MIT_EKS_EINLERNEN;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;STEUERN_FENSTERHEBER_EINLERNEN_AUS_CODIERUNG;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;STEUERN_FENSTERHEBER_DENORMIEREN;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;STATUS_WIEDERHOLZAEHLER;Status von PL2-FRMFA lesen;Lire l'état du FRMFA PL2;auto
+job;STEUERN_AL_EINSCHALTEN;Abblendlicht ueber Diagnose ein- bzw. ausschalten;Allumer ou éteindre les feux de croisement par diagnostic;auto
+job;STATUS_VERBAU_SPIEGEL;Kodierdaten von FRMFA lesen;Lire les données de codage du FRMFA;auto
+job;STATUS_POSITION_SPIEGEL;Status von PL2-FRMFA lesen;Lire l'état du FRMFA PL2;auto
+job;STATUS_MEMORY_POSITION_SPIEGEL;Status von PL2-FRMFA lesen;Lire l'état du FRMFA PL2;auto
+job;STEUERN_MEMORY_POSITION_SPIEGEL;Status von PL2-FRMFA schreiben;Écrire l'état du FRMFA PL2;auto
+job;STATUS_SPIEGEL_TASTER;Status von PL2-FRMFA lesen;Lire l'état du FRMFA PL2;auto
+job;STEUERN_POSITION_SPIEGEL;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;STEUERN_POSITION_DIREKT_SPIEGEL;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;STATUS_GURTBRINGER;Status von PL2-FRMFA lesen;Lire l'état du FRMFA PL2;auto
+job;STEUERN_GURTBRINGER_INITIALISIERUNG;Status von PL2-FRMFA schreiben;Écrire l'état du FRMFA PL2;auto
+job;STEUERN_GURTBRINGER_POSITION;Status von PL2-FRMFA schreiben;Écrire l'état du FRMFA PL2;auto
+job;STEUERN_GURTBRINGER_RICHTUNG;Status von PL2-FRMFA schreiben;Écrire l'état du FRMFA PL2;auto
+job;STATUS_WARNBLINKEN;Status von PL2-FRMFA lesen;Lire l'état du FRMFA PL2;auto
+job;STATUS_KINDERSICHERUNG;Status von PL2-FRMFA lesen;Lire l'état du FRMFA PL2;auto
+job;STEUERN_KINDERSICHERUNG;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;STATUS_SPIEGELHEIZUNG;Status von PL2-FRMFA lesen;Lire l'état du FRMFA PL2;auto
+job;STEUERN_SPIEGELHEIZUNG;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;STATUS_SPIEGEL_ABBLENDEN;Status von PL2-FRMFA lesen;Lire l'état du FRMFA PL2;auto
+job;STEUERN_SPIEGEL_ABBLENDEN;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;STATUS_XENON_AL_EINSCHALTVERSUCHE;Auslesen wie oft das Abblendlicht eingeschaltet wurde;Lire le nombre d'allumages des feux de croisement;auto
+job;STEUERN_XENON_AL_EINSCHALTVERSUCHE_LOESCHEN;Loeschen der AL-Einschaltversuche;Effacer les tentatives d'allumage des feux de croisement;auto
+job;STATUS_INNENBELEUCHTUNG_DAUERAUS;Auslesen, ob Innenlicht daueraus geschaltet wurde;Lire si l'éclairage intérieur a été désactivé en permanence;auto
+job;STEUERN_INNENBELEUCHTUNG_DAUERAUS;Innenbeleuchtung Dauerausschalten;Désactiver l'éclairage intérieur en permanence;auto
+job;STATUS_SENSE_LESEN;Senseausgang fuer ausgewaehlte Lampe lesen, FRMFA;Lire la mesure de la lampe choisie (FRMFA);auto
+job;STATUS_FH_SCHALTER;Status von PL2-FRMFA lesen;Lire l'état du FRMFA PL2;auto
+job;STATUS_EE_FH_LOG_DATA;Lesen von EE_FH_LOG_DATA;Lire EE_FH_LOG_DATA (journal des lève-vitres);auto
+job;STEUERN_EE_FH_LOG_DATA;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;_CODIERDATEN_BLOCK_LESEN_LEAR;Modus : Default;Mode : par défaut;auto
+job;_CODIERDATEN_BLOCK_SCHREIBEN_LEAR;Beschreiben der Codierdaten je nach Block;Écrire les données de codage par bloc;auto
+job;_CODIERDATEN_3000_LESEN_KOMPLETT_LEAR;Auslesen der kompletten Codierdaten im 3000-Bereich;Lire toutes les données de codage de la zone 3000;auto
+job;_CODIERDATEN_3400_LESEN_KOMPLETT_LEAR;Auslesen der kompletten Codierdaten im 3400-Bereich;Lire toutes les données de codage de la zone 3400;auto
+job;_CODIERDATEN_3100_LESEN_KOMPLETT_LESEN_LEAR;Auslesen der kompletten Codierdaten im 3100-Bereich;Lire toutes les données de codage de la zone 3100;auto
+job;_CODIERDATEN_3500_LESEN_KOMPLETT_LEAR;Auslesen der kompletten Codierdaten im 3500-Bereich (FH);Lire toutes les données de codage de la zone 3500 (lève-vitres);auto
+job;_CODIERDATEN_3400_SCHREIBEN_AUS_DATEI_LEAR;Beschreiben der Default-Codierdaten;Écrire les données de codage par défaut;auto
+job;_CODIERDATEN_3000_SCHREIBEN_AUS_DATEI_LEAR;Beschreiben der Default-Codierdaten;Écrire les données de codage par défaut;auto
+job;_CODIERDATEN_3100_SCHREIBEN_AUS_DATEI_LEAR;Beschreiben der Default-Codierdaten fuer 3100-Bereich;Écrire les données de codage par défaut de la zone 3100;auto
+job;_CODIERDATEN_KOMPLETT_SCHREIBEN_LEAR;Beschreiben der Default-Codierdaten;Écrire les données de codage par défaut;auto
+job;_READ_IDENT_94_SSECUSON_LEAR;SystemSupplierECUSoftwareNumber;Numéro de logiciel du calculateur (fournisseur);auto
+job;_WRITE_CI_AHL_FH_LEAR;Beschreiben der CI fuer AHL und FH;Écrire l'indice de codage des phares directionnels et des lève-vitres;auto
+job;READ_IDENT_PARAM;Identdaten;Données d'identification;auto
+job;WRITE_IDENT_93_SSECUHVN;Schreiben der SystemSupplierECUHardwareVersionNumber;Écrire la version matérielle du calculateur (fournisseur);auto
+job;READ_FVIN;liest die lange Fahrgestellnummer;Lit le numéro de châssis long (VIN);auto
+job;WRITE_FVIN;schreibt die lange Fahrgestellnummer;Écrit le numéro de châssis long (VIN);auto
+job;FVIN_AUFTRAG;lange Fahrgestellnummer schreiben und ruecklesen;Écrire et relire le numéro de châssis long (VIN);auto
+job;STATUS_LWR_LESEN;Lesen eines Codierdatensatzes zur Unterscheidung;Lire un jeu de données de codage pour l'identification;auto
+job;READ_ENERGY_SAVING_MODE;Energy-Saving-Mode auslesen;Lire le mode d'économie d'énergie;auto
+job;_HERSTELLER_DATEN_LESEN_LEAR;Auslesen der Herstellerdaten;Lire les données du fabricant;auto
+job;CBD_ZEICHN_INDEX_LESEN_LEAR;Auslesen des Aenderungsindex aus den Codierdaten;Lire l'indice de modification dans les données de codage;auto
+job;_HERSTELLER_DATEN_SCHREIBEN_LEAR;Beschreiben der Codierdaten je nach Block;Écrire les données de codage par bloc;auto
+job;C_FA_LESEN;Fahrzeugauftrag lesen;Lire l'ordre de fabrication du véhicule;auto
+job;C_FA_SCHREIBEN;Fahrzeugauftrag schreiben;Écrire l'ordre de fabrication du véhicule;auto
+job;C_FA_AUFTRAG;Fahrzeugauftrag schreiben;Écrire l'ordre de fabrication du véhicule;auto
+job;_FLASH_PROG_STATUS_SCHREIBEN_LEAR;Fahrgestellnummer schreiben;Écrire le numéro de châssis;auto
+job;_STEUERN_DIAGNOSE_BROSE_FH_1;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;_STEUERN_DIAGNOSE_BROSE_FH_2;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;_STEUERN_DIAGNOSE_BROSE_FH_3;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;_STEUERN_DIAGNOSE_BROSE_FH_4;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;_STEUERN_DIAGNOSE_BROSE_FH_5;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;_READ_CAN_BUS_ERROR_LEAR;KWP 2000: $21 ReadDataByLocalIdentifier;KWP 2000 : $21 ReadDataByLocalIdentifier;auto
+job;_CLR_CAN_BUS_ERROR_LEAR;Modus : Default;Mode : par défaut;auto
+job;_READ_REGISTER_U435_LEAR;KWP 2000: $21 ReadDataByLocalIdentifier;KWP 2000 : $21 ReadDataByLocalIdentifier;auto
+job;_WRITE_REGISTER_U435_LEAR;Modus : Default;Mode : par défaut;auto
+job;_RESET_KURZSCHLUSS_SPERRE;Kurzschlusssperre ueber Diagnose ausschalten;Lever le blocage après court-circuit par diagnostic;auto
+job;STATUS_LAMPEN_KURZSCHLUSS;Status Lampenkurzschluesse (explizit) von FRMFA lesen;Lire l'état des courts-circuits de lampes (explicite) du FRMFA;auto
+job;STATUS_LAMPEN_KURZSCHLUSS_WIEDERHOL_COUNTER;Status Lampenkurzschlusswiederholzaehler (explizit) von FRMFA lesen;Lire les compteurs de répétitions de court-circuit de lampes (explicite) du FRMFA;auto
+job;STATUS_LAMPEN_KURZSCHLUSS_COUNTER;Status Lampenkurzschlusszaehler (explizit) von FRMFA lesen;Lire les compteurs de courts-circuits de lampes (explicite) du FRMFA;auto
+job;STATUS_LAMPEN_KURZSCHLUSS_COUNTER_MAX;Status des max. Wertes des Lampenkurzschlusszaehlers (explizit) von FRMFA lesen;Lire le maximum des compteurs de courts-circuits de lampes (explicite) du FRMFA;auto
+job;STEUERN_SMC_BESTROMEN;Status von FRMFA schreiben;Écrire l'état du FRMFA;auto
+job;STEUERN_REFERENZLAUF_ALC_SYSTEM;Referenzlauf der SMCs starten;Lancer le référencement des SMC;auto
+job;STATUS_REFERENZLAUF_ALC_SYSTEM;Pruefung, ob ALC-System referenziert ist;Vérifier si le système de phares directionnels (ALC) est référencé;auto
+job;_CODIERDATEN_SMC_BLOCK_SCHREIBEN_LEAR;Beschreiben der Codierdaten je nach Block;Écrire les données de codage par bloc;auto
+job;_CODIERDATEN_SMC_SCHREIBEN_LEAR;Beschreiben der Default-Codierdaten;Écrire les données de codage par défaut;auto
+job;_CODIERDATEN_SMC_BLOCK_LESEN_LEAR;Auslesen der Codierdaten fuer einen Block;Lire les données de codage d'un bloc;auto
+job;_CODIERDATEN_SMC_LINKS_LESEN_KOMPLETT_LEAR;Auslesen der kompletten Codierdaten;Lire toutes les données de codage;auto
+job;_CODIERDATEN_SMC_RECHTS_LESEN_KOMPLETT_LEAR;Auslesen der kompletten Codierdaten;Lire toutes les données de codage;auto
+job;VIN_SMC_LINKS_SCHREIBEN_LEAR;Schreiben der VIN in die linke SMC;Écrire le VIN dans le SMC gauche;auto
+job;VIN_SMC_RECHTS_SCHREIBEN_LEAR;Schreiben der VIN in die rechte SMC;Écrire le VIN dans le SMC droit;auto
+job;VIN_SMC_LESEN;Fahrgestellnummer fuer SMC links und rechts lesen;Lire le numéro de châssis des SMC gauche et droit;auto
+job;ID_SMC_LESEN;ID-SMC lesen;Lire l'identification des SMC;auto
+job;STEUERN_REFERENZLAUF_SMC;Referenzlauf der SMC starten;Lancer le référencement du SMC;auto
+job;STATUS_POSITION_SMC;IST-Position der SMC auslesen;Lire la position réelle du SMC;auto
+job;STEUERN_POSITION_SMC;bestimmte Position der SMC anfahren;Amener le SMC à une position donnée;auto
+job;SMC_SPEICHER_LESEN_LEAR;Speicher lesen;Lire la mémoire;auto
+job;SMC_SPEICHER_SCHREIBEN_LEAR;Beschreiben des Steuergeraete-Speichers;Écrire la mémoire du calculateur;auto
+job;_HERSTELLERDATEN_SMC_LEAR_SCHREIBEN;Beschreiben der LEAR-Herstellerdaten;Écrire les données du fabricant LEAR;auto
+job;_HERSTELLERDATEN_SMC_LEAR_LESEN;Auslesen der LEAR-Herstellerdaten;Lire les données du fabricant LEAR;auto
+job;HERSTELLERDATEN_SMC_SCHEINWERFER_SCHREIBEN;Beschreiben der Scheinwerfer-Herstellerdaten;Écrire les données du fabricant des projecteurs;auto
+job;HERSTELLERDATEN_SMC_SCHEINWERFER_LESEN;Auslesen der Scheinwerfer-Herstellerdaten;Lire les données du fabricant des projecteurs;auto
+job;IS_LESEN_SMC_L_LEAR;Infospeicher von SMC links lesen (alle Info-Meldungen / Ort und Art);Lire la mémoire d'informations du SMC gauche (tous les messages / emplacement et type);auto
+job;IS_LESEN_SMC_R_LEAR;Infospeicher von SMC rechts lesen (alle Info-Meldungen / Ort und Art);Lire la mémoire d'informations du SMC droit (tous les messages / emplacement et type);auto
+job;IS_LESEN_DETAIL_SMC_L_LEAR;Infospeicher Details von SMC links lesen (alle Info-Meldungen / Ort und Art);Lire le détail de la mémoire d'informations du SMC gauche (tous les messages / emplacement et type);auto
+job;IS_LESEN_DETAIL_SMC_R_LEAR;Infospeicher Details von SMC rechts lesen (alle Info-Meldungen / Ort und Art);Lire le détail de la mémoire d'informations du SMC droit (tous les messages / emplacement et type);auto
+job;IS_LOESCHEN_SMC_L_LEAR;Infospeicher der SMC links loeschen;Effacer la mémoire d'informations du SMC gauche;auto
+job;IS_LOESCHEN_SMC_R_LEAR;Infospeicher der SMC rechts loeschen;Effacer la mémoire d'informations du SMC droit;auto
+job;STATUS_BETR_H_SMC;Betriebsstunden von ausgewaehlter SMC lesen;Lire les heures de fonctionnement du SMC choisi;auto
+job;STEUERN_BETR_H_SMC_LOESCHEN;alle Betriebszeiten der ausgewaehlten SMC loeschen;Effacer toutes les durées de fonctionnement du SMC choisi;auto
+job;STATUS_VERTEILUNG_WINKEL_ANSTEUERUNG_SMC;Verteilung der Winkelansteuerung von ausgewaehlter SMC lesen;Lire la répartition des angles commandés du SMC choisi;auto
+job;STEUERN_VERTEILUNG_WINKEL_ANSTEUERUNG_SMC_LOESCHEN;Loeschen der Verteilung der Winkelansteuerung der ausgewaehlten SMC;Effacer la répartition des angles commandés du SMC choisi;auto
+job;STATUS_TEMPERATURVERTEILUNG_SMC;Temperaturverteilung von der ausgewaehlten SMC lesen;Lire la répartition des températures du SMC choisi;auto
+job;STEUERN_TEMPERATURVERTEILUNG_SMC_LOESCHEN;Loeschen der Temperaturverteilung der ausgewaehlten SMC;Effacer la répartition des températures du SMC choisi;auto
+job;STATUS_SCHRITTVERLUSTE_SMC;Schrittverluste von der ausgewaehlten SMC lesen;Lire les pertes de pas du SMC choisi;auto
+job;STEUERN_SCHRITTVERLUSTE_SMC_LOESCHEN;Loeschen der Schrittverluste der ausgewaehlten SMC;Effacer les pertes de pas du SMC choisi;auto
+job;STATUS_HW_EINGANGE_SMC;HW_Eingaenge von der ausgewaehlten SMC lesen;Lire les entrées matérielles du SMC choisi;auto
+job;_HERSTELLERTEST_SMC_LEAR;Herstellertest;Test fabricant;auto
+job;SCHEINWERFERHERSTELLERDATEN_SCHREIBEN;Beschreiben der Scheinwerfer-Herstellerdaten;Écrire les données du fabricant des projecteurs;auto
+job;SCHEINWERFERHERSTELLERDATEN_LESEN;Auslesen der Scheinwerfer-Herstellerdaten;Lire les données du fabricant des projecteurs;auto
+job;PRUEFSTEMPEL_SCHEINWERFER_SCHREIBEN;Beschreiben des Scheinwerfer-Pruefstempel;Écrire le tampon de contrôle des projecteurs;auto
+job;PRUEFSTEMPEL_SCHEINWERFER_LESEN;Auslesen der Scheinwerfer-Pruefstempel;Lire les tampons de contrôle des projecteurs;auto
+job;_WARTEZEIT_LEAR;Wartezeit;Temps d'attente;auto
+job;STATUS_LAMPENAUSGANG_ENTPRELLT_LESEN;Status von FRMFA lesen;Lire l'état du FRMFA;auto
+job;FG_NR_SMC_DEFAULT;Beschreiben der VIN mit 0xff;Effacer le VIN (écrit avec 0xff);auto
+job;READ_GURTBRINGER_FA_IDENT;ident lesen des LIN-Slave GURTBRINGER_FA;Lire l'identification de l'esclave LIN présentateur de ceinture conducteur;auto
+job;READ_GURTBRINGER_BF_IDENT;ident lesen des LIN-Slave GURTBRINGER_BF;Lire l'identification de l'esclave LIN présentateur de ceinture passager;auto
+job;C_FG_SCHREIBEN_GURTBRINGER_FA;Schreiben der FG-Nr. in den GURTBRINGER_FA;Écrire le numéro de châssis dans le présentateur de ceinture conducteur;auto
+job;C_FG_LESEN_GURTBRINGER_FA;Lesen der FG-Nr. aus dem GURTBRINGER_FA;Lire le numéro de châssis du présentateur de ceinture conducteur;auto
+job;C_FG_AUFTRAG_GURTBRINGER_FA;Schreiben und Lesen der FG-Nr. GURTBRINGER_FA;Écrire et relire le numéro de châssis du présentateur de ceinture conducteur;auto
+job;C_FG_SCHREIBEN_GURTBRINGER_BF;Schreiben der FG-Nr. in den GURTBRINGER_BF;Écrire le numéro de châssis dans le présentateur de ceinture passager;auto
+job;C_FG_LESEN_GURTBRINGER_BF;Lesen der FG-Nr. aus dem GURTBRINGER_BF;Lire le numéro de châssis du présentateur de ceinture passager;auto
+job;C_FG_AUFTRAG_GURTBRINGER_BF;Schreiben und Lesen der FG-Nr. GURTBRINGER_BF;Écrire et relire le numéro de châssis du présentateur de ceinture passager;auto
+job;C_AEI_SCHREIBEN_GURTBRINGER_FA;Schreiben des Aenderungsindex in den GURTBRINGER_FA;Écrire l'indice de modification dans le présentateur de ceinture conducteur;auto
+job;C_AEI_LESEN_GURTBRINGER_FA;Lesen des Aenderungsindex aus dem GURTBRINGER_FA;Lire l'indice de modification du présentateur de ceinture conducteur;auto
+job;C_AEI_AUFTRAG_GURTBRINGER_FA;Schreiben und Lesen des Aenderungsindex GURTBRINGER_FA;Écrire et relire l'indice de modification du présentateur de ceinture conducteur;auto
+job;C_AEI_SCHREIBEN_GURTBRINGER_BF;Schreiben des Aenderungsindex in den GURTBRINGER_BF;Écrire l'indice de modification dans le présentateur de ceinture passager;auto
+job;C_AEI_LESEN_GURTBRINGER_BF;Lesen des Aenderungsindex aus dem GURTBRINGER_BF;Lire l'indice de modification du présentateur de ceinture passager;auto
+job;C_AEI_AUFTRAG_GURTBRINGER_BF;Schreiben und Lesen des Aenderungsindex GURTBRINGER_BF;Écrire et relire l'indice de modification du présentateur de ceinture passager;auto
+job;RESET_GURTBRINGER_FA;Reset GURTBRINGER_FA;Réinitialiser le présentateur de ceinture conducteur;auto
+job;RESET_GURTBRINGER_BF;Reset GURTBRINGER_BF;Réinitialiser le présentateur de ceinture passager;auto
+defaut;0x9CA8;interner Fehler;Défaut interne;auto
+defaut;0x9CA9;Klemme 30A Anschluss fehlerhaft;Branchement borne 30A défectueux;auto
+defaut;0x9CAA;Klemme 30B Anschluss fehlerhaft;Branchement borne 30B défectueux;auto
+defaut;0x9CAB;eine Klemme 15 fehlt;Une borne 15 manque;auto
+defaut;0x9CAC;Bremslichtschalter defekt;Contacteur de feux stop défectueux;auto
+defaut;0x9CAD;AHM-Kommunikation gestoert;Communication avec le module d'attelage perturbée;auto
+defaut;0x9CAE;Bedienteilfehler;Défaut du bloc de commande;auto
+defaut;0x9CAF;Lichtschalterstellung 1 defekt;Commodo d'éclairage position 1 défectueux;auto
+defaut;0x9CB0;Lichtschalterstellung 2 defekt;Commodo d'éclairage position 2 défectueux;auto
+defaut;0x9CB1;Dimmer-Poti defekt;Potentiomètre de gradation défectueux;auto
+defaut;0x9CB2;LWR-Poti defekt;Potentiomètre du correcteur de portée défectueux;auto
+defaut;0x9CB3;Sensor Hoehenstand vorne defekt;Capteur de hauteur avant défectueux;auto
+defaut;0x9CB4;Sensor Hoehenstand hinten defekt;Capteur de hauteur arrière défectueux;auto
+defaut;0x9CB5;Energiesparmode aktiv;Mode d'économie d'énergie actif;auto
+defaut;0x9CB6;LWR-Spulenabriss;Bobine du correcteur de portée coupée;auto
+defaut;0x9CB7;LWR-Treiberfehler;Défaut de l'étage de commande du correcteur de portée;auto
+defaut;0x9CB8;SPI (EEPROM, LWR) gestoert;Bus SPI (EEPROM, correcteur de portée) perturbé;auto
+defaut;0x9CB9;Kurzschlussfehler 4;Défaut de court-circuit 4;auto
+defaut;0x9CBA;Kurzschlussfehler 3;Défaut de court-circuit 3;auto
+defaut;0x9CBB;Kurzschlussfehler 2;Défaut de court-circuit 2;auto
+defaut;0x9CBC;Kurzschlussfehler 1;Défaut de court-circuit 1;auto
+defaut;0x9CBD;Kommunikation mit StepperMotorBox links gestoert;Communication avec le boîtier moteur pas à pas gauche perturbée;auto
+defaut;0x9CBE;Kommunikation mit StepperMotorBox rechts gestoert;Communication avec le boîtier moteur pas à pas droit perturbée;auto
+defaut;0x9CBF;SMC links defekt;SMC gauche défectueux;auto
+defaut;0x9CC0;SMC rechts defekt;SMC droit défectueux;auto
+defaut;0x9CC1;Kommunikation mit Spiegel Fahrerseite gestoert;Communication avec le rétroviseur conducteur perturbée;auto
+defaut;0x9CC2;Kommunikation mit Spiegel Beifahrerseite gestoert;Communication avec le rétroviseur passager perturbée;auto
+defaut;0x9CC3;Spiegelheizung Fahrerseite defekt;Chauffage du rétroviseur conducteur défectueux;auto
+defaut;0x9CC4;Spiegelheizung Beifahrerseite defekt;Chauffage du rétroviseur passager défectueux;auto
+defaut;0x9CC5;Hallsensor FH-Fahrertuer defekt;Capteur à effet Hall du lève-vitre conducteur défectueux;auto
+defaut;0x9CC6;Hallsensor FH-Beifahrertuer defekt;Capteur à effet Hall du lève-vitre passager défectueux;auto
+defaut;0x9CC7;Zeitfenster FH-Fahrertuer gestoert;Fenêtre temporelle du lève-vitre conducteur perturbée;auto
+defaut;0x9CC8;Zeitfenster FH-Beifahrertuer gestoert;Fenêtre temporelle du lève-vitre passager perturbée;auto
+defaut;0x9CC9;FH-EEPROM gestoert;EEPROM des lève-vitres perturbée;auto
+defaut;0x9CCA;Relais FH-Fahrertuer defekt;Relais du lève-vitre conducteur défectueux;auto
+defaut;0x9CCB;Relais FH-Beifahrertuer defekt;Relais du lève-vitre passager défectueux;auto
+defaut;0x9CCC;Tiefentladungsschutz der Batterie: Abschaltung Standlicht;Protection contre la décharge profonde : feux de position coupés;auto
+defaut;0x9CCD;Tiefentladungsschutz der Batterie: Abschaltung Parklicht;Protection contre la décharge profonde : feux de stationnement coupés;auto
+defaut;0x9CCE;Batterie tiefentladen;Batterie profondément déchargée;auto
+defaut;0x9CCF;Kommunikation mit LIN-Bedienteil gestoert;Communication avec le bloc de commande LIN perturbée;auto
+defaut;0x9CD0;Antrieb Spiegel Fahrerseite defekt;Moteur du rétroviseur conducteur défectueux;auto
+defaut;0x9CD1;Antrieb Spiegel Beifahrerseite defekt;Moteur du rétroviseur passager défectueux;auto
+defaut;0x9CD2;Antrieb Beiklappen Spiegel Fahrerseite defekt;Moteur de rabattement du rétroviseur conducteur défectueux;auto
+defaut;0x9CD3;Antrieb Beiklappen Spiegel Beifahrerseite defekt;Moteur de rabattement du rétroviseur passager défectueux;auto
+defaut;0x9CD4;Kommunikation mit Gurtbringer Fahrerseite gestoert;Communication avec le présentateur de ceinture conducteur perturbée;auto
+defaut;0x9CD5;Kommunikation mit Gurtbringer Beifahrerseite gestoert;Communication avec le présentateur de ceinture passager perturbée;auto
+defaut;0xE584;CAN-Low, physikalischer Fehler;CAN-Low, défaut physique;auto
+defaut;0xE585;CAN-High, Kurzschluss VB;CAN-High, court-circuit au +batterie;auto
+defaut;0xE586;Ground Shift, zu hoch;Décalage de masse trop élevé;auto
+defaut;0xE587;Controller K-CAN, Bus Off;Contrôleur K-CAN, bus coupé (Bus Off);auto
+defaut;0xE588;Controller PT-CAN, Bus Off;Contrôleur PT-CAN, bus coupé (Bus Off);auto
+defaut;0xE58B;Controller PT-CAN, Bus Off;Contrôleur PT-CAN, bus coupé (Bus Off);auto
+defaut;0xFFFF;unbekannter Fehlerort;Emplacement de défaut inconnu;auto
+symptome;0x00;kein passendes Fehlersymptom;aucun symptôme de défaut correspondant;auto
+symptome;0x01;Signal oder Wert oberhalb Schwelle;Signal ou valeur au-dessus du seuil;auto
+symptome;0x02;Signal oder Wert unterhalb Schwelle;Signal ou valeur en dessous du seuil;auto
+symptome;0x04;kein Signal oder Wert;Aucun signal ou valeur;auto
+symptome;0x08;unplausibles Signal oder Wert;Signal ou valeur non plausible;auto
+symptome;0x10;Testbedingungen erfüllt;Conditions de test remplies;auto
+symptome;0x11;Testbedingungen noch nicht erfüllt;Conditions de test non encore remplies;auto
+symptome;0x20;Fehler bisher nicht aufgetreten;Défaut jamais apparu;auto
+symptome;0x21;Fehler momentan nicht vorhanden, aber bereits gespeichert;Défaut non présent actuellement, mais déjà mémorisé;auto
+symptome;0x22;Fehler momentan vorhanden, aber noch nicht gespeichert (Entprellphase);Défaut présent, mais pas encore mémorisé (phase de confirmation);auto
+symptome;0x23;Fehler momentan vorhanden und bereits gespeichert;Défaut présent et déjà mémorisé;auto
+symptome;0x30;Fehler würde kein Aufleuchten einer Warnlampe verursachen;Le défaut n'allumerait pas de témoin;auto
+symptome;0x31;Fehler würde das Aufleuchten einer Warnlampe verursachen;Le défaut allumerait un témoin;auto
+symptome;0xFF;unbekannte Fehlerart;Type de défaut inconnu;auto
+table;IARTTEXTE/0x00;kein passendes Fehlersymptom;Aucun symptôme de défaut correspondant;auto
+table;IARTTEXTE/0x01;Signal oder Wert oberhalb Schwelle;Signal ou valeur au-dessus du seuil;auto
+table;IARTTEXTE/0x02;Signal oder Wert unterhalb Schwelle;Signal ou valeur en dessous du seuil;auto
+table;IARTTEXTE/0x04;kein Signal oder Wert;Aucun signal ou valeur;auto
+table;IARTTEXTE/0x08;unplausibles Signal oder Wert;Signal ou valeur non plausible;auto
+table;IARTTEXTE/0x10;Testbedingungen erfüllt;Conditions de test remplies;auto
+table;IARTTEXTE/0x11;Testbedingungen noch nicht erfüllt;Conditions de test non encore remplies;auto
+table;IARTTEXTE/0x20;Fehler bisher nicht aufgetreten;Défaut jamais apparu;auto
+table;IARTTEXTE/0x21;Fehler momentan nicht vorhanden, aber bereits gespeichert;Défaut non présent actuellement, mais déjà mémorisé;auto
+table;IARTTEXTE/0x22;Fehler momentan vorhanden, aber noch nicht gespeichert (Entprellphase);Défaut présent, mais pas encore mémorisé (phase de confirmation);auto
+table;IARTTEXTE/0x23;Fehler momentan vorhanden und bereits gespeichert;Défaut présent et déjà mémorisé;auto
+table;IARTTEXTE/0x30;Fehler würde kein Aufleuchten einer Warnlampe verursachen;Le défaut n'allumerait pas de témoin;auto
+table;IARTTEXTE/0x31;Fehler würde das Aufleuchten einer Warnlampe verursachen;Le défaut allumerait un témoin;auto
+table;IARTTEXTE/0xFF;unbekannte Fehlerart;Type de défaut inconnu;auto
+table;FUMWELTTEXTE/0x10;Klemme 15;Borne 15;auto
+table;FUMWELTTEXTE/0x11;Klemme R;Borne R;auto
+table;FUMWELTTEXTE/0x12;Standlicht;Feux de position;auto
+table;FUMWELTTEXTE/0x13;Parklicht links;Feu de stationnement gauche;auto
+table;FUMWELTTEXTE/0x14;Parklicht rechts;Feu de stationnement droit;auto
+table;FUMWELTTEXTE/0x15;Warnblinklicht;Feux de détresse;auto
+table;FUMWELTTEXTE/0x16;Follow me home;Éclairage d'accompagnement (Follow me home);auto
+table;FUMWELTTEXTE/0XXY;unbekannte Umweltbedingung;Condition d'environnement inconnue;auto
+table;ERR_LAMPE/0x00;Fernlicht links, E92/E93: Abbiegelicht links;Feu de route gauche (E92/E93 : feu d'intersection gauche);auto
+table;ERR_LAMPE/0x01;Fernlicht rechts, E92/E93: Abbiegelicht rechts;Feu de route droit (E92/E93 : feu d'intersection droit);auto
+table;ERR_LAMPE/0x02;Abblendlicht links;Feu de croisement gauche;auto
+table;ERR_LAMPE/0x03;Abblendlicht rechts;Feu de croisement droit;auto
+table;ERR_LAMPE/0x04;Begrenzungslicht links;Feu de position gauche;auto
+table;ERR_LAMPE/0x05;Begrenzungslicht rechts;Feu de position droit;auto
+table;ERR_LAMPE/0x06;Nebelscheinwerfer links;Antibrouillard avant gauche;auto
+table;ERR_LAMPE/0x07;Nebelscheinwerfer rechts;Antibrouillard avant droit;auto
+table;ERR_LAMPE/0x08;Fahrtrichtungsanzeiger links vorne 1;Clignotant avant gauche 1;auto
+table;ERR_LAMPE/0x09;Fahrtrichtungsanzeiger rechts vorne 1;Clignotant avant droit 1;auto
+table;ERR_LAMPE/0x0A;Fahrtrichtungsanzeiger links hinten;Clignotant arrière gauche;auto
+table;ERR_LAMPE/0x0B;Fahrtrichtungsanzeiger rechts hinten;Clignotant arrière droit;auto
+table;ERR_LAMPE/0x0C;unbekannte Lampe 1;Lampe inconnue 1;auto
+table;ERR_LAMPE/0x0D;Beleuchtung WBL-Taster;Éclairage du bouton de détresse;auto
+table;ERR_LAMPE/0x0E;Bremslicht links;Feu stop gauche;auto
+table;ERR_LAMPE/0x0F;Bremslicht rechts;Feu stop droit;auto
+table;ERR_LAMPE/0x10;Bremslicht mitte;Feu stop central;auto
+table;ERR_LAMPE/0x11;Schlusslicht links 1, E92/E93: Tagfahrlicht links;Feu arrière gauche 1 (E92/E93 : feu de jour gauche);auto
+table;ERR_LAMPE/0x12;Schlusslicht rechts 1, E92/E93: Tagfahrlicht rechts;Feu arrière droit 1 (E92/E93 : feu de jour droit);auto
+table;ERR_LAMPE/0x13;Schlusslicht links 2;Feu arrière gauche 2;auto
+table;ERR_LAMPE/0x14;Schlusslicht rechts 2;Feu arrière droit 2;auto
+table;ERR_LAMPE/0x15;Kennzeichenlicht;Éclairage de plaque;auto
+table;ERR_LAMPE/0x16;Innenbeleuchtung;Éclairage intérieur;auto
+table;ERR_LAMPE/0x17;Nebelschlusslicht links;Antibrouillard arrière gauche;auto
+table;ERR_LAMPE/0x18;Nebelschlusslicht rechts;Antibrouillard arrière droit;auto
+table;ERR_LAMPE/0x19;Rueckfahrlicht links;Feu de recul gauche;auto
+table;ERR_LAMPE/0x1A;Rueckfahrlicht rechts;Feu de recul droit;auto
+table;ERR_LAMPE/0x1B;Break-Force-Display links;Brake Force Display gauche;auto
+table;ERR_LAMPE/0x1C;Break-Force-Display rechts;Brake Force Display droit;auto
+table;ERR_LAMPE/0x1D;Klemme 58g;Borne 58g (éclairage des commandes);auto
+table;ERR_LAMPE/0x1E;LED Fahrtlichtkontrolle;LED de contrôle des feux;auto
+table;ERR_LAMPE/0x1F;LED Vorfeldbeleuchtung;LED d'éclairage d'approche;auto
+table;ERR_LAMPE/0x20;unbekannte Lampe 2;Lampe inconnue 2;auto
+table;ERR_LAMPE/0x21;unbekannte Lampe 3;Lampe inconnue 3;auto
+table;ERR_LAMPE/0x22;unbekannte Lampe 4;Lampe inconnue 4;auto
+table;ERR_LAMPE/0xFFFF;unbekannte Lampe;Lampe inconnue;auto
+table;IORTTEXTE/0x9308;Fernlicht links, E92/E93: Abbiegelicht links defekt;Feu de route gauche (E92/E93 : feu d'intersection gauche) : défaut;auto
+table;IORTTEXTE/0x9309;Fernlicht rechts, E92/E93: Abbiegelicht rechts defekt;Feu de route droit (E92/E93 : feu d'intersection droit) : défaut;auto
+table;IORTTEXTE/0x930A;Abblendlicht links defekt;Feu de croisement gauche : défaut;auto
+table;IORTTEXTE/0x930B;Abblendlicht rechts defekt;Feu de croisement droit : défaut;auto
+table;IORTTEXTE/0x930C;Begrenzungslicht links defekt;Feu de position gauche : défaut;auto
+table;IORTTEXTE/0x930D;Begrenzungslicht rechts defekt;Feu de position droit : défaut;auto
+table;IORTTEXTE/0x930E;Nebelscheinwerfer links defekt;Antibrouillard avant gauche : défaut;auto
+table;IORTTEXTE/0x930F;Nebelscheinwerfer rechts defekt;Antibrouillard avant droit : défaut;auto
+table;IORTTEXTE/0x9310;Fahrtrichtungsanzeiger links vorne defekt;Clignotant avant gauche : défaut;auto
+table;IORTTEXTE/0x9311;Fahrtrichtungsanzeiger rechts vorne defekt;Clignotant avant droit : défaut;auto
+table;IORTTEXTE/0x9312;Fahrtrichtungsanzeiger links hinten defekt;Clignotant arrière gauche : défaut;auto
+table;IORTTEXTE/0x9313;Fahrtrichtungsanzeiger rechts hinten defekt;Clignotant arrière droit : défaut;auto
+table;IORTTEXTE/0x9314;unbekannte Lampe 1 defekt;Lampe inconnue 1 : défaut;auto
+table;IORTTEXTE/0x9315;Beleuchtung WBL-Taster defekt;Éclairage du bouton de détresse : défaut;auto
+table;IORTTEXTE/0x9316;Bremslicht links defekt;Feu stop gauche : défaut;auto
+table;IORTTEXTE/0x9317;Bremslicht rechts defekt;Feu stop droit : défaut;auto
+table;IORTTEXTE/0x9318;Bremslicht mitte defekt;Feu stop central : défaut;auto
+table;IORTTEXTE/0x9319;Schlusslicht links 1, E92/E93: Tagfahrlicht links defekt;Feu arrière gauche 1 (E92/E93 : feu de jour gauche) : défaut;auto
+table;IORTTEXTE/0x931A;Schlusslicht rechts 1, E92/E93: Tagfahrlicht rechts defekt;Feu arrière droit 1 (E92/E93 : feu de jour droit) : défaut;auto
+table;IORTTEXTE/0x931B;Schlusslicht links 2 defekt;Feu arrière gauche 2 : défaut;auto
+table;IORTTEXTE/0x931C;Schlusslicht rechts 2 defekt;Feu arrière droit 2 : défaut;auto
+table;IORTTEXTE/0x931D;Kennzeichenlicht defekt;Éclairage de plaque : défaut;auto
+table;IORTTEXTE/0x931E;Innenbeleuchtung defekt;Éclairage intérieur : défaut;auto
+table;IORTTEXTE/0x931F;Nebelschlusslicht links defekt;Antibrouillard arrière gauche : défaut;auto
+table;IORTTEXTE/0x9320;Nebelschlusslicht rechts defekt;Antibrouillard arrière droit : défaut;auto
+table;IORTTEXTE/0x9321;Rueckfahrlicht links defekt;Feu de recul gauche : défaut;auto
+table;IORTTEXTE/0x9322;Rueckfahrlicht rechts defekt;Feu de recul droit : défaut;auto
+table;IORTTEXTE/0x9323;Break-Force-Display links defekt;Brake Force Display gauche : défaut;auto
+table;IORTTEXTE/0x9324;Break-Force-Display rechts defekt;Brake Force Display droit : défaut;auto
+table;IORTTEXTE/0x9325;Klemme 58g defekt;Borne 58g (éclairage des commandes) : défaut;auto
+table;IORTTEXTE/0x9326;LED Fahrtlichtkontrolle defekt;LED de contrôle des feux : défaut;auto
+table;IORTTEXTE/0x9327;LED Vorfeldbeleuchtung defekt;LED d'éclairage d'approche : défaut;auto
+table;IORTTEXTE/0x9328;LoadDump aktiviert;Protection contre les surtensions (load dump) activée;auto
+table;IORTTEXTE/0x9329;Bedienteil abgerissen;Bloc de commande arraché;auto
+table;IORTTEXTE/0x932A;Lichtnotlauf mit Kl.15 aktiv;Éclairage de secours actif avec la borne 15;auto
+table;IORTTEXTE/0x932B;Lichtnotlauf mit Geschwindigkeit aktiv;Éclairage de secours actif selon la vitesse;auto
+table;IORTTEXTE/0x932C;ALC-System defekt;Système de phares directionnels (ALC) défectueux;auto
+table;IORTTEXTE/0x932D;ALC-System: AL links abgeschaltet;Phares directionnels : feu de croisement gauche coupé;auto
+table;IORTTEXTE/0x932E;ALC-System: AL rechts abgeschaltet;Phares directionnels : feu de croisement droit coupé;auto
+table;IORTTEXTE/0x932F;Signal vom Regenlichtsensor unplausibel;Signal du capteur de pluie / luminosité non plausible;auto
+table;IORTTEXTE/0x9330;Telegramm Geschwindigkeit ungueltig;Message vitesse non valide;auto
+table;IORTTEXTE/0x9331;Telegramm Gierrate Timeout oder ungueltig;Message vitesse de lacet absent ou non valide;auto
+table;IORTTEXTE/0x9332;Telegramm Lenkwinkel Timeout oder ungueltig;Message angle de braquage absent ou non valide;auto
+table;IORTTEXTE/0x9333;Telegramm Klemmenstatus Timeout oder ungueltig;Message état des bornes absent ou non valide;auto
+table;IORTTEXTE/0x9334;Telegramm Status-AHM Timeout;Message état du module d'attelage absent;auto
+table;IORTTEXTE/0x9335;Telegramm Status DSC Timeout;Message état DSC absent;auto
+table;IORTTEXTE/0x9336;Telegramm Status Fahrlicht Timeout;Message état des feux absent;auto
+table;IORTTEXTE/0x9337;Uebertemperatur FH-Fahrertuer;Surchauffe du lève-vitre conducteur;auto
+table;IORTTEXTE/0x9338;Uebertemperatur FH-Beifahrertuer;Surchauffe du lève-vitre passager;auto
+table;IORTTEXTE/0x9339;Schliesszylinder defekt;Barillet de serrure défectueux;auto
+table;IORTTEXTE/0x933A;Telegramm Fernlichtassistent Timeout;Message assistant feux de route absent;auto
+table;IORTTEXTE/0x933B;Analog-Schalter FH-Fahrertuer defekt;Bouton analogique du lève-vitre conducteur défectueux;auto
+table;IORTTEXTE/0x933C;Analog-Schalter FH-Beifahrertuer defekt;Bouton analogique du lève-vitre passager défectueux;auto
+table;IORTTEXTE/0x933D;LIN-Schalterblock FH-Fahrertuer defekt;Bloc de commandes LIN lève-vitre conducteur défectueux;auto
+table;IORTTEXTE/0x933E;LIN-Schalterblock FH-Beifahrertuer defekt;Bloc de commandes LIN lève-vitre passager défectueux;auto
+table;IORTTEXTE/0x933F;LIN-Schalterblock FH-Fahrertuer hinten defekt;Bloc de commandes LIN lève-vitre arrière côté conducteur défectueux;auto
+table;IORTTEXTE/0x9340;LIN-Schalterblock FH-Beifahrertuer hinten defekt;Bloc de commandes LIN lève-vitre arrière côté passager défectueux;auto
+table;IORTTEXTE/0x9341;LIN-Schalterblock zentraler FH-Schalter defekt;Bloc de commandes LIN, bouton central des lève-vitres défectueux;auto
+table;IORTTEXTE/0x9342;LIN-Schalterblock Spiegelverstellung horizontal defekt;Bloc de commandes LIN, réglage horizontal des rétroviseurs défectueux;auto
+table;IORTTEXTE/0x9343;LIN-Schalterblock Spiegelverstellung vertikal defekt;Bloc de commandes LIN, réglage vertical des rétroviseurs défectueux;auto
+table;IORTTEXTE/0x9344;LIN-Schalterblock Spiegelverstellung beiklappen defekt;Bloc de commandes LIN, rabattement des rétroviseurs défectueux;auto
+table;IORTTEXTE/0x9345;LIN-Schalterblock Funktionsschalter 1 defekt;Bloc de commandes LIN, bouton de fonction 1 défectueux;auto
+table;IORTTEXTE/0x9400;EEPROM SMC links defekt;EEPROM du SMC gauche défectueuse;auto
+table;IORTTEXTE/0x9401;Motor Kurvenlicht SMC links defekt;Moteur de phare directionnel du SMC gauche défectueux;auto
+table;IORTTEXTE/0x9402;Motor LWR SMC links defekt;Moteur du correcteur de portée du SMC gauche défectueux;auto
+table;IORTTEXTE/0x9403;Treiber Kurvenlicht SMC links defekt;Étage de commande du phare directionnel du SMC gauche défectueux;auto
+table;IORTTEXTE/0x9404;Spannungsversorgung Sensor SMC links defekt;Alimentation du capteur du SMC gauche défectueuse;auto
+table;IORTTEXTE/0x9405;Signal Sensor SMC links defekt;Signal du capteur du SMC gauche défectueux;auto
+table;IORTTEXTE/0x9406;Flanke Sensor SMC links defekt;Front du capteur du SMC gauche défectueux;auto
+table;IORTTEXTE/0x9407;LIN SMC links defekt;LIN du SMC gauche défectueux;auto
+table;IORTTEXTE/0x9408;Schrittverlust Grenze 1 SMC links;Perte de pas, seuil 1, SMC gauche;auto
+table;IORTTEXTE/0x9409;Schrittverlust Grenze 2 SMC links;Perte de pas, seuil 2, SMC gauche;auto
+table;IORTTEXTE/0x940A;Schrittverlust Grenze 3 SMC links;Perte de pas, seuil 3, SMC gauche;auto
+table;IORTTEXTE/0x940B;Schrittverlust Grenze 4 SMC links;Perte de pas, seuil 4, SMC gauche;auto
+table;IORTTEXTE/0x940C;Schrittverlust Grenze 5 SMC links;Perte de pas, seuil 5, SMC gauche;auto
+table;IORTTEXTE/0x940D;Schrittverlust Grenze 6 SMC links;Perte de pas, seuil 6, SMC gauche;auto
+table;IORTTEXTE/0x940E;Spike auf Sensor SMS links;Pic sur le capteur du SMC gauche;auto
+table;IORTTEXTE/0x940F;Notlauf aktiv SMC links;Mode dégradé actif, SMC gauche;auto
+table;IORTTEXTE/0x9410;unbekannter Fehler 2 SMC links;Défaut inconnu 2, SMC gauche;auto
+table;IORTTEXTE/0x9411;unbekannter Fehler 3 SMC links;Défaut inconnu 3, SMC gauche;auto
+table;IORTTEXTE/0x9412;unbekannter Fehler 4 SMC links;Défaut inconnu 4, SMC gauche;auto
+table;IORTTEXTE/0x9413;unbekannter Fehler 5 SMC links;Défaut inconnu 5, SMC gauche;auto
+table;IORTTEXTE/0x9420;EEPROM SMC rechts defekt;EEPROM du SMC droit défectueuse;auto
+table;IORTTEXTE/0x9421;Motor Kurvenlicht SMC rechts defekt;Moteur de phare directionnel du SMC droit défectueux;auto
+table;IORTTEXTE/0x9422;Motor LWR SMC rechts defekt;Moteur du correcteur de portée du SMC droit défectueux;auto
+table;IORTTEXTE/0x9423;Treiber Kurvenlicht SMC rechts defekt;Étage de commande du phare directionnel du SMC droit défectueux;auto
+table;IORTTEXTE/0x9424;Spannungsversorgung Sensor SMC rechts defekt;Alimentation du capteur du SMC droit défectueuse;auto
+table;IORTTEXTE/0x9425;Signal Sensor SMC rechts defekt;Signal du capteur du SMC droit défectueux;auto
+table;IORTTEXTE/0x9426;Flanke Sensor SMC rechts defekt;Front du capteur du SMC droit défectueux;auto
+table;IORTTEXTE/0x9427;LIN SMC rechts defekt;LIN du SMC droit défectueux;auto
+table;IORTTEXTE/0x9428;Schrittverlust Grenze 1 SMC rechts;Perte de pas, seuil 1, SMC droit;auto
+table;IORTTEXTE/0x9429;Schrittverlust Grenze 2 SMC rechts;Perte de pas, seuil 2, SMC droit;auto
+table;IORTTEXTE/0x942A;Schrittverlust Grenze 3 SMC rechts;Perte de pas, seuil 3, SMC droit;auto
+table;IORTTEXTE/0x942B;Schrittverlust Grenze 4 SMC rechts;Perte de pas, seuil 4, SMC droit;auto
+table;IORTTEXTE/0x942C;Schrittverlust Grenze 5 SMC rechts;Perte de pas, seuil 5, SMC droit;auto
+table;IORTTEXTE/0x942D;Schrittverlust Grenze 6 SMC rechts;Perte de pas, seuil 6, SMC droit;auto
+table;IORTTEXTE/0x942E;Spike auf Sensor SMS rechts;Pic sur le capteur du SMC droit;auto
+table;IORTTEXTE/0x942F;Notlauf aktiv SMC rechts;Mode dégradé actif, SMC droit;auto
+table;IORTTEXTE/0x9430;unbekannter Fehler 2 SMC rechts;Défaut inconnu 2, SMC droit;auto
+table;IORTTEXTE/0x9431;unbekannter Fehler 3 SMC rechts;Défaut inconnu 3, SMC droit;auto
+table;IORTTEXTE/0x9432;unbekannter Fehler 4 SMC rechts;Défaut inconnu 4, SMC droit;auto
+table;IORTTEXTE/0x9433;unbekannter Fehler 5 SMC rechts;Défaut inconnu 5, SMC droit;auto
+table;IORTTEXTE/0xFFFF;unbekannter Fehlerort;Emplacement de défaut inconnu;auto
+table;IUMWELTTEXTE/0x01;Batteriespannung;Tension batterie;auto
+table;IUMWELTTEXTE/0x02;Betriebsstunden;Heures de fonctionnement;auto
+table;IUMWELTTEXTE/0x03;Sensorspannung;Tension du capteur;auto
+table;IUMWELTTEXTE/0x04;Motortemperatur;Température moteur;auto
+table;IUMWELTTEXTE/0x05;Bordnetzspannung;Tension du réseau de bord;auto
+table;IUMWELTTEXTE/0XXY;unbekannte Umweltbedingung;Condition d'environnement inconnue;auto
+table;LAMPNRTEXTE/0x00;Fernlicht links, E92/E93: Abbiegelicht links;Feu de route gauche (E92/E93 : feu d'intersection gauche);auto
+table;LAMPNRTEXTE/0x01;Fernlicht rechts, E92/E93: Abbiegelicht rechts;Feu de route droit (E92/E93 : feu d'intersection droit);auto
+table;LAMPNRTEXTE/0x02;Abblendlicht links;Feu de croisement gauche;auto
+table;LAMPNRTEXTE/0x03;Abblendlicht rechts;Feu de croisement droit;auto
+table;LAMPNRTEXTE/0x04;Begrenzungslicht links;Feu de position gauche;auto
+table;LAMPNRTEXTE/0x05;Begrenzungslicht rechts;Feu de position droit;auto
+table;LAMPNRTEXTE/0x06;Nebelscheinwerfer links;Antibrouillard avant gauche;auto
+table;LAMPNRTEXTE/0x07;Nebelscheinwerfer rechts;Antibrouillard avant droit;auto
+table;LAMPNRTEXTE/0x08;Fahrtrichtungsanzeiger links vorne;Clignotant avant gauche;auto
+table;LAMPNRTEXTE/0x09;Fahrtrichtungsanzeiger rechts vorne;Clignotant avant droit;auto
+table;LAMPNRTEXTE/0x0A;Fahrtrichtungsanzeiger links hinten;Clignotant arrière gauche;auto
+table;LAMPNRTEXTE/0x0B;Fahrtrichtungsanzeiger rechts hinten;Clignotant arrière droit;auto
+table;LAMPNRTEXTE/0x0C;unbelegt 1;Non utilisé 1;auto
+table;LAMPNRTEXTE/0x0D;Beleuchtung WBL-Taster;Éclairage du bouton de détresse;auto
+table;LAMPNRTEXTE/0x0E;Bremslicht links;Feu stop gauche;auto
+table;LAMPNRTEXTE/0x0F;Bremslicht rechts;Feu stop droit;auto
+table;LAMPNRTEXTE/0x10;Bremslicht mitte;Feu stop central;auto
+table;LAMPNRTEXTE/0x11;Schlusslicht/Bremslicht links 1, E92/E93: Tagfahrlicht links;Feu arrière / stop gauche 1 (E92/E93 : feu de jour gauche);auto
+table;LAMPNRTEXTE/0x12;Schlusslicht/Bremslicht rechts 1, E92/E93: Tagfahrlicht rechts;Feu arrière / stop droit 1 (E92/E93 : feu de jour droit);auto
+table;LAMPNRTEXTE/0x13;Schlusslicht/Bremslicht links 2;Feu arrière / stop gauche 2;auto
+table;LAMPNRTEXTE/0x14;Schlusslicht/Bremslicht rechts 2;Feu arrière / stop droit 2;auto
+table;LAMPNRTEXTE/0x15;Kennzeichenlicht;Éclairage de plaque;auto
+table;LAMPNRTEXTE/0x16;Innenbeleuchtung;Éclairage intérieur;auto
+table;LAMPNRTEXTE/0x17;Nebelschlusslicht links;Antibrouillard arrière gauche;auto
+table;LAMPNRTEXTE/0x18;Nebelschlusslicht rechts;Antibrouillard arrière droit;auto
+table;LAMPNRTEXTE/0x19;Rueckfahrlicht links;Feu de recul gauche;auto
+table;LAMPNRTEXTE/0x1A;Rueckfahrlicht rechts;Feu de recul droit;auto
+table;LAMPNRTEXTE/0x1B;Break-Force-Display links;Brake Force Display gauche;auto
+table;LAMPNRTEXTE/0x1C;Break-Force-Display rechts;Brake Force Display droit;auto
+table;LAMPNRTEXTE/0x1D;Klemme 58g;Borne 58g (éclairage des commandes);auto
+table;LAMPNRTEXTE/0x1E;LED Fahrtlichtkontrolle;LED de contrôle des feux;auto
+table;LAMPNRTEXTE/0x1F;LED Vorfeldbeleuchtung;LED d'éclairage d'approche;auto
+table;LAMPNRTEXTE/0xFF;unbekannte Lampe;Lampe inconnue;auto
+table;FUNKTIONNRTEXTE/0x00;Fernlicht, E92/E93: Abbiegelicht;Feux de route (E92/E93 : feux d'intersection);auto
+table;FUNKTIONNRTEXTE/0x01;Abblendlicht;Feux de croisement;auto
+table;FUNKTIONNRTEXTE/0x02;Standlicht;Feux de position;auto
+table;FUNKTIONNRTEXTE/0x03;Nebelscheinwerfer;Antibrouillards avant;auto
+table;FUNKTIONNRTEXTE/0x04;Fahrtrichtungsanzeiger links;Clignotant gauche;auto
+table;FUNKTIONNRTEXTE/0x05;Fahrtrichtungsanzeiger rechts;Clignotant droit;auto
+table;FUNKTIONNRTEXTE/0x06;Bremslichtstufe 1;Feux stop niveau 1;auto
+table;FUNKTIONNRTEXTE/0x07;Bremslichtstufe 2;Feux stop niveau 2;auto
+table;FUNKTIONNRTEXTE/0x08;Nebelschlusslicht;Antibrouillard arrière;auto
+table;FUNKTIONNRTEXTE/0x09;Rueckfahrlicht;Feux de recul;auto
+table;FUNKTIONNRTEXTE/0x0A;unbekannte Funktion;Fonction inconnue;auto
+table;FUNKTIONNRTEXTE/0x0B;unbekannte Funktion;Fonction inconnue;auto
+table;FUNKTIONNRTEXTE/0x0C;unbekannte Funktion;Fonction inconnue;auto
+table;ZUSATZOUT/0x00;unbekannter Ausgang;Sortie inconnue;auto
+table;ENERGYSAVING/0x00;Energysaving aus;Économie d'énergie désactivée;auto
+table;ENERGYSAVING/0x01;Energysaving Produktion;Économie d'énergie : production;auto
+table;ENERGYSAVING/0x02;Energysaving Shipment;Économie d'énergie : transport;auto
+table;ENERGYSAVING/0x04;Energysaving Repair-Shop;Économie d'énergie : atelier;auto
+table;ENERGYSAVING/0x08;falscher Eingabewert;Valeur saisie incorrecte;auto
+table;SMCS/0x89;SMC links;SMC gauche;auto
+table;SMCS/0x8A;SMC rechts;SMC droit;auto
+table;SMCS/0xFF;falscher Eingabewert;Valeur saisie incorrecte;auto
+table;REF_SMCS/0x00;Referenzlauf Kurvenlicht mit Sensor;Référencement du phare directionnel avec capteur;auto
+table;REF_SMCS/0x01;Referenzlauf Kurvenlicht ohne Sensor;Référencement du phare directionnel sans capteur;auto
+table;REF_SMCS/0x02;Referenzlauf LWR;Référencement du correcteur de portée;auto
+table;REF_SMCS/0xFF;falscher Eingabewert;Valeur saisie incorrecte;auto
+table;FH_RICHTUNG/0x00;Fenster nicht bewegen;Ne pas bouger la vitre;auto
+table;FH_RICHTUNG/0x01;Fenster oeffnen;Ouvrir la vitre;auto
+table;FH_RICHTUNG/0x03;Fenster schliessen;Fermer la vitre;auto
+table;FH_RICHTUNG/0xFF;falscher Eingabewert;Valeur saisie incorrecte;auto
+table;AUSWAHL_FENSTER/0x01;Fensterheber Fahrertuer auswaehlen;Choisir le lève-vitre conducteur;auto
+table;AUSWAHL_FENSTER/0x02;Fensterheber Beifahrertuer auswaehlen;Choisir le lève-vitre passager;auto
+table;AUSWAHL_FENSTER/0x03;beide Fensterheber auswaehlen;Choisir les deux lève-vitres;auto
+table;AUSWAHL_FENSTER/0xFF;falscher Eingabewert;Valeur saisie incorrecte;auto
+table;AUSWAHL_SPIEGEL/0x01;Spiegel Fahrertuer auswaehlen;Choisir le rétroviseur conducteur;auto
+table;AUSWAHL_SPIEGEL/0x02;Spiegel Beifahrertuer auswaehlen;Choisir le rétroviseur passager;auto
+table;AUSWAHL_SPIEGEL/0xFF;falscher Eingabewert;Valeur saisie incorrecte;auto
+table;RICHTUNG_SPIEGEL/0x00;Spiegel nicht bewegen;Ne pas bouger le rétroviseur;auto
+table;RICHTUNG_SPIEGEL/0x01;Spiegel nach oben fahren;Rétroviseur vers le haut;auto
+table;RICHTUNG_SPIEGEL/0x02;Spiegel nach unten fahren;Rétroviseur vers le bas;auto
+table;RICHTUNG_SPIEGEL/0x03;Spiegel nach links fahren;Rétroviseur vers la gauche;auto
+table;RICHTUNG_SPIEGEL/0x04;Spiegel nach rechts fahren;Rétroviseur vers la droite;auto
+table;RICHTUNG_SPIEGEL/0x05;Spiegel beiklappen;Rabattre le rétroviseur;auto
+table;RICHTUNG_SPIEGEL/0xFF;falscher Eingabewert;Valeur saisie incorrecte;auto
+table;SPIEGEL_HEIZUNG/0x00;Spiegelheizung aus;Chauffage des rétroviseurs éteint;auto
+table;SPIEGEL_HEIZUNG/0x01;Spiegelheizung 25% ein;Chauffage des rétroviseurs à 25 %;auto
+table;SPIEGEL_HEIZUNG/0x02;Spiegelheizung 50% ein;Chauffage des rétroviseurs à 50 %;auto
+table;SPIEGEL_HEIZUNG/0x03;Spiegelheizung 75% ein;Chauffage des rétroviseurs à 75 %;auto
+table;SPIEGEL_HEIZUNG/0x04;Spiegelheizung 100% ein;Chauffage des rétroviseurs à 100 %;auto
+table;SPIEGEL_HEIZUNG/0x05;Spiegelheizung 125% ein;Chauffage des rétroviseurs à 125 %;auto
+table;SPIEGEL_HEIZUNG/0x06;Spiegelheizung unbegrenzt ein;Chauffage des rétroviseurs sans limite;auto
+table;SPIEGEL_HEIZUNG/0x07;ungueltig;Non valide;auto
+table;SPIEGEL_HEIZUNG/0xFF;falscher Eingabewert;Valeur saisie incorrecte;auto

@@ -1,0 +1,87 @@
+type;cle;de;traduction;statut
+ecu;;SINE_65 · DWA-Sirene und Neigungsgeber;SINE_65 · Sirène d'alarme antivol et capteur d'inclinaison;auto
+resultat;IDENT/ID_BMW_NR;BMW-Teilenummer;Numéro de pièce BMW;auto
+resultat;IDENT/ID_HW_NR;BMW-Hardwarenummer;Numéro de matériel BMW;auto
+resultat;IDENT/ID_COD_INDEX;Codier-Index;Indice de codage;auto
+resultat;IDENT/ID_DIAG_INDEX;Diagnose-Index;Indice de diagnostic;auto
+resultat;IDENT/ID_VAR_INDEX;Varianten-Index;Indice de variante;auto
+resultat;IDENT/ID_DATUM_JAHR;Herstelldatum (Jahr);Date de fabrication (année);auto
+resultat;IDENT/ID_DATUM_MONAT;Herstelldatum (Monat);Date de fabrication (mois);auto
+resultat;IDENT/ID_DATUM_TAG;Herstelldatum (Tag);Date de fabrication (jour);auto
+resultat;IDENT/ID_DATUM;Herstelldatum (TT.MM.JJJJ);Date de fabrication (JJ.MM.AAAA);auto
+resultat;IDENT/ID_LIEF_NR;Lieferanten-Nummer;Numéro fournisseur;auto
+resultat;IDENT/ID_LIEF_TEXT;Lieferanten-Text;Texte fournisseur;auto
+resultat;IDENT/ID_SW_NR_MCV;Softwarenummer (message catalogue version);Numéro de logiciel (version catalogue de messages);auto
+resultat;IDENT/ID_SW_NR_FSV;Softwarenummer (functional software version);Numéro de logiciel (version logiciel fonctionnel);auto
+resultat;IDENT/ID_SW_NR_OSV;Softwarenummer (operating system version);Numéro de logiciel (version système d'exploitation);auto
+resultat;IDENT/ID_SW_NR_RES;Softwarenummer (reserved - currently unused);Numéro de logiciel (réservé - actuellement non utilisé);auto
+resultat;IDENT/ID_SG_ADR;Steuergeraeteadresse;Adresse calculateur;auto
+resultat;PRUEFSTEMPEL_LESEN/BYTE1;BYTE1;BYTE1;auto
+resultat;PRUEFSTEMPEL_LESEN/BYTE2;BYTE2;BYTE2;auto
+resultat;PRUEFSTEMPEL_LESEN/BYTE3;BYTE3;BYTE3;auto
+job;INITIALISIERUNG;Initialisierung und Kommunikationsparameter;Initialisation et paramètres de communication;auto
+job;INFO;Information SGBD;Information SGBD;auto
+job;DIAGNOSEPROTOKOLL_LESEN;Gibt die möglichen Diagnoseprotokolle;Affiche les protocoles de diagnostic possibles;auto
+job;DIAGNOSEPROTOKOLL_SETZEN;Wählt ein Diagnoseprotokoll aus;Sélectionner un protocole de diagnostic;auto
+job;IDENT;Identdaten;Données d'identification;auto
+job;FS_LESEN;Fehlerspeicher lesen (alle Fehler / Ort und Art);Lire la mémoire de défauts (tous les défauts / lieu et type);auto
+job;FS_LESEN_DETAIL;Fehlerspeicher lesen (ein Fehler / alle Details);Lire la mémoire de défauts (un défaut / tous les détails);auto
+job;FS_LOESCHEN;Fehlerspeicher loeschen;Effacer la mémoire de défauts;auto
+job;PRUEFSTEMPEL_LESEN;Auslesen des Pruefstempels;Lire le tampon de test;auto
+job;PRUEFSTEMPEL_SCHREIBEN;Beschreiben des Pruefstempels;Écrire le tampon de test;auto
+job;NORMALER_DATENVERKEHR;Sperren bzw. Freigeben des normalen Datenverkehrs;Verrouiller ou déverrouiller le trafic de données normal;auto
+job;DIAGNOSE_AUFRECHT;Diagnosemode des SG aufrecht erhalten;Maintenir le mode diagnostic du calculateur;auto
+job;SLEEP_MODE;SG in Sleep-Mode versetzen;Mettre le calculateur en mode veille;auto
+job;SPEICHER_LESEN;Auslesen des Steuergeraete-Speichers;Lire la mémoire du calculateur;auto
+job;C_CI_LESEN;Codierindex lesen;Lire l'index de codage;auto
+job;C_FG_LESEN;Fahrgestellnummer lesen;Lire le numéro de châssis;auto
+job;C_FG_SCHREIBEN;Fahrgestellnummer schreiben;Écrire le numéro de châssis;auto
+job;C_FG_AUFTRAG;Fahrgestellnummer schreiben und ruecklesen;Écrire et relire le numéro de châssis;auto
+job;C_AEI_LESEN;Aenderungsindex der Codierdaten lesen;Lire l'index de modification des données de codage;auto
+job;C_AEI_SCHREIBEN;Aenderungsindex der Codierdaten schreiben;Écrire l'index de modification des données de codage;auto
+job;C_AEI_AUFTRAG;Aenderungsindex der Codierdaten schreiben und ruecklesen;Écrire et relire l'index de modification des données de codage;auto
+job;C_C_LESEN;Codierdaten lesen;Lire les données de codage;auto
+job;C_C_SCHREIBEN;Codierdaten schreiben;Écrire les données de codage;auto
+job;C_C_AUFTRAG;Codierdaten schreiben und ruecklesen;Écrire et relire les données de codage;auto
+job;PRUEFCODE_LESEN;Standard Pruefcode lesen fuer Kundendienst;Lire le code de test standard pour le service client;auto
+job;STATUS_INCLINATION_X_AXIS;Reading of X axis inclination;Lire l'inclinaison sur l'axe X;auto
+job;STATUS_INCLINATION_Y_AXIS;Reading of Y axis inclination;Lire l'inclinaison sur l'axe Y;auto
+job;STATUS_INCLINATION_Z_AXIS;Reading of Z axis inclination;Lire l'inclinaison sur l'axe Z;auto
+job;SELF_TEST;Self Test;Autotest;auto
+defaut;0x9D11;Fehler Bus-Leitung;Défaut de la ligne de bus;auto
+defaut;0x9D12;Fehler Batterie-Kreis;Défaut du circuit de batterie;auto
+defaut;0x9D13;Fehler EEprom;Défaut EEPROM;auto
+defaut;0x9D14;Fehler Sicherheits-Kreis;Défaut du circuit de sécurité;auto
+defaut;0x9D15;Fehler Timing-Schaltung;Défaut du circuit de temporisation;auto
+defaut;0x9D16;Fehler Alarmsignal-Kreis;Défaut du circuit du signal d'alarme;auto
+defaut;0x9D1F;Fehler Neigungssensor-Kreis;Défaut du circuit du capteur d'inclinaison;auto
+defaut;0x9D44;Alarm: Funktionsstörung Spannungsversorgung;Alarme : défaut d'alimentation;auto
+defaut;0x9D45;Alarm: Bus gegen Plus oder Überspannung;Alarme : bus en court-circuit au plus ou surtension;auto
+defaut;0x9D46;Alarm: Bus gegen Masse;Alarme : bus en court-circuit à la masse;auto
+defaut;0x9D47;Alarm: Zyklus fehlt;Alarme : cycle manquant;auto
+defaut;0x9D48;Alarm: Keine Antwort auf Neigungsgeberalarm;Alarme : pas de réponse à l'alarme du capteur d'inclinaison;auto
+defaut;0x9338;Information: Back-up-Batterie entladen;Information : batterie de secours déchargée;auto
+defaut;0x9339;Information: Verpolung erkannt;Information : inversion de polarité détectée;auto
+defaut;0xFFFF;unbekannter Fehlerort;Emplacement de défaut inconnu;auto
+symptome;0x00;kein passendes Fehlersymptom;aucun symptôme de défaut correspondant;auto
+symptome;0x01;Signal oder Wert oberhalb Schwelle;Signal ou valeur au-dessus du seuil;auto
+symptome;0x02;Signal oder Wert unterhalb Schwelle;Signal ou valeur en dessous du seuil;auto
+symptome;0x04;kein Signal oder Wert;Aucun signal ou valeur;auto
+symptome;0x08;unplausibles Signal oder Wert;Signal ou valeur non plausible;auto
+symptome;0x10;Testbedingungen erfüllt;Conditions de test remplies;auto
+symptome;0x11;Testbedingungen noch nicht erfüllt;Conditions de test non encore remplies;auto
+symptome;0x20;Fehler bisher nicht aufgetreten;Défaut jamais apparu;auto
+symptome;0x21;Fehler momentan nicht vorhanden, aber bereits gespeichert;Défaut non présent actuellement, mais déjà mémorisé;auto
+symptome;0x22;Fehler momentan vorhanden, aber noch nicht gespeichert (Entprellphase);Défaut présent, mais pas encore mémorisé (phase de confirmation);auto
+symptome;0x23;Fehler momentan vorhanden und bereits gespeichert;Défaut présent et déjà mémorisé;auto
+symptome;0x30;Fehler würde kein Aufleuchten einer Warnlampe verursachen;Le défaut n'allumerait pas de témoin;auto
+symptome;0x31;Fehler würde das Aufleuchten einer Warnlampe verursachen;Le défaut allumerait un témoin;auto
+symptome;0xFF;unbekannte Fehlerart;Type de défaut inconnu;auto
+table;FUMWELTTEXTE/0x01;Temperatur;Température;auto
+table;FUMWELTTEXTE/0x02;Kapazität;Capacité;auto
+table;FUMWELTTEXTE/0x03;Max. negative Spannung;Tension négative maximale;auto
+table;FUMWELTTEXTE/0x04;Zeit < -1V;Durée sous -1 V;auto
+table;FUMWELTTEXTE/0x05;Zeit < -2V;Durée sous -2 V;auto
+table;FUMWELTTEXTE/0x06;Zeit < -3V;Durée sous -3 V;auto
+table;FUMWELTTEXTE/0x07;Zeit < -4V;Durée sous -4 V;auto
+table;FUMWELTTEXTE/0XXY;unbekannte Umweltbedingung;Condition d'environnement inconnue;auto

@@ -88,6 +88,12 @@ INPA fault memory printout. Everything seeded is marked `auto` and needs a revie
 taken from the TestO file come from jobs of the same name, sometimes of other ECUs, and can be
 wrong. Rows with the same German text share the same translation.
 
+`fr/cccg60.csv` (MOST/CAN gateway of the CCC), `fr/frm_87.csv` (footwell module), `fr/fzd_87.csv`
+(roof function centre) and `fr/sine_65.csv` (alarm siren and tilt sensor) are translations of
+templates exported from the app (*Export for translation*) on an E90: the texts shared with
+`fr/msv70.csv` reuse its translation, the others were translated with the glossary below. All
+`auto`, to review.
+
 ## Machine pre-translation
 
 [`tools/translate_ecu.py`](../tools/translate_ecu.py) fills the empty `traduction` cells of a file

@@ -1,0 +1,401 @@
+type;cle;de;traduction;statut
+ecu;;E60_CCC_MOST\CAN_Gateway · add job Paralleles Flashen;E60 CCC, passerelle MOST/CAN · job de flashage parallèle ajouté;auto
+resultat;STATUS_MOST_3DB/STAT_MOST_3DB;Status der Lichtleistungsabsenkung;État de la réduction de puissance lumineuse;auto
+resultat;STATUS_MOST_3DB/STAT_MOST_3DB_TEXT;Status der Lichtleistungsabsenkung als Text;État de la réduction de puissance lumineuse (texte);auto
+resultat;STATUS_WAKE_UP_STATUS/STAT_WAKE_UP_STATUS;Status ob Device geweckt hat oder geweckt wurde;État : l'appareil a réveillé ou a été réveillé;auto
+resultat;STATUS_WAKE_UP_STATUS/STAT_WAKE_UP_STATUS_TEXT;Status ob Device geweckt hat oder geweckt wurde als Text;État : l'appareil a réveillé ou a été réveillé (texte);auto
+resultat;STATUS_ABILITY_TO_WAKE/STAT_ABILITY_TO_WAKE;Status ob Device wecken darf;État : l'appareil a le droit de réveiller;auto
+resultat;STATUS_ABILITY_TO_WAKE/STAT_ABILITY_TO_WAKE_TEXT;Status ob Device wecken darf als Text;État : l'appareil a le droit de réveiller (texte);auto
+resultat;STATUS_VERSION_GATEWAYTABELLE/STAT_VERSION_GATEWAYTABELLE;Versionsnummer der Gateway-Tabelle;Numéro de version de la table de passerelle;auto
+resultat;STATUS_GATEWAY_WAKEUP_SOURCE/STAT_WAKEUP_SOURCE;Weckursache;Cause du réveil;auto
+resultat;STATUS_GATEWAY_OWN_DEVICE_ID/STAT_LOG_MOST_ID_RECEIVE_STATE;Default oder Current. Current, falls zum Zeitpunkt der Abfrage;Default ou Current. Current si, au moment de la requête;auto
+resultat;STATUS_GATEWAY_OWN_DEVICE_ID/STAT_LOG_MOST_DEV_ID;Eigene logische MOST Device-ID des Devices, das den Dispatcher-;ID logique MOST propre de l'appareil qui porte le dispatcher;auto
+resultat;STATUS_GATEWAY_MOST_DEVICE_COUNT/STAT_MOST_DEVICE_COUNT;Anzahl der vom Dispatcher erkannten MOST-Teilnehmer im Ring;Nombre de participants MOST détectés dans l'anneau par le dispatcher;auto
+resultat;STATUS_GATEWAY_MOST_DEVICES/STAT_MOST_DEVICE;Bezeichnung des MOST-Devices;Nom de l'appareil MOST;auto
+resultat;*/STAT_ELEMENT_COUNT;Anzahl der registrierten FBlocks bzw. FBlock-Modells;Nombre de FBlocks ou modèles de FBlock enregistrés;auto
+resultat;*/STAT_NODE_TYPE;Typ des registrierten Funktionsblocks bzw. -Modells;Type du bloc fonctionnel ou du modèle enregistré;auto
+resultat;*/STAT_FBLOCK_ID;Funktions-Block-ID des registrierten Funktionsblocks bzw. -Modells;ID du bloc fonctionnel ou du modèle enregistré;auto
+resultat;*/STAT_INST_ID;Instanz-ID des registrierten Funktionsblocks bzw. -Modells;ID d'instance du bloc fonctionnel ou du modèle enregistré;auto
+resultat;STATUS_GATEWAY_EVENT_SINK_COUNT/STAT_EVENT_SINK_COUNT;Anzahl der am Dispatcher registrierten Event-Kommunikationsteilnehmer;Nombre de participants de communication d'événements enregistrés au dispatcher;auto
+resultat;STATUS_PRAEPROZESSOR_SWITCH/STAT_PRE_PROS_SWI;pre-processor switch state;État du commutateur du préprocesseur;auto
+resultat;STATUS_INCLUDED_GW_TAB/STAT_INC_GW_TAB;status of included GW table;État de la table de passerelle intégrée;auto
+resultat;*/STAT_TEMPERATUR_VALUE;Temperatur (Grad C);Température (°C);auto
+resultat;STATUS_ALL_ADC_VALUES/STAT_VOLTAGE_1500MV;Voltage in mVolt;Tension en mV;auto
+resultat;STATUS_ALL_ADC_VALUES/STAT_VOLTAGE_1800MV;Voltage in mVolt;Tension en mV;auto
+resultat;STATUS_ALL_ADC_VALUES/STAT_VOLTAGE_3300MV;Voltage in mVolt;Tension en mV;auto
+resultat;STATUS_ALL_ADC_VALUES/STAT_VOLTAGE_5_V;Voltage in mVolt;Tension en mV;auto
+resultat;STATUS_ALL_ADC_VALUES/STAT_VOLTAGE_8_V;Voltage in mVolt;Tension en mV;auto
+resultat;STATUS_ALL_ADC_VALUES/STAT_VOLTAGE_SUPPLY;Voltage in mVolt;Tension en mV;auto
+resultat;STATUS_AMPLIFIER_MUTE/STAT_POWER_AMPLIFIER;mute mode;Mode muet;auto
+resultat;STATUS_LOUDSP_STATUS/STAT_L_FRONT_STAT_TEXT;Lautsprecher status links vorne;État haut-parleur avant gauche;auto
+resultat;STATUS_LOUDSP_STATUS/STAT_R_FRONT_STAT_TEXT;Lautsprecher status rechts vorne;État haut-parleur avant droit;auto
+resultat;STATUS_LOUDSP_STATUS/STAT_L_REAR_STAT_TEXT;Lautsprecher status links hinten;État haut-parleur arrière gauche;auto
+resultat;STATUS_LOUDSP_STATUS/STAT_R_REAR_STAT_TEXT;Lautsprecher status rechts hinten;État haut-parleur arrière droit;auto
+resultat;STATUS_SPEED_IN2/STAT_DIRECTION_SWITCH;1 - Pin ist High, 0 - Pin ist Low;1 = broche à l'état haut, 0 = broche à l'état bas;auto
+resultat;STATUS_LUEFTER/STAT_LUEFTER_DREHZAHL;Luefter Geschwindigkeit;Vitesse du ventilateur;auto
+resultat;STATUS_EXT_ILLUMINATION/STAT_ILLUMINATION;aktueller Illumination Status;État actuel de l'éclairage;auto
+resultat;STATUS_EEPROM_STATUS/STAT_EEPROM;Eeprom;EEPROM;auto
+resultat;STATUS_I2C_OLIC/STAT_OLIC;Olic;OLIC;auto
+resultat;STATUS_I2C_AMPLIFIER/STAT_AMPLIFIER;Amplifier;Amplificateur;auto
+resultat;STATUS_RAD_ON_DIAG/STAT_RAD_ON;proportional zur RAD_ON Spannung;Proportionnel à la tension RAD_ON;auto
+resultat;STATUS_MOST_CONFIG/STAT_MOST;status 0-Internal CCC Operation, 1-External Most Ring;État : 0 = fonctionnement interne du CCC, 1 = anneau MOST externe;auto
+resultat;STATUS_MOST_CONFIG/STAT_MOST_TEXT;status text;Texte d'état;auto
+resultat;IDENT/ID_BMW_NR;BMW-Teilenummer;Numéro de pièce BMW;auto
+resultat;IDENT/ID_HW_NR;BMW-Hardware-Versionsindex;Indice de version matériel BMW;auto
+resultat;READ_BMW_SACH_NR/ID_HW_NR;BMW-Hardwarenummer;Numéro de matériel BMW;auto
+resultat;READ_BMW_HW_VERSION/ID_HW_NR;BMW-HardwareVersion;Version matérielle BMW;auto
+resultat;IDENT/ID_COD_INDEX;Codier-Index;Indice de codage;auto
+resultat;IDENT/ID_DIAG_INDEX;Diagnose-Index;Indice de diagnostic;auto
+resultat;IDENT/ID_VAR_INDEX;Varianten-Index;Indice de variante;auto
+resultat;IDENT/ID_DATUM_JAHR;Herstelldatum (Jahr);Date de fabrication (année);auto
+resultat;IDENT/ID_DATUM_MONAT;Herstelldatum (Monat);Date de fabrication (mois);auto
+resultat;IDENT/ID_DATUM_TAG;Herstelldatum (Tag);Date de fabrication (jour);auto
+resultat;IDENT/ID_DATUM;Herstelldatum (TT.MM.JJJJ);Date de fabrication (JJ.MM.AAAA);auto
+resultat;IDENT/ID_LIEF_NR;Lieferanten-Nummer;Numéro fournisseur;auto
+resultat;IDENT/ID_LIEF_TEXT;Lieferanten-Text;Texte fournisseur;auto
+resultat;IDENT/ID_SW_NR_MCV;Softwarenummer (message catalogue version);Numéro de logiciel (version catalogue de messages);auto
+resultat;IDENT/ID_SW_NR_FSV;Softwarenummer (functional software version);Numéro de logiciel (version logiciel fonctionnel);auto
+resultat;IDENT/ID_SW_NR_OSV;Softwarenummer (operating system version);Numéro de logiciel (version système d'exploitation);auto
+resultat;IDENT/ID_SW_NR_RES;Softwarenummer (reserved - currently unused);Numéro de logiciel (réservé - actuellement non utilisé);auto
+resultat;IDENT/ID_SG_ADR;Steuergeraeteadresse;Adresse calculateur;auto
+resultat;IDENT/ID_LIN_SLAVE_ADR;LIN Slave Steuergeraeteadresse;Adresse calculateur esclave LIN;auto
+resultat;IDENT/ID_EWS_SS;Identifikation EWS-Schnittstelle;Identification interface EWS;auto
+resultat;PRUEFSTEMPEL_LESEN/BYTE1;BYTE1;BYTE1;auto
+resultat;PRUEFSTEMPEL_LESEN/BYTE2;BYTE2;BYTE2;auto
+resultat;PRUEFSTEMPEL_LESEN/BYTE3;BYTE3;BYTE3;auto
+resultat;MOST_VERSION_LESEN/TRANSCEIVER_VERSION;Version des MOST Transceivers;Version de l'émetteur-récepteur MOST;auto
+resultat;MOST_VERSION_LESEN/NETSERVICES_VERSION;Version der Oasis NetServices;Version des Oasis NetServices;auto
+resultat;MOST_VERSION_LESEN/NETSERVICES_REVISION;Revision der Oasis NetServices;Révision des Oasis NetServices;auto
+resultat;SERIENNUMMER_LESEN/SERIENNUMMER;Seriennummer des Steuergeraets;Numéro de série du calculateur;auto
+resultat;ZIF_LESEN/ZIF_PROGRAMM_REFERENZ;PRGREF ProgrammReferenz;PRGREF Référence programme;auto
+resultat;ZIF_LESEN/ZIF_SG_KENNUNG;ZZZ;ZZZ;auto
+resultat;ZIF_LESEN/ZIF_PROJEKT;PPPxV;PPPxV;auto
+resultat;ZIF_LESEN/ZIF_PROGRAMM_STAND;BBxh;BBxh;auto
+resultat;ZIF_LESEN/ZIF_STATUS;Dateninhalt bei FF noch nicht beschrieben;Contenu des données FF non encore écrit;auto
+resultat;ZIF_LESEN/ZIF_BMW_HW;VMECUH*N vehicleManufacturerECUHardware*Number;VMECUH*N Numéro de matériel ECU du constructeur*;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_PROGRAMM_REFERENZ;PRGREFB ProgrammReferenzBackup;PRGREFB Référence programme de secours;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_SG_KENNUNG;ZZZ;ZZZ;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_PROJEKT;PPPxV;PPPxV;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_PROGRAMM_STAND;BBxh;BBxh;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_STATUS;Dateninhalt bei FF noch nicht beschrieben;Contenu des données FF non encore écrit;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_BMW_HW;VMECUH*NB vehicleManufECUHW*NumberBackup;VMECUH*NB Numéro de matériel ECU du constructeur* de secours;auto
+resultat;PHYSIKALISCHE_HW_NR_LESEN/PHYSIKALISCHE_HW_NR;Physikalische Hardware-Nummer;Numéro de matériel physique;auto
+resultat;HARDWARE_REFERENZ_LESEN/HARDWARE_REFERENZ;Hardware Referenz;Référence matériel;auto
+resultat;HARDWARE_REFERENZ_LESEN/HW_REF_SG_KENNUNG;ZZZ;ZZZ;auto
+resultat;HARDWARE_REFERENZ_LESEN/HW_REF_PROJEKT;PPPx;PPPx;auto
+resultat;HARDWARE_REFERENZ_LESEN/HW_REF_STATUS;Dateninhalt bei FF noch nicht beschrieben;Contenu des données FF non encore écrit;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REFERENZ;Daten Referenz;Référence données;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_SG_KENNUNG;ZZZ;ZZZ;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_PROJEKT;PPPxV;PPPxV;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_PROGRAMM_STAND;BBxh;BBxh;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_DATENSATZ;dxxxx;dxxxx;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_STATUS;Dateninhalt bei FF noch nicht beschrieben;Contenu des données FF non encore écrit;auto
+resultat;READ_CURRENT_UIF/UIF_FG_NR;Fahrgestellnummer 7-stellig;Numéro de châssis 7 chiffres;auto
+resultat;READ_CURRENT_UIF/UIF_DATUM;Datum der SG-Programmierung in der Form TT.MM.JJJJ;Date de programmation du calculateur (JJ.MM.AAAA);auto
+resultat;READ_CURRENT_UIF/UIF_ZB_NR;BMW/Rover Zusammenbaunummer;Numéro d'assemblage BMW/Rover;auto
+resultat;READ_CURRENT_UIF/UIF_OFFSET;Anzahl Programmiervorgaenge;Nombre de programmations;auto
+resultat;READ_CURRENT_UIF/UIF_GROESSE;Groesse des UIF;Taille de l'UIF;auto
+resultat;PROGRAM_REFERENZ_LESEN/PROGRAMM_REFERENZ;PRGREF ProgrammReferenz;PRGREF Référence programme;auto
+resultat;*/DEVICE_ID;MOST device Id;ID d'appareil MOST;auto
+resultat;*/FB_ID;MOST Funktions block;Bloc fonctionnel MOST;auto
+resultat;*/INST_ID;Instanz Id;ID d'instance;auto
+resultat;*/FB_NAME;Name des FBlocks;Nom du FBlock;auto
+resultat;READ_DIFF_REGISTRY/DIFF_TYPE;Art der Ring Modifikation;Type de modification de l'anneau;auto
+resultat;READ_DIFF_REGISTRY/DEVICEID_DIFF;MOST device ID;ID d'appareil MOST;auto
+resultat;READ_DIFF_REGISTRY/FBLOCKID_DIFF;MOST Funktionsblock ID;ID de bloc fonctionnel MOST;auto
+resultat;READ_DIFF_REGISTRY/INSTID_DIFF;Instanz ID;ID d'instance;auto
+resultat;READ_DIFF_REGISTRY/FBLOCK_NAME_DIFF;Name des FBlocks;Nom du FBlock;auto
+job;INFO;Information SGBD;Information SGBD;auto
+job;INITIALISIERUNG;Initialisierung und Kommunikationsparameter;Initialisation et paramètres de communication;auto
+job;DIAGNOSEPROTOKOLL_LESEN;Gibt die möglichen Diagnoseprotokolle;Affiche les protocoles de diagnostic possibles;auto
+job;DIAGNOSEPROTOKOLL_SETZEN;Wählt ein Diagnoseprotokoll aus;Sélectionner un protocole de diagnostic;auto
+job;IDENT;Identdaten;Données d'identification;auto
+job;FS_LESEN;Fehlerspeicher lesen (alle Fehler / Ort und Art);Lire la mémoire de défauts (tous les défauts / lieu et type);auto
+job;FS_LESEN_DETAIL;Fehlerspeicher lesen (ein Fehler / alle Details);Lire la mémoire de défauts (un défaut / tous les détails);auto
+job;FS_LOESCHEN;Fehlerspeicher loeschen;Effacer la mémoire de défauts;auto
+job;PRUEFSTEMPEL_LESEN;Auslesen des Pruefstempels;Lire le tampon de test;auto
+job;PRUEFSTEMPEL_SCHREIBEN;Beschreiben des Pruefstempels;Écrire le tampon de test;auto
+job;NORMALER_DATENVERKEHR;Sperren bzw. Freigeben des normalen Datenverkehrs;Verrouiller ou déverrouiller le trafic de données normal;auto
+job;DIAGNOSE_AUFRECHT;Diagnosemode des SG aufrecht erhalten;Maintenir le mode diagnostic du calculateur;auto
+job;FS_SPERREN;Sperren bzw. Freigeben des Fehlerspeichers;Verrouiller ou déverrouiller la mémoire de défauts;auto
+job;IS_LESEN;Infospeicher lesen (alle Info-Meldungen / Ort und Art);Lire la mémoire d'informations (tous les messages / emplacement et type);auto
+job;IS_LESEN_DETAIL;Infospeicher lesen (alle Info-Meldungen / Ort und Art);Lire la mémoire d'informations (tous les messages / emplacement et type);auto
+job;IS_LOESCHEN;Infospeicher loeschen;Effacer la mémoire d'informations;auto
+job;SLEEP_MODE;SG in Sleep-Mode versetzen;Mettre le calculateur en mode veille;auto
+job;ENERGIESPARMODE;Einstellen des Energiesparmodes;Régler le mode d'économie d'énergie;auto
+job;SPEICHER_LESEN;Auslesen des Steuergeraete-Speichers;Lire la mémoire du calculateur;auto
+job;SPEICHER_SCHREIBEN;Beschreiben des Steuergeraete-Speichers;Écrire la mémoire du calculateur;auto
+job;MOST_VERSION_LESEN;Auslesen von Most Version;Lire la version MOST;auto
+job;STATUS_MOST_3DB;Auslesen des Status der Lichtleistungsabsenkung;Lire l'état de la réduction de puissance lumineuse;auto
+job;STEUERN_MOST_3DB;Lichtleistungsabsenkung einschalten;Activer la réduction de puissance lumineuse;auto
+job;STATUS_WAKE_UP_STATUS;Auslesen des Status WakeupStatus;Lire l'état WakeupStatus;auto
+job;STATUS_ABILITY_TO_WAKE;Auslesen des Status AbilityToWake;Lire l'état AbilityToWake;auto
+job;STEUERN_ABILITY_TO_WAKE;AbilityToWake einstellen;Régler AbilityToWake;auto
+job;STATUS_VERSION_GATEWAYTABELLE;Lesen der Versionsnummer der Gateway-Tabelle;Lire le numéro de version de la table de passerelle;auto
+job;STATUS_GATEWAY_WAKEUP_SOURCE;Liefert die Quelle/Ursache zurück, die zum Wecken des;Renvoie la source / la cause du réveil du;auto
+job;STATUS_GATEWAY_OWN_DEVICE_ID;Information über den Gateway-Dispatcher;Informations sur le dispatcher de la passerelle;auto
+job;STATUS_GATEWAY_MOST_DEVICE_COUNT;Information über den Gateway-Dispatcher;Informations sur le dispatcher de la passerelle;auto
+job;STATUS_GATEWAY_MOST_DEVICES;Ausgabe der erkannten MOST-Devices. Die Erkennung;Liste des appareils MOST détectés. La détection;auto
+job;STATUS_GATEWAY_LOCAL_REGISTRY_ELEMENTS;Information über den Gateway-Dispatcher;Informations sur le dispatcher de la passerelle;auto
+job;STATUS_GATEWAY_EXTERNAL_REGISTRY_ELEMENTS;Information über den Gateway-Dispatcher;Informations sur le dispatcher de la passerelle;auto
+job;STATUS_GATEWAY_EVENT_SINK_COUNT;Information über den Gateway-Dispatcher;Informations sur le dispatcher de la passerelle;auto
+job;STATUS_PRAEPROZESSOR_SWITCH;Read out status of pre-processor switch;Lire l'état du commutateur du préprocesseur;auto
+job;STATUS_INCLUDED_GW_TAB;Read out status of included GW table;Lire l'état de la table de passerelle intégrée;auto
+job;PRUEFCODE_LESEN;Standard Pruefcode lesen fuer Kundendienst;Lire le code de test standard pour le service client;auto
+job;C_CI_LESEN;Codierindex lesen;Lire l'index de codage;auto
+job;C_FG_LESEN;Fahrgestellnummer lesen;Lire le numéro de châssis;auto
+job;C_FG_SCHREIBEN;Fahrgestellnummer schreiben;Écrire le numéro de châssis;auto
+job;C_FG_AUFTRAG;Fahrgestellnummer schreiben und ruecklesen;Écrire et relire le numéro de châssis;auto
+job;C_AEI_LESEN;Aenderungsindex der Codierdaten lesen;Lire l'index de modification des données de codage;auto
+job;C_AEI_SCHREIBEN;Aenderungsindex der Codierdaten schreiben;Écrire l'index de modification des données de codage;auto
+job;C_AEI_AUFTRAG;Aenderungsindex der Codierdaten schreiben und ruecklesen;Écrire et relire l'index de modification des données de codage;auto
+job;C_C_LESEN;Codierdaten lesen;Lire les données de codage;auto
+job;C_C_SCHREIBEN;Codierdaten schreiben;Écrire les données de codage;auto
+job;C_C_AUFTRAG;Codierdaten schreiben und ruecklesen;Écrire et relire les données de codage;auto
+job;SERIENNUMMER_LESEN;Hersteller Seriennummer lesen;Lire le numéro de série du fabricant;auto
+job;ZIF_LESEN;Auslesen des Zulieferinfofeldes;Lire le champ d'information du fournisseur;auto
+job;ZIF_BACKUP_LESEN;Auslesen des Backups des Zulieferinfofeldes;Lire la sauvegarde du champ d'information du fournisseur;auto
+job;PHYSIKALISCHE_HW_NR_LESEN;Auslesen der physikalischen Hardwarenummer;Lire le numéro de matériel physique;auto
+job;HARDWARE_REFERENZ_LESEN;Auslesen der Hardware Referenz;Lire la référence du matériel;auto
+job;DATEN_REFERENZ_LESEN;Auslesen der Daten Referenz;Lire la référence des données;auto
+job;FLASH_ZEITEN_LESEN;Auslesen der Flash Loeschzeit, Signaturtestzeit,;Lire le temps d'effacement Flash, le temps de test de signature,;auto
+job;FLASH_BLOCKLAENGE_LESEN;Auslesen des maximalen Blocklaenge beim Flashen;Lire la longueur de bloc maximale lors du flashage;auto
+job;AUTHENTISIERUNG_ZUFALLSZAHL_LESEN;Authentisierung Zufallszahl des SG lesen;Lire le nombre aléatoire d'authentification du calculateur;auto
+job;AUTHENTISIERUNG_START;Authentisierung pruefen;Vérifier l'authentification;auto
+job;FLASH_PROGRAMMIER_STATUS_LESEN;Programmierstatus des SG lesen;Lire l'état de programmation du calculateur;auto
+job;FLASH_SIGNATUR_PRUEFEN;Flash Signatur pruefen;Vérifier la signature Flash;auto
+job;STEUERGERAETE_RESET;Steuergeraete reset ausloesen;Déclencher le réinitialisation des calculateurs;auto
+job;FLASH_LOESCHEN;Flash loeschen;Effacer le Flash;auto
+job;FLASH_SCHREIBEN_ADRESSE;Vorbereitung fuer Flash schreiben;Préparation pour l'écriture du Flash;auto
+job;FLASH_SCHREIBEN;Flash Daten schreiben;Écrire les données Flash;auto
+job;FLASH_SCHREIBEN_ENDE;Flashprogrammierung abschliessen;Terminer la programmation Flash;auto
+job;AIF_LESEN;Auslesen des Anwender Informations Feldes;Lecture du champ d'informations utilisateur;auto
+job;AIF_SCHREIBEN;Schreiben des Anwender Informations Feldes;Écriture du champ d'informations utilisateur;auto
+job;START_PARALLELE_PROG;start parallele Programierung;Démarrer la programmation parallèle;auto
+job;STOP_PARALLELE_PROG;stop parallele Programierung;Arrêter la programmation parallèle;auto
+job;SELBSTTEST_STARTEN;Starten des Selbsttests;Démarrer l'autotest;auto
+job;SELBSTTEST_STOPPEN;Abbrechen des Selbsttests;Interrompre l'autotest;auto
+job;SELBSTTEST_ABFRAGEN;Abfragen des Systemtests;Lire le test système;auto
+job;SYSTEMTEST_STARTEN;Starten des Systemtests;Démarrer le test système;auto
+job;SYSTEMTEST_STOPPEN;Abbrechen des Systemtests;Interrompre le test système;auto
+job;SYSTEMTEST_ABFRAGEN;Abfragen des Systemtests;Lire le test système;auto
+job;READ_CURRENT_UIF;currentUIFDataTable;Table de données UIF actuelle;auto
+job;READ_BMW_SACH_NR;SystemSupplierECUHardwareNumber;Numéro de matériel du calculateur (fournisseur);auto
+job;READ_BMW_HW_VERSION;vehicleManufactureECUHardwareVersionNumber;Version matérielle du calculateur (constructeur);auto
+job;PROGRAM_REFERENZ_LESEN;vehicleManufECUSoftwareLayerVersionNumber;Version de la couche logicielle du calculateur (constructeur);auto
+job;STATUS_PWB_TEMP;die Temperatur des Sensors auf dem PowerBord wird ausgegeben;Lit la température du capteur de la carte d'alimentation;auto
+job;STEUERN_PWB_TEMP;die Temperatur des Sensors auf dem Powerboard wird simuliert;Simule la température du capteur de la carte d'alimentation;auto
+job;STATUS_FOT_TEMP;die Temperatur des Sensors an der FOT wird ausgegeben;Lit la température du capteur du FOT;auto
+job;STEUERN_FOT_TEMP;die Temperatur des Sensors an der FOT wird simuliert;Simule la température du capteur du FOT;auto
+job;STATUS_ALL_ADC_VALUES;Die internen Spannungen werden ausgegeben;Lit les tensions internes;auto
+job;STATUS_AMPLIFIER_MUTE;der Mute Mode des PowerAmpifiers wird ausgegeben;Lit le mode muet de l'amplificateur de puissance;auto
+job;STATUS_LOUDSP_STATUS;der Status der Lautspecherverbindung wird ausgegeben;Lit l'état de la connexion des haut-parleurs;auto
+job;STATUS_SPEED_IN2;der Wert des Pins der externen Fahrtrichtungssignals wird ausgegeben;Lit la broche du signal externe de clignotant;auto
+job;STATUS_LUEFTER;die Luefter Geschwindigkeit wird ausgegeben;Lit la vitesse du ventilateur;auto
+job;STEUERN_LUEFTER;schalte Luefter;Commander le ventilateur;auto
+job;STATUS_EXT_ILLUMINATION;der Status externen Illumination wird ausgegeben (Klemme 58g);Lit l'état de l'éclairage externe (borne 58g);auto
+job;STATUS_FLASH_CHKSUM;lese die Flash Checksumme;Lire la somme de contrôle de la flash;auto
+job;READ_CURRENT_REGISTRY;der Werte der aktuellen MOST registry wird ausgegeben;Lit les valeurs du registre MOST actuel;auto
+job;READ_DEFAULT_REGISTRY;die Werte der default MOST registry wird ausgegeben;Lit les valeurs du registre MOST par défaut;auto
+job;STEUERN_ZENTRALE_REGISTRY_SOLLKONFIGURATION;die aktuelle Registry wird in die default Registry uebernommen;Copie le registre actuel dans le registre par défaut;auto
+job;READ_DIFF_REGISTRY;Vergleich der Current MOST Registry mit der Default MOST Registry;Compare le registre MOST actuel au registre MOST par défaut;auto
+job;STATUS_EEPROM_STATUS;der Eeprom Chip Status wird ausgegeben;Lit l'état de la puce EEPROM;auto
+job;STATUS_I2C_OLIC;der Olic Chip Status wird ausgegeben;Lit l'état de la puce OLIC;auto
+job;STATUS_I2C_AMPLIFIER;der Amplifier Chip Status wird ausgegeben;Lit l'état de la puce de l'amplificateur;auto
+job;STEUERN_RAD_ON;der Wert des RAD_ON Pins wird gesetzt;Règle la broche RAD_ON;auto
+job;STATUS_RAD_ON_DIAG;der Wert des RAD_ON Pins wird ausgegeben;Lit la broche RAD_ON;auto
+job;STEUERN_BOOTMODE_HOST;der BootMode der CCC_Host wird gesetzt;Règle le mode de démarrage de l'hôte CCC;auto
+job;SET_ENDE_CODIERUNG;Codierdaten flashen;Flasher les données de codage;auto
+job;STEUERN_RESET_CCC;der gesammte CCC wird zurueckgesetzt;Réinitialise tout le CCC;auto
+job;STATUS_MOST_CONFIG;status des MOST rings;État de l'anneau MOST;auto
+job;LESE_MOSTREGISTER;Es wird ein bestimmtes MOST-Register;Un registre MOST donné est;auto
+job;READ_RIT;Auslesen der Routing Information Table eines;Lire la table d'informations de routage d'un;auto
+job;STATUS_SEARCH_FBLOCK;Suche Fblock,InstID;Chercher FBlock, InstID;auto
+job;READ_CURRENT_REGISTRY_DIAGNOSIS;die Diagnose Daten der aktuellen MOST registry wird ausgegeben;Lit les données de diagnostic du registre MOST actuel;auto
+job;READ_DEFAULT_REGISTRY_DIAGNOSIS;die Diagnose Daten der default MOST registry wird ausgegeben;Lit les données de diagnostic du registre MOST par défaut;auto
+defaut;0xA168;EEPROM antwortet nicht;L'EEPROM ne répond pas;auto
+defaut;0xA169;OLIC antwortet nicht;L'OLIC ne répond pas;auto
+defaut;0xA16A;TDA7563 antwortet nicht;Le TDA7563 ne répond pas;auto
+defaut;0xA16B;Fehler im Power Source Supply;Défaut d'alimentation électrique;auto
+defaut;0xA16C;Fehler Externe Beleuchtung;Défaut d'éclairage externe;auto
+defaut;0xA16D;Temperatur (MOST-FOT,PWB) ausserhalb zulaessigem Bereich;Température (FOT MOST, carte) hors de la plage admise;auto
+defaut;0xA16E;Lautsprecher nicht OK;Haut-parleur défectueux;auto
+defaut;0xA16F;Fehler im K-CAN Test;Défaut au test K-CAN;auto
+defaut;0xA170;RAD_ON Signal (fuer ext.Ampl.) ohne Funktion;Signal RAD_ON (amplificateur externe) sans effet;auto
+defaut;0xA171;Checksum Fehler Eeprom;Erreur de somme de contrôle EEPROM;auto
+defaut;0xA172;Checksum Fehler ext.Flash;Erreur de somme de contrôle flash externe;auto
+defaut;0xA174;Coding data CRC Fehler;Erreur CRC des données de codage;auto
+defaut;0xA177;Externer Fan arbeitet nicht;Le ventilateur externe ne fonctionne pas;auto
+defaut;0xA178;Temperatur Sensor Fehler;Défaut du capteur de température;auto
+defaut;0xA179;Ueber-/Unterspannung interne Spannung;Surtension / sous-tension interne;auto
+defaut;0xA17A;I2C-Amplifier Output;Sortie amplificateur I2C;auto
+defaut;0xA17B;Ueberspannung externe Versorgung (Batterie);Surtension de l'alimentation externe (batterie);auto
+defaut;0xA17C;Fehler 0xA17C;Défaut 0xA17C;auto
+defaut;0xA17D;Fehler 0xA17D;Défaut 0xA17D;auto
+defaut;0xA17E;Fehler 0xA17E;Défaut 0xA17E;auto
+defaut;0xA17F;Fehler 0xA17F;Défaut 0xA17F;auto
+defaut;0xA180;Fehler 0xA180;Défaut 0xA180;auto
+defaut;0xA181;Fehler 0xA181;Défaut 0xA181;auto
+defaut;0xA182;Fehler 0xA182;Défaut 0xA182;auto
+defaut;0xA183;Fehler 0xA183;Défaut 0xA183;auto
+defaut;0xA184;Fehler 0xA184;Défaut 0xA184;auto
+defaut;0xA185;Fehler 0xA185;Défaut 0xA185;auto
+defaut;0xA186;Fehler 0xA186;Défaut 0xA186;auto
+defaut;0xA187;Energiesparmode aktiv;Mode d'économie d'énergie actif;auto
+defaut;0xE184;K-CAN Leitungsfehler;Défaut de ligne K-CAN;auto
+defaut;0xE187;K-CAN Kommunikationsfehler;Défaut de communication K-CAN;auto
+defaut;0xE18C;Device hat die Monitoringnachricht nicht abgenommen oder bestaetigt. (Error_Monitoring).;Un appareil n'a pas accepté ou acquitté le message de surveillance (Error_Monitoring).;auto
+defaut;0xE18D;Weckendes Device hat 3 mal erfolglos versucht das Netzwerk zu wecken. (Error_WakeUp_Failed).;L'appareil réveilleur a tenté 3 fois sans succès de réveiller le réseau (Error_WakeUp_Failed).;auto
+defaut;0xE18E;Obwohl Shutdown(Execute) geschickt wurde ging das Licht nicht aus. (Error_Light_Not_Off).;La lumière ne s'est pas éteinte malgré l'envoi de Shutdown(Execute) (Error_Light_Not_Off).;auto
+defaut;0xE18F;Zentrale Registry stimmt nicht mit der Sollkonfiguration ueberein (Error_Registry_New).;Le registre central ne correspond pas à la configuration de consigne (Error_Registry_New).;auto
+defaut;0xE190;Ringbruchdiagnose wurde durchgefuehrt (Error_Ring_Diagnose).;Un diagnostic de rupture d'anneau a été effectué (Error_Ring_Diagnose).;auto
+defaut;0xE191;Lange und/oder haeufige Unlocks (Error_Unlock_Long).;Pertes de verrouillage longues et/ou fréquentes (Error_Unlock_Long).;auto
+defaut;0xE192;Ein Device hat sich wegen Uebertemperatur abgeschaltet (Error_Temp_Shutdown).;Un appareil s'est coupé à cause d'une surchauffe (Error_Temp_Shutdown).;auto
+defaut;0xFFFF;unbekannter Fehlerort;Emplacement de défaut inconnu;auto
+symptome;0x00;kein passendes Fehlersymptom;aucun symptôme de défaut correspondant;auto
+symptome;0x01;Signal oder Wert oberhalb Schwelle;Signal ou valeur au-dessus du seuil;auto
+symptome;0x02;Signal oder Wert unterhalb Schwelle;Signal ou valeur en dessous du seuil;auto
+symptome;0x04;kein Signal oder Wert;Aucun signal ou valeur;auto
+symptome;0x08;unplausibles Signal oder Wert;Signal ou valeur non plausible;auto
+symptome;0x10;Testbedingungen erfüllt;Conditions de test remplies;auto
+symptome;0x11;Testbedingungen noch nicht erfüllt;Conditions de test non encore remplies;auto
+symptome;0x20;Fehler bisher nicht aufgetreten;Défaut jamais apparu;auto
+symptome;0x21;Fehler momentan nicht vorhanden, aber bereits gespeichert;Défaut non présent actuellement, mais déjà mémorisé;auto
+symptome;0x22;Fehler momentan vorhanden, aber noch nicht gespeichert (Entprellphase);Défaut présent, mais pas encore mémorisé (phase de confirmation);auto
+symptome;0x23;Fehler momentan vorhanden und bereits gespeichert;Défaut présent et déjà mémorisé;auto
+symptome;0x30;Fehler würde kein Aufleuchten einer Warnlampe verursachen;Le défaut n'allumerait pas de témoin;auto
+symptome;0x31;Fehler würde das Aufleuchten einer Warnlampe verursachen;Le défaut allumerait un témoin;auto
+symptome;0xFF;unbekannte Fehlerart;Type de défaut inconnu;auto
+table;IARTTEXTE/0x00;kein passendes Fehlersymptom;Aucun symptôme de défaut correspondant;auto
+table;IARTTEXTE/0x01;Signal oder Wert oberhalb Schwelle;Signal ou valeur au-dessus du seuil;auto
+table;IARTTEXTE/0x02;Signal oder Wert unterhalb Schwelle;Signal ou valeur en dessous du seuil;auto
+table;IARTTEXTE/0x04;kein Signal oder Wert;Aucun signal ou valeur;auto
+table;IARTTEXTE/0x08;unplausibles Signal oder Wert;Signal ou valeur non plausible;auto
+table;IARTTEXTE/0x10;Testbedingungen erfüllt;Conditions de test remplies;auto
+table;IARTTEXTE/0x11;Testbedingungen noch nicht erfüllt;Conditions de test non encore remplies;auto
+table;IARTTEXTE/0x20;Fehler bisher nicht aufgetreten;Défaut jamais apparu;auto
+table;IARTTEXTE/0x21;Fehler momentan nicht vorhanden, aber bereits gespeichert;Défaut non présent actuellement, mais déjà mémorisé;auto
+table;IARTTEXTE/0x22;Fehler momentan vorhanden, aber noch nicht gespeichert (Entprellphase);Défaut présent, mais pas encore mémorisé (phase de confirmation);auto
+table;IARTTEXTE/0x23;Fehler momentan vorhanden und bereits gespeichert;Défaut présent et déjà mémorisé;auto
+table;IARTTEXTE/0x30;Fehler würde kein Aufleuchten einer Warnlampe verursachen;Le défaut n'allumerait pas de témoin;auto
+table;IARTTEXTE/0x31;Fehler würde das Aufleuchten einer Warnlampe verursachen;Le défaut allumerait un témoin;auto
+table;IARTTEXTE/0xFF;unbekannte Fehlerart;Type de défaut inconnu;auto
+table;TLOGMOSTIDRECEIVESTATE/0x00;Default Value;Valeur par défaut;auto
+table;TLOGMOSTIDRECEIVESTATE/0x01;Current Value;Valeur actuelle;auto
+table;TNODETYPE/0x00;Virtual Function-Block;Bloc fonctionnel virtuel;auto
+table;TNODETYPE/0x01;Local Function-Block;Bloc fonctionnel local;auto
+table;TNODETYPE/0x02;External Function-Block;Bloc fonctionnel externe;auto
+table;TNODETYPE/0x03;Virtual Function-Block-Model;Modèle de bloc fonctionnel virtuel;auto
+table;TNODETYPE/0x04;Local Function-Block-Model;Modèle de bloc fonctionnel local;auto
+table;TNODETYPE/0x05;External Function-Block-Model;Modèle de bloc fonctionnel externe;auto
+table;FUMWELTTEXTE/0x05;Diagnoseadresse;Adresse de diagnostic;auto
+table;FUMWELTTEXTE/0x07;Uebertemperatur;surtempérature;auto
+table;FUMWELTTEXTE/0x10;Logische-Knotenadresse;Adresse logique du nœud;auto
+table;FUMWELTTEXTE/0x11;FBlockID;ID FBlock;auto
+table;FUMWELTTEXTE/0x12;InstID;ID d'instance;auto
+table;FUMWELTTEXTE/0x13;FktID;ID de fonction;auto
+table;FUMWELTTEXTE/0x20;VDO-Error;Erreur VDO;auto
+table;FUMWELTTEXTE/0x21;Datenlaenge;Longueur des données;auto
+table;FUMWELTTEXTE/0x22;dummy1;dummy1;auto
+table;FUMWELTTEXTE/0x23;dummy2;dummy2;auto
+table;FUMWELTTEXTE/0x24;dummy3;dummy3;auto
+table;FUMWELTTEXTE/0x25;SensorID;ID du capteur;auto
+table;FUMWELTTEXTE/0x26;SensorName;Nom du capteur;auto
+table;FUMWELTTEXTE/0x27;ErrorTyp (0 - Unterspannung, 1 - Ueberspannung);Type d'erreur (0 = sous-tension, 1 = surtension);auto
+table;FUMWELTTEXTE/0x28;Wert (mVolt);Valeur (mV);auto
+table;FUMWELTTEXTE/0x29;DetektiertId;ID détecté;auto
+table;FUMWELTTEXTE/0x2A;DetektiertVon;Détecté par;auto
+table;FUMWELTTEXTE/0x2B;dummy4;dummy4;auto
+table;HORTTEXTE/0xFFFF;unbekannter Fehlerort;Emplacement de défaut inconnu;auto
+table;IORTTEXTE/0x9308;Device bekam Reset (Error_Reset).;L'appareil a été réinitialisé (Error_Reset).;auto
+table;IORTTEXTE/0x9309;Bis zum Auftreten des Timeouts konnte kein Licht bzw. kein stabiler Lock erkannt werden (Error_NSInit_Timeout).;Aucune lumière ni verrouillage stable détecté avant l'expiration du délai (Error_NSInit_Timeout).;auto
+table;IORTTEXTE/0x930A;Device ist im Zustand Normal Operation und das Licht am Eingang geht ohne Vorankuendigung aus (Error_Sudden_light_off).;L'appareil est en fonctionnement normal et la lumière en entrée s'éteint sans préavis (Error_Sudden_light_off).;auto
+table;IORTTEXTE/0x930B;Anfragendes Device bekommt keine Antwort obwohl Partner vorhanden ist (Error_Device_No_Answer).;L'appareil demandeur ne reçoit pas de réponse alors que le partenaire est présent (Error_Device_No_Answer).;auto
+table;IORTTEXTE/0x930C;Kurze Unlocks (Error_Unlock_Short).;Pertes de verrouillage courtes (Error_Unlock_Short).;auto
+table;IORTTEXTE/0x930D;Kein Broadcast Configuration(Status) vom Networkmaster erhalten (Error_t_CfgStatus).;Aucune diffusion Configuration(Status) reçue du maître réseau (Error_t_CfgStatus).;auto
+table;IORTTEXTE/0x930F;Ein Device hat im laufenden Betrieb seinen Bypass All geschlossen (Error_NCE).;Un appareil a fermé son Bypass All en fonctionnement (Error_NCE).;auto
+table;IORTTEXTE/0x9310;Empfaenger hat eine Nachricht nicht abgenommen (Error_NAK).;Le destinataire n'a pas accepté un message (Error_NAK).;auto
+table;IORTTEXTE/0x9311;Lange und/oder haeufige Unlocks (Error_Unlock_Long).;Pertes de verrouillage longues et/ou fréquentes (Error_Unlock_Long).;auto
+table;IORTTEXTE/0xA168;EEPROM does not respond (obsolete);L'EEPROM ne répond pas (obsolète);auto
+table;IORTTEXTE/0xA169;OLIC does not respond (obsolete);L'OLIC ne répond pas (obsolète);auto
+table;IORTTEXTE/0xA16A;TDA7563 does not respond (obsolete);Le TDA7563 ne répond pas (obsolète);auto
+table;IORTTEXTE/0xA16B;Power Source Supply (obsolete);Alimentation électrique (obsolète);auto
+table;IORTTEXTE/0xA16C;Illumination ext failed (obsolete);Défaut d'éclairage externe (obsolète);auto
+table;IORTTEXTE/0xA16D;Temp. out of range (MOST-FOT,PWB) (obsolete);Température hors plage (FOT MOST, carte) (obsolète);auto
+table;IORTTEXTE/0xA16E;Loudspeaker not OK (obsolete);Haut-parleur défectueux (obsolète);auto
+table;IORTTEXTE/0xA16F;K-CAN Test not OK (obsolete);Test K-CAN en défaut (obsolète);auto
+table;IORTTEXTE/0xA170;RAD_ON Signal (for ext.Ampl.) failed (obsolete);Signal RAD_ON (amplificateur externe) en défaut (obsolète);auto
+table;IORTTEXTE/0xA171;Wrong Checksum Eeprom (obsolete);Somme de contrôle EEPROM erronée (obsolète);auto
+table;IORTTEXTE/0xA172;Wrong Checksum ext.Flash (obsolete);Somme de contrôle flash externe erronée (obsolète);auto
+table;IORTTEXTE/0xA173;CAN Transceiver not working (obsolete);L'émetteur-récepteur CAN ne fonctionne pas (obsolète);auto
+table;IORTTEXTE/0xA174;Connection SPI to MOST Transc. NOK (obsolete);Liaison SPI vers l'émetteur-récepteur MOST en défaut (obsolète);auto
+table;IORTTEXTE/0xA175;Connection I2S DSP-GW-DSP not OK (unp.) (obsolete);Liaison I2S DSP-passerelle-DSP en défaut (non plausible) (obsolète);auto
+table;IORTTEXTE/0xA176;Connection I2S DSP-GW-DSP not OK (p.) (obsolete);Liaison I2S DSP-passerelle-DSP en défaut (plausible) (obsolète);auto
+table;IORTTEXTE/0xA177;Function of ext. Fan failed (obsolete);Défaut du ventilateur externe (obsolète);auto
+table;IORTTEXTE/0xA178;Temperatur Sensor Fehler (Obsolete);Défaut du capteur de température (obsolète);auto
+table;IORTTEXTE/0xA179;Ueber-/Unterspannung interne Spannung (Obsolete);Surtension / sous-tension interne (obsolète);auto
+table;IORTTEXTE/0xA17A;I2C-Amplifier Output (Obsolete);Sortie amplificateur I2C (obsolète);auto
+table;IORTTEXTE/0xA187;Energiesparmodus (FeTraWe) aktiv (Obsolete);Mode d'économie d'énergie (usine/transport/atelier) actif (obsolète);auto
+table;IORTTEXTE/0xFFFF;unbekannter Fehlerort;Emplacement de défaut inconnu;auto
+table;IUMWELTTEXTE/0x05;Diagnoseadresse;Adresse de diagnostic;auto
+table;IUMWELTTEXTE/0x10;Logische-Knotenadresse;Adresse logique du nœud;auto
+table;IUMWELTTEXTE/0x11;FBlockID;ID FBlock;auto
+table;IUMWELTTEXTE/0x12;InstID;ID d'instance;auto
+table;IUMWELTTEXTE/0x13;FktID;ID de fonction;auto
+table;IUMWELTTEXTE/0x20;VDO-Error;Erreur VDO;auto
+table;IUMWELTTEXTE/0x04;ResetReason;Cause de la réinitialisation;auto
+table;IUMWELTTEXTE/0x22;dummy1;dummy1;auto
+table;IUMWELTTEXTE/0x23;dummy2;dummy2;auto
+table;IUMWELTTEXTE/0x24;dummy3;dummy3;auto
+table;IUMWELTTEXTE/0x25;Aktueller Status;État actuel;auto
+table;IUMWELTTEXTE/0x26;Akt. Haeufigkeit;Fréquence actuelle;auto
+table;IUMWELTTEXTE/0x27;Haeufigkeit LifeCycle;Fréquence sur la durée de vie;auto
+table;IUMWELTTEXTE/0x28;Aktueller Status Wert;Valeur de l'état actuel;auto
+table;DETECTSOURCE/0x00;CAN AUTOdetect;Détection automatique CAN;auto
+table;DETECTSOURCE/0x01;SelbstTest;Autotest;auto
+table;IERRORSTATE/0x20;Fehler nicht aktiv;Défaut inactif;auto
+table;IERRORSTATE/0x60;Fehler aktiv;Défaut actif;auto
+table;TWAKEUPSOURCE/0x01;Weckursache = CAN;Cause du réveil = CAN;auto
+table;TWAKEUPSOURCE/0x02;Weckursache = MOST;Cause du réveil = MOST;auto
+table;TWAKEUPSOURCE/0x03;Weckursache = IPC;Cause du réveil = IPC;auto
+table;TWAKEUPSOURCE/0x04;Weckursache = INTERN;Cause du réveil = interne;auto
+table;TWAKEUPSOURCE/0x05;Weckursache = RESET/SWITCH TO POWER;Cause du réveil = réinitialisation / mise sous tension;auto
+table;TMOSTDEVICE/0x15;TELCO (TelCommander);TELCO (TelCommander);auto
+table;TMOSTDEVICE/0x31;MMC (Multimedia-Changer);MMC (changeur multimédia);auto
+table;TMOSTDEVICE/0x32;MMIC (MMI/GT Fond CAN-Interface);MMIC (interface CAN MMI/GT arrière);auto
+table;TMOSTDEVICE/0x34;MMIF (MMI/GT Fond CAN-Interface);MMIF (interface CAN MMI/GT arrière);auto
+table;TMOSTDEVICE/0x35;SVS (Sprachverarbeitungssystem);SVS (système de commande vocale);auto
+table;TMOSTDEVICE/0x36;TEL (Telefon-Interface);TEL (interface téléphone);auto
+table;TMOSTDEVICE/0x37;AMP (Top-Hifi Verstaerker);AMP (amplificateur Top-HiFi);auto
+table;TMOSTDEVICE/0x3A;KH-INT (Kopfhoerer-Interface);KH-INT (interface casque);auto
+table;TMOSTDEVICE/0x3B;NAV (Navigationssystem);NAV (système de navigation);auto
+table;TMOSTDEVICE/0x3C;CDC (CD-Wechsler);CDC (changeur CD);auto
+table;TMOSTDEVICE/0x3D;HUD (Head-Up Display);HUD (affichage tête haute);auto
+table;TMOSTDEVICE/0x3F;ASK (Audio-System-Kontroller);ASK (contrôleur du système audio);auto
+table;TMOSTDEVICE/0x47;TUNER (Antennentuner);TUNER (tuner d'antenne);auto
+table;TMOSTDEVICE/0x49;SEC1 (Security-Modul 1);SEC1 (module de sécurité 1);auto
+table;TMOSTDEVICE/0x4A;SEC2 (Security-Modul 2);SEC2 (module de sécurité 2);auto
+table;TMOSTDEVICE/0x4B;VID (Videomodul);VID (module vidéo);auto
+table;TMOSTDEVICE/0x60;KOMBI (Instrumentenkombination);KOMBI (combiné d'instruments);auto
+table;TMOSTDEVICE/0x53;IBOC (In Band on Channel);IBOC (In Band on Channel);auto
+table;TMOSTDEVICE/0x54;SDARS (Satelliten-Radio);SDARS (radio satellite);auto
+table;TMOSTDEVICE/0x61;FBI (Flexible Bus-Interface);FBI (interface de bus flexible);auto
+table;TMOSTDEVICE/0x62;MCGW (MOST/CAN-Gateway);MCGW (passerelle MOST/CAN);auto
+table;TMOSTDEVICE/0x63;MMI (MMI/GT Front| M-ASK | CCC);MMI (MMI/GT avant | M-ASK | CCC);auto
+table;TMOSTDEVICE/0x90;MMI-FW (MMI-FW im CCC;MMI-FW (MMI-FW dans le CCC;auto
+table;TMOSTDEVICE/0x91;CCC-DRV (Laufwerk im CCC;CCC-DRV (lecteur dans le CCC;auto
+table;TMOSTDEVICE/0x92;CCC-DVD (DVD-Laufwerk im CCC;CCC-DVD (lecteur DVD dans le CCC;auto
+table;TMOSTDEVICE/0x93;CCC-BT (BT-Modul im CCC;CCC-BT (module Bluetooth dans le CCC;auto
+table;TMOSTDEVICE/0x94;CCC-POS (Pos.-Modul im CCC;CCC-POS (module de positionnement dans le CCC;auto
+table;TMOSTDEVICE/0x95;CCC-RS (Rear Seat G im CCC;CCC-RS (Rear Seat dans le CCC;auto
+table;TMOSTDEVICE/0x96;CCC-OS (Betriebssystem SH4 im CCC;CCC-OS (système d'exploitation SH4 dans le CCC;auto
+table;TMOSTDEVICE/0x97;CCC-JVM (Java Virtual Machine im CCC;CCC-JVM (machine virtuelle Java dans le CCC;auto
+table;TMOSTDEVICE/0x98;CCC-MM (MM-FW im CCC;CCC-MM (micrologiciel MM dans le CCC;auto
+table;TMOSTDEVICE/0x99;CCC-MMI (MMI Descr im CCC;CCC-MMI (description MMI dans le CCC;auto
+table;TMOSTDEVICE/0x9A;CCC-PFS (PFS-FW im CCC;CCC-PFS (micrologiciel PFS dans le CCC;auto
+table;TMOSTDEVICE/0x9B;CCC-HUD (HUD-Software im CCC;CCC-HUD (logiciel HUD dans le CCC;auto
+table;TMOSTDEVICE/0x9C;CCC-ONL (Online Pack im CCC;CCC-ONL (pack Online dans le CCC;auto
+table;TMOSTDEVICE/0x9D;CCC-MPG (MPEG2 im CCC;CCC-MPG (MPEG2 dans le CCC;auto
+table;TMOSTDEVICE/0x9E;CCC-DSP (DPS im CCC;CCC-DSP (DSP dans le CCC;auto
+table;TMOSTDEVICE/0x9F;CCC-NET (Network im CCC;CCC-NET (réseau dans le CCC;auto
+table;TMOSTDEVICE/0xA0;CCC-APP (Applikation im CCC;CCC-APP (application dans le CCC;auto

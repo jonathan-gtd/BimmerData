@@ -1,0 +1,200 @@
+type;cle;de;traduction;statut
+ecu;;Funktionszentrum Dach;Centre de fonctions de toit (FZD);auto
+resultat;IDENT/ID_BMW_NR;BMW-Teilenummer;Numéro de pièce BMW;auto
+resultat;IDENT/ID_HW_NR;BMW-Hardware-Versionsindex;Indice de version matériel BMW;auto
+resultat;IDENT/ID_COD_INDEX;Codier-Index;Indice de codage;auto
+resultat;IDENT/ID_DIAG_INDEX;Diagnose-Index;Indice de diagnostic;auto
+resultat;IDENT/ID_VAR_INDEX;Varianten-Index;Indice de variante;auto
+resultat;IDENT/ID_DATUM_JAHR;Herstelldatum (Jahr);Date de fabrication (année);auto
+resultat;IDENT/ID_DATUM_MONAT;Herstelldatum (Monat);Date de fabrication (mois);auto
+resultat;IDENT/ID_DATUM_TAG;Herstelldatum (Tag);Date de fabrication (jour);auto
+resultat;IDENT/ID_DATUM;Herstelldatum (TT.MM.JJJJ);Date de fabrication (JJ.MM.AAAA);auto
+resultat;IDENT/ID_LIEF_NR;Lieferanten-Nummer;Numéro fournisseur;auto
+resultat;IDENT/ID_LIEF_TEXT;Lieferanten-Text;Texte fournisseur;auto
+resultat;IDENT/ID_SW_NR_MCV;Softwarenummer (message catalogue version);Numéro de logiciel (version catalogue de messages);auto
+resultat;IDENT/ID_SW_NR_FSV;Softwarenummer (functional software version);Numéro de logiciel (version logiciel fonctionnel);auto
+resultat;IDENT/ID_SW_NR_OSV;Softwarenummer (operating system version);Numéro de logiciel (version système d'exploitation);auto
+resultat;IDENT/ID_SW_NR_RES;Softwarenummer (reserved - currently unused);Numéro de logiciel (réservé - actuellement non utilisé);auto
+resultat;IDENT/ID_SG_ADR;Steuergeraeteadresse;Adresse calculateur;auto
+resultat;IDENT/ID_LIN_SLAVE_ADR;LIN Slave Steuergeraeteadresse;Adresse calculateur esclave LIN;auto
+resultat;IDENT/ID_EWS_SS;Identifikation EWS-Schnittstelle;Identification interface EWS;auto
+resultat;PRUEFSTEMPEL_LESEN/BYTE1;BYTE1;BYTE1;auto
+resultat;PRUEFSTEMPEL_LESEN/BYTE2;BYTE2;BYTE2;auto
+resultat;PRUEFSTEMPEL_LESEN/BYTE3;BYTE3;BYTE3;auto
+resultat;*/SERIENNUMMER;Seriennummer des Steuergeraets;Numéro de série du calculateur;auto
+resultat;ZIF_LESEN/ZIF_PROGRAMM_REFERENZ;PRGREF ProgrammReferenz;PRGREF Référence programme;auto
+resultat;ZIF_LESEN/ZIF_SG_KENNUNG;ZZZ;ZZZ;auto
+resultat;ZIF_LESEN/ZIF_PROJEKT;PPPxV;PPPxV;auto
+resultat;ZIF_LESEN/ZIF_PROGRAMM_STAND;BBxh;BBxh;auto
+resultat;ZIF_LESEN/ZIF_STATUS;Dateninhalt bei FF noch nicht beschrieben;Contenu des données FF non encore écrit;auto
+resultat;ZIF_LESEN/ZIF_BMW_HW;VMECUH*N vehicleManufacturerECUHardware*Number;VMECUH*N Numéro de matériel ECU du constructeur*;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_PROGRAMM_REFERENZ;PRGREFB ProgrammReferenzBackup;PRGREFB Référence programme de secours;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_SG_KENNUNG;ZZZ;ZZZ;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_PROJEKT;PPPxV;PPPxV;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_PROGRAMM_STAND;BBxh;BBxh;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_STATUS;Dateninhalt bei FF noch nicht beschrieben;Contenu des données FF non encore écrit;auto
+resultat;ZIF_BACKUP_LESEN/ZIF_BACKUP_BMW_HW;VMECUH*NB vehicleManufECUHW*NumberBackup;VMECUH*NB Numéro de matériel ECU du constructeur* de secours;auto
+resultat;PHYSIKALISCHE_HW_NR_LESEN/PHYSIKALISCHE_HW_NR;Physikalische Hardware-Nummer;Numéro de matériel physique;auto
+resultat;HARDWARE_REFERENZ_LESEN/HARDWARE_REFERENZ;Hardware Referenz;Référence matériel;auto
+resultat;HARDWARE_REFERENZ_LESEN/HW_REF_SG_KENNUNG;ZZZ;ZZZ;auto
+resultat;HARDWARE_REFERENZ_LESEN/HW_REF_PROJEKT;PPPx;PPPx;auto
+resultat;HARDWARE_REFERENZ_LESEN/HW_REF_STATUS;Dateninhalt bei FF noch nicht beschrieben;Contenu des données FF non encore écrit;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REFERENZ;Daten Referenz;Référence données;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_SG_KENNUNG;ZZZ;ZZZ;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_PROJEKT;PPPxV;PPPxV;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_PROGRAMM_STAND;BBxh;BBxh;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_DATENSATZ;dxxxx;dxxxx;auto
+resultat;DATEN_REFERENZ_LESEN/DATEN_REF_STATUS;Dateninhalt bei FF noch nicht beschrieben;Contenu des données FF non encore écrit;auto
+job;INITIALISIERUNG;Initialisierung und Kommunikationsparameter;Initialisation et paramètres de communication;auto
+job;INFO;Information SGBD;Information SGBD;auto
+job;DIAGNOSEPROTOKOLL_LESEN;Gibt die möglichen Diagnoseprotokolle;Affiche les protocoles de diagnostic possibles;auto
+job;DIAGNOSEPROTOKOLL_SETZEN;Wählt ein Diagnoseprotokoll aus;Sélectionner un protocole de diagnostic;auto
+job;IDENT;Identdaten;Données d'identification;auto
+job;FS_LESEN;Fehlerspeicher lesen (alle Fehler / Ort und Art);Lire la mémoire de défauts (tous les défauts / lieu et type);auto
+job;FS_LESEN_DETAIL;Fehlerspeicher lesen (ein Fehler / alle Details);Lire la mémoire de défauts (un défaut / tous les détails);auto
+job;FS_LOESCHEN;Fehlerspeicher loeschen;Effacer la mémoire de défauts;auto
+job;PRUEFSTEMPEL_LESEN;Auslesen des Pruefstempels;Lire le tampon de test;auto
+job;PRUEFSTEMPEL_SCHREIBEN;Beschreiben des Pruefstempels;Écrire le tampon de test;auto
+job;NORMALER_DATENVERKEHR;Sperren bzw. Freigeben des normalen Datenverkehrs;Verrouiller ou déverrouiller le trafic de données normal;auto
+job;DIAGNOSE_AUFRECHT;Diagnosemode des SG aufrecht erhalten;Maintenir le mode diagnostic du calculateur;auto
+job;IS_LESEN;Infospeicher lesen (alle Info-Meldungen / Ort und Art);Lire la mémoire d'informations (tous les messages / emplacement et type);auto
+job;IS_LESEN_DETAIL;Infospeicher lesen (alle Info-Meldungen / Ort und Art);Lire la mémoire d'informations (tous les messages / emplacement et type);auto
+job;IS_LOESCHEN;Infospeicher loeschen;Effacer la mémoire d'informations;auto
+job;DIAGNOSE_ENDE;Diagnosemode des SG beenden;Quitter le mode diagnostic du calculateur;auto
+job;DIAGNOSE_MODE;SG in bestimmten Diagnosemode bringen;Mettre le calculateur en mode diagnostic spécifique;auto
+job;SLEEP_MODE;SG in Sleep-Mode versetzen;Mettre le calculateur en mode veille;auto
+job;ENERGIESPARMODE;Einstellen des Energiesparmodes;Régler le mode d'économie d'énergie;auto
+job;SPEICHER_LESEN;Auslesen des Steuergeraete-Speichers;Lire la mémoire du calculateur;auto
+job;SPEICHER_SCHREIBEN;Beschreiben des Steuergeraete-Speichers;Écrire la mémoire du calculateur;auto
+job;PRUEFCODE_LESEN;Standard Pruefcode lesen fuer Kundendienst;Lire le code de test standard pour le service client;auto
+job;C_CI_LESEN;Codierindex lesen;Lire l'index de codage;auto
+job;C_FG_LESEN;Fahrgestellnummer lesen;Lire le numéro de châssis;auto
+job;C_FG_SCHREIBEN;Fahrgestellnummer schreiben;Écrire le numéro de châssis;auto
+job;C_FG_AUFTRAG;Fahrgestellnummer schreiben und ruecklesen;Écrire et relire le numéro de châssis;auto
+job;C_AEI_LESEN;Aenderungsindex der Codierdaten lesen;Lire l'index de modification des données de codage;auto
+job;C_AEI_SCHREIBEN;Aenderungsindex der Codierdaten schreiben;Écrire l'index de modification des données de codage;auto
+job;C_AEI_AUFTRAG;Aenderungsindex der Codierdaten schreiben und ruecklesen;Écrire et relire l'index de modification des données de codage;auto
+job;C_C_LESEN;Codierdaten lesen;Lire les données de codage;auto
+job;C_C_SCHREIBEN;Codierdaten schreiben;Écrire les données de codage;auto
+job;C_C_AUFTRAG;Codierdaten schreiben und ruecklesen;Écrire et relire les données de codage;auto
+job;SERIENNUMMER_LESEN;Hersteller Seriennummer lesen;Lire le numéro de série du fabricant;auto
+job;ZIF_LESEN;Auslesen des Zulieferinfofeldes;Lire le champ d'information du fournisseur;auto
+job;ZIF_BACKUP_LESEN;Auslesen des Backups des Zulieferinfofeldes;Lire la sauvegarde du champ d'information du fournisseur;auto
+job;PHYSIKALISCHE_HW_NR_LESEN;Auslesen der physikalischen Hardwarenummer;Lire le numéro de matériel physique;auto
+job;HARDWARE_REFERENZ_LESEN;Auslesen der Hardware Referenz;Lire la référence du matériel;auto
+job;DATEN_REFERENZ_LESEN;Auslesen der Daten Referenz;Lire la référence des données;auto
+job;FLASH_ZEITEN_LESEN;Auslesen der Flash Loeschzeit, Signaturtestzeit,;Lire le temps d'effacement Flash, le temps de test de signature,;auto
+job;FLASH_BLOCKLAENGE_LESEN;Auslesen des maximalen Blocklaenge beim Flashen;Lire la longueur de bloc maximale lors du flashage;auto
+job;AUTHENTISIERUNG_ZUFALLSZAHL_LESEN;Authentisierung Zufallszahl des SG lesen;Lire le nombre aléatoire d'authentification du calculateur;auto
+job;AUTHENTISIERUNG_START;Authentisierung pruefen;Vérifier l'authentification;auto
+job;FLASH_PROGRAMMIER_STATUS_LESEN;Programmierstatus des SG lesen;Lire l'état de programmation du calculateur;auto
+job;FLASH_SIGNATUR_PRUEFEN;Flash Signatur pruefen;Vérifier la signature Flash;auto
+job;STEUERGERAETE_RESET;Steuergeraete reset ausloesen;Déclencher le réinitialisation des calculateurs;auto
+job;FLASH_LOESCHEN;Flash loeschen;Effacer le Flash;auto
+job;FLASH_SCHREIBEN_ADRESSE;Vorbereitung fuer Flash schreiben;Préparation pour l'écriture du Flash;auto
+job;FLASH_SCHREIBEN;Flash Daten schreiben;Écrire les données Flash;auto
+job;FLASH_SCHREIBEN_ENDE;Flashprogrammierung abschliessen;Terminer la programmation Flash;auto
+job;AIF_LESEN;Auslesen des Anwender Informations Feldes;Lecture du champ d'informations utilisateur;auto
+job;AIF_SCHREIBEN;Schreiben des Anwender Informations Feldes;Écriture du champ d'informations utilisateur;auto
+job;STATUS_MOTORTEMPERATUR;Motortemperatur abfragen;Lire la température du moteur;auto
+job;STATUS_BATTERIESPANNUNG;Batteriespannung abfragen;Lire la tension batterie;auto
+job;STATUS_BEDIENTASTER;Auslesen der Stati von Bedienschalter-Leitungen;Lire l'état des lignes des commandes;auto
+job;STATISTIKZAEHLER_LESEN;Statistikzaehler des Bedienkonzepts auslesen;Lire les compteurs statistiques des commandes;auto
+job;BEDIENKONZEPTZUSTAENDE_LESEN;Zustandswerte des Bedienkonzeptes auslesen;Lire les états des commandes;auto
+job;STEUERN_AUTOINIT;SHD Autoinitialisierung ansteuern;Lancer l'initialisation automatique du toit ouvrant;auto
+job;STATUS_AUTOINIT;SHD Autoinitialisierung ansteuern;Lancer l'initialisation automatique du toit ouvrant;auto
+job;STATUS_SHD_LESEN;Lernflags des SHD auslesen;Lire les indicateurs d'apprentissage du toit ouvrant;auto
+job;KENNLINIE_LESEN;Auslesen der Kennlinien von SHD oder SoS;Lire les courbes caractéristiques du toit ouvrant ou du store;auto
+job;STEUERN_LICHT;Leuchten ansteuern;Commander les éclairages;auto
+job;STATUS_LICHTTASTER;Lichttaster abfragen;Lire les boutons d'éclairage;auto
+job;STATUS_BESCHLAGSENSOR;Beschlagsensorstatus abfragen;Lire l'état du capteur de buée;auto
+job;STEUERN_PRUEFMODUS;Prüfmodus aktiviern/beenden;Activer / quitter le mode test;auto
+job;STEUERN_SHD;SHD Ansteuerung über Prüfmodus;Commander le toit ouvrant en mode test;auto
+job;STEUERN_DIGITAL_SHD;Verfahren des Schiebedachs per Diagnose;Déplacer le toit ouvrant par diagnostic;auto
+job;SERIENNUMMER_LESEN_FZD;Hersteller Seriennummer lesen FZD;Lire le numéro de série fabricant du FZD;auto
+defaut;0xA088;unzulässige Tastenkombination SHD 0xA088;Combinaison de boutons du toit ouvrant non admise 0xA088;auto
+defaut;0xA08A;Überlast Suchbeleuchtung 0xA08A;Surcharge de l'éclairage de recherche 0xA08A;auto
+defaut;0xA08D;Kodierung inkonsistent 0xA08D;Codage incohérent 0xA08D;auto
+defaut;0xA090;SHD_Mechanik schwergängig 0xA090;Mécanique du toit ouvrant dure 0xA090;auto
+defaut;0xA091;SHD_Motor/Kabelbaum 0xA091;Moteur / faisceau du toit ouvrant 0xA091;auto
+defaut;0xA092;SHD_Normierung 0xA092;Initialisation du toit ouvrant 0xA092;auto
+defaut;0xA668;Fehler Leselicht Rechts 0xA668;Défaut liseuse droite 0xA668;auto
+defaut;0xA669;Fehler Innenlicht Front 0xA669;Défaut plafonnier avant 0xA669;auto
+defaut;0xA66A;Fehler Leselicht Links 0xA66A;Défaut liseuse gauche 0xA66A;auto
+defaut;0xA66C;Fehler Leselicht Rechts Fond 0xA66C;Défaut liseuse arrière droite 0xA66C;auto
+defaut;0xA66D;Fehler Leselicht Links Fond 0xA66D;Défaut liseuse arrière gauche 0xA66D;auto
+defaut;0xA66E;Fehler Innenlicht Fond 0xA66E;Défaut plafonnier arrière 0xA66E;auto
+defaut;0xA670;Fehler Beschlagsensor 0xA670;Défaut du capteur de buée 0xA670;auto
+defaut;0xA671;Taster SHD hängt 0xA671;Bouton du toit ouvrant bloqué 0xA671;auto
+defaut;0xA672;Innenlicht_Taster_Front_hängt 0xA672;Bouton du plafonnier avant bloqué 0xA672;auto
+defaut;0xA673;Leselicht_Taster_Front_Links_hängt 0xA673;Bouton de la liseuse avant gauche bloqué 0xA673;auto
+defaut;0xA674;Leselicht_Taster_Front_Rechts_hängt 0xA674;Bouton de la liseuse avant droite bloqué 0xA674;auto
+defaut;0xA675;Innenlicht_Taster_Fond_hängt 0xA675;Bouton du plafonnier arrière bloqué 0xA675;auto
+defaut;0xA676;Leselicht_Taster_Fond_Links_hängt 0xA676;Bouton de la liseuse arrière gauche bloqué 0xA676;auto
+defaut;0xA677;Leselicht_Taster_Fond_Rechts_hängt 0xA677;Bouton de la liseuse arrière droite bloqué 0xA677;auto
+defaut;0xA678;Überlast Rückfahrsignal 0xA678;Surcharge du signal de marche arrière 0xA678;auto
+defaut;0xA679;EC-Spiegel Analogsignal außerhalb des gültigen Bereiches 0xA679;Signal analogique du rétroviseur électrochrome hors plage 0xA679;auto
+defaut;0xA687;Energiesparmode aktiv;Mode d'économie d'énergie actif;auto
+defaut;0xDE84;CAN Bus CAN LOW Fehler 0xDE84;Défaut CAN Low 0xDE84;auto
+defaut;0xDE85;CAN Bus CAN HIGH Fehler 0xDE85;Défaut CAN High 0xDE85;auto
+defaut;0xDE87;CAN Bus CAN BUS OFF Fehler 0xDE87;Défaut CAN, bus coupé (Bus Off) 0xDE87;auto
+defaut;0xDE88;LIN Leitungsfehler 0xDE88;Défaut de ligne LIN 0xDE88;auto
+defaut;0xDE8B;LIN Fehler 0xDE8B;Défaut LIN 0xDE8B;auto
+defaut;0xDE8F;LIN Fehler UGDO 0xDE8F;Défaut LIN de l'ouvre-porte de garage intégré 0xDE8F;auto
+defaut;0xFFFF;unbekannter Fehlerort;Emplacement de défaut inconnu;auto
+symptome;0x00;kein passendes Fehlersymptom;aucun symptôme de défaut correspondant;auto
+symptome;0x01;Signal oder Wert oberhalb Schwelle;Signal ou valeur au-dessus du seuil;auto
+symptome;0x02;Signal oder Wert unterhalb Schwelle;Signal ou valeur en dessous du seuil;auto
+symptome;0x04;kein Signal oder Wert;Aucun signal ou valeur;auto
+symptome;0x08;unplausibles Signal oder Wert;Signal ou valeur non plausible;auto
+symptome;0x10;Testbedingungen erfüllt;Conditions de test remplies;auto
+symptome;0x11;Testbedingungen noch nicht erfüllt;Conditions de test non encore remplies;auto
+symptome;0x20;Fehler bisher nicht aufgetreten;Défaut jamais apparu;auto
+symptome;0x21;Fehler momentan nicht vorhanden, aber bereits gespeichert;Défaut non présent actuellement, mais déjà mémorisé;auto
+symptome;0x22;Fehler momentan vorhanden, aber noch nicht gespeichert (Entprellphase);Défaut présent, mais pas encore mémorisé (phase de confirmation);auto
+symptome;0x23;Fehler momentan vorhanden und bereits gespeichert;Défaut présent et déjà mémorisé;auto
+symptome;0x30;Fehler würde kein Aufleuchten einer Warnlampe verursachen;Le défaut n'allumerait pas de témoin;auto
+symptome;0x31;Fehler würde das Aufleuchten einer Warnlampe verursachen;Le défaut allumerait un témoin;auto
+symptome;0xFF;unbekannte Fehlerart;Type de défaut inconnu;auto
+table;IARTTEXTE/0x00;kein passendes Fehlersymptom;Aucun symptôme de défaut correspondant;auto
+table;IARTTEXTE/0x01;Signal oder Wert oberhalb Schwelle;Signal ou valeur au-dessus du seuil;auto
+table;IARTTEXTE/0x02;Signal oder Wert unterhalb Schwelle;Signal ou valeur en dessous du seuil;auto
+table;IARTTEXTE/0x04;kein Signal oder Wert;Aucun signal ou valeur;auto
+table;IARTTEXTE/0x08;unplausibles Signal oder Wert;Signal ou valeur non plausible;auto
+table;IARTTEXTE/0x10;Testbedingungen erfüllt;Conditions de test remplies;auto
+table;IARTTEXTE/0x11;Testbedingungen noch nicht erfüllt;Conditions de test non encore remplies;auto
+table;IARTTEXTE/0x20;Fehler bisher nicht aufgetreten;Défaut jamais apparu;auto
+table;IARTTEXTE/0x21;Fehler momentan nicht vorhanden, aber bereits gespeichert;Défaut non présent actuellement, mais déjà mémorisé;auto
+table;IARTTEXTE/0x22;Fehler momentan vorhanden, aber noch nicht gespeichert (Entprellphase);Défaut présent, mais pas encore mémorisé (phase de confirmation);auto
+table;IARTTEXTE/0x23;Fehler momentan vorhanden und bereits gespeichert;Défaut présent et déjà mémorisé;auto
+table;IARTTEXTE/0x30;Fehler würde kein Aufleuchten einer Warnlampe verursachen;Le défaut n'allumerait pas de témoin;auto
+table;IARTTEXTE/0x31;Fehler würde das Aufleuchten einer Warnlampe verursachen;Le défaut allumerait un témoin;auto
+table;IARTTEXTE/0xFF;unbekannte Fehlerart;Type de défaut inconnu;auto
+table;HORTTEXTE/0xFFFF;unbekannter Fehlerort;Emplacement de défaut inconnu;auto
+table;IORTTEXTE/0x9401;letzter Reset wurde durch Watchdog ausgeführt 0x9401;Dernière réinitialisation par le chien de garde 0x9401;auto
+table;IORTTEXTE/0x9402;undef. Opcode erkannt 0x9402;Code d'opération non défini détecté 0x9402;auto
+table;IORTTEXTE/0x9403;Kalibrierwerte ungültig 0x9403;Valeurs d'étalonnage non valides 0x9403;auto
+table;IORTTEXTE/0x9405;Temperatur < -40 oder > +85 0x9405;Température < -40 ou > +85 0x9405;auto
+table;IORTTEXTE/0x9440;Aktivierung des Panikmodes 0x9440;Activation du mode panique 0x9440;auto
+table;IORTTEXTE/0x9441;Anzahl der man. Inits 0x9441;Nombre d'initialisations manuelles 0x9441;auto
+table;IORTTEXTE/0x9442;Anzahl der Autoinits 0x9442;Nombre d'initialisations automatiques 0x9442;auto
+table;IORTTEXTE/0x9443;Initialisierung nicht vollständig 0x9443;Initialisation incomplète 0x9443;auto
+table;IORTTEXTE/0x9444;Unterspannung 0x9444;Sous-tension 0x9444;auto
+table;IORTTEXTE/0x9445;Überspannung 0x9445;Surtension 0x9445;auto
+table;IORTTEXTE/0x9447;Anzahl der gültigen Kodierungen 0x9447;Nombre de codages valides 0x9447;auto
+table;IORTTEXTE/0x9448;Anzahl der ungültigen Kodierungen 0x9448;Nombre de codages non valides 0x9448;auto
+table;IORTTEXTE/0x9500;Hall_1_Signal_fehlerhaft 0x9500;Signal Hall 1 défectueux 0x9500;auto
+table;IORTTEXTE/0x9501;Hall_2_Signal_fehlerhaft 0x9501;Signal Hall 2 défectueux 0x9501;auto
+table;IORTTEXTE/0x9502;Hall_Drehrichtung_falsch 0x9502;Sens de rotation Hall incorrect 0x9502;auto
+table;IORTTEXTE/0x9503;Relais zieht nicht an 0x9503;Le relais ne colle pas 0x9503;auto
+table;IORTTEXTE/0x9504;Relaiskleber 0x9504;Relais collé 0x9504;auto
+table;IORTTEXTE/0x9507;Ausfall_Ubat 0x9507;Perte de la tension batterie 0x9507;auto
+table;IORTTEXTE/0x9508;ungültige Dachposition 0x9508;Position du toit non valide 0x9508;auto
+table;IORTTEXTE/0x9509;Kennlinie_Schiebebereich_ungültig 0x9509;Courbe de la plage de coulissement non valide 0x9509;auto
+table;IORTTEXTE/0x950A;Kennlinie_Hebebereich_ungültig 0x950A;Courbe de la plage d'entrebâillement non valide 0x950A;auto
+table;IORTTEXTE/0x950C;Überstrom an Hall Speisung 0x950c;Surintensité sur l'alimentation des capteurs Hall 0x950c;auto
+table;IORTTEXTE/0x9540;manuelle Dachbewegung 0x9540;Mouvement manuel du toit 0x9540;auto
+table;IORTTEXTE/0x9541;Aktivierung Einklemmschutz 0x9541;Activation de l'anti-pincement 0x9541;auto
+table;IORTTEXTE/0x9543;Motor hat Grenzwert für Motorlauf überschritten 0x9543;Le moteur a dépassé sa durée de fonctionnement limite 0x9543;auto
+table;IORTTEXTE/0xA40D;EEprom Schreibfehler 0xA40D;Erreur d'écriture EEPROM 0xA40D;auto
+table;IORTTEXTE/0xFFFF;unbekannter Fehlerort;Emplacement de défaut inconnu;auto
