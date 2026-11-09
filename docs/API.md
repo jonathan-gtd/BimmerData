@@ -168,9 +168,30 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 | GET | `/api/v1/recording` | read | Recording state |
 | POST | `/api/v1/recording/start`, `/stop`, `/markers` | config | Control the CSV recording |
 | GET | `/api/v1/recordings`, `/api/v1/recordings/{name}` | read | List / download CSV files |
-| GET / PATCH | `/api/v1/settings` | read / config | App settings (API settings are read-only) |
-| GET / PATCH | `/api/v1/export/telegraf` | config | Telegraf export settings and queue (token / password never returned, changed on the phone only) |
+| GET / PATCH | `/api/v1/settings` | read / config | App settings: auto-connect on the cable, Bluetooth connect-on-start (API settings are read-only) |
+| GET / PATCH | `/api/v1/settings/gps` | read / config | GPS position: switch, interval, permission and state |
+| GET / PATCH | `/api/v1/settings/recording` | read / config | CSV recording: row rate, file prefix, back to the default folder |
+| GET / PATCH | `/api/v1/settings/translations` | read / config | Translation of the ECU texts: language, source URL, token (write-only), ECU selection |
+| POST | `/api/v1/settings/translations/update` | config | Download the translation files again (background) |
+| GET | `/api/v1/permissions` | read | Permissions and switches the app needs: granted / missing, what for, what to tap |
+| GET | `/api/v1/ecu-files[?files=true]` | read | Imported ECU files, free space, device import folder and import progress |
+| PUT / DELETE | `/api/v1/ecu-files/{name}` | config | Upload one `.prg` / `.grp` file (streamed, ≤ 64 MB) / delete it |
+| DELETE | `/api/v1/ecu-files` | config | Delete every ECU file |
+| POST / DELETE | `/api/v1/ecu-files/import-from-device` | config | Import the ECU files put in the app's folder on the phone (background) / stop it |
+| GET | `/api/v1/bluetooth` | read | Bluetooth permission, on / off, chosen adapter, connect-on-start, adapter state |
+| GET | `/api/v1/bluetooth/devices` | config | Paired devices (likely OBD adapters first) |
+| PUT / DELETE | `/api/v1/bluetooth/adapter` | config | Choose a paired device as the adapter (and connect-on-start) / forget it |
+| POST | `/api/v1/bluetooth/adapter/read` | config | Read type, firmware, voltage and CAN mode (connected over Bluetooth) |
+| PUT | `/api/v1/bluetooth/adapter/can-mode` | config | **Writes to the adapter.** Change its CAN mode, after a confirmation on the phone |
+| GET / PATCH | `/api/v1/export/telegraf` | config | Telegraf export settings and queue (token / password never returned) |
+| PUT | `/api/v1/export/telegraf/auth` | config | Authentication: none / token / basic with its secret (write-only) |
 | POST | `/api/v1/export/telegraf/test`, `/send` | config | Test the listener / upload the waiting points now |
+| DELETE | `/api/v1/export/telegraf/queue` | config | Delete the points waiting on the phone |
+| GET / DELETE | `/api/v1/export/telegraf/rejected` | config | Download (gzip line protocol) / delete the batches Telegraf refused |
+| POST | `/api/v1/export/telegraf/rejected/retry` | config | Queue the refused batches again |
+| POST | `/api/v1/profiles/import[?activate=false]` | layout | Import a profile file (pages and graphs) as a new profile |
+| GET / POST | `/api/v1/profiles/{profile}/graphs` | read / layout | Graphs of the Graph tab / add one |
+| GET / PUT / DELETE | `/api/v1/profiles/{profile}/graphs/{graph}` | read / layout | One graph / replace it / delete it (pages never touched) |
 | GET | `/api/v1/diag/vehicle` | diag | Last detected vehicle, its ECUs and their last fault read (no car traffic, never the VIN) |
 | GET | `/api/v1/diag/faults` | diag | Read the fault memory from the car (`?ecu=0x12` for one ECU, `?cached=true` for the last read) |
 | POST | `/api/v1/diag/faults/clear` | diag | **Writes.** Clear one ECU (`{"ecu":"0x12"}`) or all (`{}`), after a confirmation on the phone |
@@ -197,9 +218,80 @@ Every error has the same shape and a meaningful status:
 
 `400` bad input · `401` missing / wrong token · `403` scope not enabled (or API settings,
 which are phone-only) · `404` unknown id · `405` wrong method · `409` conflict (overlap, page
-full, last page, not connected) · `413` body over 1 MB · `422` invalid layout (`details` lists
-each problem with its JSON path) · `429` rate limited (`Retry-After`). Diagnostics add `403 refused_on_phone`,
-`408 confirmation_timeout`, `409 vehicle_moving` and `503 confirmation_unavailable` / `not_connected`.
+full, last page, not connected) · `413` body over 1 MB (64 MB for an ECU file upload) · `422` invalid layout (`details` lists
+each problem with its JSON path) · `429` rate limited (`Retry-After`) · `501` not available on
+this phone · `507 insufficient_storage` (the app always keeps 100 MB free). Diagnostics and the
+adapter CAN mode add `403 refused_on_phone`, `408 confirmation_timeout`, `409 vehicle_moving` and
+`503 confirmation_unavailable` / `not_connected`.
+
+## Set up the app entirely through the API
+
+Everything the Settings screens, the Profiles screen and the Graph tab do can be done through the
+API, so an agent can set BimmerData up while the user does not touch the phone, except for the
+few steps Android reserves to the user (listed below). Grant the `read`, `layout` and `config`
+scopes for this (Settings › Local API: that first step is on the phone, see
+[Enabling it](#enabling-it)). Order of the calls:
+
+1. **What the user still has to allow**: `GET /api/v1/permissions`. Each entry has `status`
+   (`granted`, `missing`, `notRequired`, `on`, `off`, `askedOnConnect`), `neededFor` and
+   `howToGrant` (what to tap); `blocking` lists those a feature that is switched on cannot work
+   without. Show the `howToGrant` text of the missing entries to the user: an app cannot grant
+   itself a permission.
+2. **ECU files** (EDIABAS `.prg` / `.grp`, the same storage as the in-app import, lower-case names):
+   - the whole `Ecu` folder: put it in the app's own folder on the phone, then import it. The
+     folder is `importDir` of `GET /api/v1/ecu-files`,
+     `/sdcard/Android/data/io.github.jonathangtd.bimmerdata/files/ecu-import/` on most phones
+     (created at the first start of the app):
+     ```sh
+     adb push <path-to>/Ecu/. /sdcard/Android/data/io.github.jonathangtd.bimmerdata/files/ecu-import/
+     curl -s -H "$H" -X POST "$BD/ecu-files/import-from-device" -d '{"mode":"replace"}'
+     curl -s -H "$H" "$BD/ecu-files"      # deviceImport.phase: running → done, filesDone / filesTotal
+     ```
+     The import runs in the background (≈ 1600 files / 800 MB take a minute or two). `replace`
+     makes this folder the new ECU set, swapped in only once complete (the app disconnects from
+     the car just before); `merge` adds and replaces files and keeps the others. It is safe to
+     call twice: while it runs, the call returns the progress; files already imported with the
+     same size and time are not copied again, so calling it again after an interruption goes on
+     where it stopped. Sub-folders are searched (pushing `Ecu` itself instead of its content
+     works too), only regular files with a plain `.prg` / `.grp` name are taken, symbolic links
+     and other files are listed in `skipped`. Afterwards the folder can be emptied, either with
+     `"deleteSource": true` or by hand (`adb shell rm -r /sdcard/Android/data/io.github.jonathangtd.bimmerdata/files/ecu-import/*`);
+     it is also removed with the app. Without `adb`, copying with a USB file transfer from a
+     computer works on phones that still show `Android/data` over USB (many Android 11+ phones
+     hide it: use `adb push` then).
+   - a few files: `PUT /api/v1/ecu-files/<sgbd>.prg` with the raw file as body, one file per call
+     (`curl -T <sgbd>.prg -H "$H" "$BD/ecu-files/<sgbd>.prg"`). The body is streamed to disk and
+     moved in place once complete; uploading a whole folder this way is not intended.
+   The catalog (`GET /api/v1/ecus`) sees the new files at once.
+3. **Bluetooth adapter** (if the car is read through a Deep OBD adapter; the USB cable needs
+   nothing here): pair it on the phone, then `GET /api/v1/bluetooth/devices`,
+   `PUT /api/v1/bluetooth/adapter` `{"address":"<mac>","connectOnStart":true}`. Once connected,
+   `POST /api/v1/bluetooth/adapter/read`; `PUT /api/v1/bluetooth/adapter/can-mode` writes to the
+   adapter and waits for the user's confirmation on the phone.
+4. **Telegraf export**: `PATCH /api/v1/export/telegraf` `{"enabled":true,"url":"http://<host>:8186/api/v2/write","car":"My car","mode":"afterTrip"}`,
+   `PUT /api/v1/export/telegraf/auth` `{"auth":"token","token":"<token>"}`, then
+   `POST /api/v1/export/telegraf/test`.
+5. **Other settings**: `PATCH /api/v1/settings` (auto-connect on the cable),
+   `/api/v1/settings/gps`, `/api/v1/settings/recording`, `/api/v1/settings/translations`
+   (then `POST /api/v1/settings/translations/update`).
+6. **Profiles and graphs**: `POST /api/v1/profiles/import` with a profile file (the JSON of
+   `GET /api/v1/profiles/{profile}/export`, pages and graphs included), or `POST /api/v1/profiles`
+   and the dashboard routes; graphs with `/api/v1/profiles/{profile}/graphs`.
+7. **Connect**: `POST /api/v1/connect` `{"mode":"usb"}` / `{"mode":"bluetooth"}` /
+   `{"mode":"simulation"}`, then `GET /api/v1/status`.
+
+What still needs a tap on the phone, and why:
+
+| Step | Why |
+|---|---|
+| Enable the API, its scopes, port, HTTPS, (re)generate the token | Read-only through the API: changing them remotely would let a client widen its own access |
+| Runtime permissions: Nearby devices (Bluetooth), notifications, location, local network (Android 17) | Android only lets the user grant them; `GET /api/v1/permissions` says which and where |
+| USB access to the cable | Android asks once per cable when the app connects (tick "Always open") |
+| Pairing a Bluetooth adapter (PIN) | Done in Android's Bluetooth settings; the app does not scan |
+| Bluetooth / location switched on | System switches |
+| Choosing a recording folder or a translation folder | Android's folder picker (SAF) can only be used by the user; the API can go back to the default recording folder |
+| Each fault clear, EDIABAS job and adapter CAN mode change | Confirmed on the phone for every call, by design |
+| Exporting a profile or the refused Telegraf batches to a file of the phone | The API returns them as downloads instead |
 
 ## HTTPS
 
@@ -274,21 +366,32 @@ fall back to plain HTTP.
   Regenerating it immediately locks out every client using the old one.
 - **Scopes**: each operation needs one scope, granted by toggles on the phone:
   `read` (values, ECUs, layout, recordings, pictures), `layout` (edit pages and cards),
-  `config` (connect / disconnect, recordings, connection settings), `diag` (fault memory;
+  `config` (connect / disconnect, recordings, settings, ECU files, Bluetooth adapter, Telegraf
+  export and its secrets), `diag` (fault memory;
   clearing faults and running jobs, each confirmed on the phone, see [Diagnostics](#diagnostics)).
-  The API settings themselves (enable, port, token, scopes) can only be changed on the phone.
+  The API settings themselves (enable, port, token, scopes, HTTPS) can only be changed on the
+  phone: through the API they are read-only (`GET /api/v1/settings`).
+- **Secrets are write-only**: the Telegraf token / password (`PUT /api/v1/export/telegraf/auth`,
+  stored encrypted by the Android Keystore) and the translation source token are never
+  returned; the views only say whether one is stored (`secretSet`, `tokenSet`).
+- **ECU files**: only plain `.prg` / `.grp` names are accepted (no folder, no `..`, letters,
+  digits, `_`, `-`, `.`), stored in lower case; the device import reads only regular files under
+  its own folder (symbolic links are skipped, paths are checked to stay inside the folder);
+  uploads and imports stop before the free space goes under 100 MB.
 - **Local network only**: the server binds the phone's private IPv4 addresses on Wi-Fi,
   Ethernet, USB tethering and its own hotspot (plus 127.0.0.1), never mobile data or VPN
   interfaces, and drops connections from non-private addresses.
 - **Limits**: about 20 requests/s per client (bursts of 60), lock-out for 5 minutes after 10
-  wrong tokens, 16 connections, 4 event streams, 1 MB request bodies, 16 KB headers.
+  wrong tokens, 16 connections, 4 event streams, 1 MB request bodies (64 MB for an ECU file
+  upload, streamed to disk), 16 KB headers.
 - **Encryption**: plain HTTP by default. On a shared or public Wi-Fi, anyone sniffing can then
   read the token: switch [HTTPS](#https) on, or use the API on networks you trust (home Wi-Fi,
   the phone's own hotspot), over a VPN or over `adb forward`.
 - **Writes to ECUs only with the user's consent, per call.** Without the `diag` scope the API
   reads live values and changes app data only. With it, clearing faults and running jobs wait
   for the user's confirmation on the phone, every single time, and are refused while the car is
-  moving; see [Diagnostics](#diagnostics).
+  moving; see [Diagnostics](#diagnostics). The one write to the Bluetooth adapter (its CAN mode,
+  scope `config`) goes through the same confirmation.
 
 ## Lifetime on Android
 
@@ -343,6 +446,12 @@ curl -s -m 180 -X POST -H "Authorization: Bearer $T" -d '{"sgbd":"<sgbd>","job":
   are written by a few lines of DER code (`app/.../api/tls/`), without any extra library.
 - `openapi.json` is generated from the same route table that dispatches requests, so the spec
   and the behaviour cannot drift apart.
+- Request bodies are read into memory (1 MB at most), except on routes declared as uploads
+  (`PUT /api/v1/ecu-files/{name}`): there the server hands the socket's body to the handler as a
+  stream, answers `Expect: 100-continue` only when the handler starts reading (a request refused
+  for its token, scope or name is never sent), and closes the connection if the body was not
+  read to the end. The setup routes live in `app/.../api/SetupRoutes.kt` and
+  `ProfileGraphRoutes.kt`; the ECU file storage in `app/.../files/EcuFileStore.kt`.
 - Layouts belong to profiles (`files/profiles.json`, `ProfileStore`); the dashboard routes go
   through `DashboardStore`, i.e. the active profile. The phone and Android Auto follow every
   change live; a change made while the phone editor is open is offered to the user, not forced.
