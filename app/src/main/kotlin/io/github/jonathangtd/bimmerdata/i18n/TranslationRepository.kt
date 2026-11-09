@@ -129,7 +129,8 @@ class TranslationRepository private constructor(context: Context) {
         fetch(c, sgbd)
     }
 
-    private val refreshPrefs = app.getSharedPreferences("translations_refresh", Context.MODE_PRIVATE)
+    // Lazy: autoRefresh() is launched from init, which runs before the properties declared below it.
+    private val refreshPrefs by lazy { app.getSharedPreferences("translations_refresh", Context.MODE_PRIVATE) }
 
     /**
      * At start, at most once per day ([TranslationRefresh.IntervalMs]): asks every cached file
@@ -330,7 +331,7 @@ class TranslationRepository private constructor(context: Context) {
         TranslationTemplate.coverage(template, translator.table(sgbd, fetch = false)).also { coverageCache[sgbd] = key to it }
     }
 
-    private val coverageCache = java.util.concurrent.ConcurrentHashMap<String, Pair<String, TranslationTemplate.Coverage>>()
+    private val coverageCache by lazy { java.util.concurrent.ConcurrentHashMap<String, Pair<String, TranslationTemplate.Coverage>>() }
 
     companion object {
         private const val K_LAST_CHECK = "last_check_ms"
