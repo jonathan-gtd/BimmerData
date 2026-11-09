@@ -59,6 +59,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.jonathangtd.bimmerdata.R
+import io.github.jonathangtd.bimmerdata.cars.CarBook
+import io.github.jonathangtd.bimmerdata.cars.CarsScreen
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import io.github.jonathangtd.bimmerdata.dashboard.ui.DashboardScreen
 import io.github.jonathangtd.bimmerdata.dashboard.ui.ProfilesScreen
 import io.github.jonathangtd.bimmerdata.faults.FaultsScreen
@@ -77,8 +81,9 @@ enum class AppTab(@param:DrawableRes val icon: Int, @param:StringRes val label: 
 
 /**
  * Top-level screens with a bottom navigation bar (hidden while editing the dashboard layout).
- * Tool32 and the API documentation are secondary screens ([AppOverlay]) opened through
- * [LocalAppNavigator]: from Settings › Tools, and from an ECU's detail with its SGBD selected.
+ * Tool32, the API documentation and My cars are secondary screens ([AppOverlay]) opened through
+ * [LocalAppNavigator]: from Settings › Tools, from an ECU's detail with its SGBD selected, from the
+ * profile screens ("Change car"). My cars also opens at start when there is no car or several.
  */
 @Composable
 fun AppRoot() {
@@ -93,6 +98,7 @@ fun AppRoot() {
             openApiDocs = { overlay = AppOverlay.ApiDocs },
             openProfiles = { overlay = null; tab = AppTab.Profiles },
             openDashboard = { overlay = null; tab = AppTab.Dashboard },
+            openCars = { overlay = AppOverlay.Cars },
         )
     }
     BackHandler(enabled = overlay != null) { overlay = null }
@@ -109,6 +115,14 @@ fun AppRoot() {
     // REST API server and USB auto-connect follow the settings for the whole process life.
     val context = LocalContext.current
     LaunchedEffect(Unit) { AppServices.start(context) }
+    // My cars first when there is no car (how to get one) or several (which one); one car: the dashboard.
+    var startChecked by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (startChecked) return@LaunchedEffect
+        startChecked = true
+        val cars = withContext(Dispatchers.IO) { CarBook.get(context).snapshot().cars.size }
+        if (cars != 1 && overlay == null) overlay = AppOverlay.Cars
+    }
     Column(Modifier.fillMaxSize().background(Cockpit.Background)) {
         // While the bottom bar is shown it owns the navigation bar inset.
         Box(Modifier.fillMaxWidth().weight(1f).then(if (barVisible) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
@@ -116,6 +130,7 @@ fun AppRoot() {
                 when (overlay) {
                     AppOverlay.Tool32 -> Tool32Screen(initialSgbd = tool32Sgbd, onBack = { overlay = null })
                     AppOverlay.ApiDocs -> ApiDocsScreen(onBack = { overlay = null })
+                    AppOverlay.Cars -> CarsScreen(onBack = { overlay = null }, onShown = { overlay = null; tab = AppTab.Dashboard })
                     null -> holder.SaveableStateProvider(tab.name) {
                         when (tab) {
                             AppTab.Dashboard -> DashboardScreen(onEditingChange = { editing = it })

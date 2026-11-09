@@ -17,7 +17,11 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
 
-/** Everything the Faults tab keeps between launches: the user's cars and their last fault read. */
+/**
+ * The user's cars and their last fault read, kept between launches. [currentId] is the selected
+ * car: the Faults tab, the profile list and the Telegraf `car` tag follow it (see
+ * [io.github.jonathangtd.bimmerdata.cars.CarBook]).
+ */
 data class Garage(
     val vehicles: List<Vehicle> = emptyList(),
     val currentId: String? = null,
@@ -88,6 +92,8 @@ object GarageJson {
         val scannedAtMs: Long? = null,
         val scanMethod: String? = null,
         val busTopology: Boolean = false,
+        val model: String? = null,
+        val addedSgbds: List<String> = emptyList(),
     )
 
     @Serializable
@@ -147,11 +153,11 @@ object GarageJson {
     }
 
     private fun Vehicle.toDto() =
-        VehicleDto(id, label, vin, vinShort, series, seriesSgbd, seriesByUser, ecus.map { it.toDto() }, scannedAtMs, scanMethod?.name, busTopology)
+        VehicleDto(id, label, vin, vinShort, series, seriesSgbd, seriesByUser, ecus.map { it.toDto() }, scannedAtMs, scanMethod?.name, busTopology, model, addedSgbds)
 
     private fun VehicleDto.toModel() = Vehicle(
         id, label, vin, vinShort, series, seriesSgbd, seriesByUser, ecus.map { it.toModel() }, scannedAtMs,
-        ScanMethod.entries.firstOrNull { it.name == scanMethod }, busTopology,
+        ScanMethod.entries.firstOrNull { it.name == scanMethod }, busTopology, model, addedSgbds,
     )
 
     private fun VehicleEcu.toDto() = EcuDto(address, name, description, group, sgbd, sgbdAvailable, bus, ident.map { ValueDto(it.name, it.value, it.unit) })

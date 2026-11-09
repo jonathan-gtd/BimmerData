@@ -6,6 +6,7 @@ package io.github.jonathangtd.bimmerdata.dashboard
 import android.content.Context
 import io.github.jonathangtd.bimmerdata.profiles.ProfileStore
 import io.github.jonathangtd.bimmerdata.profiles.Profiles
+import io.github.jonathangtd.bimmerdata.vehicle.VehicleRepository
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -14,13 +15,14 @@ import kotlinx.coroutines.flow.StateFlow
  * name; writing a layout with a new name renames the profile.
  *
  * With no profile (first launch), [load] gives an empty layout; a write of a layout that has pages
- * or a name (REST API) creates a profile for it, an empty one changes nothing.
+ * or a name (REST API) creates a profile for it on the selected car ([selectedCar]; without a car
+ * the profile store gives it one), an empty one changes nothing.
  *
  * Every access goes through the profile store's process-wide lock; writers that change the layout
  * based on its current content use [update] (read, change and write under the lock).
  */
-class DashboardStore(private val profiles: ProfileStore) {
-    constructor(context: Context) : this(ProfileStore.get(context))
+class DashboardStore(private val profiles: ProfileStore, private val selectedCar: () -> String? = { null }) {
+    constructor(context: Context) : this(ProfileStore.get(context), { VehicleRepository.get(context).garage().currentId })
 
     /** Layout of the active profile; empty when there is no profile. */
     fun load(): Dashboard = profiles.load().activeDashboard()
@@ -34,7 +36,7 @@ class DashboardStore(private val profiles: ProfileStore) {
      * null if it could not be written.
      */
     fun update(transform: (Dashboard) -> Dashboard): Dashboard? = profiles.update { set ->
-        Profiles.writeActiveDashboard(set, transform(set.activeDashboard()), profiles.defaultProfileName(), profiles.now())
+        Profiles.writeActiveDashboard(set, transform(set.activeDashboard()), profiles.defaultProfileName(), profiles.now(), selectedCar().orEmpty())
     }?.activeDashboard()
 
     companion object {

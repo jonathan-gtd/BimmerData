@@ -16,7 +16,14 @@ import io.github.jonathangtd.bimmerdata.live.LiveConnection
 import io.github.jonathangtd.bimmerdata.live.LiveMode
 import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.MeasurementClient
+import io.github.jonathangtd.bimmerdata.live.vehicle.Vehicle
 import io.github.jonathangtd.bimmerdata.profiles.ProfileSet
+import io.github.jonathangtd.bimmerdata.vehicle.VehicleRepository
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import io.github.jonathangtd.bimmerdata.profiles.ProfileStore
 import io.github.jonathangtd.bimmerdata.profiles.Profiles
 import kotlinx.coroutines.Dispatchers
@@ -77,8 +84,16 @@ class GraphViewModel(app: Application) : AndroidViewModel(app) {
     private val _ui = MutableStateFlow(GraphUi())
     val ui: StateFlow<GraphUi> = _ui.asStateFlow()
 
-    private val _profiles = MutableStateFlow(ProfileSet())
-    val profiles: StateFlow<ProfileSet> = _profiles.asStateFlow()
+    private val vehicles = VehicleRepository.get(app)
+    private val allProfiles = MutableStateFlow(ProfileSet())
+
+    /** The selected car (its name heads the profile switch). */
+    val selectedCar: StateFlow<Vehicle?> = vehicles.state.map { it.garage.current }.distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, vehicles.garage().current)
+
+    /** The selected car's profiles (the switch sheet lists only these). */
+    val profiles: StateFlow<ProfileSet> = combine(allProfiles, selectedCar) { set, car -> set.forCar(car?.id) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ProfileSet())
 
     private val _index = MutableStateFlow<Map<String, Measurement>>(emptyMap())
 
@@ -132,7 +147,7 @@ class GraphViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun apply(set: ProfileSet) {
-        _profiles.value = set
+        allProfiles.value = set
         val p = set.active
         _ui.update { ui ->
             val graphs = p?.graphs.orEmpty()

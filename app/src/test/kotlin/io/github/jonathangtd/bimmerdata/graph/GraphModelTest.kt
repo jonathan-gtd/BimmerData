@@ -114,7 +114,7 @@ class GraphModelTest {
 
     @Test
     fun `graphs live in the profile and survive dashboard writes, export and import`() {
-        var set = Profiles.create(ProfileSet(), "P", nowMs = 1).first
+        var set = Profiles.create(ProfileSet(), "P", nowMs = 1, carId = "car-1").first
         val id = set.activeId!!
         set = Profiles.updateGraphs(set, id) { Graphs.add(it, "Lambda", listOf("m/1", "m/2"), id = "g") }
         // the dashboard editor writes the whole layout: graphs are not touched
@@ -126,7 +126,7 @@ class GraphModelTest {
         // shared file: graphs travel with the profile
         val exported = ProfileJson.export(set.active!!)
         assertTrue(exported.contains("\"graphs\""))
-        val (imported, p) = ProfileJson.importInto(ProfileSet(), ProfileJson.parseExport(exported), 5, "x")
+        val (imported, p) = ProfileJson.importInto(ProfileSet(), ProfileJson.parseExport(exported), 5, "x", "car-1")
         assertEquals(set.active!!.graphs, p.graphs)
         assertEquals(p.id, imported.activeId)
         // duplicating a profile copies its graphs

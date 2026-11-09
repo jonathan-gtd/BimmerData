@@ -5,6 +5,7 @@ package io.github.jonathangtd.bimmerdata.api
 
 import io.github.jonathangtd.bimmerdata.api.http.HttpResponse
 import io.github.jonathangtd.bimmerdata.api.http.HttpServer
+import io.github.jonathangtd.bimmerdata.cars.Cars
 import io.github.jonathangtd.bimmerdata.dashboard.newId
 import io.github.jonathangtd.bimmerdata.gauges.TrendWindow
 import io.github.jonathangtd.bimmerdata.graph.Graph
@@ -27,7 +28,7 @@ import kotlinx.serialization.json.put
 import java.util.Locale
 
 /**
- * Profile file import and the graphs of a profile (Graph tab). Graph changes go through
+ * Profile file import (onto a car) and the graphs of a profile (Graph tab). Graph changes go through
  * [Profiles.updateGraphs]: the pages of the profile are never touched, so the dashboard editor
  * and these routes never overwrite each other. Part of [ApiService]; pure JVM.
  */
@@ -111,14 +112,17 @@ internal class ProfileGraphRoutes(
             Route(
                 "POST", "/api/v1/profiles/import", RouteAccess.Needs(Scope.Layout), "Profiles", "importProfile",
                 "Import a profile file",
-                "Adds the profile of a profile file (the JSON of GET /api/v1/profiles/{profile}/export or of the phone's Share, with its pages and `graphs`) as a new profile, like Profiles › Import on the phone: " +
-                    "the layout is repaired the same way, a name already used gets a \" (2)\" suffix, no link to a car is made. It becomes the active profile unless `activate=false`. A plain dashboard file (older exports) is accepted too.",
-                params = listOf(Param("activate", "query", "Make it the active profile (default true).", S.bool(default = true), required = false)),
+                "Adds the profile of a profile file (the JSON of GET /api/v1/profiles/{profile}/export or of the phone's Share, with its pages and `graphs`) as a new profile of car `car` (default: the selected car), like Profiles › Import on the phone: " +
+                    "the layout is repaired the same way, a name already used gets a \" (2)\" suffix, the car's ECU list gets the file's ECUs it lacks (as added by hand). It becomes the active profile unless `activate=false`. A plain dashboard file (older exports) is accepted too.",
+                params = listOf(
+                    Param("activate", "query", "Make it the active profile (default true). With false the active profile stays, except on a car that had no profile: a car with profiles always shows one.", S.bool(default = true), required = false),
+                    Param("car", "query", "Id of the car it goes to (GET /api/v1/cars); default: the selected car (with no car at all, one named \"My car\" is made).", S.str(), required = false),
+                ),
                 body = Body(S.obj("BimmerData profile file", listOf("kind", "name"), true, null,
                     "kind" to S.str(enum = listOf("bimmerdata-profile")), "formatVersion" to S.int(), "name" to S.str(), "series" to S.str(), "model" to S.str(),
                     "ecus" to S.arr(S.str()), "dashboard" to S.ref("Dashboard"), "graphs" to S.arr(S.ref("Graph")))),
                 reply = Reply(201, "The new profile", S.obj(null, listOf("profile", "warnings"), false, null, "profile" to S.ref("Profile"), "warnings" to S.arr(S.str()))),
-                errors = mapOf(422 to "Not a profile file (code invalid_profile_file) or too many profiles."),
+                errors = mapOf(404 to "Unknown car.", 422 to "Not a profile file (code invalid_profile_file) or too many profiles."),
             ) { call ->
                 val export = try {
                     ProfileJson.parseExport(call.request.bodyText())
@@ -126,10 +130,11 @@ internal class ProfileGraphRoutes(
                     throw ApiException(422, "invalid_profile_file", e.message?.lineSequence()?.firstOrNull()?.take(300) ?: "Not a BimmerData profile file")
                 }
                 val activate = call.queryBool("activate", true)
-                val created = backend.editProfiles { set ->
-                    if (set.profiles.size >= Profiles.MAX_PROFILES) throw ApiException(422, "invalid_profile", "At most ${Profiles.MAX_PROFILES} profiles")
-                    val (withNew, p) = ProfileJson.importInto(set, export, clock(), "Imported")
-                    (if (activate) withNew else withNew.copy(activeId = set.activeId)) to p
+                val carId = call.query("car")
+                val created = backend.editCars { start ->
+                    if (start.profiles.profiles.size >= Profiles.MAX_PROFILES) throw ApiException(422, "invalid_profile", "At most ${Profiles.MAX_PROFILES} profiles")
+                    val (space, car) = if (carId != null) start to requireCar(start, carId) else Cars.ensureSelected(start, backend.defaultCarLabel, clock())
+                    Cars.importProfile(space, export, car.id, clock(), "Imported", activate)
                 }
                 ok(buildJsonObject {
                     put("profile", ApiJson.encodeToJsonElement(Profile.serializer(), created))

@@ -16,15 +16,15 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-/** Profiles: model operations, automatic choice by car, export / import, persistence. */
+/** Profiles: model operations, profiles of one car, export / import, persistence. */
 class ProfilesTest {
     private val layout = Msv70Example.create()
 
     private fun sample(): ProfileSet {
         var set = ProfileSet()
-        set = Profiles.create(set, "E90 330i · Lambda", ProfileVehicle("E90", "330i", "AB12345"), listOf("MSV70.prg"), nowMs = 100, dashboard = layout).first
-        set = Profiles.create(set, "120d E87", ProfileVehicle("E87", "120d", "ZZ99999"), listOf("dde"), nowMs = 200).first
-        set = Profiles.create(set, "Mini R50", ProfileVehicle("R50"), listOf("kms2000"), nowMs = 300).first
+        set = Profiles.create(set, "E90 330i · Lambda", ProfileVehicle("E90", "330i", "AB12345"), listOf("MSV70.prg"), nowMs = 100, dashboard = layout, carId = "car-e90").first
+        set = Profiles.create(set, "120d E87", ProfileVehicle("E87", "120d", "ZZ99999"), listOf("dde"), nowMs = 200, carId = "car-e87").first
+        set = Profiles.create(set, "Mini R50", ProfileVehicle("R50"), listOf("kms2000"), nowMs = 300, carId = "car-r50").first
         return set
     }
 
@@ -38,7 +38,7 @@ class ProfilesTest {
         assertEquals("E90 330i", lambda.vehicle.label)
         assertNull(lambda.dashboard.name, "the profile name is not duplicated in its layout")
         assertEquals(layout.copy(name = "E90 330i · Lambda"), set.copy(activeId = lambda.id).activeDashboard())
-        val (twice, p) = Profiles.create(set, " e90 330i ·  LAMBDA ", nowMs = 400)
+        val (twice, p) = Profiles.create(set, " e90 330i ·  LAMBDA ", nowMs = 400, carId = "car-e90")
         assertEquals("e90 330i · LAMBDA (2)", p.name)
         assertEquals(p.id, twice.activeId)
         assertEquals(listOf("msv70", "egs"), Profiles.normalizeEcus(listOf(" MSV70.PRG", "msv70", "egs.grp", "", "../x")))
@@ -53,6 +53,7 @@ class ProfilesTest {
         assertNotEquals(src.id, copy.id)
         assertEquals("E90 330i · Knock", copy.name)
         assertEquals(src.vehicle, copy.vehicle)
+        assertEquals("car-e90", copy.carId, "same car")
         assertEquals(src.ecus, copy.ecus)
         assertEquals(src.dashboard, copy.dashboard)
         assertEquals(1, after.profiles.indexOf(copy), "right after its source")
@@ -63,7 +64,7 @@ class ProfilesTest {
     }
 
     @Test
-    fun `writes go to the given profile, a new name renames it, delete picks the last used`() {
+    fun `writes go to the given profile, a new name renames it, delete picks the last used of the car`() {
         var set = sample()
         val lambda = set.profiles[0]
         // the editor of "Lambda" saves after another profile became active: the save stays in Lambda
@@ -75,43 +76,44 @@ class ProfilesTest {
         assertEquals("Mini R50 (2)", set.profile(lambda.id)!!.name, "names stay unique")
         assertEquals(ProfileVehicle("E90", null, null), set.profile(lambda.id)!!.vehicle)
         assertEquals(listOf("msv70", "egs"), set.profile(lambda.id)!!.ecus)
-        // delete the active one: the most recently used of the others becomes active
+        // delete the active one: another profile of its car becomes active, never one of another car
         set = Profiles.activate(set, lambda.id, nowMs = 900)
         set = Profiles.delete(set, lambda.id)
-        assertEquals("Mini R50", set.active?.name)
-        set = Profiles.delete(Profiles.delete(set, set.activeId!!), set.profiles.first().id)
+        assertNull(set.activeId, "Lambda was the only profile of its car")
+        set = set.profiles.fold(set) { s, p -> Profiles.delete(s, p.id) }
         assertTrue(set.profiles.isEmpty())
-        assertNull(set.activeId)
     }
 
     @Test
     fun `a write without profile creates one only for a layout with content`() {
         val empty = ProfileSet()
-        assertEquals(empty, Profiles.writeActiveDashboard(empty, Dashboard(), "My profile", 1))
-        val created = Profiles.writeActiveDashboard(empty, layout, "My profile", 1)
+        assertEquals(empty, Profiles.writeActiveDashboard(empty, Dashboard(), "My profile", 1, "car-1"))
+        val created = Profiles.writeActiveDashboard(empty, layout, "My profile", 1, "car-1")
         assertEquals("My profile", created.active?.name)
+        assertEquals("car-1", created.active?.carId, "on the selected car")
         assertEquals(layout, created.active?.dashboard)
-        assertEquals("330i", Profiles.writeActiveDashboard(empty, Dashboard(name = "330i"), "My profile", 1).active?.name)
+        assertEquals("330i", Profiles.writeActiveDashboard(empty, Dashboard(name = "330i"), "My profile", 1, "car-1").active?.name)
     }
 
     @Test
-    fun `the identified car picks its last used profile, never when the active one fits`() {
+    fun `the lists and the fallbacks of one car never show another car's profiles`() {
         var set = sample()
-        assertNull(Profiles.autoSelect(set, "NOPE000"), "car without profile: nothing to do")
         val lambda = set.profiles[0]
-        val knock = Profiles.duplicate(set, lambda.id, nowMs = 1_000, name = "Knock")!!
-        set = knock.first
-        assertNull(Profiles.autoSelect(set, "AB12345"), "the active profile (Knock) is already one of this car")
-        set = Profiles.activate(set, set.profiles.first { it.name == "120d E87" }.id, nowMs = 2_000)
-        assertEquals("Knock", Profiles.autoSelect(set, "ab12345")?.name, "the one used last for the car, VIN case ignored")
-        set = Profiles.activate(set, lambda.id, nowMs = 3_000)
-        set = Profiles.activate(set, set.profiles.first { it.name == "Mini R50" }.id, nowMs = 4_000)
-        assertEquals(lambda.id, Profiles.autoSelect(set, "AB12345")?.id)
-        // Android Auto list: the active profile's car, else every profile
-        set = Profiles.activate(set, lambda.id, nowMs = 5_000)
+        val (withKnock, knock) = Profiles.duplicate(set, lambda.id, nowMs = 1_000, name = "Knock")!!
+        set = withKnock
+        assertEquals(listOf("E90 330i · Lambda", "Knock"), set.forCar("car-e90").profiles.map { it.name })
+        assertEquals(knock.id, set.forCar("car-e90").activeId)
+        assertNull(set.forCar("car-r50").activeId, "the active profile is not one of that car")
+        // Android Auto lists the active profile's car
         assertEquals(listOf("E90 330i · Lambda", "Knock"), Profiles.sameCar(set).map { it.name })
-        set = Profiles.activate(set, set.profiles.first { it.name == "Mini R50" }.id, nowMs = 6_000)
-        assertEquals(4, Profiles.sameCar(Profiles.edit(set, set.activeId!!, vehicle = ProfileVehicle("R50"))).size)
+        // the active one deleted: the last used of the same car, not Mini R50 used more recently
+        set = Profiles.activate(set, set.profiles.first { it.name == "Mini R50" }.id, nowMs = 2_000)
+        set = Profiles.activate(set, knock.id, nowMs = 3_000)
+        set = Profiles.delete(set, knock.id)
+        assertEquals(lambda.id, set.activeId)
+        set = Profiles.delete(set, lambda.id)
+        assertNull(set.activeId, "its car has no profile left")
+        assertTrue(Profiles.sameCar(set).isEmpty())
     }
 
     @Test
@@ -121,10 +123,13 @@ class ProfilesTest {
         val text = ProfileJson.export(p)
         assertFalse(text.contains("AB12345"), "no VIN in a shared file")
         assertFalse(text.contains("vehicleId"))
+        assertFalse(text.contains("carId"), "nor the user's car")
+        assertFalse(text.contains("car-e90"))
         assertFalse(text.contains("lastUsedMs"))
         assertTrue(text.contains("\"kind\": \"bimmerdata-profile\""))
         val export = ProfileJson.parseExport(text)
-        val (after, imported) = ProfileJson.importInto(set, export, nowMs = 7_000, fallbackName = "My profile")
+        val (after, imported) = ProfileJson.importInto(set, export, nowMs = 7_000, fallbackName = "My profile", carId = "car-other")
+        assertEquals("car-other", imported.carId)
         assertEquals("E90 330i · Lambda (2)", imported.name)
         assertEquals(imported.id, after.activeId)
         assertEquals(ProfileVehicle("E90", "330i", null), imported.vehicle)
@@ -141,7 +146,7 @@ class ProfilesTest {
     @Test
     fun `the store persists profiles, publishes them and restores a deleted one`(@TempDir dir: File) {
         val store = ProfileStore(dir, { "My profile" }, { _, e -> throw AssertionError(e) }, clock = { 42 }, info = {})
-        val created = store.create("E90 330i", ProfileVehicle("E90", "330i"), listOf("msv70"))!!
+        val created = store.update { Profiles.create(it, "E90 330i", ProfileVehicle("E90", "330i"), listOf("msv70"), nowMs = 42, carId = "car-1").first }!!.active!!
         assertEquals(created.id, ProfileStore.state.value?.activeId)
         val copy = store.duplicate(created.id)!!
         assertEquals("E90 330i (2)", copy.name)
@@ -152,10 +157,25 @@ class ProfilesTest {
         val back = ProfileStore(dir, info = {}).load()
         assertEquals(before, back)
         assertEquals(copy.id, back.activeId)
-        val imported = store.import(ProfileJson.export(created), "My profile")
+        val imported = store.update { ProfileJson.importInto(it, ProfileJson.parseExport(ProfileJson.export(created)), 42, "My profile", "car-1").first }!!.active!!
         assertEquals(3, store.load().profiles.size)
         assertEquals(imported.id, store.load().activeId)
         assertEquals(store.load().activeDashboard(), ProfileStore.activeDashboard.value, "the active layout is published")
         assertEquals(42, store.load().active?.lastUsedMs)
+    }
+
+    @Test
+    fun `files written before cars still load, and the store gives their profiles a car at once`(@TempDir dir: File) {
+        // a profiles.json of an older version: no carId, a link to a car of the Faults tab
+        File(dir, ProfileStore.FILE_NAME).writeText(
+            """{"formatVersion":1,"activeId":"p1","profiles":[{"id":"p1","name":"E90 330i · Lambda","vehicle":{"series":"E90","model":"330i","vehicleId":"AB12345"},"ecus":["msv70"]}]}""",
+        )
+        val store = ProfileStore(dir, warn = { _, e -> throw AssertionError(e) }, info = {}, carCheck = { set ->
+            set.copy(profiles = set.profiles.map { if (it.carId.isEmpty()) it.copy(carId = "car-new") else it })
+        })
+        val set = store.load()
+        assertEquals("car-new", set.active?.carId)
+        assertEquals("AB12345", ProfileStore(dir, info = {}).load().active?.vehicle?.vehicleId, "read as before until the migration clears it")
+        assertTrue(File(dir, ProfileStore.FILE_NAME).readText().contains("car-new"), "written back at once")
     }
 }

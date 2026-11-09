@@ -62,6 +62,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.jonathangtd.bimmerdata.R
+import io.github.jonathangtd.bimmerdata.cars.CarBook
+import io.github.jonathangtd.bimmerdata.cars.MissingEcusQuestion
+import io.github.jonathangtd.bimmerdata.ui.LocalAppNavigator
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import io.github.jonathangtd.bimmerdata.dashboard.ui.PillButton
 import io.github.jonathangtd.bimmerdata.dashboard.ui.RoundIconButton
 import io.github.jonathangtd.bimmerdata.dashboard.ui.SectionTitle
@@ -84,15 +93,20 @@ import io.github.jonathangtd.bimmerdata.vehicle.VehicleState
 import io.github.jonathangtd.bimmerdata.vehicle.VehicleTask
 
 /**
- * Faults tab: the vehicle view. Vehicle header (several cars), scan / read / clear-all actions,
- * then the ECU tree built automatically from the scan (by function, or by bus when the topology is
- * known) with a status pill per ECU; an ECU opens its detail (identification, faults, clear).
+ * Faults tab: the faults of the selected car's ECUs. Car header, read / clear-all actions, then the
+ * ECU tree of the car's ECU list (by function, or by bus when the topology is known) with a status
+ * pill per ECU; an ECU opens its detail (identification, faults, clear). The ECUs themselves are
+ * detected from My cars ("Detect ECUs"); a car without ECU list gets a one-tap detection here.
  */
 @Composable
 fun FaultsScreen() {
     val context = LocalContext.current
     val resources = LocalResources.current
     val repo = remember { VehicleRepository.get(context) }
+    val book = remember { CarBook.get(context) }
+    val navigator = LocalAppNavigator.current
+    val scope = rememberCoroutineScope()
+    val snackbar = remember { SnackbarHostState() }
     val state by repo.state.collectAsStateWithLifecycle()
     var openEcu by rememberSaveable { mutableStateOf<Int?>(null) }
     var confirmClearAll by remember { mutableStateOf(false) }
@@ -117,7 +131,8 @@ fun FaultsScreen() {
         } else {
             VehicleOverview(
                 state = state,
-                onScan = repo::scan,
+                onDetect = { repo.detect() },
+                onOpenCars = navigator.openCars,
                 onReadFaults = repo::readFaults,
                 onClearAll = { confirmClearAll = true },
                 onShare = {
@@ -129,16 +144,18 @@ fun FaultsScreen() {
                 },
                 onCancel = repo::cancel,
                 connectionBar = { ConnectionPill(Modifier.fillMaxWidth()) },
-                onSelectVehicle = repo::selectVehicle,
-                onRename = repo::renameVehicle,
-                onForget = repo::deleteVehicle,
+                onSelectVehicle = { id -> scope.launch { withContext(Dispatchers.IO) { book.select(id) } } },
+                onRename = { id, label -> if (label.isNotBlank()) scope.launch { withContext(Dispatchers.IO) { book.update(id, label = label) } } },
+                onForget = { id -> scope.launch { withContext(Dispatchers.IO) { book.delete(id) } } },
                 onSeries = repo::setSeries,
                 seriesChoices = { repo.availableSeriesSgbds() },
                 onOpenEcu = { openEcu = it },
                 onDismissMessage = repo::dismissMessage,
             )
         }
+        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(16.dp))
     }
+    MissingEcusQuestion(state, snackbar)
 
     if (confirmClearAll && vehicle != null) {
         ConfirmDialog(
@@ -157,7 +174,10 @@ fun FaultsScreen() {
 @Composable
 internal fun VehicleOverview(
     state: VehicleState,
-    onScan: () -> Unit,
+    /** Detects the selected car's ECUs (shown when it has none yet). */
+    onDetect: () -> Unit,
+    /** Opens My cars (shown when there is no car). */
+    onOpenCars: () -> Unit,
     onReadFaults: () -> Unit,
     onClearAll: () -> Unit,
     onShare: () -> Unit,
@@ -195,20 +215,17 @@ internal fun VehicleOverview(
         item(key = "header") {
             VehicleHeader(
                 state, connectionBar, onSelectVehicle, onRename, onForget, onSeries, seriesChoices,
-                onScan = onScan,
                 onShare = onShare.takeIf { faults != null },
                 onClearAll = onClearAll.takeIf { withFaults.isNotEmpty() },
                 byBus = byBus.takeIf { busGroups != null },
                 onByBus = { byBus = it },
             )
         }
-        item(key = "action") {
-            // one main action: detect the car first, then read its fault memory
+        // one main action: read the fault memory of the car's ECUs (detected from My cars)
+        if (vehicle != null && vehicle.ecus.isNotEmpty()) item(key = "action") {
             PillButton(
-                stringResource(if (vehicle == null) R.string.veh_scan else R.string.veh_read_faults),
-                if (vehicle == null) onScan else onReadFaults,
-                modifier = Modifier.fillMaxWidth(),
-                icon = if (vehicle == null) R.drawable.ic_plug else R.drawable.ic_faults,
+                stringResource(R.string.veh_read_faults), onReadFaults,
+                modifier = Modifier.fillMaxWidth(), icon = R.drawable.ic_faults,
                 color = Cockpit.OnAccent, background = if (state.busy) Cockpit.Border else Cockpit.Accent, enabled = !state.busy,
             )
         }
@@ -216,7 +233,15 @@ internal fun VehicleOverview(
         state.message?.let { m -> item(key = "message") { MessageCard(messageText(m), m.error, onDismissMessage) } }
 
         if (vehicle == null) {
-            if (!state.busy) item(key = "empty") { EmptyVehicle() }
+            item(key = "empty") { EmptyVehicle(stringResource(R.string.cars_empty_title), stringResource(R.string.cars_empty_hint), stringResource(R.string.cars_open), R.drawable.ic_profile, onOpenCars, enabled = true) }
+            return@LazyColumn
+        }
+        if (vehicle.ecus.isEmpty()) {
+            item(key = "detect") {
+                val prepare = io.github.jonathangtd.bimmerdata.ui.ConnectHints.prepare()
+                val text = if (prepare == null) stringResource(R.string.fb3_veh_none_sim) else prepare + " " + stringResource(R.string.cars_detect_needed_text)
+                EmptyVehicle(stringResource(R.string.cars_detect_needed_title), text, stringResource(R.string.cars_detect), R.drawable.ic_plug, onDetect, enabled = !state.busy)
+            }
             return@LazyColumn
         }
 
@@ -356,7 +381,6 @@ private fun VehicleHeader(
     onForget: (String) -> Unit,
     onSeries: (String) -> Unit,
     seriesChoices: () -> List<String>,
-    onScan: () -> Unit,
     /** null when there is no report to share. */
     onShare: (() -> Unit)?,
     /** null when no ECU has faults. */
@@ -392,7 +416,6 @@ private fun VehicleHeader(
                 Box {
                     RoundIconButton(R.drawable.ic_more, stringResource(R.string.veh_menu), { menu = true })
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Cockpit.Card) {
-                        DropdownMenuItem(text = { Text(stringResource(R.string.veh_rescan)) }, onClick = { menu = false; onScan() }, enabled = !state.busy)
                         onShare?.let { share ->
                             DropdownMenuItem(text = { Text(stringResource(R.string.f2_share_report)) }, onClick = { menu = false; share() }, enabled = !state.busy)
                         }
@@ -512,16 +535,17 @@ internal fun MessageCard(text: String, error: Boolean, onDismiss: () -> Unit) {
     }
 }
 
+/** Nothing to read yet (no car, or a car without ECU list): what to do, and the one button that does it. */
 @Composable
-private fun EmptyVehicle() {
+private fun EmptyVehicle(title: String, text: String, action: String, icon: Int, onAction: () -> Unit, enabled: Boolean) {
     Column(Modifier.fillMaxWidth().padding(top = 48.dp, start = 16.dp, end = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Icon(painterResource(R.drawable.ic_faults), contentDescription = null, tint = Cockpit.Muted, modifier = Modifier.size(44.dp))
         Spacer(Modifier.height(16.dp))
-        Text(stringResource(R.string.veh_none_title), color = Cockpit.Text, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, fontFamily = BarlowCondensed)
+        Text(title, color = Cockpit.Text, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, fontFamily = BarlowCondensed, textAlign = TextAlign.Center)
         Spacer(Modifier.height(8.dp))
-        val prepare = io.github.jonathangtd.bimmerdata.ui.ConnectHints.prepare()
-        val text = if (prepare == null) stringResource(R.string.fb3_veh_none_sim) else prepare + " " + stringResource(R.string.veh_none_text)
         Text(text, color = Cockpit.Muted, fontSize = 15.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(20.dp))
+        PillButton(action, onAction, icon = icon, color = Cockpit.OnAccent, background = if (enabled) Cockpit.Accent else Cockpit.Border, enabled = enabled)
     }
 }
 

@@ -125,7 +125,7 @@ class AndroidDiagBackend(context: Context) : DiagBackend {
         else -> JsonPrimitive(v.toString())
     }
 
-    private fun noVehicle() = ApiException(404, "no_vehicle", "No vehicle detected yet: scan the car in the Faults tab first")
+    private fun noVehicle() = ApiException(404, "no_vehicle", "No ECU detected yet: detect the selected car's ECUs first (My cars › Detect ECUs, or POST /api/v1/cars/{car}/detect)")
 
     /** Maps the app's errors to API errors. */
     private inline fun <T> guarded(block: () -> T): T = try {

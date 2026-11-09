@@ -18,10 +18,10 @@ Rendered from the app with the built-in simulation (demo data, English UI).
   <tr>
     <td align="center"><img src="docs/screenshots/dashboard.png" width="250" alt="Card dashboard"><br><sub>Card dashboard: dials, bars, trends</sub></td>
     <td align="center"><img src="docs/screenshots/card_picker.png" width="250" alt="Card picker"><br><sub>Picking a measurement of the profile's ECUs</sub></td>
-    <td align="center"><img src="docs/screenshots/profiles.png" width="250" alt="Profiles"><br><sub>Profiles: a car, its ECUs, its own pages</sub></td>
+    <td align="center"><img src="docs/screenshots/profiles.png" width="250" alt="Profiles"><br><sub>Profiles of a car: its ECUs, its own pages</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/faults.png" width="250" alt="Fault memory of every ECU"><br><sub>Vehicle scan and fault memory of every ECU</sub></td>
+    <td align="center"><img src="docs/screenshots/faults.png" width="250" alt="Fault memory of every ECU"><br><sub>Fault memory of every ECU of the car</sub></td>
     <td align="center"><img src="docs/screenshots/fault_detail.png" width="250" alt="Fault details"><br><sub>Fault details, translated ECU texts</sub></td>
     <td align="center"><img src="docs/screenshots/tool32.png" width="250" alt="Mini Tool32"><br><sub>Mini Tool32: any EDIABAS job</sub></td>
   </tr>
@@ -80,18 +80,38 @@ Supported EDIABAS concepts so far: BMW-FAST (0x010F). DS2, KWP2000\* and D-CAN a
 Safety: the interface refuses flashing, coding writes, security access and the programming
 session before anything is sent to the car. Fault memory clear is allowed.
 
+## My cars
+
+The app is organized **car → profiles → pages**. Each car has its own profiles, its ECU list and
+its fault reports; one car is shown at a time (the profiles, the Faults tab and the Telegraf
+`car` tag follow it).
+
+- **At each connection** the app reads the car's VIN (about a second, read-only): a known car is
+  shown with its last used profile (only proposed while a CSV recording runs), an unknown VIN
+  adds a new car "Car <VIN>" (rename it). A car added by hand gets its VIN at its first connection.
+- **My cars** opens at start when there is no car or several (one car: straight to the
+  dashboard), and from the profile screens (**Change car**). Each car shows its VIN state, series,
+  profiles and ECUs; its ⋮ menu: show, **Detect ECUs**, ECUs by hand, rename, delete (with its
+  profiles, after a confirmation). **Add a car** works without the car.
+- **Detect ECUs** (connected, ignition on) finds the car's ECUs and their ECU files and keeps them
+  in the car's ECU list; ECUs can also be picked by hand from the imported ECU folder. A profile's
+  main ECUs come from its car's list, and the card picker opens on them. When a new detection no
+  longer finds an ECU that profiles use, or when you remove one by hand, the app asks before
+  removing it from those profiles (with their cards); "Keep" leaves it in the list.
+- **Copy to another car** (Profiles tab, ⋮) starts another car from a tuned profile. Shared
+  profile files carry series and model, never the VIN.
+
 ## Faults
 
-**Scan the vehicle** once: the app finds the car's ECUs and their ECU files and keeps them (one
-entry per car, several cars possible). Afterwards one tap reads the fault memory of every ECU
-without scanning again; the last read stays readable away from the car and can be shared. The
-car's ECUs also come first in the card picker, get their translations downloaded, and a profile
-linked to a car is picked when the app reads that car's VIN.
+The tab reads the fault memory of every ECU of the shown car's list (detected in My cars; a car
+without ECU list gets a one-tap **Detect ECUs** here). The last read stays readable away from the
+car and can be shared. The car's ECUs also come first in the card picker and get their
+translations downloaded.
 
 - The tab shows the faults first: a summary line, then the ECUs **to check** (with their most
   urgent fault, translated, and a chip **Present** / **Stored** / **Never occurred**) and those
-  not answering; the ECUs without faults fold into one line. Scan again, share, clear all, the bus
-  view, rename and forget are in the ⋮ menu.
+  not answering; the ECUs without faults fold into one line. Share, clear all, the bus view, the
+  car choice, rename and forget are in the ⋮ menu.
 - An ECU shows its faults (text and symptom; the details on tap) and its **functions**, like a
   workshop tester: **Reads** (states and values, one tap) and **Tests and controls** (actuators,
   self tests), with a field per argument and the help of the ECU file. A test asks for a

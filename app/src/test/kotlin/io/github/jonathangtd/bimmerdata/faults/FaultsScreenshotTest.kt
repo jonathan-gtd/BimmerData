@@ -81,7 +81,7 @@ class FaultsScreenshotTest {
 
     @Composable
     private fun Overview(state: VehicleState) = VehicleOverview(
-        state = state, onScan = {}, onReadFaults = {}, onClearAll = {}, onShare = {}, onCancel = {},
+        state = state, onDetect = {}, onOpenCars = {}, onReadFaults = {}, onClearAll = {}, onShare = {}, onCancel = {},
         onSelectVehicle = {}, onRename = { _, _ -> }, onForget = {}, onSeries = {}, seriesChoices = { emptyList() }, onOpenEcu = {},
         onDismissMessage = {},
         connectionBar = {
@@ -95,6 +95,14 @@ class FaultsScreenshotTest {
 
     @Test
     fun empty() = capture("faults_empty.png") { Overview(VehicleState()) }
+
+    /** A car added by hand, ECUs not detected yet: the one-tap detection. */
+    @Test
+    @Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
+    fun detectFirstFrench() {
+        val car = io.github.jonathangtd.bimmerdata.live.vehicle.Vehicle("car-1", "Project car", series = "E46")
+        capture("faults_detect_first_fr.png") { Overview(VehicleState(garage = Garage(listOf(car), car.id))) }
+    }
 
     @Test
     fun overview() {

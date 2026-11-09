@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mes voitures : les voitures de l’utilisateur, chacune avec ses profils et sa liste de calculateurs. -->
+<resources>
+    <string name="cars_title">Mes voitures</string>
+    <string name="cars_intro">Chaque voiture a ses propres profils, sa liste de calculateurs et ses rapports de défauts. À la connexion, l’appli lit le numéro de châssis et passe à cette voiture. Touchez une voiture pour l’afficher ; ⋮ pour détecter ses calculateurs, les choisir à la main, la renommer ou la supprimer.</string>
+    <string name="cars_add">Ajouter une voiture</string>
+    <string name="cars_empty_title">Aucune voiture</string>
+    <string name="cars_empty_hint">Connectez-vous à votre voiture : l’appli lit son numéro de châssis et l’ajoute toute seule. Vous pouvez aussi l’ajouter à la main dès maintenant ; son numéro de châssis sera lu à la première connexion.</string>
+    <string name="cars_selected">Affichée</string>
+    <string name="cars_vin">Châssis …%1$s</string>
+    <string name="cars_vin_unknown">Numéro de châssis pas encore lu</string>
+    <plurals name="cars_profiles">
+        <item quantity="one">%d profil</item>
+        <item quantity="many">%d profils</item>
+        <item quantity="other">%d profils</item>
+    </plurals>
+    <plurals name="cars_ecus">
+        <item quantity="one">%d calculateur</item>
+        <item quantity="many">%d calculateurs</item>
+        <item quantity="other">%d calculateurs</item>
+    </plurals>
+    <string name="cars_no_ecus">pas encore de calculateurs</string>
+    <string name="cars_actions">Actions pour %1$s</string>
+    <string name="cars_select">Afficher cette voiture</string>
+    <string name="cars_rename">Renommer</string>
+    <string name="cars_ecus_action">Calculateurs</string>
+    <string name="cars_delete">Supprimer</string>
+    <string name="cars_delete_title">Supprimer %1$s ?</string>
+    <plurals name="cars_delete_text">
+        <item quantity="one">Ses profils (%d), avec leurs pages et graphiques, et ses rapports de défauts sont aussi supprimés de ce téléphone. Rien n’est envoyé à la voiture.</item>
+        <item quantity="many">Ses %d profils (pages et graphiques) et ses rapports de défauts sont aussi supprimés de ce téléphone. Rien n’est envoyé à la voiture.</item>
+        <item quantity="other">Ses %d profils (pages et graphiques) et ses rapports de défauts sont aussi supprimés de ce téléphone. Rien n’est envoyé à la voiture.</item>
+    </plurals>
+    <string name="cars_deleted">%1$s supprimée</string>
+    <string name="cars_label">Nom</string>
+    <string name="cars_label_placeholder">p. ex. Quotidienne, Piste</string>
+    <string name="cars_label_required">Donnez un nom à la voiture</string>
+    <string name="cars_series">Série</string>
+    <string name="cars_model">Modèle</string>
+    <string name="cars_add_hint">Son numéro de châssis est lu à la première connexion, et ⋮ › Détecter les calculateurs remplit sa liste de calculateurs.</string>
+    <string name="cars_default_name">Ma voiture</string>
+    <string name="cars_vin_name">Voiture %1$s</string>
+    <string name="cars_change">Changer de voiture</string>
+    <string name="cars_car">Voiture</string>
+    <string name="cars_ecus_title">Calculateurs de %1$s</string>
+    <string name="cars_ecus_scanned">Trouvés par le dernier diagnostic</string>
+    <string name="cars_ecus_added">Ajoutés à la main</string>
+    <string name="cars_ecus_none">Aucun calculateur : détectez-les (⋮ › Détecter les calculateurs, connecté à la voiture), ou choisissez-les ci-dessous.</string>
+    <string name="cars_ecus_hint">Ses profils choisissent leurs calculateurs principaux dans cette liste. Une détection remplace les calculateurs qu’elle trouve ; ceux ajoutés à la main restent. Touchez-en un ajouté à la main pour le retirer.</string>
+    <string name="cars_ecu_chip_remove">Retirer %1$s</string>
+    <string name="cars_editor_restricted">Seuls les calculateurs de %1$s sont proposés (Mes voitures › ⋮ › Calculateurs pour en ajouter).</string>
+    <string name="cars_editor_open">%1$s n’a pas encore de liste de calculateurs : ceux choisis ici deviennent sa liste (Mes voitures › Détecter les calculateurs la remplit aussi).</string>
+    <string name="cars_copy_to">Copier vers une autre voiture</string>
+    <string name="cars_copy_title">Copier « %1$s » vers</string>
+    <string name="cars_copied">Copié vers %1$s</string>
+    <string name="cars_switched">%1$s reconnue · profil « %2$s »</string>
+    <string name="cars_switched_no_profile">%1$s reconnue (pas encore de profil)</string>
+    <string name="cars_new_detected">Nouvelle voiture détectée : %1$s</string>
+    <string name="cars_open">Mes voitures</string>
+    <string name="cars_detect">Détecter les calculateurs</string>
+    <string name="cars_detected">Calculateurs détectés : %1$s</string>
+    <string name="cars_detect_needed_title">Détectez d’abord les calculateurs de cette voiture</string>
+    <string name="cars_detect_needed_text">L’onglet Défauts lit les calculateurs de la liste de la voiture. La détection prend jusqu’à une minute, contact mis ; il faut les fichiers des calculateurs et la connexion.</string>
+    <string name="cars_ecu_lost_scan">La détection n’a pas trouvé %1$s dans cette voiture.</string>
+    <string name="cars_ecu_lost_hand">%1$s sort de la liste des calculateurs de cette voiture.</string>
+    <plurals name="cars_ecu_used">
+        <item quantity="one">%1$d profil l’utilise (%2$s).</item>
+        <item quantity="many">%1$d profils l’utilisent (%2$s).</item>
+        <item quantity="other">%1$d profils l’utilisent (%2$s).</item>
+    </plurals>
+    <plurals name="cars_cards">
+        <item quantity="one">%d carte</item>
+        <item quantity="many">%d cartes</item>
+        <item quantity="other">%d cartes</item>
+    </plurals>
+    <string name="cars_ecu_remove_question">Retirer %1$s de ces profils ? Ses cartes et ses valeurs de graphique sont supprimées.</string>
+    <string name="cars_ecu_remove">Retirer</string>
+    <string name="cars_ecu_keep">Garder</string>
+    <plurals name="cars_ecu_profile_cards">
+        <item quantity="one">%1$d carte ou valeur de graphique de %2$s est dans ce profil. Retirer %2$s et la supprimer ?</item>
+        <item quantity="many">%1$d cartes ou valeurs de graphique de %2$s sont dans ce profil. Retirer %2$s et les supprimer ?</item>
+        <item quantity="other">%1$d cartes ou valeurs de graphique de %2$s sont dans ce profil. Retirer %2$s et les supprimer ?</item>
+    </plurals>
+    <plurals name="cars_ecu_removed">
+        <item quantity="one">%2$s retiré de %1$d profil</item>
+        <item quantity="many">%2$s retiré de %1$d profils</item>
+        <item quantity="other">%2$s retiré de %1$d profils</item>
+    </plurals>
+</resources>

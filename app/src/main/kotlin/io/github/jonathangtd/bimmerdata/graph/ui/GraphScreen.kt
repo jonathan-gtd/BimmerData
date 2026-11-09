@@ -121,6 +121,7 @@ fun GraphScreen(vm: GraphViewModel = viewModel()) {
     val ui by vm.ui.collectAsStateWithLifecycle()
     val index by vm.index.collectAsStateWithLifecycle()
     val profiles by vm.profiles.collectAsStateWithLifecycle()
+    val selectedCar by vm.selectedCar.collectAsStateWithLifecycle()
     val status by vm.status.collectAsStateWithLifecycle()
     val connection by vm.connection.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -245,7 +246,11 @@ fun GraphScreen(vm: GraphViewModel = viewModel()) {
     when (val s = sheet) {
         null -> Unit
         GraphSheet.Profiles -> ProfileSwitchSheet(
-            set = profiles, onDismiss = { sheet = null },
+            set = profiles, car = selectedCar?.label, onDismiss = { sheet = null },
+            onChangeCar = {
+                sheet = null
+                navigator.openCars()
+            },
             onActivate = { id ->
                 sheet = null
                 scope.launch { vm.activateProfile(id) }

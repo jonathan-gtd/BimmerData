@@ -2,7 +2,7 @@
 <resources>
     <!-- Profiles tab -->
     <string name="nav_profiles">Profiles</string>
-    <string name="ptab_intro">A profile is a car, its main ECUs and its own dashboard pages, on the phone and in Android Auto. The active one is the one shown and recorded. Tap a profile to make it active; ⋮ to edit, duplicate, export or delete it.</string>
+    <string name="ptab_intro">A profile belongs to the car above: its main ECUs and its own dashboard pages, on the phone and in Android Auto. The active one is the one shown and recorded. Tap a profile to make it active; ⋮ to edit, duplicate, copy to another car, export or delete it.</string>
     <string name="ptab_active">Active</string>
     <string name="ptab_activate">Make active</string>
     <string name="ptab_activated">Profile “%1$s” is active</string>

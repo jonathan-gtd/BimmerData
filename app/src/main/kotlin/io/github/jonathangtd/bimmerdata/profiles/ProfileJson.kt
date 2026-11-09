@@ -14,8 +14,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /**
- * A profile as a file to share with other users: name, car (series and model only), ECUs,
- * pages and graphs. Never the VIN or the link to one of the user's cars ([ProfileVehicle.vehicleId]).
+ * A profile as a file to share with other users: name, car (series and model only, as metadata),
+ * ECUs, pages and graphs. Never the VIN nor the user's car it belongs to ([Profile.carId]).
  */
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
@@ -67,7 +67,7 @@ object ProfileJson {
         return ProfileSet(profiles = profiles, activeId = active)
     }
 
-    /** File for sharing [p]: no VIN, no link to the user's car, no usage time. */
+    /** File for sharing [p]: no VIN, not the user's car, no usage time. */
     fun export(p: Profile): String = json.encodeToString(
         ProfileExport.serializer(),
         ProfileExport(
@@ -118,10 +118,14 @@ object ProfileJson {
         }
     }
 
-    /** Adds an exported profile as a new, active one (named [fallbackName] if it has no name). */
-    fun importInto(set: ProfileSet, export: ProfileExport, nowMs: Long, fallbackName: String): Pair<ProfileSet, Profile> =
+    /**
+     * Adds an exported profile as a new, active one of car [carId] (named [fallbackName] if it has
+     * no name). Its ECUs are taken as given: [io.github.jonathangtd.bimmerdata.cars.Cars.importProfile]
+     * adds those the car lacks to its ECU list.
+     */
+    fun importInto(set: ProfileSet, export: ProfileExport, nowMs: Long, fallbackName: String, carId: String): Pair<ProfileSet, Profile> =
         Profiles.create(
             set, export.name.ifBlank { fallbackName }, ProfileVehicle(export.series, export.model), export.ecus,
-            nowMs, export.dashboard, export.graphs,
+            nowMs, export.dashboard, export.graphs, carId,
         )
 }

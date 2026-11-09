@@ -6,7 +6,7 @@
     <string name="fb3_prepare_usb">Plug the USB cable into the car and the phone, and switch the ignition on.</string>
     <string name="fb3_prepare_bt">Plug the Bluetooth adapter %1$s into the car and switch the ignition on.</string>
     <string name="fb3_prepare_bt_unnamed">Plug your Bluetooth adapter into the car and switch the ignition on.</string>
-    <string name="fb3_veh_none_sim">The simulation shows a demo car: scan it to see its ECUs and their fault memory.</string>
+    <string name="fb3_veh_none_sim">The simulation shows a demo car: detect its ECUs to see them and their fault memory.</string>
     <!-- What to check when no ECU answers -->
     <string name="fb3_check_any">Is the diagnostic interface connected to the car?</string>
     <string name="fb3_check_usb">Is the USB cable plugged into the car?</string>

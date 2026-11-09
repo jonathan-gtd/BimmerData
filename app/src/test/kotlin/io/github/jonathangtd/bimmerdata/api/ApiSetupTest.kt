@@ -302,7 +302,9 @@ class ApiSetupTest {
         assertEquals("My car", p.str("name"))
         assertEquals(1, p["graphs"]!!.jsonArray.size)
         assertEquals(1, r.json()["warnings"]!!.jsonArray.size, "zzz/0x1 is unknown")
-        assertEquals(null, fake.profileSet.activeId, "activate=false")
+        // a fresh install: the file goes onto a new car "My car"; being that car's only profile, it is shown even with activate=false
+        assertEquals("My car", fake.garage.current?.label)
+        assertEquals(fake.profileSet.profiles.single().id, fake.profileSet.activeId)
         assertEquals(ProfileVehicle("<series>", null, null), fake.profileSet.profiles.single().vehicle)
         // the same file again: a second profile with another name
         assertEquals("My car (2)", call("POST", "/api/v1/profiles/import", export).json().obj("profile").str("name"))

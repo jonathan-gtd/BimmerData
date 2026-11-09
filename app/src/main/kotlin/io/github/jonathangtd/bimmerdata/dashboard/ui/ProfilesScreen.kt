@@ -6,6 +6,8 @@ package io.github.jonathangtd.bimmerdata.dashboard.ui
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -56,16 +59,19 @@ private sealed interface ProfilesSheet {
     /** New profile ([id] null) or changes of profile [id]. */
     data class Edit(val id: String?) : ProfilesSheet
     data class ConfirmDelete(val id: String, val name: String) : ProfilesSheet
+    data class CopyTo(val id: String) : ProfilesSheet
 }
 
 /**
- * Profiles tab: every profile with the active one marked; activate, create, edit, duplicate,
- * export, import and delete (with undo). Shares the dashboard's view model (same activity), so a
+ * Profiles tab: the selected car's profiles with the active one marked ("Change car" opens My
+ * cars); activate, create, edit, duplicate, copy to another car, export, import and delete (with undo). Shares the dashboard's view model (same activity), so a
  * change here is what the dashboard and Android Auto show.
  */
 @Composable
 fun ProfilesScreen(vm: DashboardViewModel = viewModel()) {
     val profiles by vm.profiles.collectAsStateWithLifecycle()
+    val selectedCar by vm.selectedCar.collectAsStateWithLifecycle()
+    val carList by vm.carList.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val res = LocalResources.current
     val scope = rememberCoroutineScope()
@@ -116,11 +122,13 @@ fun ProfilesScreen(vm: DashboardViewModel = viewModel()) {
             saveProfile.launch(profileFileName(profiles.profile(id)?.name ?: "profile"))
         },
         onDelete = { id -> sheet = ProfilesSheet.ConfirmDelete(id, profiles.profile(id)?.name.orEmpty()) },
+        onCopyTo = if (carList.size > 1) { id -> sheet = ProfilesSheet.CopyTo(id) } else null,
     )
 
     Box(Modifier.fillMaxSize().background(Cockpit.Background)) {
         ProfilesTabContent(
             set = profiles, onActivate = activate, onNew = { sheet = ProfilesSheet.Edit(null) }, onImport = ::importProfile, actions = actions,
+            car = selectedCar?.label, onChangeCar = navigator.openCars,
         )
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(16.dp))
     }
@@ -130,11 +138,11 @@ fun ProfilesScreen(vm: DashboardViewModel = viewModel()) {
         is ProfilesSheet.Edit -> {
             val editing = s.id?.let { profiles.profile(it) }
             ProfileEditorSheet(
-                initial = editing, cars = rememberCarChoices(), loadChoices = { vm.sgbdChoices() }, onDismiss = { sheet = null },
-                onSave = { name, vehicle, ecus ->
+                initial = editing, car = selectedCar?.toEditorCar(), loadChoices = { vm.profileEcuChoices() }, onDismiss = { sheet = null },
+                onSave = { name, vehicle, ecus, dropCards ->
                     sheet = null
                     scope.launch {
-                        if (editing == null) vm.createProfile(name, vehicle, ecus) else vm.editProfile(editing.id, name, vehicle, ecus)
+                        if (editing == null) vm.createProfile(name, vehicle, ecus) else vm.editProfile(editing.id, name, vehicle, ecus, dropCards)
                     }
                 },
             )
@@ -151,6 +159,23 @@ fun ProfilesScreen(vm: DashboardViewModel = viewModel()) {
             },
             onDismiss = { sheet = null },
         )
+        is ProfilesSheet.CopyTo -> {
+            val p = profiles.profile(s.id)
+            CockpitSheet({ sheet = null }) {
+                Column(Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+                    SheetHeader(stringResource(R.string.cars_copy_title, p?.name.orEmpty()))
+                    carList.filter { it.id != selectedCar?.id }.forEach { c ->
+                        Text(
+                            c.label, color = Cockpit.Text, fontSize = 17.sp, fontFamily = BarlowCondensed, fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.fillMaxWidth().clickable(role = Role.Button) {
+                                sheet = null
+                                scope.launch { vm.copyProfile(s.id, c.id)?.let { message(res.getString(R.string.cars_copied, c.label)) } }
+                            }.heightIn(min = MinTouch).padding(horizontal = 20.dp, vertical = 12.dp),
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -162,6 +187,8 @@ internal fun ProfilesTabContent(
     onNew: () -> Unit,
     onImport: () -> Unit,
     actions: ProfileActions,
+    car: String? = null,
+    onChangeCar: () -> Unit = {},
 ) {
     Column(
         Modifier
@@ -172,6 +199,7 @@ internal fun ProfilesTabContent(
             stringResource(R.string.profiles_title), color = Cockpit.Text, fontSize = 28.sp, fontWeight = FontWeight.SemiBold,
             fontFamily = BarlowCondensed, modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
         )
+        CarLine(car, onChangeCar, Modifier.padding(horizontal = 16.dp).padding(bottom = 4.dp))
         if (set.profiles.isEmpty()) {
             // Nothing yet: what a profile is, and the two ways to get one.
             NoProfile(onCreate = onNew, onImport = onImport)

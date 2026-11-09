@@ -73,8 +73,10 @@ A typical agent session:
 
 1. `GET /api/v1` – check the token, see the granted scopes.
 2. `GET /api/v1/status` – connected? If not, `POST /api/v1/connect` (`{"mode":"simulation"}` needs no car).
-   `GET /api/v1/profiles` – which profile (car, main ECUs, pages) is active; a fresh install has
-   none: `POST /api/v1/profiles` creates one. The dashboard routes act on the active profile.
+   `GET /api/v1/cars` – the user's cars and the selected one; `GET /api/v1/profiles` – the
+   selected car's profiles (main ECUs, pages) and the active one. A fresh install has neither:
+   `POST /api/v1/profiles` creates a profile (and a car "My car"). The dashboard routes act on the
+   active profile.
 3. `GET /api/v1/ecus`, `GET /api/v1/ecus/<sgbd>/measurements?q=temp` – find measurement ids.
 4. `GET /api/v1/card-types` – what a card can be (a page is a `columns × rows` grid).
 5. `POST /api/v1/dashboard/car/pages`, `POST …/pages/{page}/cards` – build.
@@ -122,6 +124,15 @@ curl -s -H "$H" "$BD/dashboard/car/pages/1/render.png" -o page.png
 curl -s -H "$H" -X POST "$BD/dashboard/validate" --data-binary @dashboard.json
 curl -s -H "$H" -X PUT  "$BD/dashboard" --data-binary @dashboard.json
 
+# Cars: add one by hand, show it, its profiles, copy a profile onto it (scope layout for writes)
+curl -s -H "$H" "$BD/cars"
+curl -s -H "$H" -X POST "$BD/cars" -d '{"label":"Track car","series":"<series>","select":true}'
+curl -s -H "$H" "$BD/profiles?car=all"
+curl -s -H "$H" -X POST "$BD/profiles/<profileId>/copy" -d '{"car":"<carId>"}'
+# Detect the ECUs of a car (scope diag; asynchronous), then follow it
+curl -s -H "$H" -X POST "$BD/cars/<carId>/detect"
+curl -s -H "$H" "$BD/cars/<carId>/detect"
+
 # Recording (scope config) and download
 curl -s -H "$H" -X POST "$BD/recording/start"
 curl -s -H "$H" -X POST "$BD/recording/markers" -d '{"label":"full throttle"}'
@@ -160,10 +171,15 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 | GET | `/api/v1/dashboard/{target}/pages/{page}/render.png` | read | PNG of a saved page |
 | POST | `/api/v1/dashboard/{target}/render` | read | PNG of a draft page (body = page) |
 | GET | `/api/v1/card-types` | read | Card types and measurement counts |
-| GET / POST | `/api/v1/profiles` | read / layout | Profiles and the active one / create a profile (optionally copying another's pages) |
-| GET / PUT / DELETE | `/api/v1/profiles/{profile}` | read / layout | One profile with its layout / change name, car, ECUs or layout / delete |
-| POST | `/api/v1/profiles/{profile}/activate` | layout | Show this profile on the phone and in Android Auto |
-| GET | `/api/v1/profiles/{profile}/export` | read | The shareable profile file (never the VIN link) |
+| GET / POST | `/api/v1/cars` | read / layout | The user's cars (never the VIN, only `vinKnown`) and the selected one / add a car by hand |
+| GET / PUT / DELETE | `/api/v1/cars/{car}` | read / layout | One car with its profiles / change name, series, model, ECU list (`removeCards`) / delete it **with its profiles** and fault read |
+| POST | `/api/v1/cars/{car}/select` | layout | Show this car: its last used profile becomes active |
+| POST / GET | `/api/v1/cars/{car}/detect` | diag | Detect the car's ECUs (full scan, asynchronous, read-only jobs) / its progress and result |
+| GET / POST | `/api/v1/profiles[?car=<id>\|all]` | read / layout | The selected car's profiles (or car `car`'s, or all) and the active one / create a profile on the selected car or on `car` (optionally copying another's pages) |
+| GET / PUT / DELETE | `/api/v1/profiles/{profile}` | read / layout | One profile with its layout / change name, series / model, ECUs (`removeCards`) or layout / delete |
+| POST | `/api/v1/profiles/{profile}/activate` | layout | Show this profile (and select its car) on the phone and in Android Auto |
+| POST | `/api/v1/profiles/{profile}/copy` | layout | Copy the profile onto another car (`{"car":"<id>"}`) |
+| GET | `/api/v1/profiles/{profile}/export` | read | The shareable profile file (never the VIN nor the user's car) |
 | POST | `/api/v1/connect` | config | Connect (`usb` / `simulation`) |
 | POST | `/api/v1/disconnect` | config | Disconnect |
 | GET | `/api/v1/recording` | read | Recording state |
@@ -190,10 +206,10 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 | DELETE | `/api/v1/export/telegraf/queue` | config | Delete the points waiting on the phone |
 | GET / DELETE | `/api/v1/export/telegraf/rejected` | config | Download (gzip line protocol) / delete the batches Telegraf refused |
 | POST | `/api/v1/export/telegraf/rejected/retry` | config | Queue the refused batches again |
-| POST | `/api/v1/profiles/import[?activate=false]` | layout | Import a profile file (pages and graphs) as a new profile |
+| POST | `/api/v1/profiles/import[?activate=false&car=<id>]` | layout | Import a profile file (pages and graphs) as a new profile of the selected car (or of `car`) |
 | GET / POST | `/api/v1/profiles/{profile}/graphs` | read / layout | Graphs of the Graph tab / add one |
 | GET / PUT / DELETE | `/api/v1/profiles/{profile}/graphs/{graph}` | read / layout | One graph / replace it / delete it (pages never touched) |
-| GET | `/api/v1/diag/vehicle` | diag | Last detected vehicle, its ECUs and their last fault read (no car traffic, never the VIN) |
+| GET | `/api/v1/diag/vehicle` | diag | The selected car, the ECUs of its last detection and their last fault read (no car traffic, never the VIN) |
 | GET | `/api/v1/diag/faults` | diag | Read the fault memory from the car (`?ecu=0x12` for one ECU, `?cached=true` for the last read) |
 | POST | `/api/v1/diag/faults/clear` | diag | **Writes.** Clear one ECU (`{"ecu":"0x12"}`) or all (`{}`), after a confirmation on the phone |
 | POST | `/api/v1/diag/jobs` | diag | **May write.** Run one EDIABAS job (`{"sgbd","job","args"}`), after a confirmation on the phone |
@@ -220,6 +236,40 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 - Measurement ids that are not in the imported ECU folder are accepted but reported as
   `warnings` (the card shows "--" until the SGBD is imported).
 
+### Cars, profiles and ECU lists
+
+- **Car → profiles → pages.** Every profile belongs to one car (`carId`). One car is selected
+  (`GET /api/v1/cars` › `selectedId`): the profile list, the active profile (always one of the
+  selected car's; none when it has no profile), the Faults tab, the diag routes and the Telegraf
+  `car` tag follow it. Selecting a car (`POST /api/v1/cars/{car}/select`, or activating one of its
+  profiles) shows its last used profile; a car with profiles always shows one of them.
+- **Where cars come from.** At each connection the app reads the short VIN (one read-only job):
+  a known car becomes the selected one with its last used profile (only proposed on the phone
+  while a CSV recording runs); an unknown VIN goes to the selected car if it was added by hand and
+  has no VIN yet (its first connection), else it makes a new car "Car <VIN>". `POST /api/v1/cars`
+  adds a car by hand; a detection (`POST /api/v1/cars/{car}/detect`) fills the car with the VIN it
+  reads (the car with that VIN, the selected car without VIN, or a new car: never a duplicate).
+  The VIN itself never leaves the phone: car JSON only says `vinKnown`.
+- **ECU list of a car** (`ecus` of the car): the ECUs found by its last detection, then those
+  added by hand (`ecusByHand`; `PUT /api/v1/cars/{car}` `{"ecus":[…]}` sets them). A profile's
+  main ECUs must be in its car's list: `POST` / `PUT /api/v1/profiles…` answer
+  `422 ecu_not_in_car` with `details.allowed` otherwise. A car without list yet takes the ECUs of
+  the profile given to it; a profile copied (`…/copy`) or imported onto a car brings the ECUs the
+  car lacks into its list (added by hand). A new detection replaces the detected ECUs and keeps
+  those added by hand; an ECU it no longer finds that profiles still use stays in the list
+  (`keptInUse` of the detection; the phone asks the user).
+- **Nothing is removed silently.** Taking an ECU out of a car's list (`PUT /api/v1/cars/{car}`)
+  while the car's profiles use it (main ECUs, cards, graph values), or out of a profile's `ecus`
+  (`PUT /api/v1/profiles/{profile}`) while it still has cards or graph values there, answers
+  `409 ecu_in_use` with `details` listing each ECU and the profiles concerned (`cards`,
+  `graphSeries`). Repeat the request with `"removeCards": true` to remove it from those profiles
+  too: their cards using it are deleted from the phone and the Android Auto pages alike, and its
+  values from their graphs.
+- Deleting a car (`DELETE /api/v1/cars/{car}`) deletes its profiles (pages and graphs) and its
+  last fault read; export the profiles first to keep them.
+- Profile files (`…/export`, `…/import`) keep `series` and `model` as metadata, never the VIN
+  nor the car.
+
 ### Errors
 
 Every error has the same shape and a meaningful status:
@@ -234,15 +284,17 @@ full, last page, not connected) · `413` body over 1 MB (64 MB for an ECU file u
 each problem with its JSON path) · `429` rate limited (`Retry-After`) · `501` not available on
 this phone · `507 insufficient_storage` (the app always keeps 100 MB free). Diagnostics and the
 adapter CAN mode add `403 refused_on_phone`, `408 confirmation_timeout`, `409 vehicle_moving` and
-`503 confirmation_unavailable` / `not_connected`.
+`503 confirmation_unavailable` / `not_connected`. Cars and profiles add `404 car_not_found`,
+`409 ecu_in_use`, `409 vehicle_busy` (a detection or fault read runs) and `422 ecu_not_in_car` /
+`invalid_car`.
 
 ## Set up the app entirely through the API
 
-Everything the Settings screens, the Profiles screen and the Graph tab do can be done through the
-API, so an agent can set BimmerData up while the user does not touch the phone, except for the
-few steps Android reserves to the user (listed below). Grant the `read`, `layout` and `config`
-scopes for this (Settings › Local API: that first step is on the phone, see
-[Enabling it](#enabling-it)). Order of the calls:
+Everything the Settings screens, My cars, the Profiles screen and the Graph tab do can be done
+through the API, so an agent can set BimmerData up while the user does not touch the phone,
+except for the few steps Android reserves to the user (listed below). Grant the `read`, `layout`
+and `config` scopes for this (and `diag` to detect a car's ECUs; Settings › Local API: that first
+step is on the phone, see [Enabling it](#enabling-it)). Order of the calls:
 
 1. **What the user still has to allow**: `GET /api/v1/permissions`. Each entry has `status`
    (`granted`, `missing`, `notRequired`, `on`, `off`, `askedOnConnect`), `neededFor` and
@@ -295,12 +347,21 @@ scopes for this (Settings › Local API: that first step is on the phone, see
 5. **Other settings**: `PATCH /api/v1/settings` (auto-connect on the cable),
    `/api/v1/settings/gps`, `/api/v1/settings/recording`, `/api/v1/settings/translations`
    (then `POST /api/v1/settings/translations/update`).
-6. **Profiles and graphs**: `POST /api/v1/profiles/import` with a profile file (the JSON of
-   `GET /api/v1/profiles/{profile}/export`, pages and graphs included), or `POST /api/v1/profiles`
-   and the dashboard routes; graphs with `/api/v1/profiles/{profile}/graphs`. Android Auto gets the
-   same cards as the phone: `POST /api/v1/dashboard/car/from-phone` once the phone pages are done
-   (see [Layout rules](#layout-rules)).
-7. **Connect**: `POST /api/v1/connect` `{"mode":"usb"}` / `{"mode":"bluetooth"}` /
+6. **Cars**: `GET /api/v1/cars`. The app adds the car itself at the first connection (from its
+   VIN); to prepare profiles before that, add it by hand: `POST /api/v1/cars`
+   `{"label":"My car","series":"<series>","model":"<model>","select":true}`, and give it its ECU
+   list by hand (`PUT /api/v1/cars/{car}` `{"ecus":["<sgbd>",…]}`) or, connected to the car,
+   detect it (`POST /api/v1/cars/{car}/detect`, scope `diag`, then poll
+   `GET /api/v1/cars/{car}/detect` until `running` is false). See
+   [Cars, profiles and ECU lists](#cars-profiles-and-ecu-lists).
+7. **Profiles and graphs** (on the selected car, or `car` / `?car=`): `POST /api/v1/profiles/import`
+   with a profile file (the JSON of `GET /api/v1/profiles/{profile}/export`, pages and graphs
+   included), or `POST /api/v1/profiles` and the dashboard routes; graphs with
+   `/api/v1/profiles/{profile}/graphs`; `POST /api/v1/profiles/{profile}/copy` puts a copy on
+   another car. Android Auto gets the same cards as the phone:
+   `POST /api/v1/dashboard/car/from-phone` once the phone pages are done (see
+   [Layout rules](#layout-rules)).
+8. **Connect**: `POST /api/v1/connect` `{"mode":"usb"}` / `{"mode":"bluetooth"}` /
    `{"mode":"simulation"}`, then `GET /api/v1/status`.
 
 What still needs a tap on the phone, and why:
@@ -437,7 +498,7 @@ Scope `diag` (off by default; Settings › Local API › Permissions › Diagnos
 
 - **Reading** the fault memory (`GET /diag/faults`, `GET /diag/vehicle`) answers directly. A read
   from the car takes about 1 s per ECU; the live reading goes on between the jobs. The vehicle
-  must have been scanned once (Faults tab). Fault texts are the ECU file's (German).
+  must have been detected once (My cars › Detect ECUs, or `POST /api/v1/cars/{car}/detect`). Fault texts are the ECU file's (German).
 - **Clearing faults** (`POST /diag/faults/clear`) and **running a job** (`POST /diag/jobs`) are
   confirmed on the phone **for every single call**, nothing is remembered:
   1. if the car is moving (above 3 km/h, from a speed measurement the app reads or the phone
@@ -475,6 +536,11 @@ curl -s -m 180 -X POST -H "Authorization: Bearer $T" -d '{"sgbd":"<sgbd>","job":
   for its token, scope or name is never sent), and closes the connection if the body was not
   read to the end. The setup routes live in `app/.../api/SetupRoutes.kt` and
   `ProfileGraphRoutes.kt`; the ECU file storage in `app/.../files/EcuFileStore.kt`.
+- Cars are the garage of `files/vehicles.json` (`VehicleRepository`, `Garage.currentId` = the
+  selected car), each profile points to one by `carId`; `cars/CarBook.kt` changes both together
+  under the profile store's lock (pure operations in `cars/Cars.kt`, ECU use in `cars/EcuUsage.kt`,
+  routes in `CarRoutes.kt`). Profiles written before cars existed are given cars on the first read
+  (grouped by their "series model", the old link to a Faults-tab car kept).
 - Layouts belong to profiles (`files/profiles.json`, `ProfileStore`); the dashboard routes go
   through `DashboardStore`, i.e. the active profile. The phone and Android Auto follow every
   change live; a change made while the phone editor is open is offered to the user, not forced.

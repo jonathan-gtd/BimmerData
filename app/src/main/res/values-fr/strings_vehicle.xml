@@ -2,10 +2,6 @@
 <!-- Détection du véhicule et mémoire de défauts (onglet Défauts). -->
 <resources>
     <string name="veh_title">Véhicule</string>
-    <string name="veh_none_title">Aucun véhicule</string>
-    <string name="veh_none_text">Puis lancez la détection : tous les calculateurs de la voiture sont trouvés et leur mémoire de défauts est lue.</string>
-    <string name="veh_scan">Détecter le véhicule</string>
-    <string name="veh_rescan">Détecter à nouveau</string>
     <string name="veh_read_faults">Lire les défauts</string>
     <string name="veh_clear_all">Tout effacer</string>
     <string name="veh_share">Partager</string>
@@ -124,7 +120,7 @@
     <string name="veh_series_auto">%1$s (détectée)</string>
     <string name="veh_forget">Oublier ce véhicule</string>
     <string name="veh_forget_title">Oublier %1$s ?</string>
-    <string name="veh_forget_text">Sa liste de calculateurs et sa dernière lecture des défauts sont supprimées de ce téléphone. Rien n’est envoyé à la voiture.</string>
+    <string name="veh_forget_text">Ses profils (pages et graphiques), sa liste de calculateurs et ses rapports de défauts sont supprimés de ce téléphone. Rien n’est envoyé à la voiture.</string>
     <string name="veh_forget_confirm">Oublier</string>
     <string name="veh_switch">Vos véhicules</string>
 

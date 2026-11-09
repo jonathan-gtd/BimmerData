@@ -10,9 +10,10 @@ import kotlinx.serialization.Serializable
 import java.util.Locale
 
 /**
- * The car a profile is for. [series] and [model] are free text ("E90", "330i"); [vehicleId] links
- * the profile to a car of the Faults tab ([io.github.jonathangtd.bimmerdata.vehicle.VehicleStore]
- * id: the short VIN when it is known), so the app can pick the profile when it reads that VIN.
+ * What a profile file says about the car it was made for: [series] and [model] are free text ("E90",
+ * "330i"), shared with the profile. [vehicleId] is the link to a car of the Faults tab written before
+ * profiles belonged to a car ([Profile.carId]): only read by the migration ([io.github.jonathangtd.bimmerdata.cars.Cars.repair]),
+ * which then clears it.
  */
 @Serializable
 data class ProfileVehicle(
@@ -27,13 +28,19 @@ data class ProfileVehicle(
 }
 
 /**
- * A user profile: a car, its main ECUs and its own dashboard (phone and Android Auto pages).
+ * A user profile of one car: its main ECUs and its own dashboard (phone and Android Auto pages).
  * Examples: "E90 330i · Lambda" (msv70), "E90 330i · Knock" (msv70), "120d E87" (dde...).
  */
 @Serializable
 data class Profile(
     val id: String = newId(),
     val name: String,
+    /**
+     * The car it belongs to ([io.github.jonathangtd.bimmerdata.live.vehicle.Vehicle.id]). Empty only
+     * in files written before cars existed and in a profile created with no car at all: the store
+     * gives it one on the next read ([io.github.jonathangtd.bimmerdata.cars.Cars.repair]).
+     */
+    val carId: String = "",
     val vehicle: ProfileVehicle = ProfileVehicle(),
     /** Main ECUs (SGBD names, lower case, no extension): the card picker opens on them. */
     val ecus: List<String> = emptyList(),
@@ -62,6 +69,12 @@ data class ProfileSet(
     /** The active layout (empty when there is no profile). */
     fun activeDashboard(): Dashboard = active?.shownDashboard() ?: Dashboard()
 
+    /** The profiles of car [carId] only, with the active one if it is among them (what the profile screens list). */
+    fun forCar(carId: String?): ProfileSet {
+        val list = profiles.filter { it.carId == carId }
+        return copy(profiles = list, activeId = activeId?.takeIf { id -> list.any { it.id == id } })
+    }
+
     companion object {
         const val FORMAT_VERSION = 1
     }
@@ -75,11 +88,14 @@ object Profiles {
     const val MAX_PROFILES = 50
 
     /** Lower case, without `.prg` / `.grp`, no blanks or duplicates, at most [MAX_ECUS]. */
-    fun normalizeEcus(list: List<String>): List<String> = list
+    fun normalizeEcus(list: List<String>): List<String> = normalizeSgbds(list, MAX_ECUS)
+
+    /** SGBD names as [normalizeEcus] cleans them, at most [max] (also the ECU list of a car). */
+    fun normalizeSgbds(list: List<String>, max: Int): List<String> = list
         .map { it.trim().lowercase(Locale.ROOT).removeSuffix(".prg").removeSuffix(".grp") }
         .filter { it.isNotEmpty() && it.all { c -> c.isLetterOrDigit() || c == '_' || c == '-' } }
         .distinct()
-        .take(MAX_ECUS)
+        .take(max)
 
     fun cleanName(name: String): String = name.trim().replace(Regex("\\s+"), " ").take(MAX_NAME_LENGTH)
 
@@ -103,14 +119,14 @@ object Profiles {
         }
     }
 
-    /** Adds a profile and makes it active. */
+    /** Adds a profile to car [carId] and makes it active. */
     fun create(
         set: ProfileSet, name: String, vehicle: ProfileVehicle = ProfileVehicle(), ecus: List<String> = emptyList(),
-        nowMs: Long, dashboard: Dashboard = Dashboard(), graphs: List<Graph> = emptyList(),
+        nowMs: Long, dashboard: Dashboard = Dashboard(), graphs: List<Graph> = emptyList(), carId: String,
     ): Pair<ProfileSet, Profile> {
         require(set.profiles.size < MAX_PROFILES) { "At most $MAX_PROFILES profiles" }
         val p = Profile(
-            name = uniqueName(set, name), vehicle = cleanVehicle(vehicle), ecus = normalizeEcus(ecus),
+            name = uniqueName(set, name), carId = carId, vehicle = cleanVehicle(vehicle), ecus = normalizeEcus(ecus),
             dashboard = dashboard.copy(name = null), lastUsedMs = nowMs, graphs = graphs,
         )
         return set.copy(profiles = set.profiles + p, activeId = p.id) to p
@@ -142,11 +158,11 @@ object Profiles {
             )
         })
 
-    /** Removes [id]; if it was active, the most recently used one becomes active (or none). */
+    /** Removes [id]; if it was active, the most recently used one of the same car becomes active (or none). */
     fun delete(set: ProfileSet, id: String): ProfileSet {
-        if (set.profile(id) == null) return set
+        val gone = set.profile(id) ?: return set
         val left = set.profiles.filterNot { it.id == id }
-        val active = if (set.activeId == id) left.maxByOrNull { it.lastUsedMs }?.id else set.activeId
+        val active = if (set.activeId == id) left.filter { it.carId == gone.carId }.maxByOrNull { it.lastUsedMs }?.id else set.activeId
         return set.copy(profiles = left, activeId = active)
     }
 
@@ -165,15 +181,15 @@ object Profiles {
     }
 
     /**
-     * Writes [dashboard] into the active profile. Without a profile, one is created for a layout
-     * that has pages or a name (REST API writes), named after it or [defaultName]; an empty layout
-     * creates nothing.
+     * Writes [dashboard] into the active profile. Without a profile, one is created on car [carId]
+     * (the selected car; "" when there is none, see [Profile.carId]) for a layout that has pages or a
+     * name (REST API writes), named after it or [defaultName]; an empty layout creates nothing.
      */
-    fun writeActiveDashboard(set: ProfileSet, dashboard: Dashboard, defaultName: String, nowMs: Long): ProfileSet {
+    fun writeActiveDashboard(set: ProfileSet, dashboard: Dashboard, defaultName: String, nowMs: Long, carId: String): ProfileSet {
         set.activeId?.let { id -> if (set.profile(id) != null) return writeDashboard(set, id, dashboard) }
         val hasContent = dashboard.phonePages.isNotEmpty() || dashboard.carPages.isNotEmpty() || !dashboard.name.isNullOrBlank()
         if (!hasContent) return set
-        return create(set, dashboard.name?.takeIf { it.isNotBlank() } ?: defaultName, nowMs = nowMs, dashboard = dashboard).first
+        return create(set, dashboard.name?.takeIf { it.isNotBlank() } ?: defaultName, nowMs = nowMs, dashboard = dashboard, carId = carId).first
     }
 
     /**
@@ -185,24 +201,9 @@ object Profiles {
         return set.copy(profiles = set.profiles.map { if (it.id == profileId) it.copy(graphs = transform(it.graphs)) else it })
     }
 
-    /** Profiles linked to the car [vehicleId], most recently used first. */
-    fun forVehicle(set: ProfileSet, vehicleId: String): List<Profile> =
-        set.profiles.filter { it.vehicle.vehicleId.equals(vehicleId, ignoreCase = true) }.sortedByDescending { it.lastUsedMs }
-
-    /**
-     * Which profile to use for the car [vehicleId] that was just identified: null when no profile
-     * is linked to it, or when the active one already is (nothing to do); else the one used last.
-     */
-    fun autoSelect(set: ProfileSet, vehicleId: String): Profile? {
-        val candidates = forVehicle(set, vehicleId)
-        if (candidates.isEmpty() || candidates.any { it.id == set.activeId }) return null
-        return candidates.first()
-    }
-
-    /** Profiles to offer in Android Auto: those of the active profile's car, else all of them. */
+    /** Profiles to offer in Android Auto: those of the active profile's car, in list order (none without an active profile). */
     fun sameCar(set: ProfileSet): List<Profile> {
-        val car = set.active?.vehicle?.vehicleId ?: return set.profiles
-        val same = forVehicle(set, car).sortedBy { set.profiles.indexOf(it) }
-        return same.ifEmpty { set.profiles }
+        val car = set.active?.carId ?: return emptyList()
+        return set.profiles.filter { it.carId == car }
     }
 }

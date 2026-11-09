@@ -195,6 +195,7 @@ internal fun messageText(m: VehicleMessage): String {
         VehicleMessage.Kind.ClearFailed -> stringResource(R.string.veh_msg_clear_failed, d)
         VehicleMessage.Kind.NewVehicle -> stringResource(R.string.veh_msg_new_vehicle, d)
         VehicleMessage.Kind.Cancelled -> stringResource(R.string.veh_msg_cancelled)
+        VehicleMessage.Kind.Detected -> stringResource(R.string.cars_detected, d)
     }
 }
 

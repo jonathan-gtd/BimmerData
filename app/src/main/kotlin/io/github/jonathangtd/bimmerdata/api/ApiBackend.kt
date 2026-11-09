@@ -3,6 +3,7 @@
  */
 package io.github.jonathangtd.bimmerdata.api
 
+import io.github.jonathangtd.bimmerdata.cars.CarSpace
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.Page
 import io.github.jonathangtd.bimmerdata.dashboard.Target
@@ -66,6 +67,24 @@ interface ApiBackend {
      * same moment). [op] returns the new set and the result of the call.
      */
     fun <T> editProfiles(op: (ProfileSet) -> Pair<ProfileSet, T>): T
+
+    /** The user's cars and every profile together (each profile belongs to one car); the car routes use it. */
+    fun cars(): CarSpace
+
+    /**
+     * Read-modify-write of the cars and the profiles with no other writer in between (like
+     * [editProfiles]); [op] returns the new state and the result of the call.
+     */
+    fun <T> editCars(op: (CarSpace) -> Pair<CarSpace, T>): T
+
+    /** Name of the car made when a profile is created while there is no car at all. */
+    val defaultCarLabel: String get() = "My car"
+
+    /** Selects car [carId] and starts the detection of its ECUs (asynchronous); false when another operation on the car runs. */
+    fun startDetection(carId: String): Boolean = notAvailable("The ECU detection")
+
+    /** The running or last ECU detection ([startDetection]). */
+    fun detection(): DetectionView = notAvailable("The ECU detection")
 
     /** PNG of [RenderRequest.page] as the phone or the Android Auto screen would draw it. */
     fun renderPage(request: RenderRequest): ByteArray
@@ -209,6 +228,22 @@ data class TelegrafPatch(
 
 @Serializable
 data class TelegrafTest(val ok: Boolean, val message: String)
+
+/** ECU detection as seen through the API (schema "Detection" of [CarRoutes]). */
+@Serializable
+data class DetectionView(
+    val running: Boolean,
+    val carId: String? = null,
+    val step: String? = null,
+    val done: Int = 0,
+    val total: Int = 0,
+    val detail: String? = null,
+    val result: DetectionResultView? = null,
+    val message: String? = null,
+)
+
+@Serializable
+data class DetectionResultView(val carId: String, val ecus: Int, val keptInUse: List<String> = emptyList())
 
 /** Future vehicle detection plugs in here (detected ECUs are offered before the catalog ones). */
 fun interface DetectedEcuProvider {

@@ -46,10 +46,10 @@ class ProfilesScreenshotTest {
 
     private val set: ProfileSet = run {
         var s = ProfileSet()
-        s = Profiles.create(s, "E90 330i · Lambda", ProfileVehicle("E90", "330i", "AB12345"), listOf("msv70"), 1, Msv70Example.create()).first
-        s = Profiles.create(s, "E90 330i · Knock", ProfileVehicle("E90", "330i", "AB12345"), listOf("msv70"), 2).first
-        s = Profiles.create(s, "120d E87", ProfileVehicle("E87", "120d"), listOf("dde", "egs"), 3).first
-        s = Profiles.create(s, "Mini R50", ProfileVehicle("R50"), listOf("kms2000"), 4).first
+        s = Profiles.create(s, "E90 330i · Lambda", ProfileVehicle("E90", "330i"), listOf("msv70"), 1, Msv70Example.create(), carId = "car-e90").first
+        s = Profiles.create(s, "E90 330i · Knock", ProfileVehicle("E90", "330i"), listOf("msv70"), 2, carId = "car-e90").first
+        s = Profiles.create(s, "E90 330i · Gearbox", ProfileVehicle("E90", "330i"), listOf("msv70", "egs"), 3, carId = "car-e90").first
+        s = Profiles.create(s, "120d E87", ProfileVehicle("E87", "120d"), listOf("dde", "egs"), 4, carId = "car-e87").first
         Profiles.activate(s, s.profiles[0].id, 5)
     }
 
@@ -80,12 +80,15 @@ class ProfilesScreenshotTest {
 
     private val noActions = ProfileActions({}, {}, {}, {})
 
-    private fun tab(name: String, profiles: ProfileSet = set) = capture(name) {
-        ProfilesTabContent(profiles, onActivate = {}, onNew = {}, onImport = {}, actions = noActions)
+    /** What the profile screens show: the selected car's profiles. */
+    private val e90 = set.forCar("car-e90")
+
+    private fun tab(name: String, profiles: ProfileSet = e90) = capture(name) {
+        ProfilesTabContent(profiles, onActivate = {}, onNew = {}, onImport = {}, actions = noActions, car = "E90 330i")
     }
 
     private fun switchSheet(name: String) = capture(name, height = 620) {
-        SheetLike { ProfileSwitchContent(set, onActivate = {}, onNew = {}, onManage = {}) }
+        SheetLike { ProfileSwitchContent(e90, onActivate = {}, onNew = {}, onManage = {}, car = "E90 330i") }
     }
 
     private fun firstLaunch() = capture("profiles_first_launch.png") { NoProfile(onCreate = {}, onImport = {}) }
@@ -93,9 +96,7 @@ class ProfilesScreenshotTest {
     private fun editor() = capture("profiles_editor.png") {
         SheetLike {
             Box(Modifier.height(860.dp)) {
-                ProfileEditorContent(
-                    set.profiles[2], listOf(CarChoice("AB12345", "E90 330i"), CarChoice("ZZ99999", "120d")), { choices }, { _, _, _ -> },
-                )
+                ProfileEditorContent(set.profiles[3], EditorCar("120d", listOf("dde", "egs")), { choices }, { _, _, _, _ -> })
             }
         }
     }
@@ -129,7 +130,7 @@ class ProfilesScreenshotTest {
     @Test @Config(qualifiers = "fr-w411dp-h900dp-mdpi") fun profileEditorFrench() = capture("profiles_editor_fr.png") {
         SheetLike {
             Box(Modifier.height(860.dp)) {
-                ProfileEditorContent(set.profiles[2], listOf(CarChoice("AB12345", "E90 330i")), { choices }, { _, _, _ -> })
+                ProfileEditorContent(set.profiles[3], EditorCar("120d", emptyList()), { choices }, { _, _, _, _ -> })
             }
         }
     }

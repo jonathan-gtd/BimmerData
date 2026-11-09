@@ -5,9 +5,12 @@ package io.github.jonathangtd.bimmerdata.vehicle
 
 import android.annotation.SuppressLint
 import android.content.Context
+import io.github.jonathangtd.bimmerdata.cars.EcuUsage
 import io.github.jonathangtd.bimmerdata.files.EcuImporter
 import io.github.jonathangtd.bimmerdata.live.CableUnavailableException
 import io.github.jonathangtd.bimmerdata.live.LiveRepository
+import io.github.jonathangtd.bimmerdata.profiles.ProfileStore
+import io.github.jonathangtd.bimmerdata.live.vehicle.CarMatch
 import io.github.jonathangtd.bimmerdata.live.vehicle.DetectedEcuSource
 import io.github.jonathangtd.bimmerdata.live.vehicle.EcuFaults
 import io.github.jonathangtd.bimmerdata.live.vehicle.EcuSummary
@@ -16,6 +19,7 @@ import io.github.jonathangtd.bimmerdata.live.vehicle.Fault
 import io.github.jonathangtd.bimmerdata.live.vehicle.FaultDetail
 import io.github.jonathangtd.bimmerdata.live.vehicle.FaultService
 import io.github.jonathangtd.bimmerdata.live.vehicle.JobRunner
+import io.github.jonathangtd.bimmerdata.live.vehicle.ScanMerge
 import io.github.jonathangtd.bimmerdata.live.vehicle.UserConfirmation
 import io.github.jonathangtd.bimmerdata.live.vehicle.Vehicle
 import io.github.jonathangtd.bimmerdata.live.vehicle.VehicleScanner
@@ -58,11 +62,20 @@ sealed interface VehicleTask {
 data class VehicleMessage(val kind: Kind, val detail: String? = null) {
     enum class Kind {
         NoEcuFiles, NoCable, UsbDenied, ConnectFailed, ScanFailed, ScanCancelled, ReadFailed, Cleared, ClearFailed,
-        NewVehicle, Cancelled,
+        NewVehicle, Cancelled, Detected,
     }
 
-    val error: Boolean get() = kind !in setOf(Kind.Cleared, Kind.NewVehicle, Kind.Cancelled, Kind.ScanCancelled)
+    val error: Boolean get() = kind !in setOf(Kind.Cleared, Kind.NewVehicle, Kind.Cancelled, Kind.ScanCancelled, Kind.Detected)
 }
+
+/**
+ * ECUs of car [carId] the last detection did not find although its profiles use them: kept in its
+ * list (as added by hand) until the user says whether to take them out of those profiles.
+ */
+data class MissingEcus(val carId: String, val sgbds: List<String>)
+
+/** Outcome of the last detection that got a result: the car it went to, how many ECUs it found, those kept although not found. */
+data class DetectResult(val carId: String, val ecus: Int, val kept: List<String>)
 
 /** State of one fault detail (FS_LESEN_DETAIL). */
 sealed interface DetailState {
@@ -77,6 +90,10 @@ data class VehicleState(
     val message: VehicleMessage? = null,
     /** Fault details read in this session, by [detailKey]. */
     val details: Map<String, DetailState> = emptyMap(),
+    /** The question left by the last detection (null: none); the screens ask it ([dismissMissing] after the answer). */
+    val missingEcus: MissingEcus? = null,
+    /** Last successful detection (for the REST API), null before the first one. */
+    val lastDetect: DetectResult? = null,
 ) {
     val busy: Boolean get() = task != VehicleTask.Idle
     val current: Vehicle? get() = garage.current
@@ -88,14 +105,16 @@ data class VehicleState(
 }
 
 /**
- * Process-wide owner of the Faults tab: the user's vehicles (persisted, several cars), vehicle
- * scans, fault memory read / detail / clear.
+ * Process-wide owner of the user's cars (persisted, several cars), the detection of their ECUs
+ * (My cars) and the Faults tab: fault memory read / detail / clear.
  *
  * Cable: the app's single connection ([LiveRepository], cable or simulated E90). Every job is
  * slipped in between two read cycles of the live acquisition, which goes on; when nothing is
  * connected the first job connects in the last mode the user chose.
  *
- * Implements [DetectedEcuSource] for the rest of the app (ECUs of the current vehicle).
+ * Implements [DetectedEcuSource] for the rest of the app (ECUs of the current vehicle). Selecting,
+ * renaming, adding and deleting cars go through [io.github.jonathangtd.bimmerdata.cars.CarBook]:
+ * the profiles of each car change with it.
  */
 class VehicleRepository private constructor(context: Context) : DetectedEcuSource {
 
@@ -124,20 +143,32 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
         return VehicleTables(importer.ecuDir).also { tablesCache = stamp to it }
     }
 
+    /**
+     * The selected car's ECU list ([Vehicle.sgbds]) present in the ECU folder: the ECUs of the last
+     * scan whose SGBD was found, then those added by hand. The card picker and the GET /ecus route
+     * offer them first.
+     */
+    override fun sgbds(): List<String> = _state.value.garage.current?.let { v ->
+        (v.ecus.filter { it.sgbdAvailable }.mapNotNull { it.sgbd } + v.addedSgbds).distinct()
+    }.orEmpty()
+
     // ---- simple state changes ----
 
-    fun selectVehicle(id: String) = updateGarage { g -> if (g.vehicles.any { it.id == id }) g.copy(currentId = id) else g }
+    fun garage(): Garage = _state.value.garage
 
-    fun renameVehicle(id: String, label: String) {
-        val name = label.trim().take(40)
-        if (name.isEmpty()) return
-        updateGarage { g -> g.copy(vehicles = g.vehicles.map { if (it.id == id) it.copy(label = name) else it }) }
-    }
-
-    /** Forgets a vehicle and its last fault read. */
-    fun deleteVehicle(id: String) = updateGarage { g ->
-        val left = g.vehicles.filterNot { it.id == id }
-        g.copy(vehicles = left, faults = g.faults - id, currentId = if (g.currentId == id) left.firstOrNull()?.id else g.currentId)
+    /**
+     * Puts [next] in place of the garage if it still is [expected] (else false: something changed
+     * it meanwhile), and saves it. For [io.github.jonathangtd.bimmerdata.cars.CarBook].
+     */
+    fun replaceGarage(expected: Garage, next: Garage): Boolean {
+        while (true) {
+            val prev = _state.value
+            if (prev.garage != expected) return false
+            if (_state.compareAndSet(prev, prev.copy(garage = next))) {
+                save()
+                return true
+            }
+        }
     }
 
     /** The user's choice of vehicle SGBD (series) for the next scans of the current vehicle. */
@@ -155,16 +186,13 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
     fun dismissMessage() = _state.update { it.copy(message = null) }
 
     private fun updateGarage(change: (Garage) -> Garage) {
-        val next = _state.updateAndGet { it.copy(garage = change(it.garage)) }.garage
-        scope.launch(Dispatchers.IO) { store.save(next) }
+        _state.update { it.copy(garage = change(it.garage)) }
+        save()
     }
 
-    private inline fun MutableStateFlow<VehicleState>.updateAndGet(f: (VehicleState) -> VehicleState): VehicleState {
-        while (true) {
-            val prev = value
-            val next = f(prev)
-            if (compareAndSet(prev, next)) return next
-        }
+    /** Writes the garage as it is when the write runs, one write at a time: a later change is never overwritten by an earlier one. */
+    private fun save() {
+        scope.launch(Dispatchers.IO) { synchronized(store) { store.save(_state.value.garage) } }
     }
 
     private fun message(kind: VehicleMessage.Kind, detail: String? = null) = _state.update { it.copy(message = VehicleMessage(kind, detail)) }
@@ -173,8 +201,14 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
 
     // ---- operations on the car ----
 
-    /** Detects the car's ECUs, then reads all fault memories (ISTA "short test"). */
-    fun scan() = launchOperation { runner, tables ->
+    /**
+     * Detects the selected car's ECUs (full scan) and puts them in its ECU list
+     * ([CarMatch.mergeScan]: the car with that VIN, the selected one added by hand, or a new car).
+     * ECUs no longer found but used by the car's profiles stay in the list and are asked about
+     * ([VehicleState.missingEcus]). The fault memories are read afterwards from the Faults tab.
+     * Returns false when another operation runs (nothing started).
+     */
+    fun detect(): Boolean = launchOperation { runner, tables ->
         val previous = _state.value.current
         task(VehicleTask.Scanning(null))
         val preferred = previous?.takeIf { it.seriesByUser }?.seriesSgbd
@@ -184,15 +218,28 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
             message(if (result.cancelled) VehicleMessage.Kind.ScanCancelled else VehicleMessage.Kind.ScanFailed, result.error)
             return@launchOperation
         }
-        var isNew = false
+        val profiles = withContext(Dispatchers.IO) { ProfileStore.get(app).load() }.profiles
+        var merge: ScanMerge? = null
         updateGarage { g ->
-            val existing = g.vehicles.firstOrNull { it.id == found.id }
-            isNew = existing == null
-            val merged = if (existing != null) found.copy(label = existing.label) else found
-            g.copy(vehicles = if (existing != null) g.vehicles.map { if (it.id == found.id) merged else it } else g.vehicles + merged, currentId = found.id)
+            val m = CarMatch.mergeScan(g.vehicles, g.currentId, found) { id -> EcuUsage.usedSgbds(profiles.filter { it.carId == id }) }
+            merge = m
+            g.copy(vehicles = m.vehicles, currentId = m.car.id)
         }
-        if (isNew && previous != null) message(VehicleMessage.Kind.NewVehicle, found.label)
-        readAllFaults(runner, tables, _state.value.current ?: return@launchOperation)
+        val m = merge ?: return@launchOperation
+        _state.update {
+            it.copy(
+                lastDetect = DetectResult(m.car.id, m.car.ecus.size, m.kept),
+                missingEcus = m.kept.takeIf { k -> k.isNotEmpty() }?.let { k -> MissingEcus(m.car.id, k) },
+            )
+        }
+        if (m.isNew && previous != null) message(VehicleMessage.Kind.NewVehicle, m.car.label)
+        else message(VehicleMessage.Kind.Detected, m.car.ecus.size.toString())
+    }
+
+    /** The user answered about the first ECU of [VehicleState.missingEcus]. */
+    fun dismissMissing() = _state.update { s ->
+        val rest = s.missingEcus?.let { it.copy(sgbds = it.sgbds.drop(1)) }?.takeIf { it.sgbds.isNotEmpty() }
+        s.copy(missingEcus = rest)
     }
 
     /** Reads the fault memory of every ECU of the current vehicle. */
@@ -280,11 +327,6 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
         }
     }
 
-    /** Id of the known car with short VIN [vin] (see [Vehicle.id]), or null. */
-    fun vehicleIdForVin(vin: String): String? = _state.value.garage.vehicles.firstOrNull { v ->
-        v.id.equals(vin, ignoreCase = true) || v.vinShort.equals(vin, ignoreCase = true) || v.vin?.endsWith(vin, ignoreCase = true) == true
-    }?.id
-
     /**
      * Which of [sgbds] give no answer to IDENT (read-only) on the connected car. SGBDs without an
      * IDENT job or missing from the ECU folder are not probed. Empty when it could not check.
@@ -339,7 +381,7 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
 
     private suspend fun <T> forApi(block: suspend (JobRunner, VehicleTables, Vehicle) -> T): T = mutex.withLock {
         check(importer.importedFiles().isNotEmpty()) { "No ECU files imported" }
-        val vehicle = _state.value.current ?: throw IllegalStateException("No vehicle detected yet: scan the car in the Faults tab first")
+        val vehicle = _state.value.current?.takeIf { it.ecus.isNotEmpty() } ?: throw IllegalStateException("No ECU detected yet: detect the car's ECUs first (My cars, or POST /api/v1/cars/{car}/detect)")
         val tables = withContext(Dispatchers.IO) { tables().also { it.vehicleSgbds } }
         try {
             block(LiveRepository.get(app).jobRunner("API"), tables, vehicle)
@@ -365,9 +407,9 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
         s.copy(details = s.details.filterKeys { !it.startsWith(prefix) })
     }
 
-    /** Runs [block] with a connected runner; one operation at a time. */
-    private fun launchOperation(block: suspend (JobRunner, VehicleTables) -> Unit) {
-        if (job?.isActive == true) return
+    /** Runs [block] with a connected runner; one operation at a time (false: another one runs, nothing started). */
+    private fun launchOperation(block: suspend (JobRunner, VehicleTables) -> Unit): Boolean {
+        if (job?.isActive == true) return false
         job = scope.launch {
             mutex.withLock {
                 try {
@@ -381,6 +423,7 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
                 }
             }
         }
+        return true
     }
 
     private suspend fun withLink(block: suspend (JobRunner, VehicleTables) -> Unit) {

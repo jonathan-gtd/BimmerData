@@ -6,7 +6,12 @@ package io.github.jonathangtd.bimmerdata.dashboard
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.jonathangtd.bimmerdata.cars.CarBook
 import io.github.jonathangtd.bimmerdata.live.AcquisitionStatus
+import io.github.jonathangtd.bimmerdata.live.vehicle.Vehicle
+import io.github.jonathangtd.bimmerdata.vehicle.VehicleRepository
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import io.github.jonathangtd.bimmerdata.gauges.TrendWindow
 import io.github.jonathangtd.bimmerdata.gauges.GaugeType
 import io.github.jonathangtd.bimmerdata.live.EdiabasMeasurementCatalog
@@ -66,6 +71,13 @@ data class SgbdChoices(val detected: List<SgbdInfo>, val all: List<SgbdInfo>) {
             return SgbdChoices(detected, all)
         }
 
+        /** Only the SGBDs of a car's ECU list [carEcus] when it has one, else all of them. */
+        fun forCar(all: List<SgbdInfo>, carEcus: List<String>): SgbdChoices {
+            if (carEcus.isEmpty()) return SgbdChoices(emptyList(), all)
+            val wanted = carEcus.mapTo(HashSet()) { EdiabasMeasurementCatalog.normalize(it) }
+            return SgbdChoices(emptyList(), all.filter { it.name in wanted })
+        }
+
         /**
          * [list] filtered by [query]: every word must appear in the name or the description,
          * ignoring case and accents ("kombi e90", "getriebe", "n52"). Name matches first.
@@ -89,11 +101,23 @@ data class SgbdChoices(val detected: List<SgbdInfo>, val all: List<SgbdInfo>) {
 class DashboardViewModel(app: Application) : AndroidViewModel(app) {
     private val deps = dashboardDependencies(app)
     private val profileStore = ProfileStore.get(app)
+    private val cars = CarBook.get(app)
+    private val vehicles = VehicleRepository.get(app)
 
-    private val _profiles = MutableStateFlow(ProfileSet())
+    /** Every profile of every car, as last read or written. */
+    private val allProfiles = MutableStateFlow(ProfileSet())
 
-    /** Every profile and which one is active (profile list, card picker). */
-    val profiles: StateFlow<ProfileSet> = _profiles.asStateFlow()
+    /** The selected car (null: none yet). */
+    val selectedCar: StateFlow<Vehicle?> = vehicles.state.map { it.garage.current }.distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, vehicles.garage().current)
+
+    /** Every car, for "Copy to another car". */
+    val carList: StateFlow<List<Vehicle>> = vehicles.state.map { it.garage.vehicles }.distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, vehicles.garage().vehicles)
+
+    /** The selected car's profiles and the active one (profile lists and switch sheets show only these). */
+    val profiles: StateFlow<ProfileSet> = combine(allProfiles, selectedCar) { set, car -> set.forCar(car?.id) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ProfileSet())
 
     /** Set of profiles before the last delete, for "Undo". */
     @Volatile private var deletedFrom: ProfileSet? = null
@@ -191,7 +215,7 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
      * whole screen state (editor closed, first pages); the same profile goes through [DashboardSync].
      */
     private fun applyProfiles(set: ProfileSet) {
-        _profiles.value = set
+        allProfiles.value = set
         val shown = set.activeDashboard()
         _ui.update { ui ->
             if (ui.dashboard == null || ui.profileId != set.activeId) {
@@ -211,19 +235,26 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
     // ---- profiles ----
 
     /** ECUs of the active profile (the card picker opens on them). */
-    fun profileEcus(): List<String> = _profiles.value.active?.ecus.orEmpty()
+    fun profileEcus(): List<String> = allProfiles.value.active?.ecus.orEmpty()
 
-    /** Creates a profile and makes it active; null if it could not be saved. */
+    /** Creates a profile of the selected car and makes it active; null if it could not be saved. */
     suspend fun createProfile(name: String, vehicle: ProfileVehicle, ecus: List<String>): Profile? = withContext(Dispatchers.IO) {
         flushNow()
-        profileStore.create(name, vehicle, ecus)
+        runCatching { cars.createProfile(name, vehicle, ecus) }.getOrNull()
     }
 
+    /** Activates a profile; one of another car (a suggestion at connection) selects that car too. */
     suspend fun activateProfile(id: String) {
         withContext(Dispatchers.IO) {
             flushNow()
-            profileStore.activate(id)
+            cars.activateProfile(id)
         }
+    }
+
+    /** Copy of profile [id] onto car [carId]; null if it could not be saved. */
+    suspend fun copyProfile(id: String, carId: String): Profile? = withContext(Dispatchers.IO) {
+        flushNow()
+        runCatching { cars.copyProfile(id, carId) }.getOrNull()
     }
 
     suspend fun duplicateProfile(id: String): Profile? = withContext(Dispatchers.IO) {
@@ -231,10 +262,11 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
         profileStore.duplicate(id)
     }
 
-    suspend fun editProfile(id: String, name: String, vehicle: ProfileVehicle, ecus: List<String>) {
+    /** Changes a profile; [dropCards]: unticked ECUs whose cards and graph values the user chose to delete. */
+    suspend fun editProfile(id: String, name: String, vehicle: ProfileVehicle, ecus: List<String>, dropCards: List<String>) {
         withContext(Dispatchers.IO) {
             flushNow()
-            profileStore.edit(id, name, vehicle, ecus)
+            cars.editProfile(id, name, vehicle, ecus, dropCards)
         }
     }
 
@@ -254,13 +286,13 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** File content to share profile [id] (no VIN, no link to the user's car). */
-    fun exportProfile(id: String): String? = _profiles.value.profile(id)?.let { ProfileJson.export(it) }
+    /** File content to share profile [id] (no VIN, not the user's car). */
+    fun exportProfile(id: String): String? = allProfiles.value.profile(id)?.let { ProfileJson.export(it) }
 
-    /** Adds the profile of an exported file and makes it active; returns its name, or throws [IllegalArgumentException]. */
+    /** Adds the profile of an exported file to the selected car and makes it active; returns its name, or throws [IllegalArgumentException]. */
     suspend fun importProfile(text: String, fallbackName: String): String = withContext(Dispatchers.IO) {
         flushNow()
-        profileStore.import(text, fallbackName).name
+        cars.importProfile(text, fallbackName).name
     }
 
     /** Writes the shown layout at once (before a profile switch, so no edit is lost). */
@@ -293,6 +325,15 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
         val all = runCatching { deps.catalog.sgbdInfos() }.getOrDefault(emptyList())
         val detected = runCatching { DashboardHooks.detectedEcus.sgbds() }.getOrDefault(emptyList())
         SgbdChoices.of(all, detected)
+    }
+
+    /**
+     * SGBDs for the main ECUs of a profile: only those of the selected car's ECU list when it has
+     * one, else the whole ECU folder (the car then takes the ECUs picked, see Cars.bringEcus).
+     */
+    suspend fun profileEcuChoices(): SgbdChoices = withContext(Dispatchers.IO) {
+        val all = runCatching { deps.catalog.sgbdInfos() }.getOrDefault(emptyList())
+        SgbdChoices.forCar(all, selectedCar.value?.sgbds().orEmpty())
     }
 
     suspend fun measurements(sgbd: String): List<Measurement> {

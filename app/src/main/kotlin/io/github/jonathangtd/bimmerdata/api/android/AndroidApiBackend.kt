@@ -3,6 +3,12 @@
  */
 package io.github.jonathangtd.bimmerdata.api.android
 
+import io.github.jonathangtd.bimmerdata.api.DetectionResultView
+import io.github.jonathangtd.bimmerdata.api.DetectionView
+import io.github.jonathangtd.bimmerdata.vehicle.VehicleRepository
+import io.github.jonathangtd.bimmerdata.vehicle.VehicleTask
+import io.github.jonathangtd.bimmerdata.cars.CarBook
+import io.github.jonathangtd.bimmerdata.cars.CarSpace
 import io.github.jonathangtd.bimmerdata.net.LocalNetwork
 import android.content.Context
 import io.github.jonathangtd.bimmerdata.api.AcquisitionInfo
@@ -162,6 +168,33 @@ class AndroidApiBackend(
         val written = ProfileStore.get(app).update { current -> op(current).also { result = Result.success(it.second) }.first }
         checkNotNull(written) { "the profiles could not be written" }
         return result!!.getOrThrow()
+    }
+
+    override fun cars(): CarSpace = CarBook.get(app).snapshot()
+
+    /** [CarBook.edit]: under the profile store's lock, the garage swapped only if no scan changed it meanwhile. */
+    override fun <T> editCars(op: (CarSpace) -> Pair<CarSpace, T>): T = CarBook.get(app).edit(op)
+
+    override val defaultCarLabel: String get() = CarBook.get(app).defaultLabel()
+
+    override fun startDetection(carId: String): Boolean {
+        CarBook.get(app).select(carId)
+        return VehicleRepository.get(app).detect()
+    }
+
+    override fun detection(): DetectionView {
+        val s = VehicleRepository.get(app).state.value
+        val progress = (s.task as? VehicleTask.Scanning)?.progress
+        return DetectionView(
+            running = s.task is VehicleTask.Scanning,
+            carId = s.garage.currentId,
+            step = if (s.task is VehicleTask.Scanning) progress?.step?.name?.replaceFirstChar { it.lowercase() } ?: "connecting" else null,
+            done = progress?.done ?: 0,
+            total = progress?.total ?: 0,
+            detail = progress?.detail,
+            result = s.lastDetect?.let { DetectionResultView(it.carId, it.ecus, it.kept) },
+            message = s.message?.let { m -> m.kind.name.replaceFirstChar { it.lowercase() } + (m.detail?.let { ": $it" } ?: "") },
+        )
     }
 
     override fun renderPage(request: RenderRequest): ByteArray = renderer.render(request)

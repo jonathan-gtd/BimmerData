@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -34,6 +35,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -46,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -57,6 +60,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.jonathangtd.bimmerdata.R
+import io.github.jonathangtd.bimmerdata.cars.EcuUsage
+import io.github.jonathangtd.bimmerdata.live.vehicle.Vehicle
 import io.github.jonathangtd.bimmerdata.dashboard.SgbdChoices
 import io.github.jonathangtd.bimmerdata.profiles.Profile
 import io.github.jonathangtd.bimmerdata.profiles.ProfileSet
@@ -65,8 +70,10 @@ import io.github.jonathangtd.bimmerdata.profiles.Profiles
 import io.github.jonathangtd.bimmerdata.ui.BarlowCondensed
 import io.github.jonathangtd.bimmerdata.ui.Cockpit
 
-/** A car of the Faults tab a profile can be linked to. */
-internal data class CarChoice(val id: String, val label: String)
+/** The car a profile belongs to, as the profile editor needs it: its name, ECU list and the series / model it was given. */
+internal data class EditorCar(val label: String, val ecus: List<String>, val series: String? = null, val model: String? = null)
+
+internal fun Vehicle.toEditorCar() = EditorCar(label, sgbds(), series, model)
 
 /** One line of a profile: car and ECUs ("E90 330i · MSV70"). */
 @Composable
@@ -112,29 +119,38 @@ internal class ProfileActions(
     val onDuplicate: (String) -> Unit,
     val onExport: (String) -> Unit,
     val onDelete: (String) -> Unit,
+    /** "Copy to another car"; null hides it (a single car). */
+    val onCopyTo: ((String) -> Unit)? = null,
 )
 
 /**
- * Quick switch from the dashboard header: tap a profile to make it active, or create one; the
- * full management (edit, duplicate, export, import, delete) is the Profiles tab ([onManage]).
+ * Quick switch from the dashboard header: tap a profile of the selected car to make it active, or
+ * create one; "Change car" opens My cars; the full management (edit, duplicate, export, import,
+ * delete) is the Profiles tab ([onManage]).
  */
 @Composable
 internal fun ProfileSwitchSheet(
     set: ProfileSet,
+    car: String?,
     onDismiss: () -> Unit,
     onActivate: (String) -> Unit,
     onNew: () -> Unit,
     onManage: () -> Unit,
+    onChangeCar: () -> Unit,
 ) {
     CockpitSheet(onDismiss) {
-        ProfileSwitchContent(set, onActivate, onNew, onManage)
+        ProfileSwitchContent(set, onActivate, onNew, onManage, car, onChangeCar)
     }
 }
 
 @Composable
-internal fun ProfileSwitchContent(set: ProfileSet, onActivate: (String) -> Unit, onNew: () -> Unit, onManage: () -> Unit) {
+internal fun ProfileSwitchContent(
+    set: ProfileSet, onActivate: (String) -> Unit, onNew: () -> Unit, onManage: () -> Unit,
+    car: String? = null, onChangeCar: () -> Unit = {},
+) {
     Column(Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
         SheetHeader(stringResource(R.string.ptab_switch_title))
+        CarLine(car, onChangeCar, Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp))
         LazyColumn(Modifier.fillMaxWidth().heightIn(max = 480.dp).padding(horizontal = 16.dp)) {
             items(set.profiles, key = { it.id }) { p ->
                 ProfileRow(p, active = p.id == set.activeId, onActivate = onActivate, actions = null)
@@ -194,6 +210,7 @@ internal fun ProfileRow(p: Profile, active: Boolean, onActivate: (String) -> Uni
                 if (!active) ProfileMenuItem(R.drawable.ic_check, stringResource(R.string.ptab_activate)) { menu = false; onActivate(p.id) }
                 ProfileMenuItem(R.drawable.ic_edit, stringResource(R.string.profile_edit)) { menu = false; actions.onEdit(p.id) }
                 ProfileMenuItem(R.drawable.ic_pages, stringResource(R.string.profile_duplicate)) { menu = false; actions.onDuplicate(p.id) }
+                actions.onCopyTo?.let { copy -> ProfileMenuItem(R.drawable.ic_share, stringResource(R.string.cars_copy_to)) { menu = false; copy(p.id) } }
                 ProfileMenuItem(R.drawable.ic_download, stringResource(R.string.profile_export)) { menu = false; actions.onExport(p.id) }
                 ProfileMenuItem(R.drawable.ic_delete, stringResource(R.string.profile_delete)) { menu = false; actions.onDelete(p.id) }
             }
@@ -212,34 +229,37 @@ private fun ProfileMenuItem(icon: Int, text: String, onClick: () -> Unit) {
 }
 
 /**
- * New profile ([initial] null) or changes of one: name, car (series, model, optional link to a car
- * of the Faults tab) and ECUs, picked from the detected ones or the whole ECU folder.
+ * New profile ([initial] null) or changes of one, on its [car]: name, series and model (metadata of
+ * shared files) and main ECUs, picked from the car's ECU list ([loadChoices] gives only those when
+ * the car has one, else the whole ECU folder: the car then takes them). Unticking an ECU that still
+ * has cards in the profile asks first; "Remove" deletes those cards on save ([onSave]'s dropCards).
  */
 @Composable
 internal fun ProfileEditorSheet(
     initial: Profile?,
-    cars: List<CarChoice>,
+    car: EditorCar?,
     loadChoices: suspend () -> SgbdChoices,
     onDismiss: () -> Unit,
-    onSave: (name: String, vehicle: ProfileVehicle, ecus: List<String>) -> Unit,
+    onSave: (name: String, vehicle: ProfileVehicle, ecus: List<String>, dropCards: List<String>) -> Unit,
 ) {
     CockpitSheet(onDismiss) {
-        ProfileEditorContent(initial, cars, loadChoices, onSave)
+        ProfileEditorContent(initial, car, loadChoices, onSave)
     }
 }
 
 @Composable
 internal fun ProfileEditorContent(
     initial: Profile?,
-    cars: List<CarChoice>,
+    car: EditorCar?,
     loadChoices: suspend () -> SgbdChoices,
-    onSave: (name: String, vehicle: ProfileVehicle, ecus: List<String>) -> Unit,
+    onSave: (name: String, vehicle: ProfileVehicle, ecus: List<String>, dropCards: List<String>) -> Unit,
 ) {
     var name by remember { mutableStateOf(initial?.name.orEmpty()) }
-    var series by remember { mutableStateOf(initial?.vehicle?.series.orEmpty()) }
-    var model by remember { mutableStateOf(initial?.vehicle?.model.orEmpty()) }
-    var carId by remember { mutableStateOf(initial?.vehicle?.vehicleId) }
+    var series by remember { mutableStateOf(initial?.vehicle?.series ?: car?.series.orEmpty()) }
+    var model by remember { mutableStateOf(initial?.vehicle?.model ?: car?.model.orEmpty()) }
     val ecus = remember { mutableStateListOf<String>().apply { addAll(initial?.ecus.orEmpty()) } }
+    val dropCards = remember { mutableStateListOf<String>() }
+    var asking by remember { mutableStateOf<Pair<String, Int>?>(null) }
     var nameError by remember { mutableStateOf(false) }
     val choices by produceState<SgbdChoices?>(null) { value = loadChoices() }
 
@@ -251,7 +271,7 @@ internal fun ProfileEditorContent(
                     stringResource(if (initial == null) R.string.profile_create_button else R.string.save),
                     onClick = {
                         if (name.isBlank()) nameError = true
-                        else onSave(name, ProfileVehicle(series, model, carId), ecus.toList())
+                        else onSave(name, ProfileVehicle(series, model), ecus.toList(), dropCards.filter { it !in ecus })
                     },
                     icon = R.drawable.ic_check, color = Cockpit.OnAccent, background = Cockpit.Accent,
                 )
@@ -276,13 +296,9 @@ internal fun ProfileEditorContent(
                     label = { Text(stringResource(R.string.profile_model)) }, modifier = Modifier.weight(1f), colors = fieldColors(),
                 )
             }
-            if (cars.isNotEmpty()) {
-                SectionTitle(stringResource(R.string.profile_car_link))
-                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Chip(stringResource(R.string.profile_car_link_none), selected = carId == null, onClick = { carId = null })
-                    cars.forEach { c -> Chip(c.label, selected = carId == c.id, onClick = { carId = c.id }) }
-                }
-                Text(stringResource(R.string.profile_car_link_hint), color = Cockpit.Muted, fontSize = 12.sp, lineHeight = 16.sp)
+            if (car != null) {
+                SectionTitle(stringResource(R.string.cars_car))
+                Text(car.label, color = Cockpit.Text, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
             }
             SectionTitle(stringResource(R.string.profile_ecus))
             if (ecus.isEmpty()) {
@@ -290,11 +306,21 @@ internal fun ProfileEditorContent(
             } else {
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ecus.forEach { e ->
-                        Chip(e.uppercase(), selected = true, onClick = { ecus.remove(e) }, removeLabel = stringResource(R.string.profile_ecu_remove, e.uppercase()))
+                        Chip(e.uppercase(), selected = true, removeLabel = stringResource(R.string.profile_ecu_remove, e.uppercase()), onClick = {
+                            // its cards and graph values stay unless the user says to delete them
+                            val used = initial?.let { EcuUsage.use(it, e) }?.let { it.cards + it.graphSeries } ?: 0
+                            if (used > 0 && e !in dropCards) asking = e to used else ecus.remove(e)
+                        })
                     }
                 }
             }
             Text(stringResource(R.string.profile_ecus_hint), color = Cockpit.Muted, fontSize = 12.sp, lineHeight = 16.sp)
+            if (car != null) {
+                Text(
+                    stringResource(if (car.ecus.isEmpty()) R.string.cars_editor_open else R.string.cars_editor_restricted, car.label),
+                    color = Cockpit.Muted, fontSize = 12.sp, lineHeight = 16.sp,
+                )
+            }
         }
         Spacer(Modifier.height(4.dp))
         Box(Modifier.fillMaxWidth().weight(1f)) {
@@ -302,6 +328,34 @@ internal fun ProfileEditorContent(
                 if (picked !in ecus && ecus.size < Profiles.MAX_ECUS) ecus.add(picked)
             }
         }
+    }
+    asking?.let { (sgbd, n) ->
+        AlertDialog(
+            onDismissRequest = { asking = null }, containerColor = Cockpit.Card,
+            text = { Text(pluralStringResource(R.plurals.cars_ecu_profile_cards, n, n, sgbd.uppercase()), color = Cockpit.Text, fontSize = 15.sp, lineHeight = 21.sp) },
+            confirmButton = {
+                TextButton(onClick = { ecus.remove(sgbd); dropCards.add(sgbd); asking = null }, modifier = Modifier.heightIn(min = MinTouch)) {
+                    Text(stringResource(R.string.cars_ecu_remove), color = Cockpit.Danger, fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { asking = null }, modifier = Modifier.heightIn(min = MinTouch)) { Text(stringResource(R.string.cancel), color = Cockpit.Text) }
+            },
+        )
+    }
+}
+
+/** The selected car's name and a "Change car" button (to My cars), above a list of its profiles. */
+@Composable
+internal fun CarLine(car: String?, onChangeCar: () -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Icon(painterResource(R.drawable.ic_profile), contentDescription = null, tint = Cockpit.Muted, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(
+            car ?: stringResource(R.string.cars_empty_title), color = Cockpit.Text, fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
+            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
+        )
+        PillButton(stringResource(R.string.cars_change), onClick = onChangeCar, color = Cockpit.Accent)
     }
 }
 

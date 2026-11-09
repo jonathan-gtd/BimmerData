@@ -2,10 +2,6 @@
 <!-- Vehicle detection and fault memory (Faults tab). -->
 <resources>
     <string name="veh_title">Vehicle</string>
-    <string name="veh_none_title">No vehicle yet</string>
-    <string name="veh_none_text">Then scan: every ECU of the car is found and its fault memory is read.</string>
-    <string name="veh_scan">Scan vehicle</string>
-    <string name="veh_rescan">Scan again</string>
     <string name="veh_read_faults">Read faults</string>
     <string name="veh_clear_all">Clear all</string>
     <string name="veh_share">Share</string>
@@ -130,7 +126,7 @@
     <string name="veh_series_auto">%1$s (detected)</string>
     <string name="veh_forget">Forget this vehicle</string>
     <string name="veh_forget_title">Forget %1$s?</string>
-    <string name="veh_forget_text">Its ECU list and last fault read are removed from this phone. Nothing is sent to the car.</string>
+    <string name="veh_forget_text">Its profiles (pages and graphs), its ECU list and its fault reports are deleted from this phone. Nothing is sent to the car.</string>
     <string name="veh_forget_confirm">Forget</string>
     <string name="veh_switch">Your vehicles</string>
 

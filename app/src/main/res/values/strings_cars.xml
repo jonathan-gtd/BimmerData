@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- My cars: the user's cars, each with its own profiles and ECU list. -->
+<resources>
+    <string name="cars_title">My cars</string>
+    <string name="cars_intro">Each car has its own profiles, ECU list and fault reports. When the app connects, it reads the car’s VIN and switches to that car. Tap a car to show it; ⋮ to detect its ECUs, set them by hand, rename it or delete it.</string>
+    <string name="cars_add">Add a car</string>
+    <string name="cars_empty_title">No car yet</string>
+    <string name="cars_empty_hint">Connect to your car: the app reads its VIN and adds it by itself. You can also add it by hand now; its VIN is read at the first connection.</string>
+    <string name="cars_selected">Shown</string>
+    <string name="cars_vin">VIN …%1$s</string>
+    <string name="cars_vin_unknown">VIN not read yet</string>
+    <plurals name="cars_profiles">
+        <item quantity="one">%d profile</item>
+        <item quantity="other">%d profiles</item>
+    </plurals>
+    <plurals name="cars_ecus">
+        <item quantity="one">%d ECU</item>
+        <item quantity="other">%d ECUs</item>
+    </plurals>
+    <string name="cars_no_ecus">no ECU list yet</string>
+    <string name="cars_actions">Actions for %1$s</string>
+    <string name="cars_select">Show this car</string>
+    <string name="cars_rename">Rename</string>
+    <string name="cars_ecus_action">ECUs</string>
+    <string name="cars_delete">Delete</string>
+    <string name="cars_delete_title">Delete %1$s?</string>
+    <plurals name="cars_delete_text">
+        <item quantity="one">Its %d profile (pages and graphs) and its fault reports are deleted from this phone too. Nothing is sent to the car.</item>
+        <item quantity="other">Its %d profiles (pages and graphs) and its fault reports are deleted from this phone too. Nothing is sent to the car.</item>
+    </plurals>
+    <string name="cars_deleted">%1$s deleted</string>
+    <string name="cars_label">Name</string>
+    <string name="cars_label_placeholder">e.g. Daily, Track car</string>
+    <string name="cars_label_required">Give the car a name</string>
+    <string name="cars_series">Series</string>
+    <string name="cars_model">Model</string>
+    <string name="cars_add_hint">Its VIN is read at its first connection, and ⋮ › Detect ECUs fills its ECU list.</string>
+    <string name="cars_default_name">My car</string>
+    <string name="cars_vin_name">Car %1$s</string>
+    <string name="cars_change">Change car</string>
+    <string name="cars_car">Car</string>
+    <string name="cars_ecus_title">ECUs of %1$s</string>
+    <string name="cars_ecus_scanned">Found by the last scan</string>
+    <string name="cars_ecus_added">Added by hand</string>
+    <string name="cars_ecus_none">No ECU yet: detect them (⋮ › Detect ECUs, connected to the car), or pick them below.</string>
+    <string name="cars_ecus_hint">Its profiles pick their main ECUs from this list. A detection replaces the ECUs it finds; those added by hand stay. Tap one added by hand to remove it.</string>
+    <string name="cars_ecu_chip_remove">Remove %1$s</string>
+    <string name="cars_editor_restricted">Only the ECUs of %1$s are offered (My cars › ⋮ › ECUs adds others).</string>
+    <string name="cars_editor_open">%1$s has no ECU list yet: the ECUs picked here become its list (My cars › Detect ECUs fills it too).</string>
+    <string name="cars_copy_to">Copy to another car</string>
+    <string name="cars_copy_title">Copy “%1$s” to</string>
+    <string name="cars_copied">Copied to %1$s</string>
+    <string name="cars_switched">%1$s recognized · profile “%2$s”</string>
+    <string name="cars_switched_no_profile">%1$s recognized (no profile yet)</string>
+    <string name="cars_new_detected">New car detected: %1$s</string>
+    <string name="cars_open">My cars</string>
+    <string name="cars_detect">Detect ECUs</string>
+    <string name="cars_detected">ECUs detected: %1$s</string>
+    <string name="cars_detect_needed_title">Detect this car’s ECUs first</string>
+    <string name="cars_detect_needed_text">The Faults tab reads the ECUs of the car’s list. The detection takes up to a minute, ignition on; it needs the ECU files and the connection.</string>
+    <string name="cars_ecu_lost_scan">The detection did not find %1$s in this car.</string>
+    <string name="cars_ecu_lost_hand">%1$s leaves the ECU list of this car.</string>
+    <plurals name="cars_ecu_used">
+        <item quantity="one">%1$d profile uses it (%2$s).</item>
+        <item quantity="other">%1$d profiles use it (%2$s).</item>
+    </plurals>
+    <plurals name="cars_cards">
+        <item quantity="one">%d card</item>
+        <item quantity="other">%d cards</item>
+    </plurals>
+    <string name="cars_ecu_remove_question">Remove %1$s from these profiles? Its cards and graph values are deleted.</string>
+    <string name="cars_ecu_remove">Remove</string>
+    <string name="cars_ecu_keep">Keep</string>
+    <plurals name="cars_ecu_profile_cards">
+        <item quantity="one">%1$d card or graph value of %2$s is in this profile. Remove %2$s and delete it?</item>
+        <item quantity="other">%1$d cards or graph values of %2$s are in this profile. Remove %2$s and delete them?</item>
+    </plurals>
+    <plurals name="cars_ecu_removed">
+        <item quantity="one">%2$s removed from %1$d profile</item>
+        <item quantity="other">%2$s removed from %1$d profiles</item>
+    </plurals>
+</resources>

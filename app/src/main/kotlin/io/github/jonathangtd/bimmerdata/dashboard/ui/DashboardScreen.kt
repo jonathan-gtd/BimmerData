@@ -131,6 +131,7 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
     val connection by vm.connection.collectAsStateWithLifecycle()
     val index by vm.measurementIndex.collectAsStateWithLifecycle()
     val profiles by vm.profiles.collectAsStateWithLifecycle()
+    val selectedCar by vm.selectedCar.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val appSettings by remember { AppSettings.get(context) }.state.collectAsStateWithLifecycle()
     val res = LocalResources.current
@@ -166,11 +167,16 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
         }
     }
 
-    // Automatic profile choice and ECU check at connection (ProfileRuntime).
+    // Car recognized by its VIN, profile choice and ECU check at connection (ProfileRuntime).
     LaunchedEffect(Unit) {
         ProfileRuntime.notices.collect { n ->
             when (n) {
-                is ProfileNotice.Switched -> message(res.getString(R.string.profile_switched, n.name))
+                is ProfileNotice.CarSwitched -> message(
+                    if (n.profile != null) res.getString(R.string.cars_switched, n.car, n.profile) else res.getString(R.string.cars_switched_no_profile, n.car),
+                )
+                is ProfileNotice.NewCar -> message(
+                    res.getString(R.string.cars_new_detected, n.car), actionLabel = res.getString(R.string.cars_open), action = { navigator.openCars() },
+                )
                 is ProfileNotice.Suggest -> message(
                     res.getString(R.string.profile_suggest, n.name), actionLabel = res.getString(R.string.profile_suggest_action),
                     action = { vm.activateProfile(n.id) },
@@ -271,7 +277,7 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                 EditorHeader(target = ui.target, onTarget = vm::setTarget, onDone = { vm.setEditing(false) })
             } else {
                 DashboardHeader(
-                    title = dashboard.title(stringResource(R.string.app_name)),
+                    title = dashboard.title(stringResource(R.string.app_name)), car = selectedCar?.label,
                     onRename = { sheet = if (noProfile) Sheet.EditProfile(null) else Sheet.Profiles },
                     switchable = !noProfile,
                     status = status, rec = rec,
@@ -467,7 +473,11 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
             onDismiss = { sheet = null },
         )
         Sheet.Profiles -> ProfileSwitchSheet(
-            set = profiles, onDismiss = { sheet = null },
+            set = profiles, car = selectedCar?.label, onDismiss = { sheet = null },
+            onChangeCar = {
+                sheet = null
+                navigator.openCars()
+            },
             onActivate = { id ->
                 sheet = null
                 scope.launch { vm.activateProfile(id) }
@@ -480,13 +490,12 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
         )
         is Sheet.EditProfile -> {
             val editing = s.id?.let { profiles.profile(it) }
-            val cars = rememberCarChoices()
             ProfileEditorSheet(
-                initial = editing, cars = cars, loadChoices = { vm.sgbdChoices() }, onDismiss = { sheet = null },
-                onSave = { name, vehicle, ecus ->
+                initial = editing, car = selectedCar?.toEditorCar(), loadChoices = { vm.profileEcuChoices() }, onDismiss = { sheet = null },
+                onSave = { name, vehicle, ecus, dropCards ->
                     sheet = null
                     scope.launch {
-                        if (editing == null) vm.createProfile(name, vehicle, ecus) else vm.editProfile(editing.id, name, vehicle, ecus)
+                        if (editing == null) vm.createProfile(name, vehicle, ecus) else vm.editProfile(editing.id, name, vehicle, ecus, dropCards)
                     }
                 },
             )
@@ -499,15 +508,6 @@ internal fun profileFileName(name: String): String {
     val slug = java.text.Normalizer.normalize(name, java.text.Normalizer.Form.NFD).replace(Regex("\\p{M}+"), "")
         .replace(Regex("[^A-Za-z0-9]+"), "-").trim('-').lowercase().take(40)
     return "bimmerdata-profile" + (if (slug.isEmpty()) "" else "-$slug") + ".json"
-}
-
-/** Cars of the Faults tab, for linking a profile to one. */
-@Composable
-internal fun rememberCarChoices(): List<CarChoice> {
-    val context = LocalContext.current
-    val repo = remember { io.github.jonathangtd.bimmerdata.vehicle.VehicleRepository.get(context) }
-    val state by repo.state.collectAsStateWithLifecycle()
-    return state.garage.vehicles.map { v -> CarChoice(v.id, v.label) }
 }
 
 /** Opens the add-card flow if the page has room, else reports why. */
@@ -524,12 +524,14 @@ private fun addSheetOrMessage(res: Resources, t: Target, page: Page, col: Int?, 
 }
 
 /**
- * Title, recording and edit buttons, then the connection pill ([ConnectionPillContent]): a big
- * "Connect" when disconnected, the colored state with the read rate when connected.
+ * The selected car ([car], small, above), the profile [title], recording and edit buttons, then the
+ * connection pill ([ConnectionPillContent]): a big "Connect" when disconnected, the colored state
+ * with the read rate when connected.
  */
 @Composable
 internal fun DashboardHeader(
     title: String, onRename: () -> Unit, status: AcquisitionStatus, rec: RecordingState,
+    car: String? = null,
     switchable: Boolean = true,
     onRecord: () -> Unit, onEdit: () -> Unit,
     connection: LiveConnection, lastMode: LiveMode?, onConnect: (LiveMode) -> Unit, onDisconnect: () -> Unit,
@@ -538,18 +540,18 @@ internal fun DashboardHeader(
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             // The profile name: tapping it switches profile (chevron), or creates the first one.
             val switchLabel = stringResource(if (switchable) R.string.ptab_switch_title else R.string.profile_create)
-            Row(
-                Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).clickable(role = Role.Button, onClickLabel = switchLabel, onClick = onRename),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    title, color = Cockpit.Text, fontFamily = BarlowCondensed,
-                    fontWeight = FontWeight.SemiBold, fontSize = 22.sp, letterSpacing = 0.5.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false),
-                )
-                if (switchable) {
-                    Spacer(Modifier.width(4.dp))
-                    Icon(painterResource(R.drawable.ic_chevron_down), contentDescription = null, tint = Cockpit.Muted, modifier = Modifier.size(22.dp))
+            Column(Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).clickable(role = Role.Button, onClickLabel = switchLabel, onClick = onRename)) {
+                if (car != null) Text(car, color = Cockpit.Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        title, color = Cockpit.Text, fontFamily = BarlowCondensed,
+                        fontWeight = FontWeight.SemiBold, fontSize = 22.sp, letterSpacing = 0.5.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    if (switchable) {
+                        Spacer(Modifier.width(4.dp))
+                        Icon(painterResource(R.drawable.ic_chevron_down), contentDescription = null, tint = Cockpit.Muted, modifier = Modifier.size(22.dp))
+                    }
                 }
             }
             // starting a recording: ask first for the notification that says it keeps running off screen

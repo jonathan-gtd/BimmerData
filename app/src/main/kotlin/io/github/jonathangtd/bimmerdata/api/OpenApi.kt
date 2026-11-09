@@ -194,7 +194,8 @@ internal object OpenApi {
         SetupRoutes.TAG to "Setting the app up without tapping the phone: which permissions the user still has to allow, and the EDIABAS ECU files (one file per upload, or the import of a folder put on the phone).",
         "Live data" to "ECUs, measurements and live values. Values are only read while someone shows or requests them: the K-line is slow (≈ 10–40 reads/s in total), so request only what you need.",
         "Dashboard" to "Card layouts of the phone and of Android Auto, of the active profile. Changes are saved at once; Android Auto follows them live.",
-        "Profiles" to "A profile is a car, its main ECUs and its own phone and Android Auto pages. One is active at a time: the dashboard routes act on it.",
+        "Cars" to "The user's cars (one per VIN): added when the app reads an unknown VIN at connection, by a scan of the Faults tab, or by hand. One is selected: the profiles, the Faults tab and the Telegraf `car` tag follow it. Each car has its own profiles and its ECU list.",
+        "Profiles" to "A profile belongs to one car: its main ECUs (from the car's ECU list) and its own phone and Android Auto pages. One is active at a time, always one of the selected car's: the dashboard routes act on it.",
         "Connection" to "Connect to the car (USB cable or Deep OBD Bluetooth adapter) or to the built-in simulated car, and record CSV logs.",
         "Settings" to "App settings that may be changed remotely. API settings (enable, port, token, scopes) can only be changed on the phone.",
         "Export" to "Export of the live values to Telegraf (line protocol over HTTP), which writes them to TimescaleDB for Grafana. See docs/TELEGRAF.md in the BimmerData repository.",
@@ -212,7 +213,7 @@ BimmerData reads live data from BMW ECUs (E-series, through a USB cable or a Dee
 5. Read values: `POST /api/v1/values/read` with `{"ids":["<sgbd>/<id>"]}` waits for fresh samples; add `"seconds":10` to sample for a while and get min / max / mean.
 
 ## Building dashboards
-- Layouts belong to **profiles** (a car, its main ECUs and its pages; `GET /api/v1/profiles`). The dashboard routes act on the active profile; `POST /api/v1/profiles/{profile}/activate` switches the phone and Android Auto to another one. A fresh install has no profile: `POST /api/v1/profiles` creates one (a `PUT /api/v1/dashboard` without profile creates one too).
+- **Cars → profiles → pages.** Layouts belong to **profiles**, and each profile to one **car** (`GET /api/v1/cars`; the app adds a car when it reads an unknown VIN at connection, or `POST /api/v1/cars` adds one by hand). `GET /api/v1/profiles` lists the selected car's profiles; the dashboard routes act on the active profile, always one of the selected car's. `POST /api/v1/profiles/{profile}/activate` (or `POST /api/v1/cars/{car}/select`) switches the phone and Android Auto. A fresh install has no car and no profile: `POST /api/v1/profiles` creates one (and a car "My car"; a `PUT /api/v1/dashboard` without profile does too). A profile's `ecus` must come from its car's ECU list (`ecus` of the car).
 - `GET /api/v1/dashboard` returns the whole layout: `phonePages` (portrait phone, grid up to ${GridLimits.Phone.maxColumns}×${GridLimits.Phone.maxRows}, ${GridLimits.Phone.maxCards} cards) and `carPages` (Android Auto, landscape, grid up to ${GridLimits.Car.maxColumns}×${GridLimits.Car.maxRows}, at most ${GridLimits.Car.maxCards} big cards). **Android Auto shows the same cards as the phone** (order free): after changing phone pages, call `POST /api/v1/dashboard/car/from-phone` (${GridLimits.Car.maxCards} cards per Android Auto page); never leave a card on one side only.
 - A page is a `columns × rows` grid; a card covers `colSpan × rowSpan` cells from its top-left cell (`col`, `row`, 0-based). Cards may not overlap or leave the grid.
 - Card types (`GET /api/v1/card-types`): ${GaugeType.entries.joinToString { it.name }}. Most take one measurement; `BipolarBar` takes 1–4 (e.g. fuel trims per bank), `MultiValue` 2–3.
@@ -221,7 +222,7 @@ BimmerData reads live data from BMW ECUs (E-series, through a USB cable or a Dee
 - `{page}` is a page id or its 0-based index; `{target}` is `phone` or `car`.
 
 ## Setting the app up
-An agent can set the app up without the user tapping anything, except what Android reserves to the user: `GET /api/v1/permissions` (what to ask the user to allow) → ECU files (`POST /api/v1/ecu-files/import-from-device` after an `adb push` of the Ecu folder, or `PUT /api/v1/ecu-files/{name}` file by file) → Bluetooth adapter (`GET /api/v1/bluetooth/devices`, `PUT /api/v1/bluetooth/adapter`) → Telegraf (`PATCH /api/v1/export/telegraf`, `PUT /api/v1/export/telegraf/auth`) → profiles and graphs (`POST /api/v1/profiles/import`, `…/graphs`) → `POST /api/v1/connect`. The API's own settings (enable, port, token, scopes, HTTPS) are read-only here.
+An agent can set the app up without the user tapping anything, except what Android reserves to the user: `GET /api/v1/permissions` (what to ask the user to allow) → ECU files (`POST /api/v1/ecu-files/import-from-device` after an `adb push` of the Ecu folder, or `PUT /api/v1/ecu-files/{name}` file by file) → Bluetooth adapter (`GET /api/v1/bluetooth/devices`, `PUT /api/v1/bluetooth/adapter`) → Telegraf (`PATCH /api/v1/export/telegraf`, `PUT /api/v1/export/telegraf/auth`) → cars, profiles and graphs (`POST /api/v1/cars`, `POST /api/v1/profiles/import?car=…`, `…/graphs`) → `POST /api/v1/connect`. The API's own settings (enable, port, token, scopes, HTTPS) are read-only here.
 
 ## Errors
 Every error is `{"error":{"code":"…","message":"…","details":…}}` with a meaningful HTTP status (400 bad input, 401 no / wrong token, 403 scope not enabled, 404 unknown id, 409 conflict such as overlapping cards, 422 invalid layout, 429 rate limited).
@@ -236,6 +237,7 @@ Clearing faults and running EDIABAS jobs (scope `diag`) and changing the CAN mod
         for ((name, schema) in DiagApi.schemas()) put(name, schema)
         for ((name, schema) in SetupRoutes.schemas()) put(name, schema)
         for ((name, schema) in ProfileGraphRoutes.schemas()) put(name, schema)
+        for ((name, schema) in CarRoutes.schemas()) put(name, schema)
         put("Error", S.obj(
             "Error answer of every operation.", listOf("error"), null, null,
             "error" to S.obj(null, listOf("code", "message"), null, null,
@@ -339,27 +341,27 @@ Clearing faults and running EDIABAS jobs (scope `diag`) and changing the CAN mod
             "carPages" to S.arr(S.ref("Page"), "Pages of the Android Auto dashboard (landscape ~1280×480). At least one."),
         ))
         put("ProfileSummary", S.obj(
-            "A profile without its pages.", listOf("id", "name", "active", "vehicle", "ecus"), false, null,
+            "A profile without its pages.", listOf("id", "name", "carId", "active", "vehicle", "ecus"), false, null,
             "id" to S.str(example = "a1b2c3d4e5"),
             "name" to S.str(example = "My car · Lambda"),
+            "carId" to S.str("The car it belongs to (GET /api/v1/cars).", "car-a1b2c3d4e5"),
             "active" to S.bool("Shown on the phone and in Android Auto."),
             "vehicle" to S.obj(null, listOf("label"), false, null,
                 "series" to S.str(example = "<series>"), "model" to S.str(example = "<model>"),
-                "vehicleId" to S.str("Linked car of the Faults tab (short VIN)."),
-                "label" to S.str("Series and model, as tagged on exported points.", "My car")),
+                "label" to S.str("Series and model (metadata kept in shared profile files).", "My car")),
             "ecus" to S.arr(S.str(example = "<sgbd>"), "Main ECUs (SGBD names)."),
             "phonePages" to S.int("Number of phone pages."),
             "carPages" to S.int("Number of Android Auto pages."),
             "lastUsedMs" to S.int("Last time it was active, epoch ms.", format = "int64"),
         ))
         put("Profile", S.obj(
-            "A profile with its layout.", listOf("id", "name"), false, null,
+            "A profile of one car, with its layout.", listOf("id", "name", "carId"), false, null,
             "id" to S.str(example = "a1b2c3d4e5"),
             "name" to S.str(example = "My car · Lambda"),
+            "carId" to S.str("The car it belongs to (GET /api/v1/cars).", "car-a1b2c3d4e5"),
             "vehicle" to S.obj(null, emptyList(), false, null,
-                "series" to S.str(example = "<series>"), "model" to S.str(example = "<model>"),
-                "vehicleId" to S.str("Linked car of the Faults tab (short VIN).")),
-            "ecus" to S.arr(S.str(example = "<sgbd>"), "Main ECUs (SGBD names): the card picker opens on them."),
+                "series" to S.str(example = "<series>"), "model" to S.str(example = "<model>")),
+            "ecus" to S.arr(S.str(example = "<sgbd>"), "Main ECUs (SGBD names, from its car's ECU list): the card picker opens on them."),
             "dashboard" to S.ref("Dashboard"),
             "lastUsedMs" to S.int("Last time it was active, epoch ms.", format = "int64"),
             "graphs" to S.arr(S.ref("Graph"), "Graphs of the Graph tab (see /api/v1/profiles/{profile}/graphs)."),
@@ -418,7 +420,7 @@ Clearing faults and running EDIABAS jobs (scope `diag`) and changing the CAN mod
             "Telegraf export (secrets are never returned).", listOf("enabled", "url", "auth", "username", "secretSet", "car", "mode", "state"), false, null,
             "enabled" to S.bool(), "url" to S.str("Telegraf listener URL.", "http://192.168.1.10:8186/api/v2/write"),
             "auth" to S.str("Authentication, set with PUT /api/v1/export/telegraf/auth.", enum = listOf("none", "token", "basic")), "username" to S.str("User for basic auth."),
-            "secretSet" to S.bool("A token / password is stored, encrypted, on the phone."), "car" to S.str("Value of the `car` tag."),
+            "secretSet" to S.bool("A token / password is stored, encrypted, on the phone."), "car" to S.str("Car name of the settings: the `car` tag when no car is selected (else the selected car's name)."),
             "mode" to S.str("Every reading is exported with its own time, at the read rate. live: upload on any network; afterTrip: wait for an unmetered network.", enum = listOf("live", "afterTrip")),
             "state" to S.obj(
                 "Queue on the phone. A point is deleted only after Telegraf answered 2xx; nothing is deleted automatically.",

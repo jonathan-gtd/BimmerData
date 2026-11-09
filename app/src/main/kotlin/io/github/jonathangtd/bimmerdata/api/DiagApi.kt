@@ -104,10 +104,10 @@ class DiagApi(
         Route(
             "GET", "/api/v1/diag/vehicle", RouteAccess.Needs(Scope.Diag), TAG, "getDiagVehicle",
             "Vehicle and ECUs",
-            "The last detected vehicle (Faults tab › scan) with its ECUs and the result of the last fault read. No traffic on the car. The VIN is never returned.",
+            "The selected car (GET /api/v1/cars) with the ECUs of its last detection (My cars › Detect ECUs) and the result of the last fault read. No traffic on the car. The VIN is never returned.",
             reply = Reply(description = "Vehicle", schema = S.ref("DiagVehicle")),
-            errors = mapOf(404 to "No vehicle detected yet: scan the car in the Faults tab first."),
-        ) { ok(backend.vehicle() ?: throw notFound("no_vehicle", "No vehicle detected yet: scan the car in the Faults tab first")) },
+            errors = mapOf(404 to "No ECU detected yet: detect the selected car's ECUs first (My cars › Detect ECUs, or POST /api/v1/cars/{car}/detect)."),
+        ) { ok(backend.vehicle() ?: throw notFound("no_vehicle", "No ECU detected yet: detect the selected car's ECUs first (My cars › Detect ECUs, or POST /api/v1/cars/{car}/detect)")) },
         Route(
             "GET", "/api/v1/diag/faults", RouteAccess.Needs(Scope.Diag), TAG, "readFaults",
             "Read the fault memory",

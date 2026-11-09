@@ -64,7 +64,7 @@ One table, `bimmerdata`:
 | Column | Example | From |
 |---|---|---|
 | `time` | `2026-11-08 18:00:00.25+00` | when the value was read in the car (not when it was uploaded), UTC |
-| `car` | `My car` | the active profile's car (series and model), else Settings › Telegraf export › Car name |
+| `car` | `My car` | the selected car's name (My cars), else Settings › Telegraf export › Car name |
 | `profile` | `My car · Lambda` | the active profile (left out when there is none) |
 | `ecu` | `<sgbd>`, `gps` | SGBD of the measurement; `gps` for the phone's position |
 | `id` | `0x4402`, `STATUS_OEL/STAT_PHY_NIVOEL_WERT`, `speed` | measurement key (same as the dashboard) |

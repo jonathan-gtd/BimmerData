@@ -19,8 +19,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Profile choice from the car: the profiles of the active profile's car (all of them when it is
- * linked to no car). Creating and editing profiles happens on the phone.
+ * Profile choice from the car: the profiles of the selected car (that of the active profile).
+ * Creating and editing profiles, and changing car, happen on the phone.
  */
 class ProfilesCarScreen(carContext: CarContext) : Screen(carContext) {
     private val store = ProfileStore.get(carContext)

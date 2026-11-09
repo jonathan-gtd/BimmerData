@@ -12,9 +12,15 @@ enum class ScanMethod {
     Sequential,
 }
 
-/** One car the user diagnosed. Several are kept (one per VIN). */
+/**
+ * One of the user's cars (one per VIN). It is created by a scan, by the VIN read at connection or
+ * by hand; its profiles point to it by [id].
+ */
 data class Vehicle(
-    /** Stable key: the 7-character short VIN when known, else a generated id. */
+    /**
+     * Stable key, never changed afterwards (profiles and fault reads point to it): the 7-character
+     * short VIN when the car was first seen with its VIN, else a generated id.
+     */
     val id: String,
     /** Name shown to the user, editable (default: series and short VIN). */
     val label: String,
@@ -33,8 +39,24 @@ data class Vehicle(
     val scanMethod: ScanMethod? = null,
     /** ECUs carry a [VehicleEcu.bus] from the per-bus functional identification. */
     val busTopology: Boolean = false,
+    /** Model as the user typed it ("330i"); scans do not know it. */
+    val model: String? = null,
+    /**
+     * SGBDs the user added by hand to the car's ECU list (lower case, no extension): the whole list
+     * of a car not scanned yet, or ECUs a scan did not identify. Scans keep them.
+     */
+    val addedSgbds: List<String> = emptyList(),
 ) {
     fun ecu(address: Int): VehicleEcu? = ecus.firstOrNull { it.address == address }
+
+    /** The car has a VIN (read by a scan or at connection); a car added by hand has none until then. */
+    val hasVin: Boolean get() = vin != null || vinShort != null
+
+    /**
+     * The car's ECU list, the only ECUs its profiles may name: the SGBDs identified by the last scan,
+     * then those added by hand ([addedSgbds]). Empty for a car neither scanned nor given ECUs.
+     */
+    fun sgbds(): List<String> = (ecus.mapNotNull { it.sgbd } + addedSgbds).distinct()
 }
 
 /** One ECU found in the car. */

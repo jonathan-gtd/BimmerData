@@ -3,6 +3,7 @@
  */
 package io.github.jonathangtd.bimmerdata.api
 
+import io.github.jonathangtd.bimmerdata.cars.CarSpace
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.Page
 import io.github.jonathangtd.bimmerdata.files.EcuFileStore
@@ -10,6 +11,7 @@ import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.MeasurementSource
 import io.github.jonathangtd.bimmerdata.live.RecordingState
 import io.github.jonathangtd.bimmerdata.live.Sample
+import io.github.jonathangtd.bimmerdata.vehicle.Garage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -79,6 +81,7 @@ class FakeApiBackend : ApiBackend {
     override fun defaultDashboard() = Dashboard(phonePages = listOf(Page(name = "Default", columns = 2, rows = 6)), carPages = listOf(Page(name = "Default", columns = 4, rows = 1)))
 
     @Volatile var profileSet = io.github.jonathangtd.bimmerdata.profiles.ProfileSet()
+    @Volatile var garage = Garage()
     override fun profiles() = profileSet
     @Synchronized
     override fun <T> editProfiles(op: (io.github.jonathangtd.bimmerdata.profiles.ProfileSet) -> Pair<io.github.jonathangtd.bimmerdata.profiles.ProfileSet, T>): T {
@@ -86,6 +89,26 @@ class FakeApiBackend : ApiBackend {
         profileSet = set
         return result
     }
+
+    override fun cars() = CarSpace(garage, profileSet)
+    @Synchronized
+    override fun <T> editCars(op: (CarSpace) -> Pair<CarSpace, T>): T {
+        val (space, result) = op(cars())
+        garage = space.garage
+        profileSet = space.profiles
+        return result
+    }
+
+    /** Cars whose detection was started; [detectionBusy] refuses a new one. */
+    val detections = ArrayList<String>()
+    @Volatile var detectionBusy = false
+    override fun startDetection(carId: String): Boolean {
+        if (detectionBusy) return false
+        detections += carId
+        garage = garage.copy(currentId = carId)
+        return true
+    }
+    override fun detection() = DetectionView(running = detections.isNotEmpty(), carId = garage.currentId, step = "identifying".takeIf { detections.isNotEmpty() })
 
     override fun renderPage(request: RenderRequest): ByteArray {
         lastRender = request

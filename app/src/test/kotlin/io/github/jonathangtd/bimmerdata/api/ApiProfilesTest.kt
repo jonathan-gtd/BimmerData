@@ -70,10 +70,16 @@ class ApiProfilesTest {
     fun `create, list, change, activate, export and delete profiles`() {
         assertEquals(0, call("GET", "/api/v1/profiles").json()["profiles"]!!.jsonArray.size, "a fresh install has none")
 
-        val r = call("POST", "/api/v1/profiles", """{"name":"E90 330i · Lambda","series":"E90","model":"330i","ecus":["MSV70"],"vehicleId":"AB12345"}""")
+        assertEquals(400, call("POST", "/api/v1/profiles", """{"name":"x","vehicleId":"AB12345"}""").status, "the old car link is gone")
+        val r = call("POST", "/api/v1/profiles", """{"name":"E90 330i · Lambda","series":"E90","model":"330i","ecus":["MSV70"]}""")
         assertEquals(201, r.status, r.text)
         val lambdaId = r.json()["id"]!!.jsonPrimitive.content
         assertEquals("msv70", r.json()["ecus"]!!.jsonArray[0].jsonPrimitive.content)
+        // a fresh install has no car: one is made, and it takes the profile's ECUs as its list
+        val carId = r.json()["carId"]!!.jsonPrimitive.content
+        assertEquals("My car", backend.garage.current?.label)
+        assertEquals(carId, backend.garage.currentId)
+        assertEquals(listOf("msv70"), backend.garage.current?.sgbds())
 
         // second profile, not activated, pages copied from the first
         call("PUT", "/api/v1/profiles/$lambdaId", """{"dashboard":{"phonePages":[{"name":"Engine","columns":2,"rows":3}],"carPages":[]}}""").also { assertEquals(200, it.status, it.text) }
@@ -84,9 +90,11 @@ class ApiProfilesTest {
 
         val list = call("GET", "/api/v1/profiles").json()
         assertEquals(lambdaId, list["activeId"]!!.jsonPrimitive.content)
+        assertEquals(carId, list["selectedCarId"]!!.jsonPrimitive.content)
         val summaries = list["profiles"]!!.jsonArray.map { it.jsonObject }
         assertEquals(listOf("E90 330i · Lambda", "Knock"), summaries.map { it["name"]!!.jsonPrimitive.content })
         assertEquals("E90 330i", summaries[0]["vehicle"]!!.jsonObject["label"]!!.jsonPrimitive.content)
+        assertEquals(carId, summaries[1]["carId"]!!.jsonPrimitive.content, "the copy is on the selected car too")
         assertTrue(summaries[0]["active"]!!.jsonPrimitive.boolean)
         assertEquals(1, summaries[1]["phonePages"]!!.jsonPrimitive.int)
 
@@ -101,16 +109,22 @@ class ApiProfilesTest {
         // activate, then rename and change the car of the inactive one
         assertEquals(200, call("POST", "/api/v1/profiles/$knockId/activate").status)
         assertEquals(knockId, backend.profileSet.activeId)
+        // an ECU the car does not have: refused with the car's list
+        val foreign = call("PUT", "/api/v1/profiles/$lambdaId", """{"ecus":["msv70","egs"]}""")
+        assertEquals(422, foreign.status, foreign.text)
+        assertEquals("ecu_not_in_car", foreign.errorCode)
+        assertEquals("msv70", foreign.json()["error"]!!.jsonObject["details"]!!.jsonObject["allowed"]!!.jsonArray[0].jsonPrimitive.content)
+        assertEquals(200, call("PUT", "/api/v1/cars/$carId", """{"ecus":["msv70","egs"]}""").status)
         val renamed = call("PUT", "/api/v1/profiles/$lambdaId", """{"name":"Lambda","model":"","ecus":["msv70","egs"]}""").json()
         assertEquals("Lambda", renamed["name"]!!.jsonPrimitive.content)
-        assertEquals(ProfileVehicle("E90", null, "AB12345"), backend.profileSet.profile(lambdaId)!!.vehicle)
+        assertEquals(ProfileVehicle("E90", null), backend.profileSet.profile(lambdaId)!!.vehicle)
         assertEquals(listOf("msv70", "egs"), backend.profileSet.profile(lambdaId)!!.ecus)
 
         // shared file: no VIN link
         val export = call("GET", "/api/v1/profiles/$lambdaId/export")
         assertEquals(200, export.status, export.text)
         assertEquals("bimmerdata-profile", export.json()["kind"]!!.jsonPrimitive.content)
-        assertFalse(export.text.contains("AB12345"))
+        assertFalse(export.text.contains("carId"), "never the user's car")
 
         // delete the active one: the other becomes active
         val del = call("DELETE", "/api/v1/profiles/$knockId").json()
@@ -122,7 +136,7 @@ class ApiProfilesTest {
 
     @Test
     fun `at most the profile limit`() {
-        repeat(Profiles.MAX_PROFILES) { i -> backend.editProfiles { s -> Profiles.create(s, "P$i", nowMs = 1).first to Unit } }
+        repeat(Profiles.MAX_PROFILES) { i -> backend.editProfiles { s -> Profiles.create(s, "P$i", nowMs = 1, carId = "car-1").first to Unit } }
         val r = call("POST", "/api/v1/profiles", """{"name":"One more"}""")
         assertEquals(422, r.status, r.text)
         assertEquals("invalid_profile", r.errorCode)

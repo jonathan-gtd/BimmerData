@@ -23,6 +23,7 @@ import io.github.jonathangtd.bimmerdata.settings.AppSettings
 import io.github.jonathangtd.bimmerdata.settings.SecretStore
 import io.github.jonathangtd.bimmerdata.settings.TelegrafAuthMode
 import io.github.jonathangtd.bimmerdata.settings.TelegrafSettings
+import io.github.jonathangtd.bimmerdata.vehicle.VehicleRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -50,12 +51,15 @@ class TelegrafRuntime private constructor(context: Context) {
     private val settings = AppSettings.get(app)
     private val secrets = SecretStore.get(app)
     private val repo = LiveRepository.get(app)
+    private val vehicles = VehicleRepository.get(app)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val network = MutableStateFlow(NetworkKind.None)
     private val known = ConcurrentHashMap<String, Measurement>()
 
-    /** Settings + secrets + active profile (its car and name tag the points). */
-    val config: StateFlow<ExportConfig> = combine(settings.state.map { it.telegraf }, secrets.version, ProfileStore.state) { t, _, _ -> toConfig(t) }
+    /** Settings + secrets + selected car + active profile (their names tag the points). */
+    val config: StateFlow<ExportConfig> = combine(
+        settings.state.map { it.telegraf }, secrets.version, ProfileStore.state, vehicles.state.map { it.garage.current?.label }.distinctUntilChanged(),
+    ) { t, _, _, _ -> toConfig(t) }
         .stateIn(scope, SharingStarted.Eagerly, toConfig(settings.state.value.telegraf))
 
     private val exporter = TelegrafExporter(
@@ -130,11 +134,11 @@ class TelegrafRuntime private constructor(context: Context) {
 
     private fun toConfig(t: TelegrafSettings): ExportConfig {
         val profile = (ProfileStore.state.value ?: runCatching { ProfileStore.get(app).load() }.getOrNull())?.active
-        return toConfig(t, profile)
+        return toConfig(t, vehicles.garage().current?.label, profile)
     }
 
-    /** `car` tag: the active profile's car ("E90 330i"), else the car name of the settings. */
-    private fun toConfig(t: TelegrafSettings, profile: Profile?) = ExportConfig(
+    /** `car` tag: the selected car's name ("E90 330i"), else the car name of the settings. */
+    private fun toConfig(t: TelegrafSettings, car: String?, profile: Profile?) = ExportConfig(
         enabled = t.enabled,
         url = t.url.trim(),
         auth = when (t.authMode) {
@@ -142,7 +146,7 @@ class TelegrafRuntime private constructor(context: Context) {
             TelegrafAuthMode.Token -> TelegrafAuth.Token(secrets.get(SecretStore.TELEGRAF_TOKEN))
             TelegrafAuthMode.Basic -> TelegrafAuth.Basic(t.username, secrets.get(SecretStore.TELEGRAF_PASSWORD))
         },
-        car = profile?.vehicle?.label?.takeIf { it.isNotBlank() } ?: t.car.trim(),
+        car = car?.takeIf { it.isNotBlank() } ?: t.car.trim(),
         profile = profile?.name.orEmpty(),
         mode = t.mode,
     )

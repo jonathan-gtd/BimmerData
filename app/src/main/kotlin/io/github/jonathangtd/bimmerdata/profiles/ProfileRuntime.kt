@@ -5,6 +5,8 @@ package io.github.jonathangtd.bimmerdata.profiles
 
 import android.content.Context
 import android.util.Log
+import io.github.jonathangtd.bimmerdata.cars.CarBook
+import io.github.jonathangtd.bimmerdata.cars.VinOutcome
 import io.github.jonathangtd.bimmerdata.live.LiveConnection
 import io.github.jonathangtd.bimmerdata.live.LiveRepository
 import io.github.jonathangtd.bimmerdata.vehicle.VehicleRepository
@@ -17,13 +19,17 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-/** What the profile checks at connection have to tell the user (shown by the dashboard). */
+/** What the checks at connection have to tell the user (shown by the dashboard). */
 sealed interface ProfileNotice {
-    /** The car was identified and its profile [name] is now active. */
-    data class Switched(val name: String) : ProfileNotice
+    /** The car was identified: [car] is now selected, with its last used [profile] (null: it has none yet). */
+    data class CarSwitched(val car: String, val profile: String?) : ProfileNotice
 
-    /** The car matches profile [id] but a recording runs: only proposed. */
+    /** An unknown VIN: a new car [car] was added (and selected unless a recording runs). */
+    data class NewCar(val car: String) : ProfileNotice
+
+    /** The car matches profile [id] (of another car) but a recording runs: only proposed. */
     data class Suggest(val id: String, val name: String) : ProfileNotice
 
     /** These ECUs of the active profile do not answer (absent, asleep, or a protocol the app lacks). */
@@ -33,10 +39,11 @@ sealed interface ProfileNotice {
 /**
  * Checks made each time a connection is established, a moment after it (the reading starts first):
  *
- * 1. **Profile of the car**: when at least one profile is linked to a car, the short VIN is read
- *    (one read-only functional job) and, if profiles are linked to that car and the active one is
- *    not among them, the one used last becomes active. Never during a recording: then it is only
- *    proposed ([ProfileNotice.Suggest]).
+ * 1. **The car**: the short VIN is read (one read-only functional job, about a second) and
+ *    [CarBook.onVin] decides ([io.github.jonathangtd.bimmerdata.cars.Cars.onVin]): a known car
+ *    becomes the selected one with its last used profile, the selected car added by hand gets the
+ *    VIN, an unknown VIN adds a new car. Never during a recording: another car's profile is then
+ *    only proposed ([ProfileNotice.Suggest]).
  * 2. **ECUs of the profile**: each one gets an IDENT (read-only); those that do not answer are
  *    reported ([ProfileNotice.EcusNotResponding]), nothing is blocked.
  */
@@ -77,23 +84,18 @@ object ProfileRuntime {
 
     private suspend fun onConnected(app: Context) {
         delay(SETTLE_MS)
-        val store = ProfileStore.get(app)
         val vehicles = VehicleRepository.get(app)
-        var set = store.load()
-        if (set.profiles.any { it.vehicle.vehicleId != null }) {
-            val vin = vehicles.readShortVin()
-            val carId = vin?.let { vehicles.vehicleIdForVin(it) ?: it }
-            val pick = carId?.let { Profiles.autoSelect(set, it) }
-            if (pick != null) {
-                if (LiveRepository.get(app).recorder.state.value.recording) {
-                    _notices.tryEmit(ProfileNotice.Suggest(pick.id, pick.name))
-                } else {
-                    store.activate(pick.id)?.let { set = it }
-                    _notices.tryEmit(ProfileNotice.Switched(pick.name))
-                }
+        vehicles.readShortVin()?.let { vin ->
+            val recording = LiveRepository.get(app).recorder.state.value.recording
+            when (val o = withContext(Dispatchers.IO) { CarBook.get(app).onVin(vin, recording) }) {
+                is VinOutcome.Switched -> _notices.tryEmit(ProfileNotice.CarSwitched(o.car.label, o.profile?.name))
+                is VinOutcome.Suggested -> _notices.tryEmit(ProfileNotice.Suggest(o.profile.id, o.profile.name))
+                is VinOutcome.Created -> _notices.tryEmit(ProfileNotice.NewCar(o.car.label))
+                is VinOutcome.Attached -> Log.i(TAG, "VIN of the car added by hand read at its first connection")
+                VinOutcome.Unchanged -> Unit
             }
         }
-        val active = set.active ?: return
+        val active = withContext(Dispatchers.IO) { ProfileStore.get(app).load() }.active ?: return
         if (active.ecus.isEmpty()) return
         val silent = vehicles.probeEcus(active.ecus)
         if (silent.isNotEmpty()) _notices.tryEmit(ProfileNotice.EcusNotResponding(active.name, silent))

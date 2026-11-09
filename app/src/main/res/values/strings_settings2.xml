@@ -35,7 +35,7 @@
     <string name="settings2_tg_secret_stored">Stored encrypted on this phone. Leave empty to keep it.</string>
     <string name="settings2_tg_secret_missing">Not set yet.</string>
     <string name="settings2_tg_car">Car name</string>
-    <string name="settings2_tg_car_hint">Tag \"car\" of every point, to tell your cars apart in Grafana.</string>
+    <string name="settings2_tg_car_hint">Tag \"car\" of the points when no car is selected; otherwise it is the name of the selected car (My cars).</string>
     <string name="settings2_tg_mode">When to send</string>
     <string name="settings2_tg_mode_after">After the trip</string>
     <string name="settings2_tg_mode_live">Live</string>

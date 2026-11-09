@@ -302,16 +302,16 @@ class ReadmeScreenshotTest {
     private val profiles: ProfileSet = run {
         var s = ProfileSet()
         val demo = ProfileVehicle("Demo", "car")
-        s = Profiles.create(s, "Demo · Engine", demo, listOf("dme"), 1, Dashboard(phonePages = listOf(phonePage, phonePage.copy(name = "Mixture")), carPages = listOf(carPage))).first
-        s = Profiles.create(s, "Demo · Knock", demo, listOf("dme"), 2, Dashboard(phonePages = listOf(phonePage.copy(name = "Knock")), carPages = listOf(carPage))).first
-        s = Profiles.create(s, "Demo · Gearbox", demo, listOf("egs", "dme"), 3, Dashboard(phonePages = listOf(phonePage.copy(name = "Gearbox")))).first
-        s = Profiles.create(s, "Track day", ProfileVehicle("Track", "car"), listOf("dme", "dsc"), 4, Dashboard(phonePages = listOf(phonePage, phonePage, phonePage))).first
+        s = Profiles.create(s, "Demo · Engine", demo, listOf("dme"), 1, Dashboard(phonePages = listOf(phonePage, phonePage.copy(name = "Mixture")), carPages = listOf(carPage)), carId = "car-demo").first
+        s = Profiles.create(s, "Demo · Knock", demo, listOf("dme"), 2, Dashboard(phonePages = listOf(phonePage.copy(name = "Knock")), carPages = listOf(carPage)), carId = "car-demo").first
+        s = Profiles.create(s, "Demo · Gearbox", demo, listOf("egs", "dme"), 3, Dashboard(phonePages = listOf(phonePage.copy(name = "Gearbox"))), carId = "car-demo").first
+        s = Profiles.create(s, "Track day", ProfileVehicle("Track", "car"), listOf("dme", "dsc"), 4, Dashboard(phonePages = listOf(phonePage, phonePage, phonePage)), carId = "car-track").first
         Profiles.activate(s, s.profiles[0].id, 5)
     }
 
     @Test
     fun profiles() = capture("profiles.png") {
-        ProfilesTabContent(profiles, onActivate = {}, onNew = {}, onImport = {}, actions = ProfileActions({}, {}, {}, {}))
+        ProfilesTabContent(profiles.forCar("car-demo"), onActivate = {}, onNew = {}, onImport = {}, actions = ProfileActions({}, {}, {}, {}), car = "Demo car")
     }
 
     /** The built-in demo car, scanned and read like in the app; the VIN is left out. */
@@ -353,7 +353,7 @@ class ReadmeScreenshotTest {
         val s = scanned()
         capture("faults.png") {
             VehicleOverview(
-                state = s, onScan = {}, onReadFaults = {}, onClearAll = {}, onShare = {}, onCancel = {},
+                state = s, onDetect = {}, onOpenCars = {}, onReadFaults = {}, onClearAll = {}, onShare = {}, onCancel = {},
                 onSelectVehicle = {}, onRename = { _, _ -> }, onForget = {}, onSeries = {}, seriesChoices = { emptyList() }, onOpenEcu = {},
                 onDismissMessage = {}, connectionBar = { Pill() },
             )

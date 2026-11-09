@@ -7,6 +7,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import io.github.jonathangtd.bimmerdata.R
+import io.github.jonathangtd.bimmerdata.cars.CarBook
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.DashboardJson
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,6 +35,11 @@ import kotlin.concurrent.withLock
  * the layout, else [defaultName]) and `profiles.json` is written at once. `dashboard.json` is left
  * as it was (a backup the app no longer reads). An empty old layout gives no profile: the first
  * launch stays empty.
+ *
+ * **Cars**: [carCheck] is applied to every set read from the file and to every set about to be
+ * written; the app passes [io.github.jonathangtd.bimmerdata.cars.CarBook.repair], which gives every
+ * profile without a known car one (the migration of the files written before cars existed) and
+ * keeps the active profile among the selected car's. A read it changed is written back at once.
  */
 class ProfileStore(
     private val dir: File,
@@ -41,6 +47,7 @@ class ProfileStore(
     private val warn: (String, Throwable?) -> Unit = { msg, e -> Log.w(TAG, msg, e) },
     private val clock: () -> Long = System::currentTimeMillis,
     private val info: (String) -> Unit = { Log.i(TAG, it) },
+    private val carCheck: (ProfileSet) -> ProfileSet = { it },
 ) {
     private val file = File(dir, FILE_NAME)
     private val tmp = File(dir, "$FILE_NAME.tmp")
@@ -67,7 +74,7 @@ class ProfileStore(
      */
     fun update(transform: (ProfileSet) -> ProfileSet): ProfileSet? = lock.withLock {
         val current = read()
-        val next = transform(current)
+        val next = carCheck(transform(current))
         if (next == current) {
             if (_state.value == null) publish(current)
             return@withLock current
@@ -75,7 +82,15 @@ class ProfileStore(
         if (write(next)) next else null
     }
 
+    /** The file through [carCheck]; written back when the check changed it (migration to cars). */
     private fun read(): ProfileSet {
+        val raw = readFile()
+        val checked = carCheck(raw)
+        if (checked != raw && write(checked)) info("Profiles given their car (${checked.profiles.size} profiles)")
+        return checked
+    }
+
+    private fun readFile(): ProfileSet {
         if (file.isFile) {
             return try {
                 ProfileJson.decode(file.readText(Charsets.UTF_8))
@@ -90,7 +105,8 @@ class ProfileStore(
         val old = readLegacy() ?: return ProfileSet()
         val hasContent = old.phonePages.isNotEmpty() || old.carPages.isNotEmpty() || !old.name.isNullOrBlank()
         if (!hasContent) return ProfileSet()
-        val migrated = Profiles.create(ProfileSet(), old.name?.takeIf { it.isNotBlank() } ?: defaultName(), nowMs = clock(), dashboard = old).first
+        // no car yet: carCheck gives it one
+        val migrated = Profiles.create(ProfileSet(), old.name?.takeIf { it.isNotBlank() } ?: defaultName(), nowMs = clock(), dashboard = old, carId = "").first
         if (write(migrated)) info("Layout of ${legacy.name} moved into the first profile '${migrated.active?.name}'")
         return migrated
     }
@@ -134,12 +150,7 @@ class ProfileStore(
     }
 
     // ---- convenience writes (each one read-modify-write under the lock) ----
-
-    fun create(name: String, vehicle: ProfileVehicle, ecus: List<String>): Profile? {
-        var created: Profile? = null
-        update { set -> Profiles.create(set, name, vehicle, ecus, clock()).also { created = it.second }.first } ?: return null
-        return created
-    }
+    // Writes that involve cars (create, import, activation on another car...) go through CarBook.
 
     fun activate(id: String): ProfileSet? = update { Profiles.activate(it, id, clock()) }
 
@@ -149,21 +160,10 @@ class ProfileStore(
         return copy
     }
 
-    fun edit(id: String, name: String?, vehicle: ProfileVehicle?, ecus: List<String>?): ProfileSet? =
-        update { Profiles.edit(it, id, name, vehicle, ecus) }
-
     fun delete(id: String): ProfileSet? = update { Profiles.delete(it, id) }
 
     /** Puts a whole set back (undo of a delete). */
     fun restore(set: ProfileSet): ProfileSet? = update { set }
-
-    fun import(text: String, fallbackName: String): Profile {
-        val export = ProfileJson.parseExport(text)
-        var imported: Profile? = null
-        update { set -> ProfileJson.importInto(set, export, clock(), fallbackName).also { imported = it.second }.first }
-            ?: throw IllegalStateException("Could not save the profiles")
-        return imported!!
-    }
 
     companion object {
         private const val TAG = "ProfileStore"
@@ -191,7 +191,10 @@ class ProfileStore(
             instance?.let { return it }
             val app = context.applicationContext
             return synchronized(this) {
-                instance ?: ProfileStore(app.filesDir, { app.getString(R.string.profile_default_name) }).also { instance = it }
+                instance ?: run {
+                    val cars = CarBook.get(app)
+                    ProfileStore(app.filesDir, { app.getString(R.string.profile_default_name) }, carCheck = cars::repair).also { instance = it }
+                }
             }
         }
     }
