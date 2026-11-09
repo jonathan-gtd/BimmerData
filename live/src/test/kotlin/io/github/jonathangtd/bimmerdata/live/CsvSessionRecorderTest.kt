@@ -25,6 +25,8 @@ class CsvSessionRecorderTest {
 
     private class FakeSource : LiveDataSource {
         override val samples = MutableStateFlow<Map<String, Sample>>(emptyMap())
+        val pauseFlow = kotlinx.coroutines.flow.MutableSharedFlow<AcquisitionPause>(extraBufferCapacity = 16)
+        override val pauses: kotlinx.coroutines.flow.Flow<AcquisitionPause> get() = pauseFlow
         override val status: StateFlow<AcquisitionStatus> = MutableStateFlow(AcquisitionStatus())
         var requested: List<Measurement> = emptyList()
         override fun setMeasurements(measurements: List<Measurement>) {
@@ -44,6 +46,69 @@ class CsvSessionRecorderTest {
     private val state = Measurement("x/state", "msv70", "Status", "0-n", MeasurementSource.JobResult("STATUS_X", "", "STAT_X_TEXT"))
 
     private suspend fun awaitUntil(cond: () -> Boolean) = withTimeout(5000) { while (!cond()) delay(5) }
+
+    @Test
+    fun `a pause that arrives after the next values is still written before them`() = runBlocking {
+        val source = FakeSource()
+        val sink = Sink()
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val t0 = 1_762_590_652_000L
+        val recorder = CsvSessionRecorder(
+            source = source, columns = { listOf(oil) }, output = { sink }, scope = scope,
+            dispatcher = Dispatchers.Default, clock = { t0 }, zone = ZoneId.of("UTC"), pauseGapMs = 1000, pauseWaitMs = 2000,
+        )
+        try {
+            recorder.start()
+            awaitUntil { source.pauseFlow.subscriptionCount.value > 0 }
+            source.samples.value = mapOf(oil.id to Sample(90.0, null, t0 + 100))
+            awaitUntil { recorder.state.value.rows == 1L }
+            // the cable was busy from t0+150 to t0+1950; the values read right after the pause
+            // reach the recorder first, the pause 300 ms later (as through the app's relay)
+            source.samples.value = mapOf(oil.id to Sample(91.0, null, t0 + 2000))
+            delay(300)
+            source.pauseFlow.emit(AcquisitionPause(t0 + 150, t0 + 1950, "Faults: late"))
+            awaitUntil { recorder.state.value.rows == 3L }
+            source.samples.value = mapOf(oil.id to Sample(92.0, null, t0 + 2050))
+            awaitUntil { recorder.state.value.rows == 4L }
+            recorder.stop()
+            awaitUntil { sink.closed }
+            val lines = sink.toString(Charsets.UTF_8).split("\r\n").filter { it.isNotEmpty() }.drop(1)
+            assertEquals(4, lines.size, lines.joinToString("\n"))
+            assertEquals("100", lines[0].substringBefore(';'))
+            assertTrue(lines[1].endsWith("pause 1800 ms: Faults: late"), lines[1])
+            assertEquals("150", lines[1].substringBefore(';'), "pause line at the time the reading stopped")
+            assertEquals("2000", lines[2].substringBefore(';'))
+            assertEquals("2050", lines[3].substringBefore(';'))
+        } finally {
+            scope.cancel()
+        }
+    }
+
+    @Test
+    fun `a gap without any pause only delays the row a little`() = runBlocking {
+        val source = FakeSource()
+        val sink = Sink()
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val t0 = 1_762_590_652_000L
+        val recorder = CsvSessionRecorder(
+            source = source, columns = { listOf(oil) }, output = { sink }, scope = scope,
+            dispatcher = Dispatchers.Default, clock = { t0 }, zone = ZoneId.of("UTC"), pauseGapMs = 1000, pauseWaitMs = 200,
+        )
+        try {
+            recorder.start()
+            awaitUntil { source.pauseFlow.subscriptionCount.value > 0 }
+            source.samples.value = mapOf(oil.id to Sample(90.0, null, t0 + 100))
+            awaitUntil { recorder.state.value.rows == 1L }
+            source.samples.value = mapOf(oil.id to Sample(91.0, null, t0 + 3000)) // slow ECU, no pause
+            awaitUntil { recorder.state.value.rows == 2L }
+            recorder.stop()
+            awaitUntil { sink.closed }
+            val lines = sink.toString(Charsets.UTF_8).split("\r\n").filter { it.isNotEmpty() }.drop(1)
+            assertEquals(listOf("100", "3000"), lines.map { it.substringBefore(';') })
+        } finally {
+            scope.cancel()
+        }
+    }
 
     @Test
     fun `CSV format, markers and pinning`() = runBlocking {

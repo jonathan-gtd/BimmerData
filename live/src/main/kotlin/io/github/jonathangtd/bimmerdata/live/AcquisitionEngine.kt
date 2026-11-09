@@ -153,6 +153,9 @@ class AcquisitionEngine(
     override val pauses: SharedFlow<AcquisitionPause> = _pauses.asSharedFlow()
 
     /** Number of one-off operations run so far (tests, diagnostics). */
+    /** One-off operations at least this long are reported in [pauses] ([Config.pauseThresholdMs]). */
+    val pauseThresholdMs: Long get() = config.pauseThresholdMs
+
     @Volatile var exclusiveRuns: Long = 0
         private set
 

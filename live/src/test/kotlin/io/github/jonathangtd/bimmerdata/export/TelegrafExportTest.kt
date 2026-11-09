@@ -159,8 +159,8 @@ class TelegrafExportTest {
             }
             until("10 points queued") { exporter.state.value.queuedLines == 10L }
             net.value = NetworkKind.Metered
+            until("waiting for Wi-Fi") { exporter.state.value.phase == ExportPhase.WaitingForUnmetered }
             delay(150)
-            assertEquals(ExportPhase.WaitingForUnmetered, exporter.state.value.phase)
             assertTrue(tg.bodies.isEmpty(), "nothing is sent on mobile data")
             net.value = NetworkKind.Unmetered
             until("all sent") { exporter.state.value.sentLines == 10L }
@@ -179,7 +179,8 @@ class TelegrafExportTest {
             delay(50)
             samples.value = mapOf(oil.id to Sample(90.0, null, 5_000))
             until("tried twice") { tg.bodies.size >= 2 }
-            assertEquals(ExportPhase.Retrying, exporter.state.value.phase)
+            // the request reached the server before the exporter handled the answer: wait for it
+            until("retrying") { exporter.state.value.phase == ExportPhase.Retrying }
             assertEquals(1L, exporter.state.value.queuedLines)
             tg.status = 204
             until("sent") { exporter.state.value.sentLines == 1L }

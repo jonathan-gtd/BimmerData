@@ -142,7 +142,8 @@ class AcquisitionEngineTest {
         val catalog = catalog()
         val sim = EcuSimulator(liveValues = true)
         val (line, iface) = kline(sim)
-        fun inits() = line.requests.count { LiveTestData.hex(it).startsWith("82 12 F1 1A 80") }
+        fun inits() = line.requestsSnapshot().count { // the engine keeps sending meanwhile
+            LiveTestData.hex(it).startsWith("82 12 F1 1A 80") }
         val engine = AcquisitionEngine(iface, catalog, AcquisitionEngine.Config(retryDelayMinMs = 50, retryDelayMaxMs = 400, reconnectAfterFailedCycles = 2))
         try {
             val ms = tableMeasurements(catalog)
