@@ -18,8 +18,8 @@
     <string name="graph_values_hint">Valeurs des cartes de ce profil (téléphone et Android Auto). Maximum par graphique : %1$d.</string>
     <string name="graph_live">Direct</string>
     <string name="graph_pause">Pause</string>
-    <string name="graph_live_hint">Pincer pour zoomer · glisser pour remonter le temps · appui long pour lire les valeurs</string>
-    <string name="graph_paused_hint">En pause · glisser pour défiler · pincer pour zoomer · toucher pour masquer le curseur</string>
+    <string name="graph_live_hint">Pincer : zoom · glisser : remonter · appui long : valeurs</string>
+    <string name="graph_paused_hint">En pause · glisser : défiler · toucher : sans curseur</string>
     <string name="graph_overlay">Superposé</string>
     <string name="graph_bands">Bandes</string>
     <string name="graph_no_data">Aucune valeur lue sur cette période</string>

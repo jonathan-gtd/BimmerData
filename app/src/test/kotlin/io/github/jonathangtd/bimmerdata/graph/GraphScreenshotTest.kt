@@ -113,6 +113,14 @@ class GraphScreenshotTest {
         GraphFrame(listOf(specs[1]), GraphAxes.Overlay, GraphView(20_000, endMs = now - 80_000), now),
     )
 
+    /** Landscape squeezed the plot to a few dp: drawing must never crash, whatever the size. */
+    @Test
+    fun tinySizesDoNotCrash() {
+        for (h in listOf(1, 20, 40, 60, 75, 90, 130)) for (axes in GraphAxes.entries) {
+            render("graph_tiny_${axes}_$h.png", GraphFrame(specs, axes, GraphView(60_000), now, cursorMs = now - 10_000), heightDp = h)
+        }
+    }
+
     @Test
     @Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
     fun overlayFrench() = render("graph_overlay_fr.png", GraphFrame(specs.take(3), GraphAxes.Overlay, GraphView(1_800_000), now), Locale.FRANCE)

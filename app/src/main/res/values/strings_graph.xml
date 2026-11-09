@@ -18,8 +18,8 @@
     <string name="graph_values_hint">Values of this profile’s cards (phone and Android Auto). Maximum per graph: %1$d.</string>
     <string name="graph_live">Live</string>
     <string name="graph_pause">Pause</string>
-    <string name="graph_live_hint">Pinch to zoom · drag to look back · long-press to read values</string>
-    <string name="graph_paused_hint">Paused · drag to scroll · pinch to zoom · tap to hide the cursor</string>
+    <string name="graph_live_hint">Pinch: zoom · drag: look back · long press: values</string>
+    <string name="graph_paused_hint">Paused · drag: scroll · tap: hide the cursor</string>
     <string name="graph_overlay">Overlay</string>
     <string name="graph_bands">Bands</string>
     <string name="graph_no_data">No value read in this period</string>

@@ -94,6 +94,12 @@ class GraphRenderer(
         c.drawRoundRect(r, theme.cornerRadius * u, theme.cornerRadius * u, cardPaint)
         val pad = 12f * u
         val inner = RectF(r.left + pad, r.top + pad, r.right - pad, r.bottom - pad)
+        // Too small to draw anything readable (e.g. a very short window): just the card.
+        if (inner.height() < MIN_PLOT_DP * u || inner.width() < MIN_PLOT_DP * u) {
+            plotLeft = inner.left
+            plotRight = inner.right
+            return
+        }
         val view = frame.view
         val from = view.start(frame.nowMs)
         val to = view.end(frame.nowMs)
@@ -108,7 +114,9 @@ class GraphRenderer(
             dec.end()
             if (!dec.visibleMin.isNaN()) anyPoint = true
         }
-        if (frame.axes == GraphAxes.Bands && visible.isNotEmpty()) drawBands(c, inner, frame, visible, from, history)
+        // Bands need room for each band; otherwise overlay
+        val bandsFit = visible.isNotEmpty() && (inner.height() - 18f * u) / visible.size >= MIN_BAND_DP * u
+        if (frame.axes == GraphAxes.Bands && bandsFit) drawBands(c, inner, frame, visible, from, history)
         else drawOverlay(c, inner, frame, visible, from, history)
         if (!anyPoint) {
             tickPaint.textAlign = Paint.Align.CENTER
@@ -280,7 +288,8 @@ class GraphRenderer(
         val half = tickPaint.textSize * 0.35f
         for (t in scale.ticks()) {
             val y = bottom - (bottom - top) * scale.fraction(t).toFloat()
-            c.drawText(format.format(t, scale.decimals), x, (y + half).coerceIn(top + half * 2, bottom + half), tickPaint)
+            val lo = top + half * 2
+            c.drawText(format.format(t, scale.decimals), x, (y + half).coerceIn(lo, max(lo, bottom + half)), tickPaint)
         }
         tickPaint.textAlign = Paint.Align.LEFT
     }
@@ -438,6 +447,12 @@ class GraphRenderer(
     val plotWidth: Float get() = (plotRight - plotLeft).coerceAtLeast(1f)
 
     companion object {
+        /** Below this plot size (dp) nothing is drawn but the card. */
+        const val MIN_PLOT_DP = 48f
+
+        /** Smallest band height (dp, with its label row); fewer than that falls back to overlay. */
+        const val MIN_BAND_DP = 46f
+
         /** Smallest span shown for a value: 4 % of its usual range. */
         fun minSpan(min: Double?, max: Double?, unit: String): Double {
             val (a, b) = if (min != null && max != null && max > min) min to max else GaugeFormat.defaultRange(unit)

@@ -473,9 +473,8 @@ internal fun AxesToggle(axes: GraphAxes, onAxes: (GraphAxes) -> Unit) {
 }
 
 /** One entry per value: color, name, value now (or under the cursor); tap hides / shows it. */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Legend(specs: List<GraphSeriesSpec>, cursorMs: Long?, format: GaugeFormat, onToggle: (String) -> Unit) {
+private fun Legend(specs: List<GraphSeriesSpec>, cursorMs: Long?, format: GaugeFormat, onToggle: (String) -> Unit, columns: Int = 2) {
     // live values refresh a few times a second (the curves are redrawn every frame)
     val tick by produceState(0L) {
         while (true) {
@@ -484,33 +483,39 @@ private fun Legend(specs: List<GraphSeriesSpec>, cursorMs: Long?, format: GaugeF
         }
     }
     val hiddenText = stringResource(R.string.graph_hidden)
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        for (s in specs) {
-            val value = remember(tick, cursorMs, s, format) { legendValue(s, cursorMs, format) }
-            Row(
-                Modifier
-                    .heightIn(min = 40.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Cockpit.Card)
-                    .clickable(role = Role.Switch, onClickLabel = s.label) { onToggle(s.id) }
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(
-                    Modifier.size(10.dp).clip(CircleShape)
-                        .background(if (s.hidden) Color.Transparent else Color(s.color))
-                        .border(1.5.dp, Color(s.color), CircleShape),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    s.label, color = if (s.hidden) Cockpit.Muted else Cockpit.Text, fontSize = 13.sp, maxLines = 1,
-                    overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 180.dp),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    if (s.hidden) hiddenText else value, color = if (s.hidden) Cockpit.Muted else Cockpit.Text,
-                    fontSize = 15.sp, fontFamily = BarlowCondensed, fontWeight = FontWeight.SemiBold, maxLines = 1,
-                )
+    // Compact: [columns] entries per line, one short line each (dot, name, value).
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Cockpit.Card).padding(horizontal = 4.dp, vertical = 2.dp)) {
+        for (line in specs.chunked(columns)) {
+            Row(Modifier.fillMaxWidth()) {
+                for (s in line) {
+                    val value = remember(tick, cursorMs, s, format) { legendValue(s, cursorMs, format) }
+                    Row(
+                        Modifier
+                            .weight(1f)
+                            .heightIn(min = 36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .clickable(role = Role.Switch, onClickLabel = s.label) { onToggle(s.id) }
+                            .padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            Modifier.size(8.dp).clip(CircleShape)
+                                .background(if (s.hidden) Color.Transparent else Color(s.color))
+                                .border(1.5.dp, Color(s.color), CircleShape),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            s.label, color = Cockpit.Muted, fontSize = 12.sp, maxLines = 1,
+                            overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            if (s.hidden) hiddenText else value, color = if (s.hidden) Cockpit.Muted else Cockpit.Text,
+                            fontSize = 14.sp, fontFamily = BarlowCondensed, fontWeight = FontWeight.SemiBold, maxLines = 1,
+                        )
+                    }
+                }
+                repeat(columns - line.size) { Spacer(Modifier.weight(1f)) }
             }
         }
     }
