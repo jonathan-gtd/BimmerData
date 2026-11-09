@@ -426,6 +426,12 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
         e.message ?: "Invalid file"
     }
 
+    /** Android Auto pages rebuilt from the phone's cards ([DashboardMirror]); undo restores them. */
+    fun carFromPhone() = _ui.update { ui ->
+        val d = ui.dashboard ?: return@update ui
+        ui.copy(dashboard = DashboardMirror.carFromPhone(d), undo = d, carPage = 0)
+    }
+
     /**
      * Empties the pages of [t] only (phone OR Android Auto); the other side and the dashboard name
      * stay as they are. Undo restores the previous layout.

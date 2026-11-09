@@ -647,6 +647,18 @@ class ApiService(
                 ok(dashboardJson(d))
             },
             Route(
+                "POST", "/api/v1/dashboard/car/from-phone", RouteAccess.Needs(Scope.Layout), "Dashboard", "carFromPhone",
+                "Android Auto = the phone's cards",
+                "Replaces every Android Auto page by the cards of the phone pages: one Android Auto page per 4 cards of a phone page, " +
+                    "in the phone's reading order (\"Engine\" with 8 cards gives \"Engine 1/2\" and \"Engine 2/2\"), one card per cell. " +
+                    "Cards keep their type, values, title, thresholds and decimals. Run it after changing the phone pages when Android Auto " +
+                    "must show the same cards as the phone (layout rule of this API, see the dashboard docs).",
+                reply = Reply(description = "The new layout", schema = S.ref("Dashboard")),
+            ) {
+                val d = editLayout { d -> io.github.jonathangtd.bimmerdata.dashboard.DashboardMirror.carFromPhone(d).let { it to it } }
+                ok(dashboardJson(d))
+            },
+            Route(
                 "GET", "/api/v1/dashboard/{target}/pages", RouteAccess.Needs(Scope.Read), "Dashboard", "listPages",
                 "Pages of the phone or of Android Auto",
                 "Pages in order, each with its `index`, cards and `freeCells` (free grid cells as `(col,row)`).",

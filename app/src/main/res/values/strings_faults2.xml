@@ -55,4 +55,8 @@
     <string name="f2_test_confirm">Run the test</string>
     <string name="f2_test_moving">Tests only at a standstill (%1$s km/h read).</string>
     <string name="f2_tests_hint">These act on the car (actuators, self tests): each run is confirmed, and refused while the car moves. Coding, programming and memory clears are never offered here.</string>
+
+    <!-- dashboard editor, Android Auto side -->
+    <string name="car_from_phone">Same cards as the phone</string>
+    <string name="car_from_phone_done">Android Auto pages rebuilt from the phone cards.</string>
 </resources>

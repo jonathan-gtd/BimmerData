@@ -152,6 +152,7 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 | PUT | `/api/v1/dashboard[?dryRun=true]` | layout | Replace the layout (strict validation) |
 | POST | `/api/v1/dashboard/validate` | read | Validate a layout without saving |
 | POST | `/api/v1/dashboard/reset`, `/api/v1/dashboard/{target}/reset` | layout | Empty both sides / one side |
+| POST | `/api/v1/dashboard/car/from-phone` | layout | Rebuild the Android Auto pages from the phone's cards (layout rule: same cards on both) |
 | GET / POST | `/api/v1/dashboard/{target}/pages` | read / layout | List / add pages |
 | GET / PATCH / DELETE | `/api/v1/dashboard/{target}/pages/{page}` | read / layout | One page: get, rename / resize / move, delete |
 | POST | `/api/v1/dashboard/{target}/pages/{page}/cards` | layout | Add a card (exact cell or first free slot) |
@@ -209,6 +210,12 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
   one ECU's dynamic block holds 42 values. A card, a layout or a profile file that would make more
   is refused (`409 too_many_values`, `422 invalid_layout` with an issue `too_many_values`,
   `422 invalid_profile_file`): split the values into several profiles.
+- **Android Auto shows the same cards as the phone** (the order may differ): every card of the
+  phone pages is on an Android Auto page, and Android Auto has no other card. After creating or
+  changing phone pages, call `POST /api/v1/dashboard/car/from-phone`: it rebuilds the Android Auto
+  pages from the phone pages (4 cards per Android Auto page, "Engine 1/2", "Engine 2/2"…). For a
+  profile file, build `carPages` the same way. The app does not refuse a layout that breaks the
+  rule (older or shared profiles), but an agent must not create one.
 - Unknown JSON fields are rejected (400), so typos do not silently vanish.
 - Measurement ids that are not in the imported ECU folder are accepted but reported as
   `warnings` (the card shows "--" until the SGBD is imported).
@@ -290,7 +297,9 @@ scopes for this (Settings › Local API: that first step is on the phone, see
    (then `POST /api/v1/settings/translations/update`).
 6. **Profiles and graphs**: `POST /api/v1/profiles/import` with a profile file (the JSON of
    `GET /api/v1/profiles/{profile}/export`, pages and graphs included), or `POST /api/v1/profiles`
-   and the dashboard routes; graphs with `/api/v1/profiles/{profile}/graphs`.
+   and the dashboard routes; graphs with `/api/v1/profiles/{profile}/graphs`. Android Auto gets the
+   same cards as the phone: `POST /api/v1/dashboard/car/from-phone` once the phone pages are done
+   (see [Layout rules](#layout-rules)).
 7. **Connect**: `POST /api/v1/connect` `{"mode":"usb"}` / `{"mode":"bluetooth"}` /
    `{"mode":"simulation"}`, then `GET /api/v1/status`.
 

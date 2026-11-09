@@ -304,6 +304,14 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                     onImport = { openFile.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
                     onReset = { sheet = Sheet.ConfirmReset(target) },
                     onRename = { sheet = Sheet.RenameDashboard },
+                    onCarFromPhone = if (target == Target.Car) {
+                        {
+                            vm.carFromPhone()
+                            message(res.getString(R.string.car_from_phone_done), withUndo = true)
+                        }
+                    } else {
+                        null
+                    },
                 )
                 Text(
                     stringResource(R.string.edit_hint), color = Cockpit.Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -616,6 +624,8 @@ private fun EditorToolbar(
     onPages: () -> Unit, onAddCard: () -> Unit,
     onShare: () -> Unit, onSaveFile: () -> Unit, onImport: () -> Unit, onReset: () -> Unit,
     onRename: () -> Unit,
+    /** Android Auto side only: rebuild its pages from the phone's cards. */
+    onCarFromPhone: (() -> Unit)? = null,
 ) {
     var menu by remember { mutableStateOf(false) }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -624,6 +634,9 @@ private fun EditorToolbar(
         Box {
             RoundIconButton(R.drawable.ic_more, stringResource(R.string.more), onClick = { menu = true }, background = Track)
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Cockpit.Card) {
+                onCarFromPhone?.let { mirror ->
+                    MenuItem(R.drawable.ic_pages, stringResource(R.string.car_from_phone)) { menu = false; mirror() }
+                }
                 MenuItem(R.drawable.ic_edit, stringResource(R.string.dashboard_rename)) { menu = false; onRename() }
                 MenuItem(R.drawable.ic_share, stringResource(R.string.share_layout)) { menu = false; onShare() }
                 MenuItem(R.drawable.ic_download, stringResource(R.string.export_file)) { menu = false; onSaveFile() }
