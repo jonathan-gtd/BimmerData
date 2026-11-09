@@ -177,7 +177,12 @@ class EcuFileStore(
             dir.mkdirs()
             val (sources, skipped) = scan(dir)
             if (sources.isEmpty()) {
-                throw EcuFileException(Reason.NoEcuFiles, "No .prg / .grp file in ${dir.absolutePath} (${skipped.size} other entr${if (skipped.size == 1) "y" else "ies"} skipped)")
+                throw EcuFileException(
+                    Reason.NoEcuFiles,
+                    "No .prg / .grp file in ${dir.absolutePath} (${skipped.size} other entr${if (skipped.size == 1) "y" else "ies"} skipped). " +
+                        "If files were copied there but are not seen, the folder was probably created by adb before the app: " +
+                        "delete it (`adb shell rm -r ${dir.absolutePath}`), start the app once (it creates the folder), then copy the files again.",
+                )
             }
             val base = if (mode == Mode.Merge) ecuDir else stagingDir
             val upToDate = mode == Mode.Replace && sameSet(sources, ecuDir)
@@ -271,10 +276,21 @@ class EcuFileStore(
             if (changedLive) runCatching { afterChange() }
             deviceImport = deviceImport.copy(
                 phase = ImportPhase.Failed, copied = copied, unchanged = unchanged, current = null,
-                error = e.message ?: e.javaClass.simpleName, finishedAtMs = clock(),
+                error = (e.message ?: e.javaClass.simpleName) + accessHint(e, root), finishedAtMs = clock(),
             )
         }
     }
+
+    /**
+     * Files written by `adb shell cp` belong to the shell user with mode 0660: the app may list them
+     * but not open them (EACCES). Says how to fix it, for the agent reading the error.
+     */
+    private fun accessHint(e: Exception, root: File): String =
+        if ((e.message ?: "").contains("EACCES")) {
+            " (the app cannot read files copied with `adb shell cp`: run `adb shell chmod -R a+rw ${root.absolutePath}` or copy them with `adb push`, then call the import again)"
+        } else {
+            ""
+        }
 
     /**
      * ECU files of [root] and its sub-folders (a pushed `Ecu` folder may land one level down), and

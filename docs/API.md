@@ -259,6 +259,15 @@ scopes for this (Settings › Local API: that first step is on the phone, see
      it is also removed with the app. Without `adb`, copying with a USB file transfer from a
      computer works on phones that still show `Android/data` over USB (many Android 11+ phones
      hide it: use `adb push` then).
+
+     Two pitfalls, both reported in the error message:
+     - **start the app before copying.** If the folder is created by `adb` (with `mkdir`, or by a
+       push before the app's first start), it belongs to the shell user and the app cannot list
+       it: the import answers `422 no_ecu_files` although the files are there. Delete it
+       (`adb shell rm -r <importDir>`), start the app once, then copy again.
+     - **copy with `adb push`, not `adb shell cp`.** Files copied by `cp` inside the phone (for
+       example from `Download`) are only readable by their owner (mode 0660): the import fails
+       with `EACCES`. Run `adb shell chmod -R a+rw <importDir>` and call the import again.
    - a few files: `PUT /api/v1/ecu-files/<sgbd>.prg` with the raw file as body, one file per call
      (`curl -T <sgbd>.prg -H "$H" "$BD/ecu-files/<sgbd>.prg"`). The body is streamed to disk and
      moved in place once complete; uploading a whole folder this way is not intended.
