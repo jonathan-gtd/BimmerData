@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only: see dev/UpdateApkProvider (development installs that Android Auto accepts). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <!-- Exported without a permission on purpose: the package installer reads it; the
+             provider itself only serves the waiting update, read only, to the package installer. -->
+        <provider
+            android:name=".dev.UpdateApkProvider"
+            android:authorities="${applicationId}.update"
+            android:exported="true"
+            tools:ignore="ExportedContentProvider" />
+    </application>
+</manifest>
