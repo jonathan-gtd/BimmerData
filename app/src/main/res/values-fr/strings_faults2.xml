@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Faults tab, faults first -->
+    <plurals name="f2_ecus_with_faults">
+        <item quantity="one">%d calculateur en défaut</item>
+        <item quantity="many">%d calculateurs en défaut</item>
+        <item quantity="other">%d calculateurs en défaut</item>
+    </plurals>
+    <plurals name="f2_faults">
+        <item quantity="one">%d défaut</item>
+        <item quantity="many">%d défauts</item>
+        <item quantity="other">%d défauts</item>
+    </plurals>
+    <plurals name="f2_silent">
+        <item quantity="one">%d sans réponse</item>
+        <item quantity="many">%d sans réponse</item>
+        <item quantity="other">%d sans réponse</item>
+    </plurals>
+    <plurals name="f2_no_faults">
+        <item quantity="one">Aucun défaut sur %d calculateur</item>
+        <item quantity="many">Aucun défaut sur les %d calculateurs</item>
+        <item quantity="other">Aucun défaut sur les %d calculateurs</item>
+    </plurals>
+    <plurals name="f2_others">
+        <item quantity="one">%d calculateur sans défaut</item>
+        <item quantity="many">%d calculateurs sans défaut</item>
+        <item quantity="other">%d calculateurs sans défaut</item>
+    </plurals>
+    <plurals name="f2_all_ecus">
+        <item quantity="one">%d calculateur</item>
+        <item quantity="many">%d calculateurs</item>
+        <item quantity="other">%d calculateurs</item>
+    </plurals>
+    <plurals name="f2_more_faults">
+        <item quantity="one">+ %d autre</item>
+        <item quantity="many">+ %d autres</item>
+        <item quantity="other">+ %d autres</item>
+    </plurals>
+    <string name="f2_to_check">À traiter</string>
+    <string name="f2_no_answer">Sans réponse</string>
+    <string name="f2_presence_present">Présent</string>
+    <string name="f2_presence_stored">Mémorisé</string>
+    <string name="f2_presence_never">Jamais apparu</string>
+    <string name="f2_view_by_bus">Vue par bus</string>
+    <string name="f2_view_by_function">Vue par fonction</string>
+    <string name="f2_share_report">Partager le rapport</string>
+    <string name="f2_ecu_menu">Menu du calculateur</string>
+
+    <!-- ECU functions -->
+    <string name="f2_functions">Fonctions</string>
+    <string name="f2_reads">Lectures</string>
+    <string name="f2_tests">Tests et commandes</string>
+    <string name="f2_functions_loading">Lecture du fichier du calculateur…</string>
+    <string name="f2_functions_none">Aucune fonction documentée dans %1$s.</string>
+    <string name="f2_search">Chercher une fonction</string>
+    <string name="f2_run">Lancer</string>
+    <string name="f2_running">En cours…</string>
+    <string name="f2_result_error">Échec : %1$s</string>
+    <string name="f2_result_empty">Le calculateur n\'a renvoyé aucune valeur.</string>
+    <string name="f2_test_title">Lancer ce test ?</string>
+    <string name="f2_test_text">%1$s va commander un élément de la voiture : %2$s.\n\nVoiture arrêtée et immobilisée, contact mis. Certains tests demandent le moteur tournant, la plupart moteur coupé : suivez la description du job. Arrêtez le test avec la fonction « ENDE » correspondante quand elle existe.</string>
+    <string name="f2_test_confirm">Lancer le test</string>
+    <string name="f2_test_moving">Tests seulement à l\'arrêt (%1$s km/h lus).</string>
+    <string name="f2_tests_hint">Ces fonctions agissent sur la voiture (actionneurs, autotests) : chaque lancement est confirmé, et refusé si la voiture roule. Le codage, la programmation et l\'effacement de mémoires ne sont jamais proposés ici.</string>
+</resources>

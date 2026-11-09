@@ -61,6 +61,25 @@ internal fun StatusPill(faults: EcuFaults?, modifier: Modifier = Modifier) {
     }
 }
 
+/** Present now (red) / stored (amber) / never occurred (grey); nothing when unknown. */
+@Composable
+internal fun PresenceChip(p: io.github.jonathangtd.bimmerdata.live.vehicle.FaultPresence, modifier: Modifier = Modifier) {
+    val (text, color) = when (p) {
+        io.github.jonathangtd.bimmerdata.live.vehicle.FaultPresence.Present -> stringResource(R.string.f2_presence_present) to Cockpit.Danger
+        io.github.jonathangtd.bimmerdata.live.vehicle.FaultPresence.Stored -> stringResource(R.string.f2_presence_stored) to FaultColors.Faults
+        io.github.jonathangtd.bimmerdata.live.vehicle.FaultPresence.NeverOccurred -> stringResource(R.string.f2_presence_never) to FaultColors.Unknown
+        io.github.jonathangtd.bimmerdata.live.vehicle.FaultPresence.Unknown -> return
+    }
+    Box(
+        modifier
+            .clip(RoundedCornerShape(50))
+            .background(color.copy(alpha = 0.14f))
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+    ) {
+        Text(text, color = color, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+    }
+}
+
 /** "0x12" in a small monospace chip. */
 @Composable
 internal fun AddressChip(address: Int, modifier: Modifier = Modifier) {

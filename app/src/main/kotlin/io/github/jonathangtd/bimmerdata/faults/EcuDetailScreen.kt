@@ -6,6 +6,10 @@ package io.github.jonathangtd.bimmerdata.faults
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import io.github.jonathangtd.bimmerdata.live.vehicle.FaultPresence
 import io.github.jonathangtd.bimmerdata.i18n.ecuDescription
 import io.github.jonathangtd.bimmerdata.i18n.rememberTranslator
 import io.github.jonathangtd.bimmerdata.i18n.translationVersion
@@ -63,7 +67,11 @@ import io.github.jonathangtd.bimmerdata.vehicle.DetailState
 import io.github.jonathangtd.bimmerdata.vehicle.VehicleState
 import java.text.NumberFormat
 
-/** One ECU: identification, fault memory with details, read again / clear (with confirmation), its jobs in Tool32. */
+/**
+ * One ECU: its faults first (summary, detail on tap), then its functions (reads and tests, like a
+ * workshop tester), read again / clear. Tool32, identification and the translation export are in
+ * the menu.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun EcuDetailScreen(
@@ -77,14 +85,21 @@ internal fun EcuDetailScreen(
     onCancel: () -> Unit,
     onDismissMessage: () -> Unit,
     initiallyExpanded: Int? = null,
+    /** Screenshots: a functions group and job opened at start. */
+    initialFunctions: Pair<io.github.jonathangtd.bimmerdata.live.vehicle.EcuFunctionKind, String?>? = null,
 ) {
     val faults = state.currentFaults?.firstOrNull { it.address == ecu.address }
     var confirmClear by remember { mutableStateOf(false) }
     var expanded by rememberSaveable { mutableStateOf(initiallyExpanded) }
+    var showIdent by rememberSaveable { mutableStateOf(false) }
+    var menu by remember { mutableStateOf(false) }
     val canClear = ecu.sgbdAvailable && faults?.status == EcuFaultStatus.Faults
     val translator = rememberTranslator()
     val tv = translationVersion()
     val ecuText = remember(ecu, tv) { translator.ecuDescription(ecu, vehicle.seriesSgbd) }
+    val navigator = LocalAppNavigator.current
+    val sgbd = ecu.sgbd?.takeIf { ecu.sgbdAvailable }
+    val export = sgbd?.let { io.github.jonathangtd.bimmerdata.i18n.rememberTranslationExport(it) }
 
     LazyColumn(
         Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)),
@@ -98,15 +113,30 @@ internal fun EcuDetailScreen(
                 Column(Modifier.weight(1f)) {
                     Text(ecu.name, color = Cockpit.Text, fontSize = 24.sp, fontFamily = BarlowCondensed, fontWeight = FontWeight.SemiBold, maxLines = 1)
                     Text(
-                        listOfNotNull(String.format("0x%02X", ecu.address), ecu.sgbd?.uppercase(), vehicle.label).joinToString(" · "),
+                        listOfNotNull(String.format("0x%02X", ecu.address), ecu.sgbd?.uppercase(), ecuText).joinToString(" · "),
                         color = Cockpit.Muted, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
                 }
                 StatusPill(faults)
+                Box {
+                    RoundIconButton(R.drawable.ic_more, stringResource(R.string.f2_ecu_menu), { menu = true }, modifier = Modifier.padding(start = 6.dp))
+                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Cockpit.Card) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.settings2_ecu_jobs)) },
+                            onClick = { menu = false; ecu.sgbd?.let(navigator.openTool32) }, enabled = sgbd != null,
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(if (showIdent) R.string.veh_fault_hide else R.string.veh_ecu_ident)) },
+                            onClick = { menu = false; showIdent = !showIdent },
+                        )
+                        export?.let { e ->
+                            DropdownMenuItem(text = { Text(stringResource(R.string.tr_export)) }, onClick = { menu = false; e.launch() })
+                        }
+                    }
+                }
             }
         }
         item(key = "actions") {
-            val navigator = LocalAppNavigator.current
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 PillButton(stringResource(R.string.veh_ecu_read_again), onReadAgain, icon = R.drawable.ic_reset, enabled = !state.busy && ecu.sgbdAvailable)
                 if (canClear) {
@@ -115,15 +145,11 @@ internal fun EcuDetailScreen(
                         color = Cockpit.Danger, background = Cockpit.Danger.copy(alpha = 0.12f), enabled = !state.busy,
                     )
                 }
-                // Tool32 with this ECU's SGBD already selected
-                PillButton(
-                    stringResource(R.string.settings2_ecu_jobs), { ecu.sgbd?.let(navigator.openTool32) }, icon = R.drawable.ic_tool32,
-                    enabled = ecu.sgbdAvailable && ecu.sgbd != null,
-                )
             }
         }
         if (state.busy) item(key = "task") { TaskCard(state.task, onCancel) }
         state.message?.let { m -> item(key = "message") { MessageCard(messageText(m), m.error, onDismissMessage) } }
+        export?.message?.let { (m, err) -> item(key = "export") { MessageCard(m, err) {} } }
         if (!ecu.sgbdAvailable) {
             item(key = "nosgbd") {
                 Text(
@@ -142,7 +168,7 @@ internal fun EcuDetailScreen(
                     Text(faults.message ?: stringResource(R.string.veh_status_silent), color = FaultColors.Silent, fontSize = 14.sp)
                 else -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     faults.message?.let { Text(it, color = Cockpit.Warning, fontSize = 13.sp) }
-                    faults.faults.forEach { fault ->
+                    faults.faults.sortedBy { FaultPresence.order(FaultPresence.of(it)) }.forEach { fault ->
                         val key = VehicleState.detailKey(vehicle.id, ecu.address, fault.code)
                         val open = expanded == fault.code
                         FaultCard(
@@ -161,24 +187,25 @@ internal fun EcuDetailScreen(
             }
         }
 
-        item(key = "info-title") { SectionTitle(stringResource(R.string.veh_ecu_info)) }
-        item(key = "info") {
-            KeyValueCard(
-                listOfNotNull(
-                    stringResource(R.string.veh_ecu_address) to String.format("0x%02X", ecu.address),
-                    stringResource(R.string.veh_ecu_variant) to (ecu.sgbd?.uppercase() ?: stringResource(R.string.veh_ecu_unknown_variant)),
-                    ecu.group?.let { stringResource(R.string.veh_ecu_group) to it.uppercase() },
-                    ecu.bus?.let { stringResource(R.string.veh_ecu_bus) to it },
-                    ecuText?.let { "" to it },
-                ),
-            )
-        }
-        ecu.sgbd?.takeIf { ecu.sgbdAvailable }?.let { sgbd ->
-            item(key = "translate") { io.github.jonathangtd.bimmerdata.i18n.TranslationExportButton(sgbd) }
-        }
-        if (ecu.ident.isNotEmpty()) {
-            item(key = "ident-title") { SectionTitle(stringResource(R.string.veh_ecu_ident)) }
-            item(key = "ident") { KeyValueCard(ecu.ident.map { identLabel(it.name) to it.value }) }
+        sgbd?.let { s -> item(key = "functions") { EcuFunctionsSection(s, ecu.name, initialFunctions?.first, initialFunctions?.second) } }
+
+        if (showIdent) {
+            item(key = "info-title") { SectionTitle(stringResource(R.string.veh_ecu_info)) }
+            item(key = "info") {
+                KeyValueCard(
+                    listOfNotNull(
+                        stringResource(R.string.veh_ecu_address) to String.format("0x%02X", ecu.address),
+                        stringResource(R.string.veh_ecu_variant) to (ecu.sgbd?.uppercase() ?: stringResource(R.string.veh_ecu_unknown_variant)),
+                        ecu.group?.let { stringResource(R.string.veh_ecu_group) to it.uppercase() },
+                        ecu.bus?.let { stringResource(R.string.veh_ecu_bus) to it },
+                        ecuText?.let { "" to it },
+                    ),
+                )
+            }
+            if (ecu.ident.isNotEmpty()) {
+                item(key = "ident-title") { SectionTitle(stringResource(R.string.veh_ecu_ident)) }
+                item(key = "ident") { KeyValueCard(ecu.ident.map { identLabel(it.name) to it.value }) }
+            }
         }
     }
 
@@ -200,6 +227,7 @@ private fun FaultCard(sgbd: String?, fault: Fault, open: Boolean, detail: Detail
     val tv = translationVersion()
     var showOriginal by rememberSaveable(fault.code) { mutableStateOf(false) }
     val translated = remember(fault, tv) { translator.fault(sgbd, fault) }
+    val presence = remember(fault) { FaultPresence.of(fault) }
     @Suppress("NAME_SHADOWING") val fault = if (showOriginal) fault else translated
     Surface(color = Cockpit.Card, shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, Cockpit.Border)) {
         Column(
@@ -210,21 +238,26 @@ private fun FaultCard(sgbd: String?, fault: Fault, open: Boolean, detail: Detail
                 )
                 .padding(14.dp),
         ) {
-            Row(verticalAlignment = Alignment.Top) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 CodeChip(fault.codeHex)
-                Spacer(Modifier.width(10.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        fault.text.ifEmpty { stringResource(R.string.veh_fault_unknown) }, color = Cockpit.Text, fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium, lineHeight = 20.sp,
-                    )
-                    fault.symptom?.let { Text(it, color = Cockpit.Muted, fontSize = 13.sp, lineHeight = 18.sp) }
-                    fault.presence?.let { Text(it, color = Cockpit.Muted, fontSize = 13.sp, lineHeight = 18.sp) }
-                    fault.warning?.let { Text(it, color = Cockpit.Muted, fontSize = 13.sp, lineHeight = 18.sp) }
-                }
+                Spacer(Modifier.width(8.dp))
+                PresenceChip(presence)
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                fault.text.ifEmpty { stringResource(R.string.veh_fault_unknown) }, color = Cockpit.Text, fontSize = 15.sp,
+                fontWeight = FontWeight.Medium, lineHeight = 20.sp,
+            )
+            fault.symptom?.let { Text(it, color = Cockpit.Muted, fontSize = 13.sp, lineHeight = 18.sp) }
+            if (!open && canDetail) {
+                Text(stringResource(R.string.veh_fault_details), color = Cockpit.Accent, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp))
             }
             AnimatedVisibility(visible = open) {
                 Column(Modifier.padding(top = 10.dp)) {
+                    fault.presence?.let { Text(it, color = Cockpit.Muted, fontSize = 13.sp, lineHeight = 18.sp) }
+                    fault.warning?.let { Text(it, color = Cockpit.Muted, fontSize = 13.sp, lineHeight = 18.sp) }
+                    fault.extra.forEach { Text(it, color = Cockpit.Muted, fontSize = 13.sp, lineHeight = 18.sp) }
+                    Spacer(Modifier.height(10.dp))
                     HorizontalDivider(color = Cockpit.Border)
                     Spacer(Modifier.height(10.dp))
                     when (detail) {

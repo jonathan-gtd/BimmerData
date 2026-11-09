@@ -42,10 +42,15 @@ import java.io.File
 class FaultsScreenshotTest {
     private val out = File(System.getenv("BIMMERDATA_SCREENSHOT_DIR") ?: "build/screenshots").apply { mkdirs() }
 
-    private fun capture(name: String, content: @Composable () -> Unit) {
+    /** [settleMs]: time left to background loads (the ECU functions are read off the main thread). */
+    private fun capture(name: String, settleMs: Long = 0, content: @Composable () -> Unit) {
         val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
         activity.setContent { BimmerDataTheme { Box(Modifier.fillMaxSize().background(Cockpit.Background)) { content() } } }
         repeat(3) { shadowOf(android.os.Looper.getMainLooper()).idle() }
+        repeat((settleMs / 100).toInt()) {
+            Thread.sleep(100)
+            shadowOf(android.os.Looper.getMainLooper()).idle()
+        }
         val view = activity.window.decorView
         val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
         view.draw(android.graphics.Canvas(bitmap))
@@ -102,6 +107,31 @@ class FaultsScreenshotTest {
     fun overviewFrenchScanning() {
         val s = scanned().copy(task = VehicleTask.ReadingFaults(5, 15, "DSC"), message = VehicleMessage(VehicleMessage.Kind.Cleared, "DME/DDE"))
         capture("faults_overview_fr_busy.png") { Overview(s) }
+    }
+
+    @Test
+    @Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
+    fun overviewFrench() {
+        val s = scanned()
+        capture("faults_overview_fr.png") { Overview(s) }
+    }
+
+    /** The DME detail with its functions (the ECU file copied where the app keeps its ECU files). */
+    @Test
+    @Config(qualifiers = "fr-w411dp-h2400dp-xxhdpi")
+    fun ecuDetailFunctionsFrench() {
+        val s = scanned()
+        val v = s.current!!
+        org.robolectric.shadows.ShadowLog.stream = System.out
+        val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        val ecuDir = File(app.filesDir, "ecu").apply { mkdirs() }
+        File(System.getenv("BIMMERDATA_ECU_DIR")!!).listFiles()!!.first { it.name.equals("msv70.prg", true) }.copyTo(File(ecuDir, "msv70.prg"), overwrite = true)
+        capture("faults_ecu_dme_functions_fr.png", settleMs = 2000) {
+            EcuDetailScreen(
+                v, v.ecu(0x12)!!, s, {}, {}, {}, {}, {}, {},
+                initialFunctions = io.github.jonathangtd.bimmerdata.live.vehicle.EcuFunctionKind.Test to "STEUERN_EKP",
+            )
+        }
     }
 
     @Test

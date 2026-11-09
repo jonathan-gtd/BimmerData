@@ -232,6 +232,19 @@ private fun ChosenEcus(config: TranslationConfig, store: TranslationSettings, re
 /** Faults › ECU: "Export for translation" (CSV template of the ECU from the user's own file). */
 @Composable
 fun TranslationExportButton(sgbd: String) {
+    val export = rememberTranslationExport(sgbd)
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Button(stringResource(R.string.tr_export)) { export.launch() }
+        Hint(stringResource(R.string.tr_export_hint))
+        export.message?.let { (m, err) -> Text(m, color = if (err) Cockpit.Warning else Cockpit.Accent, fontSize = 13.sp) }
+    }
+}
+
+/** "Export for translation" of [sgbd]: [launch] asks where to save; [message] says how it went. */
+class TranslationExport(val launch: () -> Unit, val message: Pair<String, Boolean>?)
+
+@Composable
+fun rememberTranslationExport(sgbd: String): TranslationExport {
     val context = LocalContext.current
     val repo = remember { TranslationRepository.get(context) }
     val scope = rememberCoroutineScope()
@@ -247,11 +260,7 @@ fun TranslationExportButton(sgbd: String) {
             }
         }
     }
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Button(stringResource(R.string.tr_export)) { create.launch(sgbd.lowercase(Locale.ROOT) + ".csv") }
-        Hint(stringResource(R.string.tr_export_hint))
-        message?.let { (m, err) -> Text(m, color = if (err) Cockpit.Warning else Cockpit.Accent, fontSize = 13.sp) }
-    }
+    return TranslationExport({ create.launch(sgbd.lowercase(Locale.ROOT) + ".csv") }, message)
 }
 
 // ---------------------------------------------------------------- building blocks (same look as the Settings screen)

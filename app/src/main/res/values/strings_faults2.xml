@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Faults tab, faults first -->
+    <plurals name="f2_ecus_with_faults">
+        <item quantity="one">%d ECU with faults</item>
+        <item quantity="other">%d ECUs with faults</item>
+    </plurals>
+    <plurals name="f2_faults">
+        <item quantity="one">%d fault</item>
+        <item quantity="other">%d faults</item>
+    </plurals>
+    <plurals name="f2_silent">
+        <item quantity="one">%d not answering</item>
+        <item quantity="other">%d not answering</item>
+    </plurals>
+    <plurals name="f2_no_faults">
+        <item quantity="one">No fault on the %d ECU</item>
+        <item quantity="other">No fault on the %d ECUs</item>
+    </plurals>
+    <plurals name="f2_others">
+        <item quantity="one">%d ECU without faults</item>
+        <item quantity="other">%d ECUs without faults</item>
+    </plurals>
+    <plurals name="f2_all_ecus">
+        <item quantity="one">%d ECU</item>
+        <item quantity="other">%d ECUs</item>
+    </plurals>
+    <plurals name="f2_more_faults">
+        <item quantity="one">+ %d more</item>
+        <item quantity="other">+ %d more</item>
+    </plurals>
+    <string name="f2_to_check">To check</string>
+    <string name="f2_no_answer">Not answering</string>
+    <string name="f2_presence_present">Present</string>
+    <string name="f2_presence_stored">Stored</string>
+    <string name="f2_presence_never">Never occurred</string>
+    <string name="f2_view_by_bus">View by bus</string>
+    <string name="f2_view_by_function">View by function</string>
+    <string name="f2_share_report">Share the report</string>
+    <string name="f2_ecu_menu">ECU menu</string>
+
+    <!-- ECU functions -->
+    <string name="f2_functions">Functions</string>
+    <string name="f2_reads">Reads</string>
+    <string name="f2_tests">Tests and controls</string>
+    <string name="f2_functions_loading">Reading the ECU file…</string>
+    <string name="f2_functions_none">No documented function in %1$s.</string>
+    <string name="f2_search">Search a function</string>
+    <string name="f2_run">Run</string>
+    <string name="f2_running">Running…</string>
+    <string name="f2_result_error">Failed: %1$s</string>
+    <string name="f2_result_empty">The ECU returned no value.</string>
+    <string name="f2_test_title">Run this test?</string>
+    <string name="f2_test_text">%1$s will control a part of the car: %2$s.\n\nCar stopped and secured, ignition on. Some tests need the engine running, most need it off: follow the job description. Stop the test with its matching \"END\" function when there is one.</string>
+    <string name="f2_test_confirm">Run the test</string>
+    <string name="f2_test_moving">Tests only at a standstill (%1$s km/h read).</string>
+    <string name="f2_tests_hint">These act on the car (actuators, self tests): each run is confirmed, and refused while the car moves. Coding, programming and memory clears are never offered here.</string>
+</resources>

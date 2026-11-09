@@ -80,6 +80,25 @@ Supported EDIABAS concepts so far: BMW-FAST (0x010F). DS2, KWP2000\* and D-CAN a
 Safety: the interface refuses flashing, coding writes, security access and the programming
 session before anything is sent to the car. Fault memory clear is allowed.
 
+## Faults
+
+**Scan the vehicle** once: the app finds the car's ECUs and their ECU files and keeps them (one
+entry per car, several cars possible). Afterwards one tap reads the fault memory of every ECU
+without scanning again; the last read stays readable away from the car and can be shared. The
+car's ECUs also come first in the card picker, get their translations downloaded, and a profile
+linked to a car is picked when the app reads that car's VIN.
+
+- The tab shows the faults first: a summary line, then the ECUs **to check** (with their most
+  urgent fault, translated, and a chip **Present** / **Stored** / **Never occurred**) and those
+  not answering; the ECUs without faults fold into one line. Scan again, share, clear all, the bus
+  view, rename and forget are in the ⋮ menu.
+- An ECU shows its faults (text and symptom; the details on tap) and its **functions**, like a
+  workshop tester: **Reads** (states and values, one tap) and **Tests and controls** (actuators,
+  self tests), with a field per argument and the help of the ECU file. A test asks for a
+  confirmation every time and is refused while the car moves (a fresh DME or GPS speed above
+  2 km/h). Coding, programming, writes, adaptations, resets and memory clears are never offered
+  there. Tool32, the identification and the export for translation are in the ⋮ menu.
+
 ## Graphs
 
 The **Graph** tab draws several values of the active profile's cards (phone and Android Auto
