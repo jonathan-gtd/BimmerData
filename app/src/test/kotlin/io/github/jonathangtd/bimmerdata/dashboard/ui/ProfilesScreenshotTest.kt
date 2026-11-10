@@ -18,17 +18,22 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.jonathangtd.bimmerdata.cars.CarTabActions
+import io.github.jonathangtd.bimmerdata.cars.CarTabContent
 import io.github.jonathangtd.bimmerdata.dashboard.Msv70Example
 import io.github.jonathangtd.bimmerdata.dashboard.SgbdChoices
 import io.github.jonathangtd.bimmerdata.live.AcquisitionStatus
 import io.github.jonathangtd.bimmerdata.live.LiveConnection
 import io.github.jonathangtd.bimmerdata.live.RecordingState
 import io.github.jonathangtd.bimmerdata.live.SgbdInfo
+import io.github.jonathangtd.bimmerdata.live.vehicle.Vehicle
+import io.github.jonathangtd.bimmerdata.live.vehicle.VehicleEcu
 import io.github.jonathangtd.bimmerdata.profiles.ProfileSet
 import io.github.jonathangtd.bimmerdata.profiles.ProfileVehicle
 import io.github.jonathangtd.bimmerdata.profiles.Profiles
 import io.github.jonathangtd.bimmerdata.ui.BimmerDataTheme
 import io.github.jonathangtd.bimmerdata.ui.Cockpit
+import io.github.jonathangtd.bimmerdata.vehicle.VehicleState
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -38,7 +43,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
 
-/** Profiles: list, first launch, editor, header and the card picker on the profile's ECUs (visual check). */
+/** Profiles: the Car tab (car + list), first launch, editor, header and the card picker on the profile's ECUs (visual check). */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class ProfilesScreenshotTest {
@@ -83,8 +88,14 @@ class ProfilesScreenshotTest {
     /** What the profile screens show: the selected car's profiles. */
     private val e90 = set.forCar("car-e90")
 
-    private fun tab(name: String, profiles: ProfileSet = e90) = capture(name) {
-        ProfilesTabContent(profiles, onActivate = {}, onNew = {}, onImport = {}, actions = noActions, car = "E90 330i")
+    private val car = Vehicle(
+        "car-e90", "E90 330i", vinShort = "AB12345", series = "E90", model = "330i", scannedAtMs = 1_794_296_709_624,
+        ecus = listOf("msv70", "egs", "kombi87", "dsc_87").mapIndexed { i, s -> VehicleEcu(0x12 + i, s.uppercase(), sgbd = s) },
+    )
+
+    /** The Car tab: the car card, then its profiles, then My cars. */
+    private fun tab(name: String, profiles: ProfileSet = e90) = capture(name, height = 1400) {
+        CarTabContent(car, cars = 2, state = VehicleState(), set = profiles, onActivate = {}, onNew = {}, onImport = {}, actions = noActions, carActions = CarTabActions())
     }
 
     private fun switchSheet(name: String) = capture(name, height = 620) {
@@ -116,8 +127,8 @@ class ProfilesScreenshotTest {
         }
     }
 
-    @Test @Config(qualifiers = "w411dp-h900dp-mdpi") fun profilesTab() = tab("profiles_tab.png")
-    @Test @Config(qualifiers = "fr-w411dp-h900dp-mdpi") fun profilesTabFrench() = tab("profiles_tab_fr.png")
+    @Test @Config(qualifiers = "w411dp-h1400dp-mdpi") fun profilesTab() = tab("profiles_tab.png")
+    @Test @Config(qualifiers = "fr-w411dp-h1400dp-mdpi") fun profilesTabFrench() = tab("profiles_tab_fr.png")
     @Test @Config(qualifiers = "w411dp-h900dp-mdpi") fun profilesTabEmpty() = tab("profiles_tab_empty.png", ProfileSet())
     @Test @Config(qualifiers = "fr-w411dp-h900dp-mdpi") fun profilesTabEmptyFrench() = tab("profiles_tab_empty_fr.png", ProfileSet())
     @Test @Config(qualifiers = "w411dp-h900dp-mdpi") fun profileSwitch() = switchSheet("profiles_switch.png")

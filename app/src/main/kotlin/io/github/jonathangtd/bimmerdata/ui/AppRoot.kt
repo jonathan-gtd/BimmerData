@@ -60,11 +60,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.jonathangtd.bimmerdata.R
 import io.github.jonathangtd.bimmerdata.cars.CarBook
+import io.github.jonathangtd.bimmerdata.cars.CarTabScreen
 import io.github.jonathangtd.bimmerdata.cars.CarsScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import io.github.jonathangtd.bimmerdata.dashboard.ui.DashboardScreen
-import io.github.jonathangtd.bimmerdata.dashboard.ui.ProfilesScreen
 import io.github.jonathangtd.bimmerdata.faults.FaultsScreen
 import io.github.jonathangtd.bimmerdata.graph.ui.GraphScreen
 import io.github.jonathangtd.bimmerdata.settings.ApiDocsScreen
@@ -74,16 +74,17 @@ import io.github.jonathangtd.bimmerdata.settings.SettingsScreen
 enum class AppTab(@param:DrawableRes val icon: Int, @param:StringRes val label: Int) {
     Dashboard(R.drawable.ic_dashboard, R.string.nav_dashboard),
     Graph(R.drawable.ic_graph, R.string.nav_graph),
-    Profiles(R.drawable.ic_profile, R.string.nav_profiles),
+    Car(R.drawable.ic_profile, R.string.nav_car),
     Faults(R.drawable.ic_faults, R.string.nav_faults),
     Settings(R.drawable.ic_settings, R.string.nav_settings),
 }
 
 /**
  * Top-level screens with a bottom navigation bar (hidden while editing the dashboard layout).
- * Tool32, the API documentation and My cars are secondary screens ([AppOverlay]) opened through
- * [LocalAppNavigator]: from Settings › Tools, from an ECU's detail with its SGBD selected, from the
- * profile screens ("Change car"). My cars also opens at start when there is no car or several.
+ * The Car tab holds the car shown and its profiles. Tool32, the API documentation and My cars are
+ * secondary screens ([AppOverlay]) opened through [LocalAppNavigator]: from Settings › Tools, from
+ * an ECU's detail with its SGBD selected, from the Car tab ("My cars") and the profile switch
+ * ("Change car"). At start: the Car tab when there is no car yet, My cars when there are several.
  */
 @Composable
 fun AppRoot() {
@@ -96,7 +97,7 @@ fun AppRoot() {
         AppNavigator(
             openTool32 = { sgbd -> tool32Sgbd = sgbd; overlay = AppOverlay.Tool32 },
             openApiDocs = { overlay = AppOverlay.ApiDocs },
-            openProfiles = { overlay = null; tab = AppTab.Profiles },
+            openCar = { overlay = null; tab = AppTab.Car },
             openDashboard = { overlay = null; tab = AppTab.Dashboard },
             openCars = { overlay = AppOverlay.Cars },
         )
@@ -115,13 +116,16 @@ fun AppRoot() {
     // REST API server and USB auto-connect follow the settings for the whole process life.
     val context = LocalContext.current
     LaunchedEffect(Unit) { AppServices.start(context) }
-    // My cars first when there is no car (how to get one) or several (which one); one car: the dashboard.
+    // No car yet: the Car tab (how to get one); several: My cars (which one); one car: the dashboard.
     var startChecked by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         if (startChecked) return@LaunchedEffect
         startChecked = true
         val cars = withContext(Dispatchers.IO) { CarBook.get(context).snapshot().cars.size }
-        if (cars != 1 && overlay == null) overlay = AppOverlay.Cars
+        if (overlay == null) when {
+            cars == 0 -> tab = AppTab.Car
+            cars > 1 -> overlay = AppOverlay.Cars
+        }
     }
     Column(Modifier.fillMaxSize().background(Cockpit.Background)) {
         // While the bottom bar is shown it owns the navigation bar inset.
@@ -130,12 +134,13 @@ fun AppRoot() {
                 when (overlay) {
                     AppOverlay.Tool32 -> Tool32Screen(initialSgbd = tool32Sgbd, onBack = { overlay = null })
                     AppOverlay.ApiDocs -> ApiDocsScreen(onBack = { overlay = null })
-                    AppOverlay.Cars -> CarsScreen(onBack = { overlay = null }, onShown = { overlay = null; tab = AppTab.Dashboard })
+                    // a car chosen: back to the Car tab when opened from it, else to the dashboard
+                    AppOverlay.Cars -> CarsScreen(onBack = { overlay = null }, onShown = { overlay = null; if (tab != AppTab.Car) tab = AppTab.Dashboard })
                     null -> holder.SaveableStateProvider(tab.name) {
                         when (tab) {
                             AppTab.Dashboard -> DashboardScreen(onEditingChange = { editing = it })
                             AppTab.Graph -> GraphScreen()
-                            AppTab.Profiles -> ProfilesScreen()
+                            AppTab.Car -> CarTabScreen()
                             AppTab.Faults -> FaultsScreen()
                             AppTab.Settings -> SettingsScreen()
                         }

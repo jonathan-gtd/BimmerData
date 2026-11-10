@@ -121,8 +121,8 @@ private sealed interface CarsSheet {
 /**
  * My cars: every car with its VIN state, series, profiles and ECUs; show one (tap), detect its
  * ECUs, set them by hand, rename, delete (with its profiles, after a confirmation), add one by
- * hand. Shown at start when there is no car or several, and from the profile screens ("Change
- * car"). [onShown]: a car was chosen, back to the dashboard.
+ * hand. Shown at start when there are several cars, and from the Car tab ("My cars") and the
+ * profile switch ("Change car"). [onShown]: a car was chosen, back to the dashboard.
  */
 @Composable
 fun CarsScreen(onBack: () -> Unit, onShown: () -> Unit, vm: DashboardViewModel = viewModel()) {
@@ -174,17 +174,7 @@ fun CarsScreen(onBack: () -> Unit, onShown: () -> Unit, vm: DashboardViewModel =
                 scope.io { book.create(label, series, model) }
             },
         )
-        is CarsSheet.Rename -> car(s.id)?.let { c ->
-            TextInputDialog(
-                title = stringResource(R.string.cars_rename), initial = c.label, placeholder = stringResource(R.string.cars_label_placeholder),
-                maxLength = Cars.MAX_LABEL_LENGTH, hint = null,
-                onConfirm = { text ->
-                    sheet = null
-                    if (text.isNotBlank()) scope.io { book.update(c.id, label = text) }
-                },
-                onDismiss = { sheet = null },
-            )
-        }
+        is CarsSheet.Rename -> car(s.id)?.let { c -> RenameCarDialog(c, onDismiss = { sheet = null }) }
         is CarsSheet.Delete -> car(s.id)?.let { c ->
             val n = counts[c.id] ?: 0
             ConfirmDialog(
@@ -208,8 +198,25 @@ fun CarsScreen(onBack: () -> Unit, onShown: () -> Unit, vm: DashboardViewModel =
 }
 
 /** Runs [block] off the main thread (the car book writes files). */
-private fun CoroutineScope.io(block: () -> Unit) {
+internal fun CoroutineScope.io(block: () -> Unit) {
     launch { withContext(Dispatchers.IO) { block() } }
+}
+
+/** New name for [car] (My cars and the Car tab). */
+@Composable
+internal fun RenameCarDialog(car: Vehicle, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val book = remember { CarBook.get(context) }
+    val scope = rememberCoroutineScope()
+    TextInputDialog(
+        title = stringResource(R.string.cars_rename), initial = car.label, placeholder = stringResource(R.string.cars_label_placeholder),
+        maxLength = Cars.MAX_LABEL_LENGTH, hint = null,
+        onConfirm = { text ->
+            onDismiss()
+            if (text.isNotBlank()) scope.io { book.update(car.id, label = text) }
+        },
+        onDismiss = onDismiss,
+    )
 }
 
 /** Stateless content of My cars (also used by the screenshot tests). */
@@ -264,7 +271,7 @@ internal fun CarsContent(
 
 /** No car yet: connecting adds it, or add it by hand. */
 @Composable
-private fun NoCar(onAdd: () -> Unit) {
+internal fun NoCar(onAdd: () -> Unit) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(Modifier.padding(horizontal = 32.dp).widthIn(max = 360.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
@@ -313,11 +320,7 @@ private fun CarRow(r: CarRowInfo, busy: Boolean, actions: CarActions) {
                     )
                 }
             }
-            val vin = (c.vinShort ?: c.vin?.takeLast(7))?.let { stringResource(R.string.cars_vin, it) } ?: stringResource(R.string.cars_vin_unknown)
-            Text(
-                listOfNotNull(listOfNotNull(c.series, c.model).joinToString(" ").takeIf { it.isNotEmpty() }, vin).joinToString(" · "),
-                color = Cockpit.Muted, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-            )
+            Text(carSubtitle(c), color = Cockpit.Muted, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             val ecus = c.sgbds().size
             Text(
                 pluralStringResource(R.plurals.cars_profiles, r.profiles, r.profiles) + " · " +
@@ -350,7 +353,7 @@ private fun CarMenuItem(icon: Int, text: String, enabled: Boolean = true, color:
 
 /** A car by hand: name (required), series and model. */
 @Composable
-private fun AddCarDialog(onDismiss: () -> Unit, onAdd: (label: String, series: String, model: String) -> Unit) {
+internal fun AddCarDialog(onDismiss: () -> Unit, onAdd: (label: String, series: String, model: String) -> Unit) {
     var label by remember { mutableStateOf("") }
     var series by remember { mutableStateOf("") }
     var model by remember { mutableStateOf("") }
@@ -396,7 +399,7 @@ private fun AddCarDialog(onDismiss: () -> Unit, onAdd: (label: String, series: S
  * remove; one still used by profiles is asked about first), and the ECU folder to add more.
  */
 @Composable
-private fun CarEcusSheet(car: Vehicle, loadChoices: suspend () -> SgbdChoices, snackbar: SnackbarHostState, onDismiss: () -> Unit) {
+internal fun CarEcusSheet(car: Vehicle, loadChoices: suspend () -> SgbdChoices, snackbar: SnackbarHostState, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val res = LocalResources.current
     val book = remember { CarBook.get(context) }

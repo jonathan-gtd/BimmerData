@@ -132,7 +132,7 @@ fun FaultsScreen() {
             VehicleOverview(
                 state = state,
                 onDetect = { repo.detect() },
-                onOpenCars = navigator.openCars,
+                onOpenCars = navigator.openCar,
                 onReadFaults = repo::readFaults,
                 onClearAll = { confirmClearAll = true },
                 onShare = {
@@ -176,7 +176,7 @@ internal fun VehicleOverview(
     state: VehicleState,
     /** Detects the selected car's ECUs (shown when it has none yet). */
     onDetect: () -> Unit,
-    /** Opens My cars (shown when there is no car). */
+    /** Opens the Car tab (shown when there is no car). */
     onOpenCars: () -> Unit,
     onReadFaults: () -> Unit,
     onClearAll: () -> Unit,
@@ -233,7 +233,7 @@ internal fun VehicleOverview(
         state.message?.let { m -> item(key = "message") { MessageCard(messageText(m), m.error, onDismissMessage) } }
 
         if (vehicle == null) {
-            item(key = "empty") { EmptyVehicle(stringResource(R.string.cars_empty_title), stringResource(R.string.cars_empty_hint), stringResource(R.string.cars_open), R.drawable.ic_profile, onOpenCars, enabled = true) }
+            item(key = "empty") { EmptyVehicle(stringResource(R.string.cars_empty_title), stringResource(R.string.cars_empty_hint), stringResource(R.string.car_open_tab), R.drawable.ic_profile, onOpenCars, enabled = true) }
             return@LazyColumn
         }
         if (vehicle.ecus.isEmpty()) {

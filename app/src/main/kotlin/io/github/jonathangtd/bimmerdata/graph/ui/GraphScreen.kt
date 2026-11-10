@@ -199,7 +199,7 @@ fun GraphScreen(vm: GraphViewModel = viewModel()) {
             !ui.loaded -> Spacer(Modifier.weight(1f))
             ui.profileId == null -> GraphEmpty(
                 stringResource(R.string.graph_empty_title), stringResource(R.string.graph_no_profile_hint),
-                stringResource(R.string.graph_open_profiles), navigator.openProfiles, Modifier.weight(1f),
+                stringResource(R.string.graph_open_profiles), navigator.openCar, Modifier.weight(1f),
             )
             !ui.hasCards && ui.graphs.isEmpty() -> GraphEmpty(
                 stringResource(R.string.graph_no_cards_title), stringResource(R.string.graph_no_cards_hint),
@@ -257,11 +257,11 @@ fun GraphScreen(vm: GraphViewModel = viewModel()) {
             },
             onNew = {
                 sheet = null
-                navigator.openProfiles()
+                navigator.openCar()
             },
             onManage = {
                 sheet = null
-                navigator.openProfiles()
+                navigator.openCar()
             },
         )
         is GraphSheet.Edit -> {

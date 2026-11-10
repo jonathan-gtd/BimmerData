@@ -1,13 +1,12 @@
 /*
  * BimmerData - Copyright (C) 2026 Jonathan GATARD - GPL-3.0-or-later, see LICENSE.
  */
-package io.github.jonathangtd.bimmerdata.dashboard.ui
+package io.github.jonathangtd.bimmerdata.cars
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +16,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -49,35 +49,60 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.jonathangtd.bimmerdata.R
 import io.github.jonathangtd.bimmerdata.dashboard.DashboardViewModel
+import io.github.jonathangtd.bimmerdata.dashboard.ui.CockpitSheet
+import io.github.jonathangtd.bimmerdata.dashboard.ui.MinTouch
+import io.github.jonathangtd.bimmerdata.dashboard.ui.PillButton
+import io.github.jonathangtd.bimmerdata.dashboard.ui.ProfileActions
+import io.github.jonathangtd.bimmerdata.dashboard.ui.ProfileEditorSheet
+import io.github.jonathangtd.bimmerdata.dashboard.ui.ProfileRow
+import io.github.jonathangtd.bimmerdata.dashboard.ui.SectionTitle
+import io.github.jonathangtd.bimmerdata.dashboard.ui.SheetHeader
+import io.github.jonathangtd.bimmerdata.dashboard.ui.profileFileName
+import io.github.jonathangtd.bimmerdata.dashboard.ui.toEditorCar
+import io.github.jonathangtd.bimmerdata.dashboard.ui.ConfirmDialog
+import io.github.jonathangtd.bimmerdata.faults.MessageCard
+import io.github.jonathangtd.bimmerdata.faults.TaskCard
+import io.github.jonathangtd.bimmerdata.faults.messageText
+import io.github.jonathangtd.bimmerdata.live.vehicle.Vehicle
 import io.github.jonathangtd.bimmerdata.profiles.ProfileSet
 import io.github.jonathangtd.bimmerdata.ui.BarlowCondensed
 import io.github.jonathangtd.bimmerdata.ui.Cockpit
 import io.github.jonathangtd.bimmerdata.ui.LocalAppNavigator
+import io.github.jonathangtd.bimmerdata.vehicle.VehicleRepository
+import io.github.jonathangtd.bimmerdata.vehicle.VehicleState
 import kotlinx.coroutines.launch
 
-private sealed interface ProfilesSheet {
+private sealed interface CarTabSheet {
     /** New profile ([id] null) or changes of profile [id]. */
-    data class Edit(val id: String?) : ProfilesSheet
-    data class ConfirmDelete(val id: String, val name: String) : ProfilesSheet
-    data class CopyTo(val id: String) : ProfilesSheet
+    data class Edit(val id: String?) : CarTabSheet
+    data class ConfirmDelete(val id: String, val name: String) : CarTabSheet
+    data class CopyTo(val id: String) : CarTabSheet
+    data object AddCar : CarTabSheet
+    data object RenameCar : CarTabSheet
+    data object CarEcus : CarTabSheet
 }
 
 /**
- * Profiles tab: the selected car's profiles with the active one marked ("Change car" opens My
- * cars); activate, create, edit, duplicate, copy to another car, export, import and delete (with undo). Shares the dashboard's view model (same activity), so a
- * change here is what the dashboard and Android Auto show.
+ * Car tab: the car shown (its ECU list, last detection, "Detect ECUs" and its ECU list editor,
+ * rename), then its profiles with the active one marked (activate, create, edit, duplicate, copy to
+ * another car, export, import and delete with undo), then My cars to change or add a car. Without
+ * a car: how to get one. Shares the dashboard's view model (same activity), so a change here is
+ * what the dashboard and Android Auto show.
  */
 @Composable
-fun ProfilesScreen(vm: DashboardViewModel = viewModel()) {
+fun CarTabScreen(vm: DashboardViewModel = viewModel()) {
     val profiles by vm.profiles.collectAsStateWithLifecycle()
-    val selectedCar by vm.selectedCar.collectAsStateWithLifecycle()
     val carList by vm.carList.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val res = LocalResources.current
+    val book = remember { CarBook.get(context) }
+    val repo = remember { VehicleRepository.get(context) }
+    val state by repo.state.collectAsStateWithLifecycle()
+    val selectedCar = state.garage.current
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
     val navigator = LocalAppNavigator.current
-    var sheet by remember { mutableStateOf<ProfilesSheet?>(null) }
+    var sheet by remember { mutableStateOf<CarTabSheet?>(null) }
 
     fun message(text: String, actionLabel: String? = null, action: (suspend () -> Unit)? = null) {
         scope.launch {
@@ -115,27 +140,39 @@ fun ProfilesScreen(vm: DashboardViewModel = viewModel()) {
         }
     }
     val actions = ProfileActions(
-        onEdit = { id -> sheet = ProfilesSheet.Edit(id) },
+        onEdit = { id -> sheet = CarTabSheet.Edit(id) },
         onDuplicate = { id -> scope.launch { vm.duplicateProfile(id)?.let { message(res.getString(R.string.profile_duplicated, it.name)) } } },
         onExport = { id ->
             exportId = id
             saveProfile.launch(profileFileName(profiles.profile(id)?.name ?: "profile"))
         },
-        onDelete = { id -> sheet = ProfilesSheet.ConfirmDelete(id, profiles.profile(id)?.name.orEmpty()) },
-        onCopyTo = if (carList.size > 1) { id -> sheet = ProfilesSheet.CopyTo(id) } else null,
+        onDelete = { id -> sheet = CarTabSheet.ConfirmDelete(id, profiles.profile(id)?.name.orEmpty()) },
+        onCopyTo = if (carList.size > 1) { id -> sheet = CarTabSheet.CopyTo(id) } else null,
+    )
+    val carActions = CarTabActions(
+        car = CarCardActions(
+            onDetect = { repo.detect() },
+            onEcus = { sheet = CarTabSheet.CarEcus },
+            onRename = { sheet = CarTabSheet.RenameCar },
+        ),
+        onMyCars = navigator.openCars,
+        onAddCar = { sheet = CarTabSheet.AddCar },
+        onCancel = repo::cancel,
+        onDismissMessage = repo::dismissMessage,
     )
 
     Box(Modifier.fillMaxSize().background(Cockpit.Background)) {
-        ProfilesTabContent(
-            set = profiles, onActivate = activate, onNew = { sheet = ProfilesSheet.Edit(null) }, onImport = ::importProfile, actions = actions,
-            car = selectedCar?.label, onChangeCar = navigator.openCars,
+        CarTabContent(
+            car = selectedCar, cars = state.garage.vehicles.size, state = state, set = profiles,
+            onActivate = activate, onNew = { sheet = CarTabSheet.Edit(null) }, onImport = ::importProfile, actions = actions, carActions = carActions,
         )
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(16.dp))
     }
+    MissingEcusQuestion(state, snackbar)
 
     when (val s = sheet) {
         null -> Unit
-        is ProfilesSheet.Edit -> {
+        is CarTabSheet.Edit -> {
             val editing = s.id?.let { profiles.profile(it) }
             ProfileEditorSheet(
                 initial = editing, car = selectedCar?.toEditorCar(), loadChoices = { vm.profileEcuChoices() }, onDismiss = { sheet = null },
@@ -147,7 +184,7 @@ fun ProfilesScreen(vm: DashboardViewModel = viewModel()) {
                 },
             )
         }
-        is ProfilesSheet.ConfirmDelete -> ConfirmDialog(
+        is CarTabSheet.ConfirmDelete -> ConfirmDialog(
             text = stringResource(R.string.profile_delete_confirm, s.name),
             confirm = stringResource(R.string.profile_delete),
             onConfirm = {
@@ -159,7 +196,7 @@ fun ProfilesScreen(vm: DashboardViewModel = viewModel()) {
             },
             onDismiss = { sheet = null },
         )
-        is ProfilesSheet.CopyTo -> {
+        is CarTabSheet.CopyTo -> {
             val p = profiles.profile(s.id)
             CockpitSheet({ sheet = null }) {
                 Column(Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
@@ -176,19 +213,39 @@ fun ProfilesScreen(vm: DashboardViewModel = viewModel()) {
                 }
             }
         }
+        CarTabSheet.AddCar -> AddCarDialog(
+            onDismiss = { sheet = null },
+            onAdd = { label, series, model ->
+                sheet = null
+                scope.io { book.create(label, series, model) }
+            },
+        )
+        CarTabSheet.RenameCar -> selectedCar?.let { RenameCarDialog(it, onDismiss = { sheet = null }) }
+        CarTabSheet.CarEcus -> selectedCar?.let { CarEcusSheet(it, loadChoices = { vm.sgbdChoices() }, snackbar = snackbar, onDismiss = { sheet = null }) }
     }
 }
 
-/** Stateless content of the Profiles tab (also used by the screenshot tests). */
+/** What the Car tab does besides the profiles: the car card, My cars, adding the first car, the detection's progress and message. */
+internal class CarTabActions(
+    val car: CarCardActions = CarCardActions(),
+    val onMyCars: () -> Unit = {},
+    val onAddCar: () -> Unit = {},
+    val onCancel: () -> Unit = {},
+    val onDismissMessage: () -> Unit = {},
+)
+
+/** Stateless content of the Car tab (also used by the screenshot tests). [car]: the car shown, null = none yet; [cars]: how many. */
 @Composable
-internal fun ProfilesTabContent(
+internal fun CarTabContent(
+    car: Vehicle?,
+    cars: Int,
+    state: VehicleState,
     set: ProfileSet,
     onActivate: (String) -> Unit,
     onNew: () -> Unit,
     onImport: () -> Unit,
     actions: ProfileActions,
-    car: String? = null,
-    onChangeCar: () -> Unit = {},
+    carActions: CarTabActions,
 ) {
     Column(
         Modifier
@@ -196,13 +253,14 @@ internal fun ProfilesTabContent(
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)),
     ) {
         Text(
-            stringResource(R.string.profiles_title), color = Cockpit.Text, fontSize = 28.sp, fontWeight = FontWeight.SemiBold,
-            fontFamily = BarlowCondensed, modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
+            stringResource(R.string.nav_car), color = Cockpit.Text, fontSize = 28.sp, fontWeight = FontWeight.SemiBold,
+            fontFamily = BarlowCondensed, modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
         )
-        CarLine(car, onChangeCar, Modifier.padding(horizontal = 16.dp).padding(bottom = 4.dp))
-        if (set.profiles.isEmpty()) {
-            // Nothing yet: what a profile is, and the two ways to get one.
-            NoProfile(onCreate = onNew, onImport = onImport)
+        if (car == null) {
+            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                state.message?.let { m -> MessageCard(messageText(m), m.error, carActions.onDismissMessage) }
+            }
+            NoCar(carActions.onAddCar)
             return
         }
         LazyColumn(
@@ -210,17 +268,28 @@ internal fun ProfilesTabContent(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            item {
-                Text(stringResource(R.string.ptab_intro), color = Cockpit.Muted, fontSize = 14.sp, lineHeight = 20.sp, modifier = Modifier.padding(bottom = 4.dp))
-            }
-            items(set.profiles, key = { it.id }) { p ->
-                Surface(color = Cockpit.Card, shape = RoundedCornerShape(16.dp)) {
-                    Box(Modifier.padding(4.dp)) {
-                        ProfileRow(p, active = p.id == set.activeId, onActivate = onActivate, actions = actions)
+            if (state.busy) item(key = "task") { TaskCard(state.task, carActions.onCancel) }
+            state.message?.let { m -> item(key = "message") { MessageCard(messageText(m), m.error, carActions.onDismissMessage) } }
+            item(key = "car") { CarCard(car, busy = state.busy, actions = carActions.car) }
+            item(key = "profiles-title") { SectionTitle(stringResource(R.string.nav_profiles), Modifier.padding(top = 8.dp)) }
+            if (set.profiles.isEmpty()) {
+                // no profile yet: what one is, and the two ways to get one (compact: the car stays above)
+                item(key = "no-profile") {
+                    Text(stringResource(R.string.profile_create_hint), color = Cockpit.Muted, fontSize = 14.sp, lineHeight = 20.sp, modifier = Modifier.padding(bottom = 4.dp))
+                }
+            } else {
+                item(key = "intro") {
+                    Text(stringResource(R.string.ptab_intro), color = Cockpit.Muted, fontSize = 14.sp, lineHeight = 20.sp, modifier = Modifier.padding(bottom = 4.dp))
+                }
+                items(set.profiles, key = { it.id }) { p ->
+                    Surface(color = Cockpit.Card, shape = RoundedCornerShape(16.dp)) {
+                        Box(Modifier.padding(4.dp)) {
+                            ProfileRow(p, active = p.id == set.activeId, onActivate = onActivate, actions = actions)
+                        }
                     }
                 }
             }
-            item {
+            item(key = "profile-buttons") {
                 Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     PillButton(
                         stringResource(R.string.profile_new), onClick = onNew, icon = R.drawable.ic_add,
@@ -229,6 +298,7 @@ internal fun ProfilesTabContent(
                     PillButton(stringResource(R.string.profile_import), onClick = onImport, icon = R.drawable.ic_upload, modifier = Modifier.weight(1f))
                 }
             }
+            item(key = "my-cars") { MyCarsRow(cars, carActions.onMyCars, Modifier.padding(top = 14.dp)) }
         }
     }
 }
