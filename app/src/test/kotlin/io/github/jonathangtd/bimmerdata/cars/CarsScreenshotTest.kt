@@ -16,11 +16,13 @@ import androidx.compose.ui.unit.dp
 import io.github.jonathangtd.bimmerdata.dashboard.Card
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.Page
+import io.github.jonathangtd.bimmerdata.dashboard.ui.ProfileActions
 import io.github.jonathangtd.bimmerdata.gauges.GaugeType
 import io.github.jonathangtd.bimmerdata.live.vehicle.Vehicle
 import io.github.jonathangtd.bimmerdata.live.vehicle.VehicleEcu
 import io.github.jonathangtd.bimmerdata.live.vehicle.VehicleScanner
 import io.github.jonathangtd.bimmerdata.profiles.Profile
+import io.github.jonathangtd.bimmerdata.profiles.ProfileSet
 import io.github.jonathangtd.bimmerdata.ui.BimmerDataTheme
 import io.github.jonathangtd.bimmerdata.ui.Cockpit
 import io.github.jonathangtd.bimmerdata.vehicle.Garage
@@ -35,7 +37,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
 
-/** My cars: the list, the empty start screen, a detection running and the ECU removal question (visual check). */
+/** My cars and the Car tab: the list, the empty start screen, a detection running and the ECU removal question (visual check). */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
@@ -66,6 +68,25 @@ class CarsScreenshotTest {
         CarsContent(rows = rows, state = state, onBack = {}, onAdd = {}, actions = none, onCancel = {}, onDismissMessage = {})
 
     @Test fun cars() = capture("cars.png") { Cars(rows, state) }
+
+    @Composable
+    private fun CarTab(car: Vehicle?, state: VehicleState) = CarTabContent(
+        car, cars = rows.size, state = state, set = ProfileSet(), onActivate = {}, onNew = {}, onImport = {},
+        actions = ProfileActions({}, {}, {}, {}), carActions = CarTabActions(),
+    )
+
+    @Test @Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
+    fun carTabDetectingFrench() = capture("car_tab_detecting_fr.png") {
+        CarTab(daily, state.copy(task = VehicleTask.Scanning(VehicleScanner.Progress(VehicleScanner.Step.Variants, 7, 21, "EGS"))))
+    }
+
+    @Test fun carTabNoCar() = capture("car_tab_no_car.png") { CarTab(null, VehicleState()) }
+
+    @Test @Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
+    fun carTabNoCarFrench() = capture("car_tab_no_car_fr.png") { CarTab(null, VehicleState()) }
+
+    @Test @Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
+    fun carTabHandFrench() = capture("car_tab_hand_fr.png") { CarTab(track, state) }
 
     @Test @Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
     fun carsFrench() = capture("cars_fr.png") { Cars(rows, state) }

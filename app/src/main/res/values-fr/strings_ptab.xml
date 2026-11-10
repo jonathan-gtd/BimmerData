@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Onglet Profils -->
+    <!-- Profils (onglet Voiture) -->
     <string name="nav_profiles">Profils</string>
     <string name="ptab_intro">Un profil appartient à la voiture ci-dessus : ses calculateurs principaux et ses propres pages de tableau de bord, sur le téléphone et dans Android Auto. Le profil actif est celui qui est affiché et enregistré. Touchez un profil pour l’activer ; ⋮ pour le modifier, le dupliquer, le copier vers une autre voiture, l’exporter ou le supprimer.</string>
     <string name="ptab_active">Actif</string>

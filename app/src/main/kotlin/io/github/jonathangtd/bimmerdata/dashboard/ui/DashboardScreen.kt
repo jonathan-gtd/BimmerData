@@ -175,7 +175,7 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                     if (n.profile != null) res.getString(R.string.cars_switched, n.car, n.profile) else res.getString(R.string.cars_switched_no_profile, n.car),
                 )
                 is ProfileNotice.NewCar -> message(
-                    res.getString(R.string.cars_new_detected, n.car), actionLabel = res.getString(R.string.cars_open), action = { navigator.openCars() },
+                    res.getString(R.string.cars_new_detected, n.car), actionLabel = res.getString(R.string.nav_car), action = { navigator.openCar() },
                 )
                 is ProfileNotice.Suggest -> message(
                     res.getString(R.string.profile_suggest, n.name), actionLabel = res.getString(R.string.profile_suggest_action),
@@ -485,7 +485,7 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
             onNew = { sheet = Sheet.EditProfile(null) },
             onManage = {
                 sheet = null
-                navigator.openProfiles()
+                navigator.openCar()
             },
         )
         is Sheet.EditProfile -> {

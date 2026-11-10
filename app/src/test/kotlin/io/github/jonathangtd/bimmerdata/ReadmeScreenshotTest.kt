@@ -27,13 +27,14 @@ import io.github.jonathangtd.bimmerdata.dashboard.Card
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.Page
 import io.github.jonathangtd.bimmerdata.dashboard.car.CarScreen
+import io.github.jonathangtd.bimmerdata.cars.CarTabActions
+import io.github.jonathangtd.bimmerdata.cars.CarTabContent
 import io.github.jonathangtd.bimmerdata.dashboard.ui.CardGrid
 import io.github.jonathangtd.bimmerdata.dashboard.ui.DashboardHeader
 import io.github.jonathangtd.bimmerdata.dashboard.ui.GridActions
 import io.github.jonathangtd.bimmerdata.dashboard.ui.MeasurementList
 import io.github.jonathangtd.bimmerdata.dashboard.ui.ProfileEcuBar
 import io.github.jonathangtd.bimmerdata.dashboard.ui.ProfileActions
-import io.github.jonathangtd.bimmerdata.dashboard.ui.ProfilesTabContent
 import io.github.jonathangtd.bimmerdata.dashboard.ui.SegmentedTabs
 import io.github.jonathangtd.bimmerdata.dashboard.ui.SheetHeader
 import io.github.jonathangtd.bimmerdata.ediabas.EdInterfaceObd
@@ -68,6 +69,8 @@ import io.github.jonathangtd.bimmerdata.live.vehicle.EcuFaultStatus
 import io.github.jonathangtd.bimmerdata.live.vehicle.EdiabasJobRunner
 import io.github.jonathangtd.bimmerdata.live.vehicle.FaultService
 import io.github.jonathangtd.bimmerdata.live.vehicle.VehicleScanner
+import io.github.jonathangtd.bimmerdata.live.vehicle.Vehicle
+import io.github.jonathangtd.bimmerdata.live.vehicle.VehicleEcu
 import io.github.jonathangtd.bimmerdata.live.vehicle.VehicleTables
 import io.github.jonathangtd.bimmerdata.profiles.ProfileSet
 import io.github.jonathangtd.bimmerdata.profiles.ProfileVehicle
@@ -311,7 +314,14 @@ class ReadmeScreenshotTest {
 
     @Test
     fun profiles() = capture("profiles.png") {
-        ProfilesTabContent(profiles.forCar("car-demo"), onActivate = {}, onNew = {}, onImport = {}, actions = ProfileActions({}, {}, {}, {}), car = "Demo car")
+        val car = Vehicle(
+            "car-demo", "Demo car", series = "Demo", model = "car", scannedAtMs = 1_794_296_709_624,
+            ecus = listOf("dme", "egs", "dsc", "kombi").mapIndexed { i, s -> VehicleEcu(0x12 + i, s.uppercase(), sgbd = s) },
+        )
+        CarTabContent(
+            car, cars = 2, state = VehicleState(), set = profiles.forCar("car-demo"), onActivate = {}, onNew = {}, onImport = {},
+            actions = ProfileActions({}, {}, {}, {}), carActions = CarTabActions(),
+        )
     }
 
     /** The built-in demo car, scanned and read like in the app; the VIN is left out. */
