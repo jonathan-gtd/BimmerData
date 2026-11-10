@@ -83,10 +83,11 @@ private sealed interface CarTabSheet {
 }
 
 /**
- * Car tab: the car shown (its ECU list, last detection, "Detect ECUs" and its ECU list editor,
- * rename), then its profiles with the active one marked (activate, create, edit, duplicate, copy to
- * another car, export, import and delete with undo), then My cars to change or add a car. Without
- * a car: how to get one. Shares the dashboard's view model (same activity), so a change here is
+ * Profiles tab: the cars as chips at the top (the shown one marked; a tap shows another car, then
+ * "Add" and "Manage" = My cars), the car shown (its ECU list, last detection, "Detect ECUs" and its
+ * ECU list editor, rename), then its profiles with the active one marked (activate, create, edit,
+ * duplicate, copy to another car, export, import and delete with undo). Without a car shown: the
+ * cars only, no profile. Shares the dashboard's view model (same activity), so a change here is
  * what the dashboard and Android Auto show.
  */
 @Composable
@@ -157,13 +158,14 @@ fun CarTabScreen(vm: DashboardViewModel = viewModel()) {
         ),
         onMyCars = navigator.openCars,
         onAddCar = { sheet = CarTabSheet.AddCar },
+        onSelectCar = { id -> scope.io { book.select(id) } },
         onCancel = repo::cancel,
         onDismissMessage = repo::dismissMessage,
     )
 
     Box(Modifier.fillMaxSize().background(Cockpit.Background)) {
         CarTabContent(
-            car = selectedCar, cars = state.garage.vehicles.size, state = state, set = profiles,
+            car = selectedCar, cars = state.garage.vehicles, state = state, set = profiles,
             onActivate = activate, onNew = { sheet = CarTabSheet.Edit(null) }, onImport = ::importProfile, actions = actions, carActions = carActions,
         )
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(16.dp))
@@ -230,15 +232,17 @@ internal class CarTabActions(
     val car: CarCardActions = CarCardActions(),
     val onMyCars: () -> Unit = {},
     val onAddCar: () -> Unit = {},
+    /** Shows another car (the chips at the top). */
+    val onSelectCar: (String) -> Unit = {},
     val onCancel: () -> Unit = {},
     val onDismissMessage: () -> Unit = {},
 )
 
-/** Stateless content of the Car tab (also used by the screenshot tests). [car]: the car shown, null = none yet; [cars]: how many. */
+/** Stateless content of the Profiles tab (also used by the screenshot tests). [car]: the car shown, null = none yet; [cars]: every car. */
 @Composable
 internal fun CarTabContent(
     car: Vehicle?,
-    cars: Int,
+    cars: List<Vehicle>,
     state: VehicleState,
     set: ProfileSet,
     onActivate: (String) -> Unit,
@@ -253,9 +257,11 @@ internal fun CarTabContent(
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)),
     ) {
         Text(
-            stringResource(R.string.nav_car), color = Cockpit.Text, fontSize = 28.sp, fontWeight = FontWeight.SemiBold,
+            stringResource(R.string.nav_profiles), color = Cockpit.Text, fontSize = 28.sp, fontWeight = FontWeight.SemiBold,
             fontFamily = BarlowCondensed, modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
         )
+        // the cars first: the profiles below are the shown car's; one tap shows another car
+        CarChips(cars, car?.id, carActions.onSelectCar, carActions.onAddCar, carActions.onMyCars)
         if (car == null) {
             Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 state.message?.let { m -> MessageCard(messageText(m), m.error, carActions.onDismissMessage) }
@@ -298,7 +304,32 @@ internal fun CarTabContent(
                     PillButton(stringResource(R.string.profile_import), onClick = onImport, icon = R.drawable.ic_upload, modifier = Modifier.weight(1f))
                 }
             }
-            item(key = "my-cars") { MyCarsRow(cars, carActions.onMyCars, Modifier.padding(top = 14.dp)) }
         }
+    }
+}
+
+/**
+ * The cars as one scrollable row of chips: the shown one in the accent color, a tap on another
+ * shows it (its profiles below); then "Add a car" and "Manage" (My cars: detect, ECU lists,
+ * rename, delete).
+ */
+@Composable
+internal fun CarChips(cars: List<Vehicle>, shownId: String?, onSelect: (String) -> Unit, onAdd: () -> Unit, onManage: () -> Unit) {
+    androidx.compose.foundation.lazy.LazyRow(
+        Modifier.fillMaxWidth().padding(bottom = 10.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(cars, key = { it.id }) { c ->
+            val shown = c.id == shownId
+            PillButton(
+                c.label, onClick = { if (!shown) onSelect(c.id) },
+                icon = if (shown) R.drawable.ic_check else R.drawable.ic_profile,
+                color = if (shown) Cockpit.OnAccent else Cockpit.Text,
+                background = if (shown) Cockpit.Accent else Cockpit.Card,
+            )
+        }
+        item(key = "add") { PillButton(stringResource(R.string.cars_add_short), onClick = onAdd, icon = R.drawable.ic_add) }
+        if (cars.isNotEmpty()) item(key = "manage") { PillButton(stringResource(R.string.cars_manage), onClick = onManage, icon = R.drawable.ic_settings) }
     }
 }

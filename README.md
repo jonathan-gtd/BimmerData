@@ -18,7 +18,7 @@ Rendered from the app with the built-in simulation (demo data, English UI).
   <tr>
     <td align="center"><img src="docs/screenshots/dashboard.png" width="250" alt="Card dashboard"><br><sub>Card dashboard: dials, bars, trends</sub></td>
     <td align="center"><img src="docs/screenshots/card_picker.png" width="250" alt="Card picker"><br><sub>Picking a measurement of the profile's ECUs</sub></td>
-    <td align="center"><img src="docs/screenshots/profiles.png" width="250" alt="Car tab"><br><sub>Car tab: the car, its ECUs, its profiles</sub></td>
+    <td align="center"><img src="docs/screenshots/profiles.png" width="250" alt="Profiles tab"><br><sub>Profiles tab: your cars, the car shown, its profiles</sub></td>
   </tr>
   <tr>
     <td align="center"><img src="docs/screenshots/faults.png" width="250" alt="Fault memory of every ECU"><br><sub>Fault memory of every ECU of the car</sub></td>
@@ -89,25 +89,24 @@ its fault reports; one car is shown at a time (the profiles, the Faults tab and 
 - **At each connection** the app reads the car's VIN (about a second, read-only): a known car is
   shown with its last used profile (only proposed while a CSV recording runs), an unknown VIN
   adds a new car "Car <VIN>" (rename it). A car added by hand gets its VIN at its first connection.
-- **The Car tab** (bottom bar) shows the car: its VIN state, series and model, its ECU list and
+- **The Profiles tab** (bottom bar) shows your cars at the top (one tap shows another car, **Add**, **Manage** = My cars), then the car shown: its VIN state, series and model, its ECU list and
   last detection, with **Detect** and **ECUs** (pick them by hand) buttons and rename in ⋮; below,
-  its profiles (activate, new, import, ⋮ to edit, duplicate, copy, export, delete); at the bottom,
-  **My cars** to change car or add one. With no car yet, the tab says how to get one (connect, or
+  its profiles (activate, new, import, ⋮ to edit, duplicate, copy, export, delete). With no car yet, the tab says how to get one (connect, or
   **Add a car** by hand).
 - **My cars** lists every car (VIN state, series, profiles, ECUs; its ⋮ menu: show, detect, ECUs,
   rename, delete with its profiles after a confirmation). It opens at start when there are several
-  cars, from the Car tab and from the profile switch (**Change car**).
+  cars, from the Profiles tab and from the profile switch (**Change car**).
 - **Detect ECUs** (connected, ignition on) finds the car's ECUs and their ECU files and keeps them
   in the car's ECU list; ECUs can also be picked by hand from the imported ECU folder. A profile's
   main ECUs come from its car's list, and the card picker opens on them. When a new detection no
   longer finds an ECU that profiles use, or when you remove one by hand, the app asks before
   removing it from those profiles (with their cards); "Keep" leaves it in the list.
-- **Copy to another car** (Car tab, profile ⋮) starts another car from a tuned profile. Shared
+- **Copy to another car** (Profiles tab, profile ⋮) starts another car from a tuned profile. Shared
   profile files carry series and model, never the VIN.
 
 ## Faults
 
-The tab reads the fault memory of every ECU of the shown car's list (detected from the Car tab; a car
+The tab reads the fault memory of every ECU of the shown car's list (detected from the Profiles tab; a car
 without ECU list gets a one-tap **Detect ECUs** here). The last read stays readable away from the
 car and can be shared. The car's ECUs also come first in the card picker and get their
 translations downloaded.

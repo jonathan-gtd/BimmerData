@@ -56,7 +56,6 @@
     <string name="cars_switched">%1$s reconnue · profil « %2$s »</string>
     <string name="cars_switched_no_profile">%1$s reconnue (pas encore de profil)</string>
     <string name="cars_new_detected">Nouvelle voiture détectée : %1$s</string>
-    <string name="cars_open">Mes voitures</string>
     <string name="cars_detect">Détecter les calculateurs</string>
     <string name="cars_detected">Calculateurs détectés : %1$s</string>
     <string name="cars_detect_needed_title">Détectez d’abord les calculateurs de cette voiture</string>
@@ -91,10 +90,6 @@
     <string name="car_detect_short">Détecter</string>
     <string name="car_not_scanned">aucune détection</string>
     <string name="car_open_tab">Ouvrir l’onglet Voiture</string>
-    <string name="car_my_cars_hint_one">Ajouter une autre voiture</string>
-    <plurals name="car_my_cars_hint">
-        <item quantity="one">Changer de voiture ou en ajouter une (%d voiture)</item>
-        <item quantity="many">Changer de voiture ou en ajouter une (%d de voitures)</item>
-        <item quantity="other">Changer de voiture ou en ajouter une (%d voitures)</item>
-    </plurals>
+    <string name="cars_add_short">Ajouter</string>
+    <string name="cars_manage">Gérer</string>
 </resources>

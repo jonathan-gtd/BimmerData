@@ -298,7 +298,7 @@ adapter CAN mode add `403 refused_on_phone`, `408 confirmation_timeout`, `409 ve
 
 ## Set up the app entirely through the API
 
-Everything the Settings screens, the Car tab, My cars and the Graph tab do can be done
+Everything the Settings screens, the Profiles tab, My cars and the Graph tab do can be done
 through the API, so an agent can set BimmerData up while the user does not touch the phone,
 except for the few steps Android reserves to the user (listed below). Grant the `read`, `layout`
 and `config` scopes for this (and `diag` to detect a car's ECUs; Settings › Local API: that first
@@ -550,7 +550,7 @@ Scope `diag` (off by default; Settings › Local API › Permissions › Diagnos
 
 - **Reading** the fault memory (`GET /diag/faults`, `GET /diag/vehicle`) answers directly. A read
   from the car takes about 1 s per ECU; the live reading goes on between the jobs. The vehicle
-  must have been detected once (Car tab › Detect, or `POST /api/v1/cars/{car}/detect`). Fault texts are the ECU file's (German).
+  must have been detected once (Profiles tab › Detect, or `POST /api/v1/cars/{car}/detect`). Fault texts are the ECU file's (German).
 - **Clearing faults** (`POST /diag/faults/clear`) and **running a job** (`POST /diag/jobs`) are
   confirmed on the phone **for every single call**, nothing is remembered:
   1. if the car is moving (above 3 km/h, from a speed measurement the app reads or the phone

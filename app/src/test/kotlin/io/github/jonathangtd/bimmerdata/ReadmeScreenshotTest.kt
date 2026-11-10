@@ -319,7 +319,7 @@ class ReadmeScreenshotTest {
             ecus = listOf("dme", "egs", "dsc", "kombi").mapIndexed { i, s -> VehicleEcu(0x12 + i, s.uppercase(), sgbd = s) },
         )
         CarTabContent(
-            car, cars = 2, state = VehicleState(), set = profiles.forCar("car-demo"), onActivate = {}, onNew = {}, onImport = {},
+            car, cars = listOf(car, Vehicle("car-other", "Second car")), state = VehicleState(), set = profiles.forCar("car-demo"), onActivate = {}, onNew = {}, onImport = {},
             actions = ProfileActions({}, {}, {}, {}), carActions = CarTabActions(),
         )
     }

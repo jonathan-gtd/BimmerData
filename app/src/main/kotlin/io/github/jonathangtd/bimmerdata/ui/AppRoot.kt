@@ -74,14 +74,14 @@ import io.github.jonathangtd.bimmerdata.settings.SettingsScreen
 enum class AppTab(@param:DrawableRes val icon: Int, @param:StringRes val label: Int) {
     Dashboard(R.drawable.ic_dashboard, R.string.nav_dashboard),
     Graph(R.drawable.ic_graph, R.string.nav_graph),
-    Car(R.drawable.ic_profile, R.string.nav_car),
+    Car(R.drawable.ic_profile, R.string.nav_profiles),
     Faults(R.drawable.ic_faults, R.string.nav_faults),
     Settings(R.drawable.ic_settings, R.string.nav_settings),
 }
 
 /**
  * Top-level screens with a bottom navigation bar (hidden while editing the dashboard layout).
- * The Car tab holds the car shown and its profiles. Tool32, the API documentation and My cars are
+ * The Profiles tab (enum [AppTab.Car]) holds the cars, the car shown and its profiles. Tool32, the API documentation and My cars are
  * secondary screens ([AppOverlay]) opened through [LocalAppNavigator]: from Settings › Tools, from
  * an ECU's detail with its SGBD selected, from the Car tab ("My cars") and the profile switch
  * ("Change car"). At start: the Car tab when there is no car yet, My cars when there are several.

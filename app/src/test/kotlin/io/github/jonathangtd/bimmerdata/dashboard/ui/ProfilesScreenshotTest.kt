@@ -95,7 +95,7 @@ class ProfilesScreenshotTest {
 
     /** The Car tab: the car card, then its profiles, then My cars. */
     private fun tab(name: String, profiles: ProfileSet = e90) = capture(name, height = 1400) {
-        CarTabContent(car, cars = 2, state = VehicleState(), set = profiles, onActivate = {}, onNew = {}, onImport = {}, actions = noActions, carActions = CarTabActions())
+        CarTabContent(car, cars = listOf(car, Vehicle("car-track", "Track car", series = "E46")), state = VehicleState(), set = profiles, onActivate = {}, onNew = {}, onImport = {}, actions = noActions, carActions = CarTabActions())
     }
 
     private fun switchSheet(name: String) = capture(name, height = 620) {

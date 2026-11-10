@@ -71,7 +71,7 @@ class CarsScreenshotTest {
 
     @Composable
     private fun CarTab(car: Vehicle?, state: VehicleState) = CarTabContent(
-        car, cars = rows.size, state = state, set = ProfileSet(), onActivate = {}, onNew = {}, onImport = {},
+        car, cars = rows.map { it.car }, state = state, set = ProfileSet(), onActivate = {}, onNew = {}, onImport = {},
         actions = ProfileActions({}, {}, {}, {}), carActions = CarTabActions(),
     )
 

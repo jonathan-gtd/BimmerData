@@ -118,23 +118,3 @@ internal fun CarCard(car: Vehicle, busy: Boolean, actions: CarCardActions, modif
         }
     }
 }
-
-/** Last row of the Car tab: My cars, to change car or add one ([cars]: how many there are). */
-@Composable
-internal fun MyCarsRow(cars: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Surface(color = Cockpit.Card, shape = RoundedCornerShape(16.dp), modifier = modifier.fillMaxWidth()) {
-        Row(
-            Modifier.fillMaxWidth().heightIn(min = 64.dp).clickable(role = Role.Button, onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(stringResource(R.string.cars_open), color = Cockpit.Text, fontSize = 17.sp, fontFamily = BarlowCondensed, fontWeight = FontWeight.SemiBold)
-                Text(
-                    if (cars > 1) pluralStringResource(R.plurals.car_my_cars_hint, cars, cars) else stringResource(R.string.car_my_cars_hint_one),
-                    color = Cockpit.Muted, fontSize = 13.sp,
-                )
-            }
-            Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = Cockpit.Muted, modifier = Modifier.size(22.dp))
-        }
-    }
-}

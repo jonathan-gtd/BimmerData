@@ -17,7 +17,8 @@ android {
         // -PversionCode=N overrides it (Google Play uploads need a new code each time, see
         // tools: the publishing script takes the last code on Play + 1)
         versionCode = providers.gradleProperty("versionCode").orNull?.toInt() ?: 4
-        versionName = "0.3.0"
+        // shown to users: the publishing script raises the last number when this one is already on Play
+        versionName = "0.4.0"
     }
 
     // Release signing key, kept OUTSIDE the repository (never committed): a properties file with

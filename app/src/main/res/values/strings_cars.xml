@@ -53,7 +53,6 @@
     <string name="cars_switched">%1$s recognized · profile “%2$s”</string>
     <string name="cars_switched_no_profile">%1$s recognized (no profile yet)</string>
     <string name="cars_new_detected">New car detected: %1$s</string>
-    <string name="cars_open">My cars</string>
     <string name="cars_detect">Detect ECUs</string>
     <string name="cars_detected">ECUs detected: %1$s</string>
     <string name="cars_detect_needed_title">Detect this car’s ECUs first</string>
@@ -84,9 +83,6 @@
     <string name="car_detect_short">Detect</string>
     <string name="car_not_scanned">no detection yet</string>
     <string name="car_open_tab">Open the Car tab</string>
-    <string name="car_my_cars_hint_one">Add another car</string>
-    <plurals name="car_my_cars_hint">
-        <item quantity="one">Change car or add one (%d car)</item>
-        <item quantity="other">Change car or add one (%d cars)</item>
-    </plurals>
+    <string name="cars_add_short">Add</string>
+    <string name="cars_manage">Manage</string>
 </resources>
