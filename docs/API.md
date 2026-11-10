@@ -133,6 +133,11 @@ curl -s -H "$H" -X POST "$BD/profiles/<profileId>/copy" -d '{"car":"<carId>"}'
 curl -s -H "$H" -X POST "$BD/cars/<carId>/detect"
 curl -s -H "$H" "$BD/cars/<carId>/detect"
 
+# Full backup (scope config): download it, check it, put it back (replaces everything)
+curl -s -H "$H" "$BD/backup" -o bimmerdata-backup.json
+curl -s -H "$H" -X POST --data-binary @bimmerdata-backup.json "$BD/backup/restore?dryRun=true"
+curl -s -H "$H" -X POST --data-binary @bimmerdata-backup.json "$BD/backup/restore?confirm=true"
+
 # Recording (scope config) and download
 curl -s -H "$H" -X POST "$BD/recording/start"
 curl -s -H "$H" -X POST "$BD/recording/markers" -d '{"label":"full throttle"}'
@@ -190,6 +195,8 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 | GET / PATCH | `/api/v1/settings/recording` | read / config | CSV recording: row rate, file prefix, back to the default folder |
 | GET / PATCH | `/api/v1/settings/translations` | read / config | Translation of the ECU texts: language, source URL, token (write-only), ECU selection |
 | POST | `/api/v1/settings/translations/update` | config | Download the translation files again (background) |
+| GET | `/api/v1/backup` | config | Full backup file: cars **with VIN**, ECU lists, last detection and fault read, profiles with pages and graphs, settings, cached translations; no token or password |
+| POST | `/api/v1/backup/restore?confirm=true[&dryRun=true]` | config | Put a backup back: replaces everything, all or nothing (Settings › Local API stays as it is) |
 | GET | `/api/v1/permissions` | read | Permissions and switches the app needs: granted / missing, what for, what to tap |
 | GET | `/api/v1/ecu-files[?files=true]` | read | Imported ECU files, free space, device import folder and import progress |
 | PUT / DELETE | `/api/v1/ecu-files/{name}` | config | Upload one `.prg` / `.grp` file (streamed, ≤ 64 MB) / delete it |
@@ -249,7 +256,8 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
   has no VIN yet (its first connection), else it makes a new car "Car <VIN>". `POST /api/v1/cars`
   adds a car by hand; a detection (`POST /api/v1/cars/{car}/detect`) fills the car with the VIN it
   reads (the car with that VIN, the selected car without VIN, or a new car: never a duplicate).
-  The VIN itself never leaves the phone: car JSON only says `vinKnown`.
+  The VIN itself never leaves the phone: car JSON only says `vinKnown`. The one exception is the
+  user's own full backup (`GET /api/v1/backup`, Settings › Backup), see [Backup](#backup).
 - **ECU list of a car** (`ecus` of the car): the ECUs found by its last detection, then those
   added by hand (`ecusByHand`; `PUT /api/v1/cars/{car}` `{"ecus":[…]}` sets them). A profile's
   main ECUs must be in its car's list: `POST` / `PUT /api/v1/profiles…` answer
@@ -296,6 +304,12 @@ except for the few steps Android reserves to the user (listed below). Grant the 
 and `config` scopes for this (and `diag` to detect a car's ECUs; Settings › Local API: that first
 step is on the phone, see [Enabling it](#enabling-it)). Order of the calls:
 
+0. **Restore a backup if you have one** (`GET /api/v1/backup` made before, or Settings › Backup ›
+   Export on the phone): `POST /api/v1/backup/restore?confirm=true` with the file as body puts back
+   the cars (with their VIN, ECU lists, last detection and fault read), every profile with its pages
+   and graphs, the active profile, the connection, Bluetooth adapter, GPS, recording, Telegraf and
+   translation settings and the cached translation files in one call. Then only steps 1 and 2 (and
+   the Telegraf token of step 4) remain: the answer's `todo` lists them. See [Backup](#backup).
 1. **What the user still has to allow**: `GET /api/v1/permissions`. Each entry has `status`
    (`granted`, `missing`, `notRequired`, `on`, `off`, `askedOnConnect`), `neededFor` and
    `howToGrant` (what to tap); `blocking` lists those a feature that is switched on cannot work
@@ -376,6 +390,44 @@ What still needs a tap on the phone, and why:
 | Choosing a recording folder or a translation folder | Android's folder picker (SAF) can only be used by the user; the API can go back to the default recording folder |
 | Each fault clear, EDIABAS job and adapter CAN mode change | Confirmed on the phone for every call, by design |
 | Exporting a profile or the refused Telegraf batches to a file of the phone | The API returns them as downloads instead |
+
+## Backup
+
+One JSON file with everything needed to get the app back as it was, after a reinstall or on a new
+phone: Settings › Backup on the phone (Export / Restore, Android's file dialogs) or
+`GET /api/v1/backup` / `POST /api/v1/backup/restore` (scope `config`). Same file both ways.
+
+- **In it**: `format` `"bimmerdata-backup"`, `version` 1, `appVersion` / `appVersionCode`,
+  `createdAt`; `garage` (the cars **with their VIN**, ECU lists detected and added by hand, last
+  detection with addresses and identification, last fault read, the selected car); `profiles` (every
+  profile with its car, ECUs, phone and Android Auto pages and graphs, the active one); `settings`
+  (auto-connect, last connection mode, Bluetooth adapter address and connect-on-start, GPS,
+  recording row rate and prefix, Telegraf URL / mode / car / user name, Local API enable / port /
+  scopes / HTTPS); `translations` (language, source URL, ECU selection, and the cached files, left
+  out beyond 4 MB: `filesOmitted`).
+- **Never in it**: the API token, the Telegraf token or password, the translation token, any key.
+  **Not in it**: the ECU files (import them again), the folders picked with Android's folder picker
+  (recording, translations: their permission does not survive a reinstall), the CSV recordings and
+  the Telegraf queue.
+- **Private**: it is the only place the VIN leaves the phone (profile files never hold it): keep it
+  for yourself.
+- **Restore = replace everything, all or nothing.** The whole file is checked first
+  (`not_a_backup` 400, `invalid_backup` / `newer_version` 422; a profile file is recognised and
+  refused with a hint). Then the app disconnects from the car (`busy` 409 while a detection or fault
+  read runs) and replaces the cars, the profiles, the settings and the translation cache one after
+  the other; if one of them cannot be written, the state of just before is put back in all of them
+  (`restore_failed` 500). It needs `"confirm": true` at the top level of the file or
+  `?confirm=true` (else `confirm_required` 400); `?dryRun=true` only checks the file and returns the
+  summary. A file without translation files keeps the phone's cache.
+- **Through the API, Settings › Local API stays as it is** (`apiSettingsRestored`: false): a client
+  cannot widen its own access by restoring a file. A restore on the phone puts it back too. The
+  phone keeps its own API token and Telegraf secrets in any case.
+- The answer (`RestoreSummary`) counts what came back (`cars`, `carsWithVin`, `carsScanned`,
+  `profiles`, `graphs`, `activeProfile`, `selectedCar`, `translationFiles`) and lists what is left
+  to do by hand in `todo` (text) and `todoCodes` (`ecu_files`, `telegraf_secret`,
+  `translation_folder`, `recording_folder`).
+- A Play update keeps the app's data: a backup is for a reinstall, a new phone or a switch between
+  builds signed with different keys.
 
 ## HTTPS
 

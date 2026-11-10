@@ -3,6 +3,7 @@
  */
 package io.github.jonathangtd.bimmerdata.api
 
+import io.github.jonathangtd.bimmerdata.backup.RestoreSummary
 import io.github.jonathangtd.bimmerdata.cars.CarSpace
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.Page
@@ -167,6 +168,17 @@ interface ApiBackend {
 
     /** Starts downloading every translation file again (asynchronous; follow [translations]). */
     fun updateTranslationsNow(): TranslationsView = notAvailable("Translations")
+
+    // ---- full backup (see BackupRoutes) ----
+
+    /** The backup file ([io.github.jonathangtd.bimmerdata.backup.BackupCodec]); blocking. */
+    fun backup(): String = notAvailable("The backup")
+
+    /**
+     * Replaces everything with the backup [text], except Settings › Local API (phone only); [dryRun]
+     * only checks it. Throws [io.github.jonathangtd.bimmerdata.backup.BackupException]. Blocking.
+     */
+    fun restoreBackup(text: String, dryRun: Boolean): RestoreSummary = notAvailable("The backup")
 }
 
 internal fun notAvailable(what: String): Nothing = throw ApiException(501, "not_available", "$what is not available")

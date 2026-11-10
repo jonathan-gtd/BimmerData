@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings › Backup -->
+    <string name="backup_title">Backup</string>
+    <string name="backup_summary">Export or restore everything in one file</string>
+    <string name="backup_export_label">Export</string>
+    <string name="backup_export_hint">One file with your cars (VIN, ECU list, last detection and fault read), every profile with its phone and Android Auto pages and its graphs, and the settings. Keep it off the phone (computer, cloud) to get everything back after a reinstall.</string>
+    <string name="backup_export">Export a backup</string>
+    <string name="backup_exported">Backup saved (cars: %1$d, profiles: %2$d)</string>
+    <string name="backup_restore_label">Restore</string>
+    <string name="backup_restore_hint">Replaces the cars, profiles, graphs and settings of the phone with those of the file. All or nothing: if something goes wrong, the phone stays as it was.</string>
+    <string name="backup_restore">Restore a backup</string>
+    <string name="backup_confirm_title">Replace everything?</string>
+    <string name="backup_confirm_text">Backup of %1$s (version %2$s). Cars: %3$d, profiles: %4$d, graphs: %5$d. The cars, profiles and settings now on the phone will be replaced. The app disconnects from the car first.</string>
+    <string name="backup_confirm">Replace</string>
+    <string name="backup_restored">Restored (cars: %1$d, profiles: %2$d)</string>
+    <string name="backup_todo">Still to do by hand:</string>
+    <string name="backup_failed">Failed: %1$s</string>
+    <string name="backup_working">Working…</string>
+    <string name="backup_unknown_date">unknown date</string>
+    <string name="backup_privacy_label">What is in it</string>
+    <string name="backup_privacy_vin">The file holds the VIN of your cars (unlike a shared profile file): it is your private backup, do not share it.</string>
+    <string name="backup_privacy_secrets">No API token, Telegraf token or password is ever in it: enter the Telegraf token again after a reinstall.</string>
+    <string name="backup_privacy_not">Not in it either: the ECU files (import the Ecu folder again), the recording and translation folders picked on the phone, the recordings and the Telegraf queue.</string>
+    <string name="backup_privacy_api">Also through the Local API: GET /api/v1/backup and POST /api/v1/backup/restore (scope config).</string>
+    <string name="backup_todo_ecu_files">Import the ECU files if the phone has none (Settings › Tools › Tool32).</string>
+    <string name="backup_todo_telegraf_secret">Enter the Telegraf token or password again (Settings › Telegraf export).</string>
+    <string name="backup_todo_translation_folder">Pick the translation folder again (Settings › Translations).</string>
+    <string name="backup_todo_recording_folder">Recordings go to the default folder: pick yours again in Settings › Recording if you had chosen one.</string>
+</resources>

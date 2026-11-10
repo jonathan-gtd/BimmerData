@@ -199,6 +199,7 @@ internal object OpenApi {
         "Connection" to "Connect to the car (USB cable or Deep OBD Bluetooth adapter) or to the built-in simulated car, and record CSV logs.",
         "Settings" to "App settings that may be changed remotely. API settings (enable, port, token, scopes) can only be changed on the phone.",
         "Export" to "Export of the live values to Telegraf (line protocol over HTTP), which writes them to TimescaleDB for Grafana. See docs/TELEGRAF.md in the BimmerData repository.",
+        BackupRoutes.TAG to "Full backup of the app (cars with their VIN, profiles, graphs, settings, cached translations; never a token or password) and its restore, which replaces everything. Same file as Settings › Backup on the phone.",
         DiagApi.TAG to "Fault memory and EDIABAS jobs (scope diag). Reading is free; clearing faults and running jobs need the user's confirmation on the phone for every call and are refused while the car is moving.",
     )
 
@@ -222,7 +223,7 @@ BimmerData reads live data from BMW ECUs (E-series, through a USB cable or a Dee
 - `{page}` is a page id or its 0-based index; `{target}` is `phone` or `car`.
 
 ## Setting the app up
-An agent can set the app up without the user tapping anything, except what Android reserves to the user: `GET /api/v1/permissions` (what to ask the user to allow) → ECU files (`POST /api/v1/ecu-files/import-from-device` after an `adb push` of the Ecu folder, or `PUT /api/v1/ecu-files/{name}` file by file) → Bluetooth adapter (`GET /api/v1/bluetooth/devices`, `PUT /api/v1/bluetooth/adapter`) → Telegraf (`PATCH /api/v1/export/telegraf`, `PUT /api/v1/export/telegraf/auth`) → cars, profiles and graphs (`POST /api/v1/cars`, `POST /api/v1/profiles/import?car=…`, `…/graphs`) → `POST /api/v1/connect`. The API's own settings (enable, port, token, scopes, HTTPS) are read-only here.
+An agent can set the app up without the user tapping anything, except what Android reserves to the user. **If there is a backup** (`GET /api/v1/backup`, or Settings › Backup on the phone), start with `POST /api/v1/backup/restore?confirm=true`: it puts back the cars, profiles, graphs and settings at once; then only the ECU files, the Telegraf token and what `todo` lists remain. Otherwise: `GET /api/v1/permissions` (what to ask the user to allow) → ECU files (`POST /api/v1/ecu-files/import-from-device` after an `adb push` of the Ecu folder, or `PUT /api/v1/ecu-files/{name}` file by file) → Bluetooth adapter (`GET /api/v1/bluetooth/devices`, `PUT /api/v1/bluetooth/adapter`) → Telegraf (`PATCH /api/v1/export/telegraf`, `PUT /api/v1/export/telegraf/auth`) → cars, profiles and graphs (`POST /api/v1/cars`, `POST /api/v1/profiles/import?car=…`, `…/graphs`) → `POST /api/v1/connect`. The API's own settings (enable, port, token, scopes, HTTPS) are read-only here.
 
 ## Errors
 Every error is `{"error":{"code":"…","message":"…","details":…}}` with a meaningful HTTP status (400 bad input, 401 no / wrong token, 403 scope not enabled, 404 unknown id, 409 conflict such as overlapping cards, 422 invalid layout, 429 rate limited).
@@ -238,6 +239,7 @@ Clearing faults and running EDIABAS jobs (scope `diag`) and changing the CAN mod
         for ((name, schema) in SetupRoutes.schemas()) put(name, schema)
         for ((name, schema) in ProfileGraphRoutes.schemas()) put(name, schema)
         for ((name, schema) in CarRoutes.schemas()) put(name, schema)
+        for ((name, schema) in BackupRoutes.schemas()) put(name, schema)
         put("Error", S.obj(
             "Error answer of every operation.", listOf("error"), null, null,
             "error" to S.obj(null, listOf("code", "message"), null, null,

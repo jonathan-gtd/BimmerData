@@ -171,6 +171,17 @@ class VehicleRepository private constructor(context: Context) : DetectedEcuSourc
         }
     }
 
+    /**
+     * Puts the garage of a backup in place (Settings › Backup): written before it is shown, so a
+     * failed write throws and changes nothing. Refused ([IllegalStateException]) while an operation
+     * on the car runs.
+     */
+    fun restoreGarage(next: Garage) {
+        check(!_state.value.busy) { "an operation on the car is running" }
+        synchronized(store) { store.saveOrThrow(next) }
+        _state.update { it.copy(garage = next, message = null, details = emptyMap(), missingEcus = null) }
+    }
+
     /** The user's choice of vehicle SGBD (series) for the next scans of the current vehicle. */
     fun setSeries(sgbd: String) = updateGarage { g ->
         g.copy(

@@ -79,7 +79,7 @@ import java.util.Locale
 /**
  * Settings: a list of categories ([SettingsHome]), each opening its own page with a back button
  * (and the system back gesture): connection, recording, GPS position, Telegraf export, local
- * REST API, translations, tools (Tool32) and about.
+ * REST API, translations, backup, tools (Tool32) and about.
  */
 @Composable
 fun SettingsScreen(initialPage: SettingsPage? = null) {
@@ -108,6 +108,7 @@ internal fun SettingsPageContent(page: SettingsPage) {
         SettingsPage.Telegraf -> TelegrafSection(settings.telegraf, store)
         SettingsPage.Api -> ApiSection(settings.api, api, store, runtime)
         SettingsPage.Translations -> io.github.jonathangtd.bimmerdata.i18n.TranslationsSettingsSection()
+        SettingsPage.Backup -> io.github.jonathangtd.bimmerdata.backup.BackupSection()
         SettingsPage.Tools -> ToolsSection()
         SettingsPage.About -> AboutSection()
     }
