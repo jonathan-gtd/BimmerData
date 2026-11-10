@@ -154,7 +154,8 @@ class TelegrafRuntime private constructor(context: Context) {
     /** Label, unit and SGBD of a measurement id, from what the engine reads. */
     private fun metadata(id: String): Measurement? {
         known[id]?.let { return it }
-        for (m in repo.requests.merged()) known[m.id] = m
+        // the whole profile is read, not only the page shown: its labels and units too
+        for (m in repo.measurementsRead()) known[m.id] = m
         known[id]?.let { return it }
         // phone GPS: exported whenever it is on, even without a card showing it
         return PhoneSensors.measurement(id)?.also { known[id] = it }

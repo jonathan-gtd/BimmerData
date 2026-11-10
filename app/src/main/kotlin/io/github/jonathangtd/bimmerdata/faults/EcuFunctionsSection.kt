@@ -102,7 +102,7 @@ internal class EcuFunctionsModel(private val app: Context, private val sgbd: Str
     fun blockingSpeed(): Double? {
         val live = LiveRepository.get(app)
         val samples = live.liveDataSource.samples.value
-        val ids = live.requests.merged().filter { it.unit.trim().equals("km/h", ignoreCase = true) }.map { it.id } + "${PhoneSensors.GPS}/speed"
+        val ids = live.measurementsRead().filter { it.unit.trim().equals("km/h", ignoreCase = true) }.map { it.id } + "${PhoneSensors.GPS}/speed"
         return Standstill.blockingSpeed(ids.mapNotNull { samples[it] }, System.currentTimeMillis())
     }
 

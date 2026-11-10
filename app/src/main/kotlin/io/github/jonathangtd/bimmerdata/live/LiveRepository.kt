@@ -169,6 +169,12 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
     // ---- guarded by mutex ----
     private var engine: AcquisitionEngine? = null
 
+    /**
+     * Every measurement read now, with its label and unit: the whole active profile, not only the
+     * page shown ([requests]), so a value read off screen is still named.
+     */
+    fun measurementsRead(): List<Measurement> = proxy.reading
+
     /** Read loop statistics of the current connection (null when not connected). */
     fun readStats(): ReadStats? = engine?.takeIf { it.isRunning }?.readStats()
 
@@ -414,6 +420,13 @@ internal class LiveDataProxy(private val scope: CoroutineScope) : LiveDataSource
     /** What the dashboard / Android Auto asked for, plus the live phone sensors (CSV columns). */
     val requested: List<Measurement> get() = (wanted + sensors).distinctBy { it.id }
     @Volatile private var pinned: List<Measurement>? = null
+
+    /**
+     * Everything that may be read now: [requested] (the whole profile, see [ReadScope]) plus what a
+     * recording pinned. The readings of values off the page shown carry their label and unit
+     * from here (the Telegraf export, the speed of the test guard).
+     */
+    val reading: List<Measurement> get() = (requested + pinned.orEmpty()).distinctBy { it.id }
     @Volatile private var engine: AcquisitionEngine? = null
     private var collectors: Job? = null
 

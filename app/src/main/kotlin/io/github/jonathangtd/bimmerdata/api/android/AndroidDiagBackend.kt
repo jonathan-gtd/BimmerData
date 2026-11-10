@@ -84,7 +84,7 @@ class AndroidDiagBackend(context: Context) : DiagBackend {
     }
 
     override fun speedKmh(): Double? {
-        val requests = live.requests.merged().associateBy { it.id }
+        val requests = live.measurementsRead().associateBy { it.id }
         val metadata: (String) -> Measurement? = { requests[it] }
         return VehicleSpeed.kmh(live.liveDataSource.samples.value, metadata, System.currentTimeMillis())
     }
