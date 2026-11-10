@@ -156,11 +156,13 @@ object Cars {
         return CarSpace(garage, Profiles.activate(space.profiles, profileId, nowMs))
     }
 
-    /** The selected car; without one the first car is selected, without any car one named [defaultLabel] is made. */
-    fun ensureSelected(space: CarSpace, defaultLabel: String, nowMs: Long): Pair<CarSpace, Vehicle> {
+    /**
+     * The selected car; without one the first car is selected. Null when there is no car at all: a
+     * profile belongs to a car, so the user adds one first (by hand, or by connecting: its VIN adds it).
+     */
+    fun selectedOrFirst(space: CarSpace, nowMs: Long): Pair<CarSpace, Vehicle>? {
         space.selected?.let { return space to it }
-        space.cars.firstOrNull()?.let { return select(space, it.id, nowMs) to it }
-        return create(space, defaultLabel, nowMs = nowMs)
+        return space.cars.firstOrNull()?.let { select(space, it.id, nowMs) to it }
     }
 
     /** The ECUs of [ecus] that [car] does not have; none when the car has no ECU list yet (it takes them, [bringEcus]). */

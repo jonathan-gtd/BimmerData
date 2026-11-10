@@ -167,6 +167,7 @@ fun CarTabScreen(vm: DashboardViewModel = viewModel()) {
         CarTabContent(
             car = selectedCar, cars = state.garage.vehicles, state = state, set = profiles,
             onActivate = activate, onNew = { sheet = CarTabSheet.Edit(null) }, onImport = ::importProfile, actions = actions, carActions = carActions,
+            connection = { io.github.jonathangtd.bimmerdata.ui.ConnectionPill() },
         )
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(16.dp))
     }
@@ -250,6 +251,8 @@ internal fun CarTabContent(
     onImport: () -> Unit,
     actions: ProfileActions,
     carActions: CarTabActions,
+    /** The connection pill on the "no car" screen (connecting adds the car); null in the screenshot tests. */
+    connection: (@Composable () -> Unit)? = null,
 ) {
     Column(
         Modifier
@@ -269,12 +272,12 @@ internal fun CarTabContent(
                     // cars but none shown: pick one before its profiles
                     var list by remember { mutableStateOf(false) }
                     Box {
-                        PillButton(stringResource(R.string.cars_change), onClick = { list = true }, icon = R.drawable.ic_chevron_down, color = Cockpit.OnAccent, background = Cockpit.Accent)
+                        PillButton(stringResource(R.string.cars_pick), onClick = { list = true }, icon = R.drawable.ic_chevron_down, color = Cockpit.OnAccent, background = Cockpit.Accent)
                         CarPickerMenu(list, { list = false }, picker, null)
                     }
                 }
             }
-            if (cars.isEmpty()) NoCar(carActions.onAddCar)
+            if (cars.isEmpty()) NoCar(carActions.onAddCar, connection)
             return
         }
         LazyColumn(

@@ -20,6 +20,13 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 
 /** 404 for an unknown car id. */
+/** 409 when a profile is asked for with no car at all: a profile belongs to a car. */
+internal fun noCar() = ApiException(
+    409, "no_car",
+    "No car yet: a profile belongs to a car. Add one with POST /api/v1/cars {\"label\":\"My car\",\"select\":true} " +
+        "(or connect to the car: its VIN adds it), then create the profile",
+)
+
 internal fun requireCar(space: CarSpace, id: String): Vehicle =
     space.car(id) ?: throw notFound("car_not_found", "No car '$id'; see GET /api/v1/cars")
 

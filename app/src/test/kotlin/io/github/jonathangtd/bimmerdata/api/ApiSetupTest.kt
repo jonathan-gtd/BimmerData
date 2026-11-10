@@ -296,13 +296,15 @@ class ApiSetupTest {
         val export = """{"kind":"bimmerdata-profile","formatVersion":1,"name":"My car","series":"<series>","ecus":["MSV70"],
             "dashboard":{"phonePages":[{"name":"Engine","columns":2,"rows":3,"cards":[{"type":"Dial","measurementIds":["msv70/0x4402"]}]}],"carPages":[]},
             "graphs":[{"id":"g1","name":"Temps","series":[{"measurementId":"msv70/0x4402","color":3},{"measurementId":"zzz/0x1"}],"windowSeconds":300,"axes":"Bands"}]}"""
+        assertEquals(409, call("POST", "/api/v1/profiles/import", export).status, "no car yet")
+        assertEquals(201, call("POST", "/api/v1/cars", """{"label":"My car","select":true}""").status)
         val r = call("POST", "/api/v1/profiles/import", export, query = mapOf("activate" to "false"))
         assertEquals(201, r.status, r.text)
         val p = r.json().obj("profile")
         assertEquals("My car", p.str("name"))
         assertEquals(1, p["graphs"]!!.jsonArray.size)
         assertEquals(1, r.json()["warnings"]!!.jsonArray.size, "zzz/0x1 is unknown")
-        // a fresh install: the file goes onto a new car "My car"; being that car's only profile, it is shown even with activate=false
+        // the file goes onto the selected car; being that car's only profile, it is shown even with activate=false
         assertEquals("My car", fake.garage.current?.label)
         assertEquals(fake.profileSet.profiles.single().id, fake.profileSet.activeId)
         assertEquals(ProfileVehicle("<series>", null, null), fake.profileSet.profiles.single().vehicle)
@@ -315,6 +317,7 @@ class ApiSetupTest {
 
     @Test
     fun `graphs of a profile - create, read, replace, delete, never touching the pages`() {
+        call("POST", "/api/v1/cars", """{"label":"My car","select":true}""")
         val created = call("POST", "/api/v1/profiles", """{"name":"Car"}""").json()
         val id = created.str("id")
         call("PUT", "/api/v1/profiles/$id", """{"dashboard":{"phonePages":[{"name":"Engine","columns":2,"rows":3}],"carPages":[]}}""")

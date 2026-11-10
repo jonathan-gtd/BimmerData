@@ -70,10 +70,20 @@ class CarsScreenshotTest {
     @Test fun cars() = capture("cars.png") { Cars(rows, state) }
 
     @Composable
-    private fun CarTab(car: Vehicle?, state: VehicleState) = CarTabContent(
-        car, cars = rows.map { it.car }, state = state, set = ProfileSet(), onActivate = {}, onNew = {}, onImport = {},
+    private fun CarTab(car: Vehicle?, state: VehicleState, cars: List<Vehicle> = rows.map { it.car }) = CarTabContent(
+        car, cars = cars, state = state, set = ProfileSet(), onActivate = {}, onNew = {}, onImport = {},
         actions = ProfileActions({}, {}, {}, {}), carActions = CarTabActions(),
+        connection = {
+            io.github.jonathangtd.bimmerdata.ui.ConnectionPillContent(
+                io.github.jonathangtd.bimmerdata.live.LiveConnection.Disconnected, io.github.jonathangtd.bimmerdata.live.AcquisitionStatus(),
+                io.github.jonathangtd.bimmerdata.live.LiveMode.Usb, {}, {},
+            )
+        },
     )
+
+    /** A fresh install: no car at all, so no profile either; connect (the VIN adds the car) or add it by hand. */
+    @Test @Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
+    fun carTabFreshInstallFrench() = capture("car_tab_fresh_fr.png") { CarTab(null, VehicleState(), cars = emptyList()) }
 
     @Test @Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
     fun carTabDetectingFrench() = capture("car_tab_detecting_fr.png") {

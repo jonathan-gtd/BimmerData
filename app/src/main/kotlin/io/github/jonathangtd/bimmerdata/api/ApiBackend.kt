@@ -78,9 +78,6 @@ interface ApiBackend {
      */
     fun <T> editCars(op: (CarSpace) -> Pair<CarSpace, T>): T
 
-    /** Name of the car made when a profile is created while there is no car at all. */
-    val defaultCarLabel: String get() = "My car"
-
     /** Selects car [carId] and starts the detection of its ECUs (asynchronous); false when another operation on the car runs. */
     fun startDetection(carId: String): Boolean = notAvailable("The ECU detection")
 

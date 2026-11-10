@@ -6,6 +6,7 @@
     <string name="cars_add">Ajouter une voiture</string>
     <string name="cars_empty_title">Aucune voiture</string>
     <string name="cars_empty_hint">Connectez-vous à votre voiture : l’appli lit son numéro de châssis et l’ajoute toute seule. Vous pouvez aussi l’ajouter à la main dès maintenant ; son numéro de châssis sera lu à la première connexion.</string>
+    <string name="cars_empty_tabs">Les onglets tableau de bord, graphique et défauts apparaissent une fois la voiture ajoutée : ses profils contiennent ce qu’ils affichent.</string>
     <string name="cars_selected">Affichée</string>
     <string name="cars_vin">Châssis …%1$s</string>
     <string name="cars_vin_unknown">Numéro de châssis pas encore lu</string>
@@ -41,6 +42,7 @@
     <string name="cars_default_name">Ma voiture</string>
     <string name="cars_vin_name">Voiture %1$s</string>
     <string name="cars_change">Changer de voiture</string>
+    <string name="cars_pick">Choisir une voiture</string>
     <string name="cars_car">Voiture</string>
     <string name="cars_ecus_title">Calculateurs de %1$s</string>
     <string name="cars_ecus_scanned">Trouvés par le dernier diagnostic</string>

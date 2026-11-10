@@ -6,6 +6,7 @@
     <string name="cars_add">Add a car</string>
     <string name="cars_empty_title">No car yet</string>
     <string name="cars_empty_hint">Connect to your car: the app reads its VIN and adds it by itself. You can also add it by hand now; its VIN is read at the first connection.</string>
+    <string name="cars_empty_tabs">The dashboard, graph and faults tabs appear once the car is added: its profiles hold what they show.</string>
     <string name="cars_selected">Shown</string>
     <string name="cars_vin">VIN …%1$s</string>
     <string name="cars_vin_unknown">VIN not read yet</string>
@@ -38,6 +39,7 @@
     <string name="cars_default_name">My car</string>
     <string name="cars_vin_name">Car %1$s</string>
     <string name="cars_change">Change car</string>
+    <string name="cars_pick">Choose a car</string>
     <string name="cars_car">Car</string>
     <string name="cars_ecus_title">ECUs of %1$s</string>
     <string name="cars_ecus_scanned">Found by the last scan</string>

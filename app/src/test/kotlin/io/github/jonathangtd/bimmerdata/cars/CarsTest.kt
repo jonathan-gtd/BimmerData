@@ -216,10 +216,14 @@ class CarsTest {
     }
 
     @Test
-    fun `a profile made on a fresh install gets a car`() {
-        val (space, car) = Cars.ensureSelected(CarSpace(), "My car", 1)
-        assertEquals("My car", car.label)
-        val (withProfile, p) = Cars.createProfile(space, car.id, "Lambda", ProfileVehicle(), listOf("msv70"), 2)
+    fun `a profile needs a car - none on a fresh install, else the selected one or the first`() {
+        assertNull(Cars.selectedOrFirst(CarSpace(), 1), "a fresh install has no car: the user adds one first")
+        val (space, car) = Cars.create(CarSpace(), "My car", nowMs = 1)
+        val unselected = space.copy(garage = space.garage.copy(currentId = null))
+        val (picked, first) = Cars.selectedOrFirst(unselected, 2)!!
+        assertEquals(car.id, first.id)
+        assertEquals(car.id, picked.garage.currentId)
+        val (withProfile, p) = Cars.createProfile(picked, car.id, "Lambda", ProfileVehicle(), listOf("msv70"), 2)
         assertEquals(p.id, withProfile.profiles.activeId)
         assertEquals(listOf("msv70"), withProfile.car(car.id)!!.sgbds())
         assertNotNull(withProfile.selected)

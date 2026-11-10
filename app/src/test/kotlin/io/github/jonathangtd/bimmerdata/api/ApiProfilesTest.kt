@@ -71,11 +71,18 @@ class ApiProfilesTest {
         assertEquals(0, call("GET", "/api/v1/profiles").json()["profiles"]!!.jsonArray.size, "a fresh install has none")
 
         assertEquals(400, call("POST", "/api/v1/profiles", """{"name":"x","vehicleId":"AB12345"}""").status, "the old car link is gone")
+        // a fresh install has no car: a profile belongs to one, so the car comes first
+        val noCar = call("POST", "/api/v1/profiles", """{"name":"Lambda"}""")
+        assertEquals(409, noCar.status, noCar.text)
+        assertEquals("no_car", noCar.json()["error"]!!.jsonObject["code"]!!.jsonPrimitive.content)
+        assertEquals(409, call("POST", "/api/v1/profiles/import", """{"kind":"bimmerdata-profile","formatVersion":1,"name":"x"}""").status)
+        assertEquals(0, backend.garage.vehicles.size, "no car made on the fly")
+        assertEquals(201, call("POST", "/api/v1/cars", """{"label":"My car","select":true}""").status)
         val r = call("POST", "/api/v1/profiles", """{"name":"E90 330i · Lambda","series":"E90","model":"330i","ecus":["MSV70"]}""")
         assertEquals(201, r.status, r.text)
         val lambdaId = r.json()["id"]!!.jsonPrimitive.content
         assertEquals("msv70", r.json()["ecus"]!!.jsonArray[0].jsonPrimitive.content)
-        // a fresh install has no car: one is made, and it takes the profile's ECUs as its list
+        // the car had no ECU list: it takes the profile's ECUs
         val carId = r.json()["carId"]!!.jsonPrimitive.content
         assertEquals("My car", backend.garage.current?.label)
         assertEquals(carId, backend.garage.currentId)

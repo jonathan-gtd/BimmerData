@@ -860,7 +860,7 @@ class ApiService(
             Route(
                 "POST", "/api/v1/profiles", RouteAccess.Needs(Scope.Layout), "Profiles", "createProfile",
                 "Create a profile",
-                "Creates a profile of car `car` (default: the selected car; with no car at all, one named \"My car\" is made) and, unless `activate` is false, makes it the active one, so the phone and Android Auto show it at once (activating a profile of another car selects that car). `ecus` must be in the car's ECU list (422 `ecu_not_in_car` lists the allowed ones); a car without ECU list takes them. It starts with no page; give `copyFrom` to copy the pages of another profile. A name already used gets a \" (2)\" suffix.",
+                "Creates a profile of car `car` (default: the selected car; with no car at all: 409 `no_car`, add one first with POST /api/v1/cars) and, unless `activate` is false, makes it the active one, so the phone and Android Auto show it at once (activating a profile of another car selects that car). `ecus` must be in the car's ECU list (422 `ecu_not_in_car` lists the allowed ones); a car without ECU list takes them. It starts with no page; give `copyFrom` to copy the pages of another profile. A name already used gets a \" (2)\" suffix.",
                 body = Body(S.obj(null, listOf("name"), false, null,
                     "name" to S.str("Profile name (≤ ${Profiles.MAX_NAME_LENGTH}).", "My car · Knock"),
                     "car" to S.str("Id of its car (GET /api/v1/cars); default: the selected car."),
@@ -871,7 +871,7 @@ class ApiService(
                     "activate" to S.bool("Make it the active profile (default true). With false the active profile stays, except on a car that had no profile: a car with profiles always shows one.")),
                     example = buildJsonObject { put("name", "My car · Knock"); put("series", "<series>"); put("model", "<model>"); putJsonArray("ecus") { add("<sgbd>") } }),
                 reply = Reply(201, "The new profile", S.ref("Profile")),
-                errors = mapOf(400 to "Malformed body.", 404 to "Unknown car or copyFrom profile.", 422 to "Invalid name or ECU list (an ECU not in the car: ecu_not_in_car), or too many profiles."),
+                errors = mapOf(400 to "Malformed body.", 404 to "Unknown car or copyFrom profile.", 409 to "No car yet (no_car): a profile belongs to a car, POST /api/v1/cars first.", 422 to "Invalid name or ECU list (an ECU not in the car: ecu_not_in_car), or too many profiles."),
             ) { call ->
                 val b = call.bodyObject()
                 b.allowOnly("name", "car", "series", "model", "ecus", "copyFrom", "activate")
@@ -882,7 +882,7 @@ class ApiService(
                 val carId = b.string("car")?.trim()?.takeIf { it.isNotEmpty() }
                 val created = backend.editCars { start ->
                     if (start.profiles.profiles.size >= Profiles.MAX_PROFILES) throw invalidProfile("At most ${Profiles.MAX_PROFILES} profiles")
-                    val (space, car) = if (carId != null) start to requireCar(start, carId) else Cars.ensureSelected(start, backend.defaultCarLabel, clock())
+                    val (space, car) = if (carId != null) start to requireCar(start, carId) else (Cars.selectedOrFirst(start, clock()) ?: throw noCar())
                     requireCarEcus(car, ecus)
                     val pages = b.string("copyFrom")?.let { id -> requireProfile(space.profiles, id).dashboard } ?: Dashboard()
                     Cars.createProfile(space, car.id, name, vehicle, ecus, clock(), pages, activate = activate)

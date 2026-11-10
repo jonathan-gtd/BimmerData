@@ -116,13 +116,13 @@ internal class ProfileGraphRoutes(
                     "the layout is repaired the same way, a name already used gets a \" (2)\" suffix, the car's ECU list gets the file's ECUs it lacks (as added by hand). It becomes the active profile unless `activate=false`. A plain dashboard file (older exports) is accepted too.",
                 params = listOf(
                     Param("activate", "query", "Make it the active profile (default true). With false the active profile stays, except on a car that had no profile: a car with profiles always shows one.", S.bool(default = true), required = false),
-                    Param("car", "query", "Id of the car it goes to (GET /api/v1/cars); default: the selected car (with no car at all, one named \"My car\" is made).", S.str(), required = false),
+                    Param("car", "query", "Id of the car it goes to (GET /api/v1/cars); default: the selected car (with no car at all: 409 `no_car`, add one first with POST /api/v1/cars).", S.str(), required = false),
                 ),
                 body = Body(S.obj("BimmerData profile file", listOf("kind", "name"), true, null,
                     "kind" to S.str(enum = listOf("bimmerdata-profile")), "formatVersion" to S.int(), "name" to S.str(), "series" to S.str(), "model" to S.str(),
                     "ecus" to S.arr(S.str()), "dashboard" to S.ref("Dashboard"), "graphs" to S.arr(S.ref("Graph")))),
                 reply = Reply(201, "The new profile", S.obj(null, listOf("profile", "warnings"), false, null, "profile" to S.ref("Profile"), "warnings" to S.arr(S.str()))),
-                errors = mapOf(404 to "Unknown car.", 422 to "Not a profile file (code invalid_profile_file) or too many profiles."),
+                errors = mapOf(404 to "Unknown car.", 409 to "No car yet (no_car): POST /api/v1/cars first.", 422 to "Not a profile file (code invalid_profile_file) or too many profiles."),
             ) { call ->
                 val export = try {
                     ProfileJson.parseExport(call.request.bodyText())
@@ -133,7 +133,7 @@ internal class ProfileGraphRoutes(
                 val carId = call.query("car")
                 val created = backend.editCars { start ->
                     if (start.profiles.profiles.size >= Profiles.MAX_PROFILES) throw ApiException(422, "invalid_profile", "At most ${Profiles.MAX_PROFILES} profiles")
-                    val (space, car) = if (carId != null) start to requireCar(start, carId) else Cars.ensureSelected(start, backend.defaultCarLabel, clock())
+                    val (space, car) = if (carId != null) start to requireCar(start, carId) else (Cars.selectedOrFirst(start, clock()) ?: throw noCar())
                     Cars.importProfile(space, export, car.id, clock(), "Imported", activate)
                 }
                 ok(buildJsonObject {

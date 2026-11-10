@@ -105,9 +105,9 @@ class CarBook private constructor(context: Context) {
     /** Activates a profile, switching to its car if needed. */
     fun activateProfile(id: String) = change { Cars.activateProfile(it, id, now()) }
 
-    /** New profile of the selected car (one named [defaultLabel] is made when there is no car). */
+    /** New profile of the selected car; [NoCarException] when there is no car yet. */
     fun createProfile(name: String, vehicle: ProfileVehicle, ecus: List<String>): Profile = edit { space ->
-        val (withCar, car) = Cars.ensureSelected(space, defaultLabel(), now())
+        val (withCar, car) = Cars.selectedOrFirst(space, now()) ?: throw NoCarException()
         Cars.createProfile(withCar, car.id, name, vehicle, ecus, now())
     }
 
@@ -129,11 +129,11 @@ class CarBook private constructor(context: Context) {
         Cars.copyProfile(space, id, carId, now()) ?: (space to null)
     }
 
-    /** A profile file as a new, active profile of the selected car; throws [IllegalArgumentException] when it is not one. */
+    /** A profile file as a new, active profile of the selected car; throws [IllegalArgumentException] when it is not one, [NoCarException] without car. */
     fun importProfile(text: String, fallbackName: String): Profile {
         val export = ProfileJson.parseExport(text)
         return edit { space ->
-            val (withCar, car) = Cars.ensureSelected(space, defaultLabel(), now())
+            val (withCar, car) = Cars.selectedOrFirst(space, now()) ?: throw NoCarException()
             Cars.importProfile(withCar, export, car.id, now(), fallbackName)
         }
     }
@@ -152,3 +152,6 @@ class CarBook private constructor(context: Context) {
             instance ?: synchronized(this) { instance ?: CarBook(context).also { instance = it } }
     }
 }
+
+/** A profile was asked for while there is no car: a profile belongs to a car, add one first. */
+class NoCarException : IllegalStateException("No car yet: add a car first, or connect to it (its VIN adds it)")

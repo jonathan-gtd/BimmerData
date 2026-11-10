@@ -39,6 +39,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,11 +73,12 @@ import io.github.jonathangtd.bimmerdata.settings.ApiDocsScreen
 import io.github.jonathangtd.bimmerdata.settings.AppServices
 import io.github.jonathangtd.bimmerdata.settings.SettingsScreen
 
-enum class AppTab(@param:DrawableRes val icon: Int, @param:StringRes val label: Int) {
-    Dashboard(R.drawable.ic_dashboard, R.string.nav_dashboard),
-    Graph(R.drawable.ic_graph, R.string.nav_graph),
+/** [needsCar]: hidden while there is no car (they show a car's profile or faults). */
+enum class AppTab(@param:DrawableRes val icon: Int, @param:StringRes val label: Int, val needsCar: Boolean = false) {
+    Dashboard(R.drawable.ic_dashboard, R.string.nav_dashboard, needsCar = true),
+    Graph(R.drawable.ic_graph, R.string.nav_graph, needsCar = true),
     Car(R.drawable.ic_profile, R.string.nav_profiles),
-    Faults(R.drawable.ic_faults, R.string.nav_faults),
+    Faults(R.drawable.ic_faults, R.string.nav_faults, needsCar = true),
     Settings(R.drawable.ic_settings, R.string.nav_settings),
 }
 
@@ -85,6 +88,8 @@ enum class AppTab(@param:DrawableRes val icon: Int, @param:StringRes val label: 
  * secondary screens ([AppOverlay]) opened through [LocalAppNavigator]: from Settings › Tools, from
  * an ECU's detail with its SGBD selected, from the Profiles tab ("My cars") and the profile switch
  * ("Change car"). At start: the Profiles tab when there is no car yet, My cars when there are several.
+ * Without any car only the Profiles and Settings tabs are there ([AppTab.needsCar]): a profile
+ * belongs to a car, so the car comes first (added by hand or by connecting, from its VIN).
  */
 @Composable
 fun AppRoot() {
@@ -116,6 +121,11 @@ fun AppRoot() {
     // REST API server and USB auto-connect follow the settings for the whole process life.
     val context = LocalContext.current
     LaunchedEffect(Unit) { AppServices.start(context) }
+    // No car: the tabs that show a car's profile or faults are hidden; the one shown goes to Profiles.
+    val hasCar by remember { io.github.jonathangtd.bimmerdata.vehicle.VehicleRepository.get(context).state }
+        .collectAsStateWithLifecycle().let { s -> remember { derivedStateOf { s.value.garage.vehicles.isNotEmpty() } } }
+    val tabs = AppTab.entries.filter { hasCar || !it.needsCar }
+    LaunchedEffect(hasCar) { if (tab !in tabs) tab = AppTab.Car }
     // No car yet: the Profiles tab (how to get one); several: My cars (which one); one car: the dashboard.
     var startChecked by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -149,13 +159,13 @@ fun AppRoot() {
             }
         }
         AnimatedVisibility(visible = barVisible, enter = expandVertically(), exit = shrinkVertically()) {
-            BottomBar(tab) { tab = it }
+            BottomBar(tab, tabs) { tab = it }
         }
     }
 }
 
 @Composable
-internal fun BottomBar(selected: AppTab, onSelect: (AppTab) -> Unit) {
+internal fun BottomBar(selected: AppTab, tabs: List<AppTab> = AppTab.entries, onSelect: (AppTab) -> Unit) {
     Column(Modifier.fillMaxWidth().background(Cockpit.Background)) {
         HorizontalDivider(color = Cockpit.Card)
         Row(
@@ -163,7 +173,7 @@ internal fun BottomBar(selected: AppTab, onSelect: (AppTab) -> Unit) {
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            AppTab.entries.forEach { t ->
+            tabs.forEach { t ->
                 val isSel = t == selected
                 Column(
                     Modifier

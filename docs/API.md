@@ -74,8 +74,9 @@ A typical agent session:
 1. `GET /api/v1` – check the token, see the granted scopes.
 2. `GET /api/v1/status` – connected? If not, `POST /api/v1/connect` (`{"mode":"simulation"}` needs no car).
    `GET /api/v1/cars` – the user's cars and the selected one; `GET /api/v1/profiles` – the
-   selected car's profiles (main ECUs, pages) and the active one. A fresh install has neither:
-   `POST /api/v1/profiles` creates a profile (and a car "My car"). The dashboard routes act on the
+   selected car's profiles (main ECUs, pages) and the active one. A fresh install has neither, and a
+   profile belongs to a car: add the car first (`POST /api/v1/cars`, see 6; connecting to the car
+   adds it too, from its VIN), then `POST /api/v1/profiles` (409 `no_car` without car). The dashboard routes act on the
    active profile.
 3. `GET /api/v1/ecus`, `GET /api/v1/ecus/<sgbd>/measurements?q=temp` – find measurement ids.
 4. `GET /api/v1/card-types` – what a card can be (a page is a `columns × rows` grid).

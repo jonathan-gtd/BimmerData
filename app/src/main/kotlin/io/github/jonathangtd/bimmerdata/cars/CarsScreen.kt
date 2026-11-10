@@ -269,9 +269,9 @@ internal fun CarsContent(
     }
 }
 
-/** No car yet: connecting adds it, or add it by hand. */
+/** No car yet: connecting adds it ([connection]: the connection pill, null = not shown), or add it by hand. */
 @Composable
-internal fun NoCar(onAdd: () -> Unit) {
+internal fun NoCar(onAdd: () -> Unit, connection: (@Composable () -> Unit)? = null) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(Modifier.padding(horizontal = 32.dp).widthIn(max = 360.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
@@ -286,7 +286,13 @@ internal fun NoCar(onAdd: () -> Unit) {
             Spacer(Modifier.height(8.dp))
             Text(stringResource(R.string.cars_empty_hint), color = Cockpit.Muted, fontSize = 15.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
             Spacer(Modifier.height(24.dp))
+            if (connection != null) {
+                connection()
+                Spacer(Modifier.height(12.dp))
+            }
             PillButton(stringResource(R.string.cars_add), onClick = onAdd, icon = R.drawable.ic_add, color = Cockpit.OnAccent, background = Cockpit.Accent)
+            Spacer(Modifier.height(20.dp))
+            Text(stringResource(R.string.cars_empty_tabs), color = Cockpit.Muted, fontSize = 13.sp, lineHeight = 18.sp, textAlign = TextAlign.Center)
         }
     }
 }

@@ -177,8 +177,6 @@ class AndroidApiBackend(
     /** [CarBook.edit]: under the profile store's lock, the garage swapped only if no scan changed it meanwhile. */
     override fun <T> editCars(op: (CarSpace) -> Pair<CarSpace, T>): T = CarBook.get(app).edit(op)
 
-    override val defaultCarLabel: String get() = CarBook.get(app).defaultLabel()
-
     override fun startDetection(carId: String): Boolean {
         CarBook.get(app).select(carId)
         return VehicleRepository.get(app).detect()
