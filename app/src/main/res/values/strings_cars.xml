@@ -34,7 +34,7 @@
     <string name="cars_label_required">Give the car a name</string>
     <string name="cars_series">Series</string>
     <string name="cars_model">Model</string>
-    <string name="cars_add_hint">Its VIN is read at its first connection, and Detect (Car tab) fills its ECU list.</string>
+    <string name="cars_add_hint">Its VIN is read at its first connection, and Detect (Profiles tab) fills its ECU list.</string>
     <string name="cars_default_name">My car</string>
     <string name="cars_vin_name">Car %1$s</string>
     <string name="cars_change">Change car</string>
@@ -42,11 +42,11 @@
     <string name="cars_ecus_title">ECUs of %1$s</string>
     <string name="cars_ecus_scanned">Found by the last scan</string>
     <string name="cars_ecus_added">Added by hand</string>
-    <string name="cars_ecus_none">No ECU yet: detect them (Car tab › Detect, connected to the car), or pick them below.</string>
+    <string name="cars_ecus_none">No ECU yet: detect them (Profiles tab › Detect, connected to the car), or pick them below.</string>
     <string name="cars_ecus_hint">Its profiles pick their main ECUs from this list. A detection replaces the ECUs it finds; those added by hand stay. Tap one added by hand to remove it.</string>
     <string name="cars_ecu_chip_remove">Remove %1$s</string>
-    <string name="cars_editor_restricted">Only the ECUs of %1$s are offered (Car tab › ECUs adds others).</string>
-    <string name="cars_editor_open">%1$s has no ECU list yet: the ECUs picked here become its list (Car tab › Detect fills it too).</string>
+    <string name="cars_editor_restricted">Only the ECUs of %1$s are offered (Profiles tab › ECUs adds others).</string>
+    <string name="cars_editor_open">%1$s has no ECU list yet: the ECUs picked here become its list (Profiles tab › Detect fills it too).</string>
     <string name="cars_copy_to">Copy to another car</string>
     <string name="cars_copy_title">Copy “%1$s” to</string>
     <string name="cars_copied">Copied to %1$s</string>
@@ -78,11 +78,9 @@
         <item quantity="one">%2$s removed from %1$d profile</item>
         <item quantity="other">%2$s removed from %1$d profiles</item>
     </plurals>
-    <!-- Car tab -->
+    <!-- Profiles tab -->
     <string name="nav_car">Car</string>
     <string name="car_detect_short">Detect</string>
     <string name="car_not_scanned">no detection yet</string>
-    <string name="car_open_tab">Open the Car tab</string>
-    <string name="cars_add_short">Add</string>
-    <string name="cars_manage">Manage</string>
+    <string name="car_open_tab">Open the Profiles tab</string>
 </resources>

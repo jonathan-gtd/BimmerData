@@ -43,7 +43,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
 
-/** Profiles: the Car tab (car + list), first launch, editor, header and the card picker on the profile's ECUs (visual check). */
+/** Profiles: the Profiles tab (car + list), first launch, editor, header and the card picker on the profile's ECUs (visual check). */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class ProfilesScreenshotTest {
@@ -93,7 +93,7 @@ class ProfilesScreenshotTest {
         ecus = listOf("msv70", "egs", "kombi87", "dsc_87").mapIndexed { i, s -> VehicleEcu(0x12 + i, s.uppercase(), sgbd = s) },
     )
 
-    /** The Car tab: the car card, then its profiles, then My cars. */
+    /** The Profiles tab: the car card, then its profiles, then My cars. */
     private fun tab(name: String, profiles: ProfileSet = e90) = capture(name, height = 1400) {
         CarTabContent(car, cars = listOf(car, Vehicle("car-track", "Track car", series = "E46")), state = VehicleState(), set = profiles, onActivate = {}, onNew = {}, onImport = {}, actions = noActions, carActions = CarTabActions())
     }

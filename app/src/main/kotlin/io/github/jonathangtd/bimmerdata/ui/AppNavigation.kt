@@ -14,7 +14,7 @@ class AppNavigator(
     val openTool32: (sgbd: String?) -> Unit = {},
     /** Swagger UI of the local REST API. */
     val openApiDocs: () -> Unit = {},
-    /** The Car tab: the car shown, its ECUs and its profiles (manage profiles). */
+    /** The Profiles tab: the car shown, its ECUs and its profiles (manage profiles). */
     val openCar: () -> Unit = {},
     /** The Dashboard tab. */
     val openDashboard: () -> Unit = {},

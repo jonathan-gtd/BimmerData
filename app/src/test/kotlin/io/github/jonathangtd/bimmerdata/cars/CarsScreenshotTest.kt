@@ -37,7 +37,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
 
-/** My cars and the Car tab: the list, the empty start screen, a detection running and the ECU removal question (visual check). */
+/** My cars and the Profiles tab: the list, the empty start screen, a detection running and the ECU removal question (visual check). */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")

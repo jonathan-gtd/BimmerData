@@ -83,8 +83,8 @@ enum class AppTab(@param:DrawableRes val icon: Int, @param:StringRes val label: 
  * Top-level screens with a bottom navigation bar (hidden while editing the dashboard layout).
  * The Profiles tab (enum [AppTab.Car]) holds the cars, the car shown and its profiles. Tool32, the API documentation and My cars are
  * secondary screens ([AppOverlay]) opened through [LocalAppNavigator]: from Settings › Tools, from
- * an ECU's detail with its SGBD selected, from the Car tab ("My cars") and the profile switch
- * ("Change car"). At start: the Car tab when there is no car yet, My cars when there are several.
+ * an ECU's detail with its SGBD selected, from the Profiles tab ("My cars") and the profile switch
+ * ("Change car"). At start: the Profiles tab when there is no car yet, My cars when there are several.
  */
 @Composable
 fun AppRoot() {
@@ -116,7 +116,7 @@ fun AppRoot() {
     // REST API server and USB auto-connect follow the settings for the whole process life.
     val context = LocalContext.current
     LaunchedEffect(Unit) { AppServices.start(context) }
-    // No car yet: the Car tab (how to get one); several: My cars (which one); one car: the dashboard.
+    // No car yet: the Profiles tab (how to get one); several: My cars (which one); one car: the dashboard.
     var startChecked by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         if (startChecked) return@LaunchedEffect
@@ -134,7 +134,7 @@ fun AppRoot() {
                 when (overlay) {
                     AppOverlay.Tool32 -> Tool32Screen(initialSgbd = tool32Sgbd, onBack = { overlay = null })
                     AppOverlay.ApiDocs -> ApiDocsScreen(onBack = { overlay = null })
-                    // a car chosen: back to the Car tab when opened from it, else to the dashboard
+                    // a car chosen: back to the Profiles tab when opened from it, else to the dashboard
                     AppOverlay.Cars -> CarsScreen(onBack = { overlay = null }, onShown = { overlay = null; if (tab != AppTab.Car) tab = AppTab.Dashboard })
                     null -> holder.SaveableStateProvider(tab.name) {
                         when (tab) {

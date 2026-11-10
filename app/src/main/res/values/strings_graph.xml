@@ -12,7 +12,7 @@
     <string name="graph_no_cards_hint">Graphs show the values of this profile’s cards. Add cards to the dashboard first.</string>
     <string name="graph_open_dashboard">Open the dashboard</string>
     <string name="graph_no_profile_hint">Graphs belong to a profile, like the dashboard pages. Create a profile first.</string>
-    <string name="graph_open_profiles">Open the Car tab</string>
+    <string name="graph_open_profiles">Open the Profiles tab</string>
     <string name="graph_values">Values</string>
     <string name="graph_choose_values">Choose values</string>
     <string name="graph_values_hint">Values of this profile’s cards (phone and Android Auto). Maximum per graph: %1$d.</string>

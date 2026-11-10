@@ -121,7 +121,7 @@ private sealed interface CarsSheet {
 /**
  * My cars: every car with its VIN state, series, profiles and ECUs; show one (tap), detect its
  * ECUs, set them by hand, rename, delete (with its profiles, after a confirmation), add one by
- * hand. Shown at start when there are several cars, and from the Car tab ("My cars") and the
+ * hand. Shown at start when there are several cars, and from the Profiles tab ("My cars") and the
  * profile switch ("Change car"). [onShown]: a car was chosen, back to the dashboard.
  */
 @Composable
@@ -202,7 +202,7 @@ internal fun CoroutineScope.io(block: () -> Unit) {
     launch { withContext(Dispatchers.IO) { block() } }
 }
 
-/** New name for [car] (My cars and the Car tab). */
+/** New name for [car] (My cars and the Profiles tab). */
 @Composable
 internal fun RenameCarDialog(car: Vehicle, onDismiss: () -> Unit) {
     val context = LocalContext.current

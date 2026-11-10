@@ -113,7 +113,7 @@ internal fun NoProfile(onCreate: () -> Unit, onImport: () -> Unit) {
     }
 }
 
-/** What can be done to one profile (Car tab): the "⋮" menu of its row. */
+/** What can be done to one profile (Profiles tab): the "⋮" menu of its row. */
 internal class ProfileActions(
     val onEdit: (String) -> Unit,
     val onDuplicate: (String) -> Unit,
@@ -126,7 +126,7 @@ internal class ProfileActions(
 /**
  * Quick switch from the dashboard header: tap a profile of the selected car to make it active, or
  * create one; "Change car" opens My cars; the full management (edit, duplicate, export, import,
- * delete) is the Car tab ([onManage]).
+ * delete) is the Profiles tab ([onManage]).
  */
 @Composable
 internal fun ProfileSwitchSheet(

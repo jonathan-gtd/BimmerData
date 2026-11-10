@@ -37,7 +37,7 @@
     <string name="cars_label_required">Donnez un nom à la voiture</string>
     <string name="cars_series">Série</string>
     <string name="cars_model">Modèle</string>
-    <string name="cars_add_hint">Son numéro de châssis est lu à la première connexion, et Détecter (onglet Voiture) remplit sa liste de calculateurs.</string>
+    <string name="cars_add_hint">Son numéro de châssis est lu à la première connexion, et Détecter (onglet Profils) remplit sa liste de calculateurs.</string>
     <string name="cars_default_name">Ma voiture</string>
     <string name="cars_vin_name">Voiture %1$s</string>
     <string name="cars_change">Changer de voiture</string>
@@ -45,11 +45,11 @@
     <string name="cars_ecus_title">Calculateurs de %1$s</string>
     <string name="cars_ecus_scanned">Trouvés par le dernier diagnostic</string>
     <string name="cars_ecus_added">Ajoutés à la main</string>
-    <string name="cars_ecus_none">Aucun calculateur : détectez-les (onglet Voiture › Détecter, connecté à la voiture), ou choisissez-les ci-dessous.</string>
+    <string name="cars_ecus_none">Aucun calculateur : détectez-les (onglet Profils › Détecter, connecté à la voiture), ou choisissez-les ci-dessous.</string>
     <string name="cars_ecus_hint">Ses profils choisissent leurs calculateurs principaux dans cette liste. Une détection remplace les calculateurs qu’elle trouve ; ceux ajoutés à la main restent. Touchez-en un ajouté à la main pour le retirer.</string>
     <string name="cars_ecu_chip_remove">Retirer %1$s</string>
-    <string name="cars_editor_restricted">Seuls les calculateurs de %1$s sont proposés (onglet Voiture › Calculateurs pour en ajouter).</string>
-    <string name="cars_editor_open">%1$s n’a pas encore de liste de calculateurs : ceux choisis ici deviennent sa liste (onglet Voiture › Détecter la remplit aussi).</string>
+    <string name="cars_editor_restricted">Seuls les calculateurs de %1$s sont proposés (onglet Profils › Calculateurs pour en ajouter).</string>
+    <string name="cars_editor_open">%1$s n’a pas encore de liste de calculateurs : ceux choisis ici deviennent sa liste (onglet Profils › Détecter la remplit aussi).</string>
     <string name="cars_copy_to">Copier vers une autre voiture</string>
     <string name="cars_copy_title">Copier « %1$s » vers</string>
     <string name="cars_copied">Copié vers %1$s</string>
@@ -89,7 +89,5 @@
     <string name="nav_car">Voiture</string>
     <string name="car_detect_short">Détecter</string>
     <string name="car_not_scanned">aucune détection</string>
-    <string name="car_open_tab">Ouvrir l’onglet Voiture</string>
-    <string name="cars_add_short">Ajouter</string>
-    <string name="cars_manage">Gérer</string>
+    <string name="car_open_tab">Ouvrir l’onglet Profils</string>
 </resources>

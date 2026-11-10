@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -49,7 +50,7 @@ import io.github.jonathangtd.bimmerdata.live.vehicle.Vehicle
 import io.github.jonathangtd.bimmerdata.ui.BarlowCondensed
 import io.github.jonathangtd.bimmerdata.ui.Cockpit
 
-/** What the Car tab's car card can do. */
+/** What the Profiles tab's car card can do. */
 internal class CarCardActions(
     val onDetect: () -> Unit = {},
     val onEcus: () -> Unit = {},
@@ -63,28 +64,92 @@ internal fun carSubtitle(c: Vehicle): String {
     return listOfNotNull(listOfNotNull(c.series, c.model).joinToString(" ").takeIf { it.isNotEmpty() }, vin).joinToString(" · ")
 }
 
+/** The car list of the Profiles tab: the cars ([shownId] checked, a tap shows another), then "Add a car" and "My cars". */
+internal class CarPicker(
+    val cars: List<Vehicle> = emptyList(),
+    val onSelect: (String) -> Unit = {},
+    val onAdd: () -> Unit = {},
+    val onManage: () -> Unit = {},
+)
+
+/** The drop-down list of [picker] (anchored to the enclosing Box). */
+@Composable
+internal fun CarPickerMenu(expanded: Boolean, onDismiss: () -> Unit, picker: CarPicker, shownId: String?) {
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss, containerColor = Cockpit.Card) {
+        picker.cars.forEach { c ->
+            val shown = c.id == shownId
+            DropdownMenuItem(
+                text = {
+                    Column {
+                        Text(
+                            c.label, color = if (shown) Cockpit.Accent else Cockpit.Text, fontSize = 17.sp, fontFamily = BarlowCondensed,
+                            fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(carSubtitle(c), color = Cockpit.Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                },
+                leadingIcon = {
+                    Icon(
+                        painterResource(if (shown) R.drawable.ic_check else R.drawable.ic_profile), contentDescription = null,
+                        tint = if (shown) Cockpit.Accent else Cockpit.Muted, modifier = Modifier.size(20.dp),
+                    )
+                },
+                onClick = { onDismiss(); if (!shown) picker.onSelect(c.id) },
+                modifier = Modifier.heightIn(min = MinTouch),
+            )
+        }
+        if (picker.cars.isNotEmpty()) HorizontalDivider(color = Cockpit.Border)
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.cars_add), color = Cockpit.Text, fontSize = 15.sp) },
+            leadingIcon = { Icon(painterResource(R.drawable.ic_add), contentDescription = null, tint = Cockpit.Muted, modifier = Modifier.size(20.dp)) },
+            onClick = { onDismiss(); picker.onAdd() },
+            modifier = Modifier.heightIn(min = MinTouch),
+        )
+        if (picker.cars.isNotEmpty()) DropdownMenuItem(
+            text = { Text(stringResource(R.string.cars_title), color = Cockpit.Text, fontSize = 15.sp) },
+            leadingIcon = { Icon(painterResource(R.drawable.ic_settings), contentDescription = null, tint = Cockpit.Muted, modifier = Modifier.size(20.dp)) },
+            onClick = { onDismiss(); picker.onManage() },
+            modifier = Modifier.heightIn(min = MinTouch),
+        )
+    }
+}
+
 /**
- * The car shown (Car tab): name, series / model and VIN state, its ECU list and last detection,
- * the two things done to it most (detect its ECUs, its ECU list) as buttons, rename in ⋮.
+ * The car shown (Profiles tab): name with ▾ (a tap opens the car list of [picker]: show another
+ * car, add one, My cars), series / model and VIN state, its ECU list and last detection, the two
+ * things done to it most (detect its ECUs, its ECU list) as buttons, rename in ⋮.
  * [busy]: a detection or fault read runs (detect disabled).
  */
 @Composable
-internal fun CarCard(car: Vehicle, busy: Boolean, actions: CarCardActions, modifier: Modifier = Modifier) {
+internal fun CarCard(car: Vehicle, busy: Boolean, actions: CarCardActions, picker: CarPicker = CarPicker(listOf(car)), modifier: Modifier = Modifier) {
     val context = LocalContext.current
     var menu by remember { mutableStateOf(false) }
+    var list by remember { mutableStateOf(false) }
     Surface(color = Cockpit.Card, shape = RoundedCornerShape(16.dp), modifier = modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(44.dp).clip(CircleShape).background(Cockpit.Accent.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) {
-                    Icon(painterResource(R.drawable.ic_profile), contentDescription = null, tint = Cockpit.Accent, modifier = Modifier.size(26.dp))
-                }
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        car.label, color = Cockpit.Text, fontSize = 24.sp, fontFamily = BarlowCondensed, fontWeight = FontWeight.SemiBold,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(carSubtitle(car), color = Cockpit.Muted, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Box(Modifier.weight(1f)) {
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                            .clickable(role = Role.DropdownList, onClickLabel = stringResource(R.string.cars_change)) { list = true },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(Modifier.size(44.dp).clip(CircleShape).background(Cockpit.Accent.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) {
+                            Icon(painterResource(R.drawable.ic_profile), contentDescription = null, tint = Cockpit.Accent, modifier = Modifier.size(26.dp))
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    car.label, color = Cockpit.Text, fontSize = 24.sp, fontFamily = BarlowCondensed, fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false),
+                                )
+                                Icon(painterResource(R.drawable.ic_chevron_down), contentDescription = null, tint = Cockpit.Accent, modifier = Modifier.padding(start = 4.dp).size(22.dp))
+                            }
+                            Text(carSubtitle(car), color = Cockpit.Muted, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                    CarPickerMenu(list, { list = false }, picker, car.id)
                 }
                 Box {
                     RoundIconButton(R.drawable.ic_more, stringResource(R.string.cars_actions, car.label), onClick = { menu = true }, background = Color.Transparent)

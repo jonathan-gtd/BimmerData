@@ -12,7 +12,7 @@
     <string name="graph_no_cards_hint">Les graphiques montrent les valeurs des cartes de ce profil. Ajoutez d’abord des cartes au tableau de bord.</string>
     <string name="graph_open_dashboard">Ouvrir le tableau de bord</string>
     <string name="graph_no_profile_hint">Les graphiques appartiennent à un profil, comme les pages du tableau de bord. Créez d’abord un profil.</string>
-    <string name="graph_open_profiles">Ouvrir l’onglet Voiture</string>
+    <string name="graph_open_profiles">Ouvrir l’onglet Profils</string>
     <string name="graph_values">Valeurs</string>
     <string name="graph_choose_values">Choisir les valeurs</string>
     <string name="graph_values_hint">Valeurs des cartes de ce profil (téléphone et Android Auto). Maximum par graphique : %1$d.</string>

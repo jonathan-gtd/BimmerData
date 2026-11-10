@@ -176,7 +176,7 @@ internal fun VehicleOverview(
     state: VehicleState,
     /** Detects the selected car's ECUs (shown when it has none yet). */
     onDetect: () -> Unit,
-    /** Opens the Car tab (shown when there is no car). */
+    /** Opens the Profiles tab (shown when there is no car). */
     onOpenCars: () -> Unit,
     onReadFaults: () -> Unit,
     onClearAll: () -> Unit,
