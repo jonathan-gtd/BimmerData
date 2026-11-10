@@ -333,7 +333,7 @@ private fun CarRow(r: CarRowInfo, busy: Boolean, actions: CarActions) {
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Cockpit.Card) {
                 if (!r.selected) CarMenuItem(R.drawable.ic_check, stringResource(R.string.cars_select)) { menu = false; actions.onSelect(c.id) }
                 CarMenuItem(R.drawable.ic_plug, stringResource(R.string.cars_detect), enabled = !busy) { menu = false; actions.onDetect(c.id) }
-                CarMenuItem(R.drawable.ic_faults, stringResource(R.string.cars_ecus_action)) { menu = false; actions.onEcus(c.id) }
+                CarMenuItem(R.drawable.ic_ecu, stringResource(R.string.cars_ecus_action)) { menu = false; actions.onEcus(c.id) }
                 CarMenuItem(R.drawable.ic_edit, stringResource(R.string.cars_rename)) { menu = false; actions.onRename(c.id) }
                 CarMenuItem(R.drawable.ic_delete, stringResource(R.string.cars_delete), color = Cockpit.Danger) { menu = false; actions.onDelete(c.id) }
             }

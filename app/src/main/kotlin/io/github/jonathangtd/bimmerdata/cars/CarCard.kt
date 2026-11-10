@@ -113,7 +113,7 @@ internal fun CarCard(car: Vehicle, busy: Boolean, actions: CarCardActions, modif
                     stringResource(R.string.car_detect_short), onClick = actions.onDetect, icon = R.drawable.ic_plug, enabled = !busy,
                     color = Cockpit.OnAccent, background = if (busy) Cockpit.Accent.copy(alpha = 0.35f) else Cockpit.Accent, modifier = Modifier.weight(1f),
                 )
-                PillButton(stringResource(R.string.cars_ecus_action), onClick = actions.onEcus, icon = R.drawable.ic_faults, modifier = Modifier.weight(1f))
+                PillButton(stringResource(R.string.cars_ecus_action), onClick = actions.onEcus, icon = R.drawable.ic_ecu, modifier = Modifier.weight(1f))
             }
         }
     }
