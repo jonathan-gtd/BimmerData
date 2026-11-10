@@ -72,6 +72,7 @@ class ApiService(
     val routes: List<Route> = buildRoutes() +
         ProfileGraphRoutes(backend, clock, ::meta).routes() +
         CarRoutes(backend, clock).routes() +
+        BackupRoutes(backend, clock).routes() +
         SetupRoutes(backend, guard, confirmTimeoutMs, clock, ::meta, catalogCache::clear).routes() +
         extensions.flatMap { ext ->
         ext.routes(ExtensionContext(backend, ext.guard)).onEach {

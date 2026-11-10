@@ -47,13 +47,22 @@ class VehicleStore(context: Context, private val file: AtomicFile = AtomicFile(F
     }
 
     fun save(garage: Garage) {
+        try {
+            saveOrThrow(garage)
+        } catch (e: Exception) {
+            Log.w(Tag, "Could not save the vehicles", e)
+        }
+    }
+
+    /** Like [save], but a failed write throws (the old file stays as it was). */
+    fun saveOrThrow(garage: Garage) {
         val out = file.startWrite()
         try {
             out.write(GarageJson.encode(garage).toByteArray(Charsets.UTF_8))
             file.finishWrite(out)
         } catch (e: Exception) {
             file.failWrite(out)
-            Log.w(Tag, "Could not save the vehicles", e)
+            throw e
         }
     }
 

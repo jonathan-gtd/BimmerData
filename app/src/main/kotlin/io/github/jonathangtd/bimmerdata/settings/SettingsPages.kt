@@ -81,6 +81,7 @@ enum class SettingsPage(@param:DrawableRes val icon: Int, @param:StringRes val t
     Telegraf(R.drawable.ic_upload, R.string.s3_cat_telegraf),
     Api(R.drawable.ic_api, R.string.s3_cat_api),
     Translations(R.drawable.ic_translate, R.string.s3_cat_translations),
+    Backup(R.drawable.ic_download, R.string.backup_title),
     Tools(R.drawable.ic_tool32, R.string.s3_cat_tools),
     About(R.drawable.ic_info, R.string.s3_cat_about),
 }
@@ -89,7 +90,7 @@ enum class SettingsPage(@param:DrawableRes val icon: Int, @param:StringRes val t
 private val Groups: List<Pair<Int, List<SettingsPage>>> = listOf(
     R.string.s3_group_car to listOf(SettingsPage.Connection, SettingsPage.Recording, SettingsPage.Gps),
     R.string.s3_group_data to listOf(SettingsPage.Telegraf, SettingsPage.Api),
-    R.string.s3_group_app to listOf(SettingsPage.Translations, SettingsPage.Tools, SettingsPage.About),
+    R.string.s3_group_app to listOf(SettingsPage.Translations, SettingsPage.Backup, SettingsPage.Tools, SettingsPage.About),
 )
 
 /** Home of the Settings tab: one row per category with a one-line summary of its state. */
@@ -203,6 +204,7 @@ private fun rememberSummaries(): Map<SettingsPage, Summary> {
         SettingsPage.Telegraf to telegrafText,
         SettingsPage.Api to apiText,
         SettingsPage.Translations to translationsText,
+        SettingsPage.Backup to Summary(stringResource(R.string.backup_summary)),
         SettingsPage.Tools to Summary(stringResource(R.string.s3_sum_tools)),
         SettingsPage.About to Summary(stringResource(R.string.s3_sum_about, version)),
     )

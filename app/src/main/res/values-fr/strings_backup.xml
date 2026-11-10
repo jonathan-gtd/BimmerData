@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Réglages › Sauvegarde -->
+    <string name="backup_title">Sauvegarde</string>
+    <string name="backup_summary">Exporter ou restaurer tout en un fichier</string>
+    <string name="backup_export_label">Exporter</string>
+    <string name="backup_export_hint">Un fichier avec tes voitures (VIN, liste des calculateurs, dernière détection et dernière lecture des défauts), tous les profils avec leurs pages téléphone et Android Auto et leurs graphiques, et les réglages. Garde-le hors du téléphone (ordinateur, cloud) pour tout retrouver après une réinstallation.</string>
+    <string name="backup_export">Exporter une sauvegarde</string>
+    <string name="backup_exported">Sauvegarde enregistrée (voitures : %1$d, profils : %2$d)</string>
+    <string name="backup_restore_label">Restaurer</string>
+    <string name="backup_restore_hint">Remplace les voitures, profils, graphiques et réglages du téléphone par ceux du fichier. Tout ou rien : en cas de problème, le téléphone reste comme avant.</string>
+    <string name="backup_restore">Restaurer une sauvegarde</string>
+    <string name="backup_confirm_title">Tout remplacer ?</string>
+    <string name="backup_confirm_text">Sauvegarde du %1$s (version %2$s). Voitures : %3$d, profils : %4$d, graphiques : %5$d. Les voitures, profils et réglages actuels du téléphone seront remplacés. L’appli se déconnecte d’abord de la voiture.</string>
+    <string name="backup_confirm">Remplacer</string>
+    <string name="backup_restored">Restauré (voitures : %1$d, profils : %2$d)</string>
+    <string name="backup_todo">Reste à faire à la main :</string>
+    <string name="backup_failed">Échec : %1$s</string>
+    <string name="backup_working">En cours…</string>
+    <string name="backup_unknown_date">date inconnue</string>
+    <string name="backup_privacy_label">Ce qu’il contient</string>
+    <string name="backup_privacy_vin">Le fichier contient le VIN de tes voitures (contrairement à un fichier de profil partagé) : c’est ta sauvegarde privée, ne la partage pas.</string>
+    <string name="backup_privacy_secrets">Aucun jeton d’API, jeton Telegraf ni mot de passe n’y figure : saisis à nouveau le jeton Telegraf après une réinstallation.</string>
+    <string name="backup_privacy_not">N’y figurent pas non plus : les fichiers ECU (réimporte le dossier Ecu), les dossiers d’enregistrement et de traduction choisis sur le téléphone, les enregistrements et la file d’attente Telegraf.</string>
+    <string name="backup_privacy_api">Aussi par l’API locale : GET /api/v1/backup et POST /api/v1/backup/restore (portée config).</string>
+    <string name="backup_todo_ecu_files">Importe les fichiers ECU si le téléphone n’en a pas (Réglages › Outils › Tool32).</string>
+    <string name="backup_todo_telegraf_secret">Saisis à nouveau le jeton ou le mot de passe Telegraf (Réglages › Export Telegraf).</string>
+    <string name="backup_todo_translation_folder">Choisis à nouveau le dossier des traductions (Réglages › Traductions).</string>
+    <string name="backup_todo_recording_folder">Les enregistrements vont dans le dossier par défaut : choisis à nouveau le tien dans Réglages › Enregistrement si tu en avais un.</string>
+</resources>

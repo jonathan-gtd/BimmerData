@@ -3,6 +3,8 @@
  */
 package io.github.jonathangtd.bimmerdata.api.android
 
+import io.github.jonathangtd.bimmerdata.backup.BackupManager
+import io.github.jonathangtd.bimmerdata.backup.RestoreSummary
 import io.github.jonathangtd.bimmerdata.api.DetectionResultView
 import io.github.jonathangtd.bimmerdata.api.DetectionView
 import io.github.jonathangtd.bimmerdata.vehicle.VehicleRepository
@@ -204,6 +206,10 @@ class AndroidApiBackend(
     }
 
     override fun disconnect() = repo.disconnect()
+
+    override fun backup(): String = BackupManager.get(app).export()
+
+    override fun restoreBackup(text: String, dryRun: Boolean): RestoreSummary = BackupManager.get(app).restore(text, includeApi = false, dryRun = dryRun)
 
     override val recording: StateFlow<RecordingState> get() = repo.recorder.state
     override fun startRecording() = repo.recorder.start()

@@ -96,6 +96,15 @@ class TranslationRepository private constructor(context: Context) {
 
     private fun cacheFile(lang: String, sgbd: String) = File(langDir(lang), EdiabasMeasurementCatalog.normalize(sgbd) + ".csv")
 
+    /** Folder of the cached files, `translations/<language>/<sgbd>.csv` (Settings › Backup). */
+    val cacheRoot: File get() = root
+
+    /** Reads the cached files again (after a restore replaced them). */
+    fun reloadCache() {
+        _state.update { s -> s.copy(notFound = emptySet()) }
+        loadCache(settings.state.value)
+    }
+
     /** Cached SGBDs of the current language. */
     fun cachedSgbds(): List<String> =
         langDir(settings.state.value.effectiveLanguage).listFiles()?.filter { it.name.endsWith(".csv") }?.map { it.name.removeSuffix(".csv") }?.sorted().orEmpty()

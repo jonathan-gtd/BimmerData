@@ -169,6 +169,11 @@ an older version with more values is still read, but only its page shown.
   name prefix.
 - **Telegraf export**: live values to Telegraf → TimescaleDB → Grafana, live or after the trip
   over home Wi-Fi. See [docs/TELEGRAF.md](docs/TELEGRAF.md) and [deploy/telegraf/](deploy/telegraf/).
+- **Backup**: one file with everything to get the app back after a reinstall or on a new phone:
+  your cars (with their VIN: keep the file private), their ECU lists, last detection and fault
+  read, every profile with its phone and Android Auto pages and graphs, and the settings. Never a
+  token or password; the ECU files are imported again. Restore replaces everything, all or nothing.
+  Also through the Local API (`GET /api/v1/backup`, `POST /api/v1/backup/restore`).
 - **Local API**: REST/JSON API for scripts and AI agents, with Swagger UI built in and optional HTTPS (the phone's own certificate, pinned or trusted once). See
   [docs/API.md](docs/API.md).
 
