@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Android 11 and lower: nothing is backed up (see data_extraction_rules.xml). -->
+<!-- Android 11 and lower: same content as data_extraction_rules.xml (cloud backup). -->
 <full-backup-content>
-    <exclude domain="root" path="." />
-    <exclude domain="file" path="." />
-    <exclude domain="database" path="." />
-    <exclude domain="sharedpref" path="." />
-    <exclude domain="external" path="." />
+    <include domain="file" path="profiles.json" />
+    <include domain="file" path="vehicles.json" />
+    <include domain="file" path="translations/" />
+    <include domain="sharedpref" path="settings.xml" />
+    <include domain="sharedpref" path="translations.xml" />
 </full-backup-content>

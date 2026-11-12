@@ -1,18 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Nothing is backed up or transferred: imported ECU files are large and proprietary. -->
+<!--
+  Android 12+: Android's own backup to the user's Google account (and phone-to-phone transfer)
+  keeps cars, profiles, settings and translations, restored automatically when the app is
+  installed again. Not included: the imported ECU files (about 800 MB, user-provided), the
+  Telegraf queue, and everything sealed with a Keystore key (Telegraf secrets, HTTPS identity):
+  Keystore keys never leave the phone, the app makes new ones after a restore.
+-->
 <data-extraction-rules>
     <cloud-backup>
-        <exclude domain="root" />
-        <exclude domain="file" />
-        <exclude domain="database" />
-        <exclude domain="sharedpref" />
-        <exclude domain="external" />
+        <include domain="file" path="profiles.json" />
+        <include domain="file" path="vehicles.json" />
+        <include domain="file" path="translations/" />
+        <include domain="sharedpref" path="settings.xml" />
+        <include domain="sharedpref" path="translations.xml" />
     </cloud-backup>
     <device-transfer>
-        <exclude domain="root" />
-        <exclude domain="file" />
-        <exclude domain="database" />
-        <exclude domain="sharedpref" />
-        <exclude domain="external" />
+        <include domain="file" path="profiles.json" />
+        <include domain="file" path="vehicles.json" />
+        <include domain="file" path="translations/" />
+        <include domain="sharedpref" path="settings.xml" />
+        <include domain="sharedpref" path="translations.xml" />
     </device-transfer>
 </data-extraction-rules>

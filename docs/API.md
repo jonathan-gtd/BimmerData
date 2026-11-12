@@ -500,7 +500,9 @@ fall back to plain HTTP.
 
 - **Off by default.** Nothing listens until the switch is on; switching it off closes the sockets.
 - **Token**: 256 random bits (`bd_` + 43 characters), generated on the phone, compared in constant
-  time, never logged, never returned by the API, excluded from backups (`allowBackup=false`).
+  time, never logged, never returned by the API, never in the backup file. It is part of the
+  app settings Android backs up to the user's Google account (end-to-end encrypted with the
+  screen lock), so it comes back after a reinstall from that backup.
   Regenerating it immediately locks out every client using the old one.
 - **Scopes**: each operation needs one scope, granted by toggles on the phone:
   `read` (values, ECUs, layout, recordings, pictures), `layout` (edit pages and cards),
