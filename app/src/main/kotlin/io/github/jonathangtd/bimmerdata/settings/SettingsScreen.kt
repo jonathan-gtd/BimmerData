@@ -193,7 +193,7 @@ private fun ApiSection(config: ApiConfig, state: ApiRuntimeState, store: AppSett
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Mono(url)
-                            Text(a.interfaceName, color = Cockpit.Muted, fontSize = 12.sp)
+                            Text(if (a.vpn) "VPN · " + a.interfaceName else a.interfaceName, color = Cockpit.Muted, fontSize = 12.sp)
                         }
                         TextButton(onClick = { copy(context, url, sensitive = false) }) { Text(stringResource(R.string.settings_copy), color = Cockpit.Accent) }
                     }

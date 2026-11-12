@@ -27,8 +27,9 @@ request / response schemas, examples and its error codes. This page is the human
    ```
 
 The phone and the computer must be on the same network: the same Wi-Fi, or the computer
-connected to the phone's hotspot (handy in the car). The server never listens on mobile data or
-VPN interfaces. It also listens on `127.0.0.1`, so with a USB cable you can use
+connected to the phone's hotspot (handy in the car), or the phone on a VPN to the computer's network
+(e.g. WireGuard to the home router: use the phone's VPN address, the router routes it). The server
+never listens on mobile data interfaces. It also listens on `127.0.0.1`, so with a USB cable you can use
 `adb forward tcp:8765 tcp:8765` and call `http://127.0.0.1:8765/api/v1` from the computer.
 
 **Android 17 and later: local network permission.** Android 17 protects the local network: an
@@ -516,7 +517,7 @@ fall back to plain HTTP.
   its own folder (symbolic links are skipped, paths are checked to stay inside the folder);
   uploads and imports stop before the free space goes under 100 MB.
 - **Local network only**: the server binds the phone's private IPv4 addresses on Wi-Fi,
-  Ethernet, USB tethering and its own hotspot (plus 127.0.0.1), never mobile data or VPN
+  Ethernet, USB tethering, its own hotspot and VPNs (plus 127.0.0.1), never mobile data
   interfaces, and drops connections from non-private addresses.
 - **Limits**: about 20 requests/s per client (bursts of 60), lock-out for 5 minutes after 10
   wrong tokens, 16 connections, 4 event streams, 1 MB request bodies (64 MB for an ECU file
