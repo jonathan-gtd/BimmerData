@@ -57,17 +57,16 @@ Optional: **Connect to the adapter when the app starts**, for an adapter that st
   `FD FD` firmware, `FB FB` id, `FC FC` voltage, CAN mode) — the same sequence as EdiabasLib's
   `EdCustomAdapterCommon.UpdateAdapterInfo`.
 - BMW-FAST telegrams then go to the adapter unchanged at 115200 baud; the adapter sends them on
-  the K-line, echoes them and returns the ECU answers, exactly like the K+DCAN cable. The fast
-  dashboard path (define the `2C F0` block once, then only `21 F0`) works the same.
+  the K-line, echoes them and returns the ECU answers, exactly like the K+DCAN cable. Reads are
+  the same as on the cable (whole job with `JA` on every read, at most 8 reads/s per ECU).
 - Jobs cannot change the adapter: internal telegrams that write its settings are refused.
 - There is no ignition line over Bluetooth: Tool32 shows the ignition as unknown.
 
 ## Speed
 
-Bluetooth adds a round trip to every telegram. In the simulator (MSV70, 10 values on the fast
-path) the dashboard reads **≈ 23 cycles/s without latency and ≈ 14 cycles/s with a 25 ms
-Bluetooth round trip**; the K+DCAN cable reaches ≈ 22. Expect 10–15 cycles/s in the car,
-depending on the Bluetooth module and the phone.
+Bluetooth adds a round trip to every telegram. Reads are capped at 8 per second per ECU (like
+TestO and Deep OBD) on the cable and over Bluetooth alike; with the three telegrams of each read
+and a slow module a read may take longer than 125 ms, then the rate is a bit lower.
 
 ## Limits
 

@@ -77,7 +77,7 @@ class FastPathGoldenTest {
     }
 
     @Test
-    fun `block reader defines once then decodes the recorded answers natively`() {
+    fun `block reader runs the whole job (JA) on every read and decodes the recorded answers natively`() {
         val ecuDir = LiveTestData.ecuDir()
         val catalog = EdiabasMeasurementCatalog(ecuDir)
         val runs = runs().filter { it.args.split(';').size == 11 }
@@ -96,20 +96,20 @@ class FastPathGoldenTest {
             val rows = runs[0].args.split(';').drop(1).map { tab.row(Integer.decode(it))!! }
             val reader = MesswertBlockReader(ed, fake, catalog.sgbdFile("msv70")!!.name, tab, rows)
             var mismatches = 0
-            runs.forEachIndexed { i, run ->
+            for (run in runs) {
                 val before = fake.exchanges.size
-                val values = if (i == 0) reader.defineAndRead() else reader.read()
-                if (i == 0) assertEquals(MesswertBlockReader.Mode.Native, reader.mode, reader.interpretedReason)
-                if (i > 0) {
-                    assertEquals(1, fake.exchanges.size - before, "one telegram per read")
-                    assertEquals("82 12 F1 21 F0", LiveTestData.hex(fake.exchanges.last().request))
-                }
+                val values = reader.defineAndRead()
+                assertEquals(MesswertBlockReader.Mode.Native, reader.mode, reader.interpretedReason)
+                // like TestO / Deep OBD: clear F0, define F0, read F0 every time
+                // (the first job also identifies the ECU: INITIALISIERUNG, 1A 80)
+                val sent = fake.exchanges.drop(before).map { LiveTestData.hex(BmwFast.parse(it.request)!!.data).take(8) }.takeLast(3)
+                assertEquals(listOf("2C F0 04", "2C F0 02", "21 F0"), sent, "telegrams of one read")
                 for ((row, sample) in values) {
                     if (!same(run.values[row.resultName]!!, sample.value!!)) mismatches++
                 }
             }
-            println("block reader: ${runs.size} reads, ${reader.defines} definition, $mismatches mismatches")
-            assertEquals(1L, reader.defines)
+            println("block reader: ${runs.size} reads, ${reader.defines} definitions, $mismatches mismatches")
+            assertEquals(runs.size.toLong(), reader.defines)
             assertEquals(0, mismatches)
         }
     }

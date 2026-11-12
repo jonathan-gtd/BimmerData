@@ -78,10 +78,23 @@ what is recorded to CSV, what the API asks for), and **every reading is exported
 time, at the read rate: Grafana gets the same data as the CSV. There is no points-per-second
 setting and no decimation; a value that was not read again is not sent twice.
 
-Load: about 22 read cycles/s on the cable × N measurements. With 10 measurements that is about
-220 points/s, ≈ 24 KB/s of line protocol, ≈ 2–3 KB/s once gzip-compressed on the phone (≈ 10 MB
-per hour of driving). Telegraf and TimescaleDB take that easily; batches of about 256 KB (raw)
+Load: at most 8 reads/s per ECU (see the README, "What is read") × N measurements. With 16
+measurements that is about 128 points/s, ≈ 14 KB/s of line protocol, ≈ 1–2 KB/s once
+gzip-compressed on the phone (≈ 6 MB per hour of driving). Telegraf and TimescaleDB take that easily; batches of about 256 KB (raw)
 are closed and sent every ten seconds or so.
+
+**Read statistics** of the app, every 5 s while reading: `ecu = 'bimmerdata'` with the ids
+`stat_reads_per_s`, `stat_values_per_block` (biggest block), `stat_read_interval_ms` (start to
+start between two reads of one ECU: 125, more after an automatic slow-down), `stat_slowdowns`,
+`stat_defines`, `stat_timeouts` (reads nobody answered: an ECU that reboots answers nothing for a
+second or two), `stat_errors`, `stat_slow_cycles` (> 150 ms), `stat_median_cycle_ms` and
+`stat_p90_cycle_ms`. Counters count from the connection. Example:
+
+```sql
+SELECT time, id, value FROM bimmerdata
+WHERE ecu = 'bimmerdata' AND id IN ('stat_timeouts', 'stat_slowdowns', 'stat_read_interval_ms')
+  AND time > now() - interval '1 hour' ORDER BY time;
+```
 
 **GPS position** (optional, Settings › GPS position, off by default): `ecu = 'gps'` with the ids
 `latitude`, `longitude` (degrees), `altitude` (m), `speed` (km/h), `bearing` (degrees, 0 = north)

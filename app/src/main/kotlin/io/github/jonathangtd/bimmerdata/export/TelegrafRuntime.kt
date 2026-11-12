@@ -14,9 +14,11 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.util.Log
+import io.github.jonathangtd.bimmerdata.R
 import io.github.jonathangtd.bimmerdata.live.LiveRepository
 import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.PhoneSensors
+import io.github.jonathangtd.bimmerdata.live.ReadStatsPoints
 import io.github.jonathangtd.bimmerdata.profiles.Profile
 import io.github.jonathangtd.bimmerdata.profiles.ProfileStore
 import io.github.jonathangtd.bimmerdata.settings.AppSettings
@@ -158,7 +160,22 @@ class TelegrafRuntime private constructor(context: Context) {
         for (m in repo.measurementsRead()) known[m.id] = m
         known[id]?.let { return it }
         // phone GPS: exported whenever it is on, even without a card showing it
-        return PhoneSensors.measurement(id)?.also { known[id] = it }
+        PhoneSensors.measurement(id)?.let { known[id] = it; return it }
+        // read statistics of the app (pseudo ECU "bimmerdata")
+        return ReadStatsPoints.measurement(id) { f -> app.getString(statLabel(f)) }?.also { known[id] = it }
+    }
+
+    private fun statLabel(f: ReadStatsPoints.Field): Int = when (f) {
+        ReadStatsPoints.Field.ReadsPerSecond -> R.string.stat_reads_per_s
+        ReadStatsPoints.Field.ValuesPerBlock -> R.string.stat_values_per_block
+        ReadStatsPoints.Field.ReadInterval -> R.string.stat_read_interval_ms
+        ReadStatsPoints.Field.SlowDowns -> R.string.stat_slowdowns
+        ReadStatsPoints.Field.Defines -> R.string.stat_defines
+        ReadStatsPoints.Field.Timeouts -> R.string.stat_timeouts
+        ReadStatsPoints.Field.Errors -> R.string.stat_errors
+        ReadStatsPoints.Field.SlowCycles -> R.string.stat_slow_cycles
+        ReadStatsPoints.Field.MedianCycle -> R.string.stat_median_cycle_ms
+        ReadStatsPoints.Field.P90Cycle -> R.string.stat_p90_cycle_ms
     }
 
     private fun registerNetworkCallback() {
