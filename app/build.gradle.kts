@@ -18,7 +18,7 @@ android {
         // tools: the publishing script takes the last code on Play + 1)
         versionCode = providers.gradleProperty("versionCode").orNull?.toInt() ?: 4
         // shown to users: the publishing script raises the last number when this one is already on Play
-        versionName = "0.4.5"
+        versionName = "0.4.6"
     }
 
     // Release signing key, kept OUTSIDE the repository (never committed): a properties file with
