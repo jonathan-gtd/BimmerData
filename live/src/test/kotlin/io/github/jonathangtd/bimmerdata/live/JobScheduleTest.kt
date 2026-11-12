@@ -64,7 +64,9 @@ class JobScheduleTest {
             }
             println("in 1.5 s: $jobReads job runs, $blockReads block reads; status ${engine.status.value.message}")
             assertTrue(jobReads in 3..6, "job period ~300 ms: $jobReads")
-            assertTrue(blockReads > jobReads * 3, "the fast path is not slowed down: $blockReads")
+            // the ECU is read at most 8 times a second, block and job together
+            assertTrue(blockReads >= jobReads, "the block keeps most of the reads: $blockReads")
+            assertTrue(blockReads + jobReads <= 14, "at most 8 reads/s for the ECU: ${blockReads + jobReads} in 1.5 s")
             assertEquals(90.0, engine.samples.value[job[0].id]!!.value!!, 1e-5)
             assertEquals(engine.samples.value[job[0].id]!!.timestampMs, engine.samples.value[job[1].id]!!.timestampMs, "one run feeds both results")
         } finally {

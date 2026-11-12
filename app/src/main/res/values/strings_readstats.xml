@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Labels of the read statistics exported to Telegraf (pseudo ECU "bimmerdata"). -->
+<resources>
+    <string name="stat_reads_per_s">Reads per second</string>
+    <string name="stat_values_per_block">Values in the biggest block</string>
+    <string name="stat_read_interval_ms">Time between two reads of one ECU</string>
+    <string name="stat_slowdowns">Automatic slow-downs</string>
+    <string name="stat_defines">Block definitions</string>
+    <string name="stat_timeouts">Reads without answer</string>
+    <string name="stat_errors">Read errors</string>
+    <string name="stat_slow_cycles">Cycles over 150 ms</string>
+    <string name="stat_median_cycle_ms">Median cycle time</string>
+    <string name="stat_p90_cycle_ms">Cycle time (90th percentile)</string>
+</resources>

@@ -189,6 +189,14 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
                 readStats()?.takeIf { it.cycles > 0 }?.let { Log.i("BimmerData.Read", it.summary()) }
             }
         }
+        // the same statistics as points of the pseudo ECU "bimmerdata" every 5 s (Telegraf export,
+        // next to the ECU values): timeouts, slow-downs, read interval...
+        scope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(ReadStatsPoints.INTERVAL_MS)
+                readStats()?.takeIf { it.cycles > 0 }?.let { proxy.putReadings(ReadStatsPoints.samples(it, System.currentTimeMillis())) }
+            }
+        }
     }
     @Volatile private var connectJob: Job? = null
 
@@ -448,6 +456,11 @@ internal class LiveDataProxy(private val scope: CoroutineScope) : LiveDataSource
         if (fresh.isEmpty()) return
         _samples.update { it + fresh }
         _readings.tryEmit(fresh.entries.map { it.key to it.value })
+    }
+
+    /** Readings that are not values of the car or of the phone (read statistics): export only. */
+    fun putReadings(values: List<Pair<String, Sample>>) {
+        if (values.isNotEmpty()) _readings.tryEmit(values)
     }
 
     private fun ecuOnly(list: List<Measurement>) = list.filterNot(PhoneSensors::isSensor)

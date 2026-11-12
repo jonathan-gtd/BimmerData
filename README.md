@@ -147,10 +147,21 @@ While connected, the app reads the **whole active profile** (every phone and And
 the page shown first: the screens, the graphs, the CSV recording and the Telegraf export have
 every value of the profile whatever the page shown, with no hole in the curves.
 
-The K-line is slow, so a big profile reads slower: each value of an ECU's dynamic block costs
-about 1 ms per read cycle (measured on an MSV70: about 56 ms per cycle for 6 values, 100 ms for
-41), each other ECU one more telegram per cycle, each job about 100 ms. When a profile is too slow
-for what you look at, split it into smaller profiles (one per subject: knock, lambda, fuel...).
+**Read like TestO and Deep OBD** (nothing to set): every read runs the ECU file's
+`STATUS_MESSWERTBLOCK_LESEN` job with `JA` (clear, define and read the dynamic block: 3
+telegrams), with at most **16 values per block** and at most **8 reads per second per ECU**
+(125 ms start to start). More values on one ECU make several blocks that take turns, so each value
+is read less often (17–32 values: about 4 times a second). The app never defines a block once and
+then asks for it back to back: done that way with 40 values, an MSV70 engine ECU misfired and the
+whole car glitched (every needle to zero, "DSC communication" fault, cruise control off).
+
+If the car stops answering while reading (timeout, transmission error), the app **slows down by
+itself**: the interval doubles, up to 1 s; after 3 minutes without incident it is halved again,
+never below 125 ms. The read statistics (interval, slow-downs, reads without answer...) go to the
+Telegraf export as `ecu = 'bimmerdata'` (see [docs/TELEGRAF.md](docs/TELEGRAF.md)).
+
+A small profile is read more often than a big one: split a big profile into smaller ones (one per
+subject: knock, lambda, fuel...) when you need fast curves.
 A profile holds at most **42 values** (all its pages together, a value shown twice counts once):
 one ECU's dynamic block holds 42 values (its define telegram has a one-byte length, 2 + 6 bytes
 per value), and the app refuses a card or a profile file that would make more. A profile made by

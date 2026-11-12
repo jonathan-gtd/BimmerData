@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stat_reads_per_s">Lectures par seconde</string>
+    <string name="stat_values_per_block">Valeurs du plus gros bloc</string>
+    <string name="stat_read_interval_ms">Temps entre deux lectures d\'un calculateur</string>
+    <string name="stat_slowdowns">Ralentissements automatiques</string>
+    <string name="stat_defines">Définitions de bloc</string>
+    <string name="stat_timeouts">Lectures sans réponse</string>
+    <string name="stat_errors">Erreurs de lecture</string>
+    <string name="stat_slow_cycles">Cycles de plus de 150 ms</string>
+    <string name="stat_median_cycle_ms">Temps de cycle médian</string>
+    <string name="stat_p90_cycle_ms">Temps de cycle (90e centile)</string>
+</resources>

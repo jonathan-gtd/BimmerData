@@ -45,7 +45,7 @@ class DeepObdEngineTest {
     }
 
     @Test
-    fun `fast path and a one-off job over the adapter, read rate with Bluetooth latency`() = runBlocking {
+    fun `TestO reads and a one-off job over the adapter, read rate with Bluetooth latency`() = runBlocking {
         val catalog = EdiabasMeasurementCatalog(LiveTestData.ecuDir())
         val measurements = ids.map { catalog.measurement(EdiabasMeasurementCatalog.measurementId("msv70", it))!! }
         val sim = EcuSimulator(liveValues = true)
@@ -58,8 +58,8 @@ class DeepObdEngineTest {
             awaitUntil(what = "first samples") { measurements.all { it.id in engine.samples.value } }
             assertEquals(0x0005, port.info!!.adapterType, "adapter identified while connecting")
             val noLatency = rate(engine, measurements[0].id, 2000)
-            assertTrue(engine.status.value.message!!.contains("native"), engine.status.value.message)
-            assertEquals(ids.size.toLong(), sim.recordDefinitions, "block defined once, then only 21 F0")
+            assertTrue(engine.status.value.message!!.contains("redefined each read"), engine.status.value.message)
+            assertTrue(sim.recordDefinitions >= ids.size * 5L, "block defined on every read (JA)")
 
             // a one-off job (Tool32, faults) slips in between two cycles
             val bmwNr = engine.exclusive("Tool32: MSV70 IDENT") { it.executeJob("msv70", "IDENT")[1]["ID_BMW_NR"]!!.opData }
@@ -70,9 +70,9 @@ class DeepObdEngineTest {
 
             adapter.roundTripMs = 25 // typical SPP round trip phone <-> BC417 module
             val withLatency = rate(engine, measurements[0].id, 3000)
-            println("DEEP OBD fast path: %.1f cycles/s without Bluetooth latency, %.1f with a 25 ms round trip".format(noLatency, withLatency))
-            assertTrue(noLatency in 12.0..30.0, "same as the cable without latency: $noLatency")
-            assertTrue(withLatency in 6.0..noLatency, "slower with latency: $withLatency")
+            println("DEEP OBD: %.1f reads/s without Bluetooth latency, %.1f with a 25 ms round trip".format(noLatency, withLatency))
+            assertTrue(noLatency in 5.0..8.6, "at most 8 reads/s like the cable: $noLatency")
+            assertTrue(withLatency in 2.0..(noLatency + 0.5), "not faster with latency: $withLatency")
         } finally {
             engine.close()
         }

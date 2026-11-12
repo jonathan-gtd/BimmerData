@@ -42,11 +42,15 @@ import kotlin.coroutines.coroutineContext
  * Public methods never block: they only post state; the worker picks it up between telegrams.
  *
  * Planning (redone when the measurement set changes):
- * - MESSWERTETAB measurements are grouped per SGBD into blocks of at most [Config.maxIdsPerBlock]
- *   ids (and [MesswertBlockReader.MaxRecordBytes] record bytes). With one block per SGBD the
- *   block is defined once and then read with a single `21 F0` telegram per cycle, decoded
- *   natively. All blocks of an SGBD share the ECU's local identifier F0, so with more blocks
- *   each read redefines (job path speed): keep one block per ECU for speed.
+ * - MESSWERTETAB measurements are grouped per SGBD into balanced blocks of at most
+ *   [Config.maxIdsPerBlock] ids (16, and [MesswertBlockReader.MaxRecordBytes] record bytes). Every
+ *   read runs the whole STATUS_MESSWERTBLOCK_LESEN job with JA (clear, define, read), exactly
+ *   like TestO and Deep OBD; the blocks of one ECU take turns.
+ * - Pace: two reads of one SGBD (block or job) start at least [currentReadIntervalMs] apart
+ *   ([Config.minReadIntervalMs] = 125 ms, 8 reads/s). A read the car did not answer (timeout,
+ *   transmission error) doubles the interval up to [Config.maxReadIntervalMs]; after
+ *   [Config.recoverAfterMs] without incident it is halved again, never below the minimum.
+ *   Asked back to back for 40 values, an engine ECU misfired and the whole car glitched.
  * - [MeasurementSource.JobResult] measurements are grouped by (sgbd, job, args): one job run
  *   feeds every result of the group. When other groups are planned too, a job group runs at most
  *   every [Config.jobMinIntervalMs], and at most every (1 + [Config.jobIntervalFactor]) times its
@@ -54,8 +58,7 @@ import kotlin.coroutines.coroutineContext
  *   fast path. Only read-only jobs are run ([ReadOnlyJobs.isReadOnlyName]): any other job in a
  *   layout is reported in [unsupported] and never sent.
  *
- * Errors: a read whose answer no longer matches the definition triggers an immediate redefine.
- * Transport errors put the group in exponential backoff ([Config.retryDelayMinMs]..
+ * Errors: transport errors put the group in exponential backoff ([Config.retryDelayMinMs]..
  * [Config.retryDelayMaxMs]); other groups keep running. When every group failed
  * [Config.reconnectAfterFailedCycles] times in a row, the interface is reconnected. A definition
  * the ECU refuses is split to find unsupported ids ([unsupported]); if none is found the block
@@ -64,10 +67,8 @@ import kotlin.coroutines.coroutineContext
  * Shared cable ([CableExecutor]): the engine is the only owner of [iface] and of its interpreter.
  * One-off operations ([exclusive]: Tool32, vehicle scan, fault memory, API) are queued and run on
  * the worker thread between two read cycles: one operation per cycle while measurements are
- * read, all of them in a row when nothing is read. Afterwards every fast-path block of an SGBD the
- * operation selected is defined again (a job of the same SGBD may have redefined or cleared F0;
- * other ECUs are covered by the 7F 21 31 "definition lost" detection and by restoring the
- * communication parameters before each native read). An operation longer than
+ * read, all of them in a row when nothing is read (every block read defines its record again
+ * anyway, so an operation that cleared F0 does no harm). An operation longer than
  * [Config.pauseThresholdMs] while measurements are read is reported in [pauses].
  */
 class AcquisitionEngine(
@@ -78,8 +79,20 @@ class AcquisitionEngine(
 ) : LiveDataSource, CableExecutor, AutoCloseable {
 
     data class Config(
-        /** 1..42: values per dynamic record (the SGBD refuses more than 42). */
-        val maxIdsPerBlock: Int = MesswertBlockReader.MaxIdsPerDefinition,
+        /**
+         * 1..42: values per dynamic record (the SGBD accepts 42). 16 like TestO: more values on one
+         * ECU = blocks of that ECU taking turns.
+         */
+        val maxIdsPerBlock: Int = 16,
+        /**
+         * Start-to-start minimum time between two reads of the same SGBD (each block or job of that
+         * ECU counts), never less: 125 ms = 8 reads/s like TestO / Deep OBD. 0 only for tests.
+         */
+        val minReadIntervalMs: Long = 125,
+        /** Longest interval the automatic slow-down goes to (it doubles on each incident). */
+        val maxReadIntervalMs: Long = 1000,
+        /** Without incident for this long, the interval is halved again (down to [minReadIntervalMs]). */
+        val recoverAfterMs: Long = 180_000,
         val retryDelayMinMs: Long = 200,
         val retryDelayMaxMs: Long = 5000,
         val reconnectAfterFailedCycles: Int = 5,
@@ -185,6 +198,8 @@ class AcquisitionEngine(
     private var connected = false
     private var plan: List<Group> = emptyList()
     private var plannedFor: List<Measurement>? = null
+    /** Earliest start of the next read of each SGBD ([currentReadIntervalMs]). */
+    private val sgbdNextAt = HashMap<String, Long>()
     private val blockLimit = HashMap<String, Int>()
     private val refusedRows = HashMap<String, MutableSet<Int>>()
     private val cycleTimes = ArrayDeque<Long>()
@@ -197,6 +212,37 @@ class AcquisitionEngine(
     /** Extra measurements read whatever [setMeasurements] says (null/empty = none). */
     fun setPinnedMeasurements(measurements: List<Measurement>?) {
         _pinned.value = measurements?.distinctBy { it.id } ?: emptyList()
+    }
+
+    @Volatile private var readIntervalMs = config.minReadIntervalMs.coerceAtLeast(0)
+    @Volatile private var slowDowns = 0L
+    private var lastIncidentAt = 0L
+
+    /** Start-to-start interval between two reads of one ECU now (raised by the automatic slow-down). */
+    val currentReadIntervalMs: Long get() = readIntervalMs
+
+    /**
+     * The car did not answer or forgot the record while reading: maybe the ECU is overloaded or
+     * rebooted. Read it half as often (up to [Config.maxReadIntervalMs]).
+     */
+    private fun slowDown(now: Long) {
+        lastIncidentAt = now
+        val base = config.minReadIntervalMs.coerceAtLeast(0)
+        val max = maxOf(config.maxReadIntervalMs, base)
+        val next = (maxOf(readIntervalMs, 1) * 2).coerceIn(base, max)
+        if (next != readIntervalMs) {
+            readIntervalMs = next
+            slowDowns++
+        }
+    }
+
+    /** Back towards [Config.minReadIntervalMs], one halving per [Config.recoverAfterMs] without incident. */
+    private fun maybeRecover(now: Long) {
+        val base = config.minReadIntervalMs.coerceAtLeast(0)
+        if (readIntervalMs > base && now - lastIncidentAt >= config.recoverAfterMs) {
+            readIntervalMs = (readIntervalMs / 2).coerceAtLeast(base)
+            lastIncidentAt = now // next halving after another quiet period
+        }
     }
 
     val isRunning: Boolean get() = loopJob?.isActive == true
@@ -327,20 +373,21 @@ class AcquisitionEngine(
     private sealed class Group {
         var failures = 0
         var retryAt = 0L
+        /** Start of the last read (round robin among the groups of one SGBD). */
+        var lastStart = 0L
+        abstract val sgbd: String
         abstract val label: String
     }
 
     private class BlockGroup(
-        val sgbd: String,
+        override val sgbd: String,
         val reader: MesswertBlockReader,
         val byRow: Map<Int, List<Measurement>>,
-        /** Several blocks share F0 on this ECU: every read redefines. */
-        val rotating: Boolean,
     ) : Group() {
         override val label: String get() = "$sgbd block of ${reader.rows.size}"
     }
 
-    private class JobGroup(val sgbd: String, val job: String, val args: String, val members: List<Measurement>) : Group() {
+    private class JobGroup(override val sgbd: String, val job: String, val args: String, val members: List<Measurement>) : Group() {
         override val label: String get() = "$sgbd $job${if (args.isNotEmpty()) "($args)" else ""}"
     }
 
@@ -357,6 +404,12 @@ class AcquisitionEngine(
         var lastError: String? = null
         statErrors = 0
         statLastError = null
+        statDefines = 0
+        statTimeouts = 0
+        sgbdNextAt.clear()
+        readIntervalMs = config.minReadIntervalMs.coerceAtLeast(0)
+        slowDowns = 0
+        lastIncidentAt = 0
         intervalCount = 0
         totalCycles = 0
         slowCycles = 0
@@ -401,9 +454,12 @@ class AcquisitionEngine(
                 }
                 runOps(ed, all = false) // one-off operation between two read cycles
                 val now = clock()
-                val due = plan.filter { it.retryAt <= now }
+                maybeRecover(now)
+                // due = not in backoff and its ECU not read too recently (pace); the least recently
+                // read first, so the blocks of one ECU rotate
+                val due = plan.filter { it.retryAt <= now && nextReadAt(it.sgbd) <= now }.sortedBy { it.lastStart }
                 if (due.isEmpty()) {
-                    waitOrChange((plan.minOf { it.retryAt } - now).coerceAtLeast(1))
+                    waitOrChange((plan.minOf { maxOf(it.retryAt, nextReadAt(it.sgbd)) } - now).coerceAtLeast(1))
                     continue
                 }
                 var successes = 0
@@ -413,9 +469,16 @@ class AcquisitionEngine(
                     coroutineContext.ensureActive()
                     if (plannedFor != wanted) break // replanned (refused ids)
                     val started = clock()
+                    if (nextReadAt(group.sgbd) > started) continue // this ECU was just read by another group
+                    val interval = readIntervalMs
+                    if (interval > 0) sgbdNextAt[group.sgbd] = started + interval
+                    group.lastStart = started
                     val failure = readGroup(ed, group)
                     val error = failure?.text
-                    if (failure?.link == true) linkFailures++
+                    if (failure?.link == true) {
+                        linkFailures++
+                        slowDown(clock())
+                    }
                     if (error == null) {
                         successes++
                         if (group is JobGroup && group.members.any { it.id in _unavailable.value }) {
@@ -493,23 +556,28 @@ class AcquisitionEngine(
     } catch (ex: MeasurementUnavailableException) {
         GroupFailure(ex.message ?: "not available", link = false)
     } catch (ex: TransportException) {
+        if (isTimeout(ex)) statTimeouts++
         GroupFailure(ex.message ?: "transport error", link = true)
     } catch (ex: DefinitionLostException) {
         GroupFailure(ex.message ?: "definition lost", link = true)
     } catch (ex: kotlinx.coroutines.CancellationException) {
         throw ex
     } catch (ex: Exception) {
+        if (isTimeout(ex)) statTimeouts++
         GroupFailure(MesswertBlockReader.errorText(ex), link = true)
     }
 
     private fun readBlock(group: BlockGroup) {
         val reader = group.reader
-        val values = try {
-            if (group.rotating) reader.defineAndRead() else reader.read()
-        } catch (ex: DefinitionLostException) {
-            reader.defineAndRead() // ECU reset / session lost: define again right away
+        val definesBefore = reader.defines
+        try {
+            // like TestO / Deep OBD: the whole job with JA (clear, define, read) on every read,
+            // never a record defined once and read back to back
+            val values = reader.defineAndRead()
+            publish(values.flatMap { (row, sample) -> group.byRow[row.id].orEmpty().map { it.id to sample } })
+        } finally {
+            statDefines += reader.defines - definesBefore
         }
-        publish(values.flatMap { (row, sample) -> group.byRow[row.id].orEmpty().map { it.id to sample } })
     }
 
     private fun readJob(ed: EdiabasNet, group: JobGroup) {
@@ -559,6 +627,7 @@ class AcquisitionEngine(
             val ed = ediabas!!
             for (row in rows) {
                 val single = MesswertBlockReader(ed, iface, group.reader.sgbdFile, group.reader.tab, listOf(row), clock)
+                statDefines++
                 try {
                     val values = single.defineAndRead()
                     publish(values.flatMap { (r, s) -> group.byRow[r.id].orEmpty().map { it.id to s } })
@@ -580,6 +649,7 @@ class AcquisitionEngine(
     private var lastRefusal: String? = null
 
     private fun replan(ed: EdiabasNet, wanted: List<Measurement>) {
+        val maxIds = config.maxIdsPerBlock.coerceIn(1, MesswertBlockReader.MaxIdsPerDefinition)
         val old = plan
         val groups = ArrayList<Group>()
         // ---- MESSWERTETAB blocks per SGBD ----
@@ -613,7 +683,11 @@ class AcquisitionEngine(
                 if (tab.row(id) == null || id in refused) unknown += m.id else byRow.getOrPut(id) { ArrayList() } += m
             }
             val rows = byRow.keys.map { tab.row(it)!! }
-            val limit = (blockLimit[sgbd] ?: config.maxIdsPerBlock).coerceIn(1, MesswertBlockReader.MaxIdsPerDefinition)
+            val maxLimit = minOf(blockLimit[sgbd] ?: maxIds, maxIds).coerceIn(1, MesswertBlockReader.MaxIdsPerDefinition)
+            // balanced blocks (20 values with 16 per block = 10 + 10, not 16 + 4): they rotate at
+            // the same rate
+            val blockCount = if (rows.isEmpty()) 1 else (rows.size + maxLimit - 1) / maxLimit
+            val limit = if (rows.isEmpty()) maxLimit else (rows.size + blockCount - 1) / blockCount
             val chunks = ArrayList<List<MesswertRow>>()
             var current = ArrayList<MesswertRow>()
             var bytes = 0
@@ -631,7 +705,7 @@ class AcquisitionEngine(
                 // keep the reader (and the ECU definition) when the block did not change
                 val reuse = old.firstOrNull { it is BlockGroup && it.sgbd == sgbd && it.reader.rows == chunk } as BlockGroup?
                 val reader = reuse?.reader ?: MesswertBlockReader(ed, iface, file.name, tab, chunk, clock)
-                groups += BlockGroup(sgbd, reader, chunk.associate { r -> r.id to byRow[r.id]!!.toList() }, rotating = chunks.size > 1)
+                groups += BlockGroup(sgbd, reader, chunk.associate { r -> r.id to byRow[r.id]!!.toList() })
             }
         }
         for ((key, members) in jobs) groups += JobGroup(key.first, key.second, key.third, members)
@@ -693,6 +767,9 @@ class AcquisitionEngine(
         withTimeoutOrNull(ms) { merge(effective.drop(1).map { }, opSignal.filter { it != sig }.map { }).first() }
     }
 
+    /** Earliest start of the next read of [sgbd] allowed by [currentReadIntervalMs]. */
+    private fun nextReadAt(sgbd: String): Long = sgbdNextAt[sgbd] ?: 0L
+
     // ---- read statistics (ReadStats), engine thread; read approximately from other threads ----
     private val intervals = LongArray(ReadStats.WINDOW)
     @Volatile private var intervalCount = 0
@@ -701,15 +778,32 @@ class AcquisitionEngine(
     private var lastCycleAt = 0L
     @Volatile private var statErrors = 0
     @Volatile private var statLastError: String? = null
+    @Volatile private var statDefines = 0L
+    @Volatile private var statTimeouts = 0L
 
-    /** How the read loop is doing (block modes, cycle times, errors) since connecting. */
+    /** How the read loop is doing (block modes, cycle times, errors, pace) since connecting. */
     fun readStats(): ReadStats {
         val n = intervalCount.coerceAtMost(ReadStats.WINDOW)
         val (median, p90) = ReadStats.percentiles(intervals.copyOf(n))
         val blocks = plan.filterIsInstance<BlockGroup>().map { g ->
             ReadStats.BlockStats(g.sgbd, g.reader.rows.size, g.reader.mode.name, g.reader.reads, g.reader.defines, g.reader.interpretedReason)
         }
-        return ReadStats(blocks, totalCycles, slowCycles, median, p90, statErrors, statLastError)
+        return ReadStats(
+            blocks, totalCycles, slowCycles, median, p90, statErrors, statLastError,
+            defines = statDefines, timeouts = statTimeouts,
+            readsPerSecond = cyclesPerSecondApprox(),
+            readIntervalMs = readIntervalMs, slowDowns = slowDowns,
+        )
+    }
+
+    /** [cyclesPerSecond] from another thread (reads a copy of the window, never modifies it). */
+    private fun cyclesPerSecondApprox(): Double {
+        val times = synchronized(cycleTimes) { cycleTimes.toList() }
+        val now = clock()
+        val recent = times.filter { now - it <= config.statusWindowMs }
+        if (recent.size < 2) return 0.0
+        val span = recent.last() - recent.first()
+        return if (span <= 0) 0.0 else (recent.size - 1) * 1000.0 / span
     }
 
     private fun markCycle() {
@@ -722,17 +816,19 @@ class AcquisitionEngine(
             if (ms > ReadStats.SLOW_MS) slowCycles++
         }
         lastCycleAt = now
-        cycleTimes.addLast(now)
-        while (cycleTimes.size > 2 && now - cycleTimes.first() > config.statusWindowMs) cycleTimes.removeFirst()
-        while (cycleTimes.size > 500) cycleTimes.removeFirst()
+        synchronized(cycleTimes) {
+            cycleTimes.addLast(now)
+            while (cycleTimes.size > 2 && now - cycleTimes.first() > config.statusWindowMs) cycleTimes.removeFirst()
+            while (cycleTimes.size > 500) cycleTimes.removeFirst()
+        }
     }
 
-    private fun cyclesPerSecond(): Double {
+    private fun cyclesPerSecond(): Double = synchronized(cycleTimes) {
         val now = clock()
         while (cycleTimes.isNotEmpty() && now - cycleTimes.first() > config.statusWindowMs) cycleTimes.removeFirst()
         if (cycleTimes.size < 2) return 0.0
         val span = cycleTimes.last() - cycleTimes.first()
-        return if (span <= 0) 0.0 else (cycleTimes.size - 1) * 1000.0 / span
+        if (span <= 0) 0.0 else (cycleTimes.size - 1) * 1000.0 / span
     }
 
     private fun idleMessage(): String? =
@@ -742,9 +838,7 @@ class AcquisitionEngine(
         val parts = plan.map { g ->
             when (g) {
                 is BlockGroup -> "${g.label} (" + when {
-                    g.rotating -> "redefined each read"
-                    g.reader.mode == MesswertBlockReader.Mode.Native -> "native"
-                    g.reader.mode == MesswertBlockReader.Mode.Interpreted -> "read-only job"
+                    g.reader.defines > 0 -> "redefined each read"
                     else -> "defining"
                 } + ")"
                 is JobGroup -> g.label
@@ -781,6 +875,19 @@ internal fun isLinkFailure(ex: Throwable): Boolean {
                 c == io.github.jonathangtd.bimmerdata.ediabas.ErrorCodes.EDIABAS_IFH_0010
         }
         if (e is java.io.IOException) return true
+        e = e.cause
+    }
+    return false
+}
+
+/** True when [ex] means nobody answered (EDIABAS IFH-0009: no response from the control unit). */
+internal fun isTimeout(ex: Throwable): Boolean {
+    var e: Throwable? = ex
+    while (e != null) {
+        if (e is io.github.jonathangtd.bimmerdata.ediabas.EdiabasNetException) {
+            return e.errorCode == io.github.jonathangtd.bimmerdata.ediabas.ErrorCodes.EDIABAS_IFH_0009
+        }
+        if (e.message?.contains("IFH-0009") == true) return true
         e = e.cause
     }
     return false

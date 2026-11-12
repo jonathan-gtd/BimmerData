@@ -21,17 +21,14 @@ class DefinitionLostException(message: String) : Exception(message)
 class DefineRejectedException(val jobStatus: String, message: String) : Exception(message)
 
 /**
- * Fast path for one block of MESSWERTETAB values of one SGBD.
+ * One block of MESSWERTETAB values of one SGBD, read exactly like TestO, Deep OBD and Tool32:
+ * [defineAndRead] runs STATUS_MESSWERTBLOCK_LESEN("3;ids") (= JA) in the interpreter on every
+ * read: clear F0, define F0 by common identifiers, read F0 (3 telegrams).
  *
- * [defineAndRead] runs STATUS_MESSWERTBLOCK_LESEN("3;ids") in the interpreter, exactly like
- * Tool32: clear F0, define F0 by common identifiers, read F0. From the job's own results
- * (_TEL_AUFTRAG_2 = definition, _TEL_AUFTRAG_3 = read request, _TEL_ANTWORT_3 = answer) it learns
- * the record layout and checks that the native decoder gives the same values as the SGBD.
- *
- * [read] then only sends the job's read request (`21 F0`) through the interface and decodes the
- * answer natively (mode [Mode.Native]). If the native decoder could not be verified, it runs the
- * job in read-only mode "2;ids" instead (mode [Mode.Interpreted]: same single telegram, decoded
- * by the SGBD). After [DefinitionLostException] the caller calls [defineAndRead] again.
+ * The values come from the answer decoded by the app ([MesswertDecoder], mode [Mode.Native]) when
+ * that decoding equals the SGBD's own results, else from the SGBD's results (mode
+ * [Mode.Interpreted]). There is deliberately no "define once, then only `21 F0`" loop: asked
+ * back to back that way, an engine ECU misfired and the whole car glitched.
  *
  * Not thread-safe: use from the thread owning [ediabas] and [iface].
  */
@@ -58,12 +55,6 @@ class MesswertBlockReader(
     var interpretedReason: String? = null
         private set
 
-    private var layout: MesswertDecoder.Layout? = null
-    private var readRequest: ByteArray? = null
-    private var commParameter: UIntArray? = null
-    private var commAnswerLen: ShortArray? = null
-    private var commRepeats: UInt = 0u
-
     private val idArgs = rows.joinToString(";") { "0x%04X".format(Locale.ROOT, it.id) }
 
     init {
@@ -74,11 +65,11 @@ class MesswertBlockReader(
         mode = Mode.Undefined
     }
 
-    /** Defines the record in the ECU and reads it once. Returns the samples by row. */
+    /** Clears, defines and reads the record (the whole job, JA). Returns the samples by row. */
     fun defineAndRead(): Map<MesswertRow, Sample> {
-        mode = Mode.Undefined
         defines++
         val sets = runJob("3;$idArgs")
+        reads++
         val results = sets.getOrNull(1) ?: throw DefineRejectedException("", "no result set")
         val status = results["JOB_STATUS"]?.opData as? String ?: ""
         val now = clock()
@@ -92,15 +83,14 @@ class MesswertBlockReader(
             val decoded = MesswertDecoder.decode(tab, lay, answer, now)
             if (decoded is MesswertDecoder.Decoded.Values) {
                 val mismatch = verify(decoded.values, results)
-                snapshotCommunication()
-                layout = lay
-                readRequest = readTel.copyOf()
                 if (mismatch == null) {
                     mode = Mode.Native
                     interpretedReason = null
                 } else {
                     mode = Mode.Interpreted
                     interpretedReason = mismatch
+                    // the SGBD's own values when ours differ (if it gave them)
+                    samplesFromJob(results, now).takeIf { it.isNotEmpty() }?.let { return it }
                 }
                 // Values are valid even if the job stopped later (e.g. on a state text lookup)
                 return decoded.values.associate { (slot, sample) -> slot.row to sample }
@@ -108,62 +98,10 @@ class MesswertBlockReader(
             throw DefineRejectedException(status, "$sgbdFile: answer to the definition not usable (${describe(decoded)})")
         }
         if (status != "OKAY") throw DefineRejectedException(status, "$sgbdFile STATUS_MESSWERTBLOCK_LESEN: $status")
-        // OKAY but without telegram results (other SGBD generation): trust the job, read it every time
-        snapshotCommunication()
+        // OKAY but without telegram results (other SGBD generation): trust the job
         mode = Mode.Interpreted
         interpretedReason = "job gives no _TEL_* results"
         return samplesFromJob(results, now)
-    }
-
-    /** One read of the defined record. */
-    fun read(): Map<MesswertRow, Sample> = when (mode) {
-        Mode.Undefined -> defineAndRead()
-        Mode.Native -> readNative()
-        Mode.Interpreted -> readInterpreted()
-    }
-
-    private fun readNative(): Map<MesswertRow, Sample> {
-        val request = readRequest!!
-        val lay = layout!!
-        restoreCommunication()
-        val response = try {
-            iface.transmitData(request)
-        } catch (ex: Exception) {
-            throw TransportException(errorText(ex), ex)
-        } ?: throw TransportException(EdiabasNet.getErrorDescription(ediabas.errorCodeLast).ifBlank { "no response" })
-        reads++
-        return when (val d = MesswertDecoder.decode(tab, lay, response, clock())) {
-            is MesswertDecoder.Decoded.Values -> d.values.associate { (slot, sample) -> slot.row to sample }
-            is MesswertDecoder.Decoded.NotDefined -> {
-                mode = Mode.Undefined
-                throw DefinitionLostException("$sgbdFile: ${d.reason}")
-            }
-            is MesswertDecoder.Decoded.Invalid -> throw TransportException("$sgbdFile: ${d.reason}")
-        }
-    }
-
-    private fun readInterpreted(): Map<MesswertRow, Sample> {
-        val sets = runJob("2;$idArgs")
-        reads++
-        val results = sets.getOrNull(1) ?: throw TransportException("no result set")
-        val now = clock()
-        val answer = results["_TEL_ANTWORT"]?.opData as? ByteArray ?: results["_TEL_ANTWORT_3"]?.opData as? ByteArray
-        val lay = layout
-        if (answer != null && lay != null) {
-            when (val d = MesswertDecoder.decode(tab, lay, answer, now)) {
-                is MesswertDecoder.Decoded.NotDefined -> {
-                    mode = Mode.Undefined
-                    throw DefinitionLostException("$sgbdFile: ${d.reason}")
-                }
-                else -> Unit
-            }
-        }
-        val samples = samplesFromJob(results, now)
-        if (samples.isEmpty()) {
-            mode = Mode.Undefined
-            throw DefinitionLostException("$sgbdFile read-only job: ${results["JOB_STATUS"]?.opData}")
-        }
-        return samples
     }
 
     private fun runJob(args: String): List<Map<String, ResultData>> {
@@ -199,23 +137,6 @@ class MesswertBlockReader(
             out[row] = toSample(r, now) ?: continue
         }
         return out
-    }
-
-    private fun snapshotCommunication() {
-        commParameter = iface.commParameter?.copyOf()
-        commAnswerLen = iface.commAnswerLen.copyOf()
-        commRepeats = iface.commRepeats
-    }
-
-    /** Another SGBD may have set its own parameters in between (several ECUs on one cable). */
-    private fun restoreCommunication() {
-        val wanted = commParameter ?: return
-        val current = iface.commParameter
-        if (current == null || !current.contentEquals(wanted)) {
-            iface.commParameter = wanted.copyOf()
-            commAnswerLen?.let { iface.commAnswerLen = it.copyOf() }
-            iface.commRepeats = commRepeats
-        }
     }
 
     private fun describe(d: MesswertDecoder.Decoded) = when (d) {
