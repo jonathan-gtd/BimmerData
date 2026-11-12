@@ -3,8 +3,8 @@
   Android 12+: Android's own backup to the user's Google account (and phone-to-phone transfer)
   keeps cars, profiles, settings and translations, restored automatically when the app is
   installed again. Not included: the imported ECU files (about 800 MB, user-provided), the
-  Telegraf queue, and everything sealed with a Keystore key (Telegraf secrets, HTTPS identity):
-  Keystore keys never leave the phone, the app makes new ones after a restore.
+  Telegraf queue, and what is sealed with a Keystore key (HTTPS identity; the Telegraf secrets
+  have a copy in secrets_backup.xml): Keystore keys never leave the phone.
 -->
 <data-extraction-rules>
     <cloud-backup>
@@ -13,6 +13,7 @@
         <include domain="file" path="translations/" />
         <include domain="sharedpref" path="settings.xml" />
         <include domain="sharedpref" path="translations.xml" />
+        <include domain="sharedpref" path="secrets_backup.xml" />
     </cloud-backup>
     <device-transfer>
         <include domain="file" path="profiles.json" />
@@ -20,5 +21,6 @@
         <include domain="file" path="translations/" />
         <include domain="sharedpref" path="settings.xml" />
         <include domain="sharedpref" path="translations.xml" />
+        <include domain="sharedpref" path="secrets_backup.xml" />
     </device-transfer>
 </data-extraction-rules>

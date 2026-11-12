@@ -6,4 +6,5 @@
     <include domain="file" path="translations/" />
     <include domain="sharedpref" path="settings.xml" />
     <include domain="sharedpref" path="translations.xml" />
+    <include domain="sharedpref" path="secrets_backup.xml" />
 </full-backup-content>
