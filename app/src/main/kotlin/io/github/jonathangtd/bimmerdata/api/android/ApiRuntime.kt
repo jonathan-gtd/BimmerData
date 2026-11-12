@@ -216,6 +216,8 @@ class ApiRuntime private constructor(context: Context) {
             .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) // a car hotspot without internet is fine
             .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
             .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
+            .addTransportType(NetworkCapabilities.TRANSPORT_VPN) // e.g. WireGuard to the home router
+            .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
             .build()
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) { networkChanged.tryEmit(Unit) }
