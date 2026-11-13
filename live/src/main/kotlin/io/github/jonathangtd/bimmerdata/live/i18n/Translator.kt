@@ -106,6 +106,7 @@ class Translator {
                 if (label == null && description == null) m else m.copy(label = label ?: m.label, description = description ?: m.description)
             }
             is MeasurementSource.Sensor -> m
+            is MeasurementSource.Computed -> m.copy(source = s.copy(inputs = s.inputs.map(::measurement)))
         }
     }
 

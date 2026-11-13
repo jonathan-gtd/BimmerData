@@ -50,6 +50,8 @@ data class Profile(
     val lastUsedMs: Long = 0,
     /** Graphs of the Graph tab: values of this profile's cards on a time axis. */
     val graphs: List<Graph> = emptyList(),
+    /** Values computed by the app from this profile's values (ids `calc/<key>`), e.g. the power. */
+    val computed: List<ComputedValue> = emptyList(),
 ) {
     /** The layout as the dashboard screens see it: named after the profile. */
     fun shownDashboard(): Dashboard = dashboard.copy(name = name)
@@ -123,11 +125,12 @@ object Profiles {
     fun create(
         set: ProfileSet, name: String, vehicle: ProfileVehicle = ProfileVehicle(), ecus: List<String> = emptyList(),
         nowMs: Long, dashboard: Dashboard = Dashboard(), graphs: List<Graph> = emptyList(), carId: String,
+        computed: List<ComputedValue> = emptyList(),
     ): Pair<ProfileSet, Profile> {
         require(set.profiles.size < MAX_PROFILES) { "At most $MAX_PROFILES profiles" }
         val p = Profile(
             name = uniqueName(set, name), carId = carId, vehicle = cleanVehicle(vehicle), ecus = normalizeEcus(ecus),
-            dashboard = dashboard.copy(name = null), lastUsedMs = nowMs, graphs = graphs,
+            dashboard = dashboard.copy(name = null), lastUsedMs = nowMs, graphs = graphs, computed = Computeds.sanitize(computed),
         )
         return set.copy(profiles = set.profiles + p, activeId = p.id) to p
     }
@@ -199,6 +202,21 @@ object Profiles {
     fun updateGraphs(set: ProfileSet, profileId: String, transform: (List<Graph>) -> List<Graph>): ProfileSet {
         if (set.profile(profileId) == null) return set
         return set.copy(profiles = set.profiles.map { if (it.id == profileId) it.copy(graphs = transform(it.graphs)) else it })
+    }
+
+    /**
+     * Changes the computed values of profile [profileId] only (pages and graphs untouched; removing
+     * one that cards show goes through [Computeds.remove]).
+     */
+    fun updateComputed(set: ProfileSet, profileId: String, transform: (List<ComputedValue>) -> List<ComputedValue>): ProfileSet {
+        if (set.profile(profileId) == null) return set
+        return set.copy(profiles = set.profiles.map { if (it.id == profileId) it.copy(computed = transform(it.computed)) else it })
+    }
+
+    /** Replaces profile [profileId] by [transform] of it (whole profile edits such as [Computeds.remove]). */
+    fun updateProfile(set: ProfileSet, profileId: String, transform: (Profile) -> Profile): ProfileSet {
+        if (set.profile(profileId) == null) return set
+        return set.copy(profiles = set.profiles.map { if (it.id == profileId) transform(it) else it })
     }
 
     /** Profiles to offer in Android Auto: those of the active profile's car, in list order (none without an active profile). */

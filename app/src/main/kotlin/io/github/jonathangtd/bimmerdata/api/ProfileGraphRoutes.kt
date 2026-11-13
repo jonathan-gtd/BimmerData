@@ -46,7 +46,7 @@ internal class ProfileGraphRoutes(
 
     private fun invalidGraph(message: String) = ApiException(422, "invalid_graph", message)
 
-    private fun warnings(ids: Collection<String>): JsonArray = JsonArray(ids.filter { it.contains('/') && meta(it) == null }.distinct().map {
+    private fun warnings(ids: Collection<String>): JsonArray = JsonArray(ids.filter { it.contains('/') && !io.github.jonathangtd.bimmerdata.live.ComputedValues.isComputedId(it) && meta(it) == null }.distinct().map {
         JsonPrimitive("'$it' is not in the imported ECU folder: it will show no data until its SGBD is imported")
     })
 
@@ -120,7 +120,7 @@ internal class ProfileGraphRoutes(
                 ),
                 body = Body(S.obj("BimmerData profile file", listOf("kind", "name"), true, null,
                     "kind" to S.str(enum = listOf("bimmerdata-profile")), "formatVersion" to S.int(), "name" to S.str(), "series" to S.str(), "model" to S.str(),
-                    "ecus" to S.arr(S.str()), "dashboard" to S.ref("Dashboard"), "graphs" to S.arr(S.ref("Graph")))),
+                    "ecus" to S.arr(S.str()), "dashboard" to S.ref("Dashboard"), "graphs" to S.arr(S.ref("Graph")), "computed" to S.arr(S.ref("ComputedValue")))),
                 reply = Reply(201, "The new profile", S.obj(null, listOf("profile", "warnings"), false, null, "profile" to S.ref("Profile"), "warnings" to S.arr(S.str()))),
                 errors = mapOf(404 to "Unknown car.", 409 to "No car yet (no_car): POST /api/v1/cars first.", 422 to "Not a profile file (code invalid_profile_file) or too many profiles."),
             ) { call ->

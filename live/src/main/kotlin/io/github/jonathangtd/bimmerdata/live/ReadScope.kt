@@ -28,7 +28,8 @@ object ReadScope {
         val extra = profile.filter { it.id !in visibleIds }.distinctBy { it.id }
         if (extra.isEmpty()) return visible
         val all = visible + extra
-        val perEcu = all.filter { it.source is MeasurementSource.MeasurementTable }.distinctBy { it.id }.groupingBy { it.sgbd }.eachCount()
+        // a computed value costs its inputs
+        val perEcu = ComputedValues.expand(all).filter { it.source is MeasurementSource.MeasurementTable }.distinctBy { it.id }.groupingBy { it.sgbd }.eachCount()
         if (perEcu.values.any { it > maxPerBlock }) return visible
         return all
     }

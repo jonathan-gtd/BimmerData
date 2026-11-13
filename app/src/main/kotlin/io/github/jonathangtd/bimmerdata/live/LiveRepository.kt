@@ -99,8 +99,15 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
 
     private val sensorCatalog = SensorCatalog(edCatalog, { io.github.jonathangtd.bimmerdata.gps.PhoneSensorTexts.gpsMeasurements(app) }, app.getString(io.github.jonathangtd.bimmerdata.R.string.s3_gps_catalog))
 
-    /** Measurements of the imported ECU folder plus the phone's GPS (call off the main thread: file I/O). */
-    val catalog: MeasurementCatalog get() = sensorCatalog
+    /** The computed values of the active profile (pseudo ECU "calc"), on top of the ECU folder and the GPS. */
+    private val computedCatalog = ComputedCatalog(
+        sensorCatalog,
+        { io.github.jonathangtd.bimmerdata.profiles.Computeds.defs(io.github.jonathangtd.bimmerdata.profiles.ProfileStore.state.value?.active?.computed.orEmpty()) },
+        app.getString(io.github.jonathangtd.bimmerdata.R.string.computed_catalog),
+    )
+
+    /** Measurements of the imported ECU folder, the phone's GPS and the active profile's computed values (call off the main thread: file I/O). */
+    val catalog: MeasurementCatalog get() = computedCatalog
 
     /** The ECU files were changed outside the in-app import (REST API): forget the parsed catalog. */
     fun ecuFilesChanged() = edCatalog.invalidate()
@@ -173,7 +180,7 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
      * Every measurement read now, with its label and unit: the whole active profile, not only the
      * page shown ([requests]), so a value read off screen is still named.
      */
-    fun measurementsRead(): List<Measurement> = proxy.reading
+    fun measurementsRead(): List<Measurement> = ComputedValues.withInputs(proxy.reading)
 
     /** Read loop statistics of the current connection (null when not connected). */
     fun readStats(): ReadStats? = engine?.takeIf { it.isRunning }?.readStats()
@@ -456,6 +463,18 @@ internal class LiveDataProxy(private val scope: CoroutineScope) : LiveDataSource
         if (fresh.isEmpty()) return
         _samples.update { it + fresh }
         _readings.tryEmit(fresh.entries.map { it.key to it.value })
+        compute(fresh)
+    }
+
+    /** Computed values wanted now (their inputs are read in their place, see [ComputedValues]). */
+    private fun computed(): List<Measurement> = reading.filter(ComputedValues::isComputed)
+
+    /** Samples of the computed values with an input among [fresh] (both into [samples] and [readings]). */
+    private fun compute(fresh: Map<String, Sample>) {
+        val derived = ComputedValues.update(computed(), fresh, _samples.value)
+        if (derived.isEmpty()) return
+        _samples.update { it + derived }
+        _readings.tryEmit(derived.entries.map { it.key to it.value })
     }
 
     /** Readings that are not values of the car or of the phone (read statistics): export only. */
@@ -463,7 +482,8 @@ internal class LiveDataProxy(private val scope: CoroutineScope) : LiveDataSource
         if (values.isNotEmpty()) _readings.tryEmit(values)
     }
 
-    private fun ecuOnly(list: List<Measurement>) = list.filterNot(PhoneSensors::isSensor)
+    /** What the engine reads: computed values replaced by their inputs, phone sensors left out. */
+    private fun ecuOnly(list: List<Measurement>) = ComputedValues.expand(list).filterNot(PhoneSensors::isSensor)
 
     fun attach(e: AcquisitionEngine) {
         collectors?.cancel()
@@ -471,11 +491,18 @@ internal class LiveDataProxy(private val scope: CoroutineScope) : LiveDataSource
         e.setMeasurements(ecuOnly(wanted))
         e.setPinnedMeasurements(pinned?.let(::ecuOnly))
         collectors = scope.launch {
-            launch { e.samples.collect { fresh -> if (fresh.isNotEmpty()) _samples.update { it + fresh } } }
+            launch {
+                e.samples.collect { fresh ->
+                    if (fresh.isNotEmpty()) {
+                        _samples.update { it + fresh }
+                        compute(fresh)
+                    }
+                }
+            }
             launch { e.readings.collect { _readings.tryEmit(it) } }
             launch { e.status.collect { _status.value = it } }
             launch { e.pauses.collect { _pauses.emit(it) } }
-            launch { e.unavailable.collect { _unavailable.value = it } }
+            launch { e.unavailable.collect { _unavailable.value = it + ComputedValues.unavailable(computed(), it) } }
         }
     }
 

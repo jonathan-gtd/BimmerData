@@ -155,6 +155,7 @@ class GenericCatalogTest {
                 when (val s = m.source) {
                     is MeasurementSource.MeasurementTable -> table++
                     is MeasurementSource.Sensor -> error("no phone sensor in an ECU catalog")
+                    is MeasurementSource.Computed -> error("no computed value in an ECU catalog")
                     is MeasurementSource.JobResult -> {
                         if (s.job == "STATUS_LESEN" && s.args.startsWith("ARG;")) uds++
                         jobsSeen += s.job

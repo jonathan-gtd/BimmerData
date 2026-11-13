@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="computed_catalog">Valeurs calculées</string>
+    <string name="computed_chip">Calculées</string>
+    <string name="computed_kind_power">Puissance</string>
+    <string name="computed_add_power">Nouvelle puissance</string>
+    <string name="computed_empty">Aucune valeur calculée pour l\'instant. Une puissance (ch) est calculée par l\'appli à partir d\'un couple (N·m) et d\'un régime (tr/min) des calculateurs de ce profil.</string>
+    <string name="computed_edit_title">Puissance</string>
+    <string name="computed_name">Nom</string>
+    <string name="computed_torque">Couple (N·m)</string>
+    <string name="computed_rpm">Régime moteur (tr/min)</string>
+    <string name="computed_choose">Choisir…</string>
+    <string name="computed_formula">Puissance = couple × régime ÷ 9549 × 1,36, en ch. 0 quand le couple est négatif (frein moteur) ; pas de valeur quand les deux mesures ont plus de 2 s d\'écart. Les deux valeurs sont lues et comptent dans les valeurs du profil.</string>
+    <string name="computed_save">Enregistrer</string>
+    <string name="computed_delete">Supprimer</string>
+    <string name="computed_edit">Modifier</string>
+    <string name="computed_delete_used">%1$s est affichée sur des cartes (%2$d) et dans des graphes (%3$d). La supprimer avec elles ?</string>
+    <string name="computed_delete_plain">Supprimer %1$s ?</string>
+    <string name="computed_no_ecu">Ajoutez d\'abord les calculateurs de ce profil : le couple et le régime se choisissent parmi leurs valeurs.</string>
+    <string name="computed_full">Valeurs calculées par profil : au plus %1$d.</string>
+</resources>

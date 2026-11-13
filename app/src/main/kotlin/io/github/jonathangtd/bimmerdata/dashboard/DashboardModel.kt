@@ -41,6 +41,13 @@ data class Dashboard(
     fun measurementIds(): Set<String> =
         (phonePages + carPages).flatMapTo(LinkedHashSet()) { p -> p.cards.flatMap { it.measurementIds } }
 
+    /**
+     * Values this layout costs to read: its measurement ids, each computed value (`calc/<key>`)
+     * counted as its inputs from [computed] (an input already on a card is counted once).
+     */
+    fun valueCount(computed: List<io.github.jonathangtd.bimmerdata.profiles.ComputedValue> = emptyList()): Int =
+        io.github.jonathangtd.bimmerdata.live.ComputedValues.expandIds(measurementIds(), io.github.jonathangtd.bimmerdata.profiles.Computeds.defs(computed)).size
+
     /** [name] if set, else [fallback]. */
     fun title(fallback: String): String = name?.trim()?.takeIf { it.isNotEmpty() } ?: fallback
 
@@ -61,9 +68,12 @@ data class Dashboard(
          * that adds no value stays allowed, so an older profile above the limit can still be
          * tidied up.
          */
-        fun exceedsValues(before: Dashboard, after: Dashboard): Boolean {
-            val n = after.measurementIds().size
-            return n > MAX_VALUES && n > before.measurementIds().size
+        fun exceedsValues(
+            before: Dashboard, after: Dashboard,
+            computed: List<io.github.jonathangtd.bimmerdata.profiles.ComputedValue> = emptyList(),
+        ): Boolean {
+            val n = after.valueCount(computed)
+            return n > MAX_VALUES && n > before.valueCount(computed)
         }
     }
 }

@@ -667,6 +667,7 @@ class AcquisitionEngine(
                         unknown += m.id // never run a job that could act on the car
                     }
                 is MeasurementSource.Sensor -> Unit // phone sensors (GPS) are not read on the cable
+                is MeasurementSource.Computed -> Unit // computed by the app from its inputs (ComputedValues.expand)
             }
         }
         for ((sgbd, members) in tableBySgbd) {

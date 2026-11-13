@@ -215,7 +215,9 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
      * whole screen state (editor closed, first pages); the same profile goes through [DashboardSync].
      */
     private fun applyProfiles(set: ProfileSet) {
+        val computedChanged = allProfiles.value.active?.computed != set.active?.computed
         allProfiles.value = set
+        if (computedChanged) viewModelScope.launch { reloadComputed() }
         val shown = set.activeDashboard()
         _ui.update { ui ->
             if (ui.dashboard == null || ui.profileId != set.activeId) {
@@ -284,6 +286,50 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
             deletedFrom?.let { profileStore.restore(it) }
             deletedFrom = null
         }
+    }
+
+    // ---- computed values (pseudo ECU "calc") ----
+
+    /** Computed values of the active profile. */
+    fun computedValues(): List<io.github.jonathangtd.bimmerdata.profiles.ComputedValue> = allProfiles.value.active?.computed.orEmpty()
+
+    /** Cards and graph values of the active profile showing computed value [key]. */
+    fun computedUses(key: String): Pair<Int, Int> =
+        allProfiles.value.active?.let { io.github.jonathangtd.bimmerdata.profiles.Computeds.uses(it, io.github.jonathangtd.bimmerdata.live.ComputedValues.idOf(key)) } ?: (0 to 0)
+
+    /** Adds or replaces (same key) a computed value of the active profile; false when refused (none active, too many, invalid). */
+    suspend fun saveComputed(c: io.github.jonathangtd.bimmerdata.profiles.ComputedValue): Boolean = withContext(Dispatchers.IO) {
+        if (io.github.jonathangtd.bimmerdata.profiles.Computeds.problem(c) != null) return@withContext false
+        flushNow()
+        val id = _ui.value.profileId ?: return@withContext false
+        var ok = false
+        profileStore.update { set ->
+            Profiles.updateComputed(set, id) { list ->
+                when {
+                    list.any { it.key == c.key } -> list.map { if (it.key == c.key) c else it }.also { ok = true }
+                    list.size >= io.github.jonathangtd.bimmerdata.profiles.Computeds.MAX -> list
+                    else -> (list + c).also { ok = true }
+                }
+            }
+        }
+        reloadComputed()
+        ok
+    }
+
+    /** Deletes computed value [key] of the active profile with the cards and graph values showing it. */
+    suspend fun deleteComputed(key: String) = withContext(Dispatchers.IO) {
+        flushNow()
+        val id = _ui.value.profileId ?: return@withContext
+        profileStore.update { set -> Profiles.updateProfile(set, id) { io.github.jonathangtd.bimmerdata.profiles.Computeds.remove(it, key) } }
+        reloadComputed()
+    }
+
+    /** The computed values changed: their measurements again (labels, inputs). */
+    private suspend fun reloadComputed() {
+        val calc = io.github.jonathangtd.bimmerdata.live.ComputedValues.CALC
+        loadedSgbds.remove(calc)
+        _index.update { m -> m.filterKeys { !io.github.jonathangtd.bimmerdata.live.ComputedValues.isComputedId(it) } }
+        loadSgbd(calc)
     }
 
     /** File content to share profile [id] (no VIN, not the user's car). */
@@ -373,7 +419,7 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
             val page = d.pages(t).firstOrNull { it.id == pageId } ?: return@update ui
             val result = op(page) ?: return@update ui
             val next = d.updatePage(t, pageId) { result }
-            if (Dashboard.exceedsValues(d, next)) {
+            if (Dashboard.exceedsValues(d, next, allProfiles.value.active?.computed.orEmpty())) {
                 tooMany = true
                 return@update ui
             }
@@ -457,7 +503,7 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
     /** Replaces the whole layout; returns null on success or the error message. */
     fun importJson(text: String): String? = try {
         val d = DashboardJson.decode(text)
-        val n = d.measurementIds().size
+        val n = d.valueCount(allProfiles.value.active?.computed.orEmpty())
         require(n <= Dashboard.MAX_VALUES) {
             "This layout has $n values; a profile holds at most ${Dashboard.MAX_VALUES} (it is read whole at every cycle): split it into several profiles"
         }

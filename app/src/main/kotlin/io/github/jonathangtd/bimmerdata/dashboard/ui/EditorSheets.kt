@@ -305,8 +305,9 @@ internal fun MeasurementPickerSheet(
                     SgbdStep(choices) { sgbd = it }
                 }
                 else -> {
+                    val isCalc = s.equals(io.github.jonathangtd.bimmerdata.live.ComputedValues.CALC, ignoreCase = true)
                     SheetHeader(
-                        s.uppercase(),
+                        if (isCalc) stringResource(R.string.computed_catalog) else s.uppercase(),
                         onBack = {
                             if (autoSkipped || (choices?.all?.size ?: 0) <= 1) {
                                 if (fixedType == null) type = null
@@ -318,9 +319,16 @@ internal fun MeasurementPickerSheet(
                         },
                     )
                     if (profileEcus.isNotEmpty()) {
-                        ProfileEcuBar(profileEcus, current = s, onPick = { sgbd = it }, onOther = { otherEcu = true; sgbd = null })
+                        ProfileEcuBar(
+                            profileEcus, current = s, onPick = { sgbd = it }, onOther = { otherEcu = true; sgbd = null },
+                            onComputed = { sgbd = io.github.jonathangtd.bimmerdata.live.ComputedValues.CALC },
+                        )
                     }
-                    MeasurementStep(vm, s, t, selected, onConfirm = { onConfirm(t, selected.toList()) })
+                    if (isCalc) {
+                        ComputedStep(vm, t, selected, profileEcus, onConfirm = { onConfirm(t, selected.toList()) })
+                    } else {
+                        MeasurementStep(vm, s, t, selected, onConfirm = { onConfirm(t, selected.toList()) })
+                    }
                 }
             }
         }
@@ -506,6 +514,7 @@ private fun sourceLine(m: Measurement): String {
         is MeasurementSource.MeasurementTable -> listOfNotNull(unit, m.id.substringAfter('/'), src.resultName)
         is MeasurementSource.JobResult -> listOfNotNull(unit, src.job + if (src.args.isNotEmpty()) " " + src.args.substringAfter(';') else "", src.resultName)
         is MeasurementSource.Sensor -> listOfNotNull(unit, src.sensor.uppercase(java.util.Locale.ROOT), src.field)
+        is MeasurementSource.Computed -> listOfNotNull(unit) + src.inputs.map { it.label }
     }.joinToString("  ·  ")
 }
 

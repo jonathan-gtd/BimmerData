@@ -71,6 +71,7 @@ class ApiService(
 
     val routes: List<Route> = buildRoutes() +
         ProfileGraphRoutes(backend, clock, ::meta).routes() +
+        ComputedRoutes(backend, ::meta).routes() +
         CarRoutes(backend, clock).routes() +
         BackupRoutes(backend, clock).routes() +
         SetupRoutes(backend, guard, confirmTimeoutMs, clock, ::meta, catalogCache::clear).routes() +
@@ -79,6 +80,10 @@ class ApiService(
             require(it.access == RouteAccess.Needs(Scope.Diag)) { "Extension route ${it.method} ${it.path} must need the diag scope" }
             require(it.path.startsWith("/api/v1/diag/")) { "Extension routes live under /api/v1/diag/" }
         }
+    }
+
+    init {
+        LayoutOps.activeComputed = { runCatching { backend.profiles().active?.computed }.getOrNull().orEmpty() }
     }
 
     /** Called about every 100 ms by the server: feeds the history and expires leases. */
@@ -152,6 +157,10 @@ class ApiService(
         val now = clock()
         // a new ECU folder (import from the phone or the in-app import) makes the cache stale at once
         val stamp = backend.ecuFiles?.ecuDir?.lastModified() ?: 0L
+        // computed values follow the active profile: never cached
+        if (key == io.github.jonathangtd.bimmerdata.live.ComputedValues.CALC) {
+            return runCatching { backend.measurements(key) }.getOrElse { emptyList() }.associateBy { it.id }
+        }
         catalogCache[key]?.let { (at, folder, map) -> if (now - at < 60_000 && folder == stamp) return map }
         val map = runCatching { backend.measurements(key) }.getOrElse { emptyList() }.associateBy { it.id }
         catalogCache[key] = Triple(now, stamp, map)
@@ -186,6 +195,10 @@ class ApiService(
             }
             is MeasurementSource.Sensor -> buildJsonObject {
                 put("kind", "sensor"); put("sensor", s.sensor); put("field", s.field)
+            }
+            is MeasurementSource.Computed -> buildJsonObject {
+                put("kind", "computed"); put("computed", s.kind.name)
+                put("inputs", JsonArray(s.inputs.map { JsonPrimitive(it.id) }))
             }
         })
     }
@@ -1182,6 +1195,7 @@ class ApiService(
                 is MeasurementSource.MeasurementTable -> s.resultName
                 is MeasurementSource.JobResult -> s.job + " " + s.resultName
                 is MeasurementSource.Sensor -> s.sensor + " " + s.field
+                is MeasurementSource.Computed -> s.kind.name + " " + s.inputs.joinToString(" ") { it.label }
             }
             m.id.lowercase().contains(needle) || m.label.lowercase().contains(needle) || m.unit.lowercase() == needle || src.lowercase().contains(needle)
         }

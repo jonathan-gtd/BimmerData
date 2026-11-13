@@ -52,6 +52,13 @@ sealed interface MeasurementSource {
      * cable, its samples come from the phone (see [PhoneSensors]).
      */
     data class Sensor(val sensor: String, val field: String) : MeasurementSource
+
+    /**
+     * A value computed by the app from other measurements ([inputs], in the order of
+     * [ComputedKind.roles]), e.g. the power from a torque and an engine speed. Never read on the
+     * cable itself: its inputs are, and its samples are computed from theirs (see [ComputedValues]).
+     */
+    data class Computed(val kind: ComputedKind, val inputs: List<Measurement>) : MeasurementSource
 }
 
 /** Latest value of a measurement. Numeric results fill [value]; text results fill [text]. */

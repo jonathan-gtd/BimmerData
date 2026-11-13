@@ -238,6 +238,7 @@ Clearing faults and running EDIABAS jobs (scope `diag`) and changing the CAN mod
         for ((name, schema) in DiagApi.schemas()) put(name, schema)
         for ((name, schema) in SetupRoutes.schemas()) put(name, schema)
         for ((name, schema) in ProfileGraphRoutes.schemas()) put(name, schema)
+        for ((name, schema) in ComputedRoutes.schemas()) put(name, schema)
         for ((name, schema) in CarRoutes.schemas()) put(name, schema)
         for ((name, schema) in BackupRoutes.schemas()) put(name, schema)
         put("Error", S.obj(
@@ -367,6 +368,7 @@ Clearing faults and running EDIABAS jobs (scope `diag`) and changing the CAN mod
             "dashboard" to S.ref("Dashboard"),
             "lastUsedMs" to S.int("Last time it was active, epoch ms.", format = "int64"),
             "graphs" to S.arr(S.ref("Graph"), "Graphs of the Graph tab (see /api/v1/profiles/{profile}/graphs)."),
+            "computed" to S.arr(S.ref("ComputedValue"), "Values computed by the app (ids `calc/<key>`, see /api/v1/profiles/{profile}/computed)."),
         ))
         put("Page", S.obj(
             "One screen of cards on a columns × rows grid that fills the screen.", listOf("name", "columns", "rows"), false, null,

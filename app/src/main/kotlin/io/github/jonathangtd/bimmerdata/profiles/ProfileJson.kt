@@ -28,6 +28,8 @@ data class ProfileExport(
     val ecus: List<String> = emptyList(),
     val dashboard: Dashboard = Dashboard(),
     val graphs: List<Graph> = emptyList(),
+    /** Computed values (ids `calc/<key>`) the pages and graphs may show. */
+    val computed: List<ComputedValue> = emptyList(),
 ) {
     companion object {
         const val KIND = "bimmerdata-profile"
@@ -61,6 +63,7 @@ object ProfileJson {
                 ecus = Profiles.normalizeEcus(p.ecus),
                 dashboard = DashboardJson.sanitize(p.dashboard).copy(name = null),
                 graphs = Graphs.sanitize(p.graphs),
+                computed = Computeds.sanitize(p.computed),
             )
         }
         val active = parsed.activeId?.takeIf { id -> profiles.any { it.id == id } }
@@ -72,7 +75,7 @@ object ProfileJson {
         ProfileExport.serializer(),
         ProfileExport(
             name = p.name, series = p.vehicle.series, model = p.vehicle.model, ecus = p.ecus,
-            dashboard = p.dashboard.copy(name = null), graphs = p.graphs,
+            dashboard = p.dashboard.copy(name = null), graphs = p.graphs, computed = p.computed,
         ),
     )
 
@@ -101,8 +104,10 @@ object ProfileJson {
             throw IllegalArgumentException("Not a BimmerData profile: ${ex.message}", ex)
         }
         require(e.formatVersion <= ProfileSet.FORMAT_VERSION) { "Profile format ${e.formatVersion} is newer than this app" }
-        requireValueLimit(e.dashboard)
+        val computed = Computeds.sanitize(e.computed)
+        requireValueLimit(e.dashboard, computed)
         return e.copy(
+            computed = computed,
             name = Profiles.cleanName(e.name),
             ecus = Profiles.normalizeEcus(e.ecus),
             dashboard = DashboardJson.sanitize(e.dashboard).copy(name = null),
@@ -111,8 +116,8 @@ object ProfileJson {
     }
 
     /** A profile file with more than [Dashboard.MAX_VALUES] values is refused, with how to fix it. */
-    private fun requireValueLimit(d: Dashboard) {
-        val n = d.measurementIds().size
+    private fun requireValueLimit(d: Dashboard, computed: List<ComputedValue> = emptyList()) {
+        val n = d.valueCount(computed)
         require(n <= Dashboard.MAX_VALUES) {
             "This profile has $n values; a profile holds at most ${Dashboard.MAX_VALUES} (it is read whole at every cycle): split it into several profiles"
         }
@@ -126,6 +131,6 @@ object ProfileJson {
     fun importInto(set: ProfileSet, export: ProfileExport, nowMs: Long, fallbackName: String, carId: String): Pair<ProfileSet, Profile> =
         Profiles.create(
             set, export.name.ifBlank { fallbackName }, ProfileVehicle(export.series, export.model), export.ecus,
-            nowMs, export.dashboard, export.graphs, carId,
+            nowMs, export.dashboard, export.graphs, carId, export.computed,
         )
 }

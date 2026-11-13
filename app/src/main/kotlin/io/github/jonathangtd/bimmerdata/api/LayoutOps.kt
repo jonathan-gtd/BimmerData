@@ -38,6 +38,12 @@ object LayoutOps {
     // ---------------------------------------------------------------- validation
 
     /** Every rule a stored layout must satisfy; empty list = valid. */
+    /**
+     * Computed values of the active profile (the layouts these operations edit): a `calc/<key>`
+     * value costs its inputs ([Dashboard.valueCount]). Set by [ApiService].
+     */
+    @Volatile var activeComputed: () -> List<io.github.jonathangtd.bimmerdata.profiles.ComputedValue> = { emptyList() }
+
     fun validate(d: Dashboard): List<LayoutIssue> {
         val issues = ArrayList<LayoutIssue>()
         if (d.formatVersion > Dashboard.FORMAT_VERSION) {
@@ -73,7 +79,7 @@ object LayoutOps {
                 }
             }
         }
-        val values = d.measurementIds().size
+        val values = d.valueCount(activeComputed())
         if (values > Dashboard.MAX_VALUES) {
             issues += LayoutIssue("", "too_many_values", "A profile holds at most ${Dashboard.MAX_VALUES} values (it is read whole at every cycle), this layout has $values: split it into several profiles")
         }
@@ -85,10 +91,11 @@ object LayoutOps {
      * (an edit adding no value stays allowed, see [Dashboard.exceedsValues]).
      */
     fun requireValueLimit(before: Dashboard, after: Dashboard) {
-        if (Dashboard.exceedsValues(before, after)) {
+        val computed = activeComputed()
+        if (Dashboard.exceedsValues(before, after, computed)) {
             throw ApiException(
                 409, "too_many_values",
-                "A profile holds at most ${Dashboard.MAX_VALUES} values (it is read whole at every cycle); this change would make ${after.measurementIds().size}. Remove values first, or create another profile",
+                "A profile holds at most ${Dashboard.MAX_VALUES} values (it is read whole at every cycle); this change would make ${after.valueCount(computed)}. Remove values first, or create another profile",
             )
         }
     }

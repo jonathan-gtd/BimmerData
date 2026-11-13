@@ -383,14 +383,16 @@ internal fun Chip(text: String, selected: Boolean, onClick: () -> Unit, removeLa
 
 /** Card picker: the profile's ECUs as tabs, and "Other ECU…" for the whole ECU folder. */
 @Composable
-internal fun ProfileEcuBar(ecus: List<String>, current: String, onPick: (String) -> Unit, onOther: () -> Unit) {
+internal fun ProfileEcuBar(ecus: List<String>, current: String, onPick: (String) -> Unit, onOther: () -> Unit, onComputed: (() -> Unit)? = null) {
+    val calc = current.equals(io.github.jonathangtd.bimmerdata.live.ComputedValues.CALC, ignoreCase = true)
     Surface(color = Color.Transparent, border = BorderStroke(0.dp, Color.Transparent)) {
         Row(
             Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             ecus.forEach { e -> Chip(e.uppercase(), selected = e.equals(current, ignoreCase = true), onClick = { onPick(e) }) }
-            Chip(stringResource(R.string.profile_other_ecu), selected = ecus.none { it.equals(current, ignoreCase = true) }, onClick = onOther)
+            if (onComputed != null) Chip(stringResource(R.string.computed_chip), selected = calc, onClick = onComputed)
+            Chip(stringResource(R.string.profile_other_ecu), selected = !calc && ecus.none { it.equals(current, ignoreCase = true) }, onClick = onOther)
         }
     }
 }

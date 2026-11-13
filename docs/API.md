@@ -218,6 +218,8 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 | POST | `/api/v1/profiles/import[?activate=false&car=<id>]` | layout | Import a profile file (pages and graphs) as a new profile of the selected car (or of `car`) |
 | GET / POST | `/api/v1/profiles/{profile}/graphs` | read / layout | Graphs of the Graph tab / add one |
 | GET / PUT / DELETE | `/api/v1/profiles/{profile}/graphs/{graph}` | read / layout | One graph / replace it / delete it (pages never touched) |
+| GET / POST | `/api/v1/profiles/{profile}/computed` | read / layout | Computed values of a profile (ids `calc/<key>`, e.g. the power) / add one |
+| PUT / DELETE | `/api/v1/profiles/{profile}/computed/{key}[?removeCards=true]` | layout | Replace a computed value / delete it (`409 computed_in_use` while cards or graphs show it, unless `removeCards=true`) |
 | GET | `/api/v1/diag/vehicle` | diag | The selected car, the ECUs of its last detection and their last fault read (no car traffic, never the VIN) |
 | GET | `/api/v1/diag/faults` | diag | Read the fault memory from the car (`?ecu=0x12` for one ECU, `?cached=true` for the last read) |
 | POST | `/api/v1/diag/faults/clear` | diag | **Writes.** Clear one ECU (`{"ecu":"0x12"}`) or all (`{}`), after a confirmation on the phone |
@@ -279,6 +281,28 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
   last fault read; export the profiles first to keep them.
 - Profile files (`…/export`, `…/import`) keep `series` and `model` as metadata, never the VIN
   nor the car.
+
+### Computed values
+
+- A profile can hold values computed by the app from its other values (`computed` of the profile,
+  at most 8), measurement ids `calc/<key>`. Cards, graphs, the CSV recording, the Telegraf export
+  (tag `ecu=calc`) and `/api/v1/values` treat them like any measurement, session min / max
+  included; `GET /api/v1/ecus/calc/measurements` lists those of the active profile.
+- Only kind today: **`Power`** in ch, from inputs `torque` (N·m) and `rpm`:
+  power = torque × rpm / 9549.3 × 1.35962. A negative torque (engine braking) gives 0. A value is
+  computed each time an input gets a new sample, only when the two inputs are at most 2 s apart;
+  its time is the newer input's.
+- Its inputs are read whenever the computed value is shown or recorded, and they count toward the
+  profile's 42 values (an input already on a card counts once); the computed id itself costs nothing.
+- Create one:
+
+  ```sh
+  curl -s -H "$H" -X POST "$BD/profiles/<profile>/computed"     -d '{"kind":"Power","label":"Power","inputs":{"torque":"<sgbd>/<id>","rpm":"<sgbd>/<id2>"}}'
+  # -> {"computed":{"id":"calc/power","key":"power","kind":"Power","label":"Power","unit":"ch","inputs":{...}},"warnings":[]}
+  ```
+
+  then put `calc/power` on a card like any measurement id. Profile files (`…/export`, `…/import`)
+  and the full backup carry `computed`; files without it still load.
 
 ### Errors
 

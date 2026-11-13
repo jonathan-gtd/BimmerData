@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Computed values (pseudo ECU "calc"): power from a torque and an engine speed -->
+    <string name="computed_catalog">Computed values</string>
+    <string name="computed_chip">Computed</string>
+    <string name="computed_kind_power">Power</string>
+    <string name="computed_add_power">New power value</string>
+    <string name="computed_empty">No computed value yet. A power value (ch) is computed by the app from a torque (N·m) and an engine speed (rpm) of this profile\'s ECUs.</string>
+    <string name="computed_edit_title">Power value</string>
+    <string name="computed_name">Name</string>
+    <string name="computed_torque">Torque (N·m)</string>
+    <string name="computed_rpm">Engine speed (rpm)</string>
+    <string name="computed_choose">Choose…</string>
+    <string name="computed_formula">Power = torque × engine speed ÷ 9549 × 1.36, in ch. 0 when the torque is negative (engine braking); no value when the two are more than 2 s apart. Its two inputs are read and count toward the profile\'s values.</string>
+    <string name="computed_save">Save</string>
+    <string name="computed_delete">Delete</string>
+    <string name="computed_edit">Edit</string>
+    <string name="computed_delete_used">%1$s is shown on cards (%2$d) and in graphs (%3$d). Delete it together with them?</string>
+    <string name="computed_delete_plain">Delete %1$s?</string>
+    <string name="computed_no_ecu">Add this profile\'s ECUs first: the torque and the engine speed are picked among their values.</string>
+    <string name="computed_full">Computed values per profile: at most %1$d.</string>
+</resources>
