@@ -25,6 +25,9 @@ class DashboardStoreTest {
     private fun profiles(dir: File) = ProfileStore(dir, { "My profile" }, { msg, _ -> warnings += msg }, info = {})
     private fun store(dir: File) = DashboardStore(profiles(dir))
 
+    /** The example layout with Android Auto showing its phone cards, as every stored layout is ([DashboardRules]). */
+    private fun example() = DashboardRules.syncCar(Msv70Example.create())
+
     @Test
     fun `first launch has no profile and an empty layout, a save creates the profile`(@TempDir dir: File) {
         val s = store(dir)
@@ -33,7 +36,7 @@ class DashboardStoreTest {
         assertTrue(profiles(dir).load().profiles.isEmpty())
         assertTrue(s.save(Dashboard(name = "Empty")))
         assertEquals(Dashboard(name = "Empty"), store(dir).load(), "a profile named after the layout, no page added")
-        val d = Msv70Example.create().copy(name = "330i")
+        val d = example().copy(name = "330i")
         assertTrue(s.save(d))
         assertEquals(d, store(dir).load(), "the same profile, renamed, with the pages")
         assertEquals(1, profiles(dir).load().profiles.size)
@@ -44,7 +47,7 @@ class DashboardStoreTest {
 
     @Test
     fun `the old layout file becomes the first profile, an empty one gives none`(@TempDir dir: File) {
-        val old = Msv70Example.create().copy(name = "Ma 330i")
+        val old = example().copy(name = "Ma 330i")
         File(dir, DashboardStore.FILE_NAME).writeText(DashboardJson.encode(old))
         assertEquals(old, store(dir).load())
         val set = profiles(dir).load()
@@ -70,10 +73,34 @@ class DashboardStoreTest {
         assertTrue(dir.list()!!.any { it.startsWith(ProfileStore.FILE_NAME + ".unreadable-") }, "the user's file is not lost")
         // androidx AtomicFile (old versions): base half written, .bak = last good layout
         val legacy = File(dir, "legacy").apply { mkdirs() }
-        val good = Msv70Example.create()
+        val good = example()
         File(legacy, DashboardStore.FILE_NAME).writeText("{ half")
         File(legacy, DashboardStore.FILE_NAME + ".bak").writeText(DashboardJson.encode(good))
         assertEquals(good.copy(name = "My profile"), store(legacy).load())
+    }
+
+    @Test
+    fun `stored profiles breaking the rule are brought to it on the first read, every write keeps it`(@TempDir dir: File) {
+        // a profile written by an older version: hand-made Android Auto page with 1 card of the phone + 1 of its own
+        val raw = Msv70Example.create()
+        val phoneCard = raw.phonePages[0].cards[0]
+        val handMade = raw.copy(carPages = listOf(Page(id = "k", name = "Car", columns = 4, rows = 1, cards = listOf(
+            phoneCard.copy(id = "k1", col = 0, row = 0, colSpan = 1, rowSpan = 1, title = "stale"),
+            Card(id = "k2", type = io.github.jonathangtd.bimmerdata.gauges.GaugeType.BigNumber, measurementIds = listOf("msv70/0x9999"), col = 1),
+        ))))
+        val set = io.github.jonathangtd.bimmerdata.profiles.Profiles.create(io.github.jonathangtd.bimmerdata.profiles.ProfileSet(), "Old", nowMs = 1, dashboard = handMade, carId = "car-1").first
+        File(dir, ProfileStore.FILE_NAME).writeText(io.github.jonathangtd.bimmerdata.profiles.ProfileJson.encode(set))
+
+        val loaded = store(dir).load()
+        assertTrue(DashboardRules.follows(loaded), "every phone card on Android Auto, nothing else")
+        assertEquals(raw.phonePages, loaded.phonePages, "the phone pages are not touched")
+        assertEquals(raw.phonePages.sumOf { it.cards.size }, loaded.carPages.sumOf { it.cards.size })
+        assertEquals(phoneCard.title, loaded.carPages[0].cards.first { it.id == "k1" }.title, "the hand-made copy is kept in place, with the phone's content")
+        assertTrue(File(dir, ProfileStore.FILE_NAME).readText().contains("phoneCardId"), "written back at once")
+        // any write: a card of its own on Android Auto does not survive
+        assertTrue(store(dir).update { d -> d.updatePage(Target.Car, "k") { it.copy(cards = it.cards.filterNot { c -> c.id == "k1" }) } } != null)
+        assertTrue(DashboardRules.follows(store(dir).load()))
+        assertTrue(warnings.isEmpty(), "$warnings")
     }
 
     @Test
@@ -98,7 +125,7 @@ class DashboardStoreTest {
 
     @Test
     fun `readers never see a half-written file while writers save`(@TempDir dir: File) {
-        val big = Msv70Example.create()
+        val big = example()
         val layouts = (0 until 20).map { big.copy(name = "v$it") }
         store(dir).save(layouts[0])
         val pool = Executors.newFixedThreadPool(6)

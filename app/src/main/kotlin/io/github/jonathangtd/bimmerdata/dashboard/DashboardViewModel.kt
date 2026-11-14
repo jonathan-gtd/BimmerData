@@ -420,7 +420,7 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
             val d = ui.dashboard ?: return@update ui
             val page = d.pages(t).firstOrNull { it.id == pageId } ?: return@update ui
             val result = op(page) ?: return@update ui
-            val next = d.updatePage(t, pageId) { result }
+            val next = DashboardRules.syncCar(d.updatePage(t, pageId) { result })
             if (Dashboard.exceedsValues(d, next, allProfiles.value.active?.computed.orEmpty())) {
                 tooMany = true
                 return@update ui
@@ -436,26 +436,37 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
     fun resizeCard(t: Target, pageId: String, cardId: String, colSpan: Int, rowSpan: Int) =
         editPage(t, pageId) { GridRules.resize(it, cardId, colSpan, rowSpan) }
 
-    fun addCard(t: Target, pageId: String, card: Card) = editPage(t, pageId) { GridRules.add(it, card, GridLimits.of(t)) }
+    /**
+     * Adds a card to a phone page (Android Auto shows it by itself, [DashboardRules]); refused on
+     * Android Auto, whose cards are the phone's.
+     */
+    fun addCard(t: Target, pageId: String, card: Card) = t == Target.Phone && editPage(t, pageId) { GridRules.add(it, card, GridLimits.of(t)) }
 
-    /** Replaces a card's settings (and span, if it still fits). */
+    /** Replaces a card's settings (and span, if it still fits). On Android Auto only its place and size may change. */
     fun updateCard(t: Target, pageId: String, card: Card) = editPage(t, pageId) { page ->
-        if (GridRules.canPlace(page, card)) page.replace(card) else null
+        val old = page.card(card.id)
+        when {
+            t == Target.Car && (old == null || !DashboardRules.placeOnly(old, card)) -> null
+            GridRules.canPlace(page, card) -> page.replace(card)
+            else -> null
+        }
     }
 
     /** Trend card: next quick time window ([TrendWindow.next]); returns its label, null if not a trend card. */
     fun cycleTrendWindow(t: Target, pageId: String, cardId: String): String? {
         val card = _ui.value.dashboard?.pages(t)?.firstOrNull { it.id == pageId }?.card(cardId) ?: return null
-        if (card.type != GaugeType.Trend) return null
+        if (card.type != GaugeType.Trend || t == Target.Car) return null
         val next = TrendWindow.next(card.windowSeconds)
         updateCard(t, pageId, card.copy(windowSeconds = next))
         return TrendWindow.duration(next)
     }
 
+    /** Deletes a phone card, and so its Android Auto card; Android Auto cards cannot be deleted on their own. */
     fun deleteCard(t: Target, pageId: String, cardId: String) {
+        if (t == Target.Car) return
         _ui.update { ui ->
             val d = ui.dashboard ?: return@update ui
-            ui.copy(dashboard = d.updatePage(t, pageId) { p -> p.copy(cards = p.cards.filterNot { it.id == cardId }) }, undo = d)
+            ui.copy(dashboard = DashboardRules.syncCar(d.updatePage(t, pageId) { p -> p.copy(cards = p.cards.filterNot { it.id == cardId }) }), undo = d)
         }
     }
 
@@ -481,7 +492,8 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
             val pages = d.pages(t)
             if (pages.none { it.id == pageId }) return@update ui
             val remaining = pages.filterNot { it.id == pageId }
-            val updated = ui.copy(dashboard = d.withPages(t, remaining), undo = d)
+            // an Android Auto page deleted: its cards go to the other pages (they are the phone's)
+            val updated = ui.copy(dashboard = DashboardRules.syncCar(d.withPages(t, remaining)), undo = d)
             val last = remaining.lastIndex.coerceAtLeast(0)
             if (t == Target.Phone) updated.copy(phonePage = ui.phonePage.coerceAtMost(last))
             else updated.copy(carPage = ui.carPage.coerceAtMost(last))
@@ -509,7 +521,7 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
         require(n <= Dashboard.MAX_VALUES) {
             "This layout has $n values; a profile holds at most ${Dashboard.MAX_VALUES} (it is read whole at every cycle): split it into several profiles"
         }
-        _ui.update { it.copy(dashboard = d, phonePage = 0, carPage = 0, undo = it.dashboard) }
+        _ui.update { it.copy(dashboard = DashboardRules.syncCar(d), phonePage = 0, carPage = 0, undo = it.dashboard) }
         null
     } catch (e: IllegalArgumentException) {
         e.message ?: "Invalid file"
@@ -527,7 +539,8 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
      */
     fun resetTarget(t: Target) = _ui.update { ui ->
         val d = ui.dashboard ?: return@update ui
-        val next = ui.copy(dashboard = DashboardReset.target(d, t), undo = d)
+        // Android Auto emptied: laid out again from the phone's cards, which it always shows
+        val next = ui.copy(dashboard = DashboardRules.syncCar(DashboardReset.target(d, t)), undo = d)
         if (t == Target.Phone) next.copy(phonePage = 0) else next.copy(carPage = 0)
     }
 

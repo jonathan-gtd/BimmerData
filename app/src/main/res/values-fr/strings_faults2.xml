@@ -64,6 +64,6 @@
     <string name="f2_tests_hint">Ces fonctions agissent sur la voiture (actionneurs, autotests) : chaque lancement est confirmé, et refusé si la voiture roule. Le codage, la programmation et l\'effacement de mémoires ne sont jamais proposés ici.</string>
 
     <!-- dashboard editor, Android Auto side -->
-    <string name="car_from_phone">Mêmes cartes que le téléphone</string>
-    <string name="car_from_phone_done">Pages Android Auto refaites avec les cartes du téléphone.</string>
+    <string name="car_from_phone">Disposer comme le téléphone</string>
+    <string name="car_from_phone_done">Pages Android Auto redisposées comme celles du téléphone.</string>
 </resources>

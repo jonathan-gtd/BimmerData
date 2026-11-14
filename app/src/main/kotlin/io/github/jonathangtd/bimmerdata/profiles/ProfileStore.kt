@@ -10,6 +10,7 @@ import io.github.jonathangtd.bimmerdata.R
 import io.github.jonathangtd.bimmerdata.cars.CarBook
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.DashboardJson
+import io.github.jonathangtd.bimmerdata.dashboard.DashboardRules
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,6 +41,10 @@ import kotlin.concurrent.withLock
  * written; the app passes [io.github.jonathangtd.bimmerdata.cars.CarBook.repair], which gives every
  * profile without a known car one (the migration of the files written before cars existed) and
  * keeps the active profile among the selected car's. A read it changed is written back at once.
+ *
+ * **Same cards on Android Auto**: every set read or written goes through [DashboardRules.syncCar],
+ * so no write path (editor, REST API, profile file, backup...) can leave a profile whose Android
+ * Auto pages differ from its phone cards; older files are brought to the rule on the first read.
  */
 class ProfileStore(
     private val dir: File,
@@ -74,7 +79,7 @@ class ProfileStore(
      */
     fun update(transform: (ProfileSet) -> ProfileSet): ProfileSet? = lock.withLock {
         val current = read()
-        val next = carCheck(transform(current))
+        val next = sameCards(carCheck(transform(current)))
         if (next == current) {
             if (_state.value == null) publish(current)
             return@withLock current
@@ -85,8 +90,10 @@ class ProfileStore(
     /** The file through [carCheck]; written back when the check changed it (migration to cars). */
     private fun read(): ProfileSet {
         val raw = readFile()
-        val checked = carCheck(raw)
-        if (checked != raw && write(checked)) info("Profiles given their car (${checked.profiles.size} profiles)")
+        val withCars = carCheck(raw)
+        if (withCars != raw && write(withCars)) info("Profiles given their car (${withCars.profiles.size} profiles)")
+        val checked = sameCards(withCars)
+        if (checked != withCars && write(checked)) info("Android Auto pages brought to the phone's cards")
         return checked
     }
 
@@ -123,6 +130,16 @@ class ProfileStore(
             warn("Unreadable ${source.name}, not migrated", e)
             null
         }
+    }
+
+    /** Every profile with Android Auto showing exactly its phone cards ([DashboardRules.syncCar]). */
+    private fun sameCards(set: ProfileSet): ProfileSet {
+        var changed = false
+        val profiles = set.profiles.map { p ->
+            val d = DashboardRules.syncCar(p.dashboard)
+            if (d === p.dashboard) p else p.copy(dashboard = d).also { changed = true }
+        }
+        return if (changed) set.copy(profiles = profiles) else set
     }
 
     private fun write(set: ProfileSet): Boolean = try {

@@ -10,6 +10,7 @@ import io.github.jonathangtd.bimmerdata.cars.Cars
 import io.github.jonathangtd.bimmerdata.cars.EcuUsage
 import io.github.jonathangtd.bimmerdata.dashboard.Card
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
+import io.github.jonathangtd.bimmerdata.dashboard.DashboardRules
 import io.github.jonathangtd.bimmerdata.profiles.Profile
 import io.github.jonathangtd.bimmerdata.profiles.ProfileExport
 import io.github.jonathangtd.bimmerdata.profiles.ProfileJson
@@ -313,9 +314,12 @@ class ApiService(
         return Profiles.normalizeEcus(list)
     }
 
-    /** Load → edit → save under one lock, so concurrent API edits never lose each other. */
+    /**
+     * Load → edit → save under one lock, so concurrent API edits never lose each other. Android
+     * Auto then follows the phone's cards ([DashboardRules.syncCar]).
+     */
     private fun <T> editLayout(op: (Dashboard) -> Pair<Dashboard, T>): T = synchronized(layoutLock) {
-        backend.editDashboard(op)
+        backend.editDashboard { d -> op(d).let { (next, value) -> DashboardRules.syncCar(next) to value } }
     }
 
     /** Warnings about measurement ids that the ECU catalog does not know (the layout is still accepted). */
@@ -368,7 +372,7 @@ class ApiService(
         val profileParam = Param("profile", "path", "Profile id (see GET /api/v1/profiles).", S.str(), example = JsonPrimitive("a1b2c3d4e5"))
         val cardParam = Param("card", "path", "Card id (see the page's `cards`).", S.str(), example = JsonPrimitive("k3j4h5g6f7"))
         val idsBody = "ids" to S.arr(S.str(example = "<sgbd>/<id>"), "Measurement ids (`<sgbd>/<key>`), at most 64.", 1, 64)
-        val layoutErrors = mapOf(404 to "Unknown page or card.", 409 to "Conflict: overlapping cards, page full, duplicate id.", 422 to "Invalid card or grid (details list each problem).", 400 to "Malformed body.")
+        val layoutErrors = mapOf(404 to "Unknown page or card.", 409 to "Conflict: overlapping cards, page full, duplicate id.", 422 to "Invalid card or grid (details list each problem), or an Android Auto card added, deleted or changed (car_cards_locked: change the phone card, Android Auto follows).", 400 to "Malformed body.")
 
         return listOf(
             // ------------------------------------------------------------ general
@@ -600,7 +604,9 @@ class ApiService(
             Route(
                 "PUT", "/api/v1/dashboard", RouteAccess.Needs(Scope.Layout), "Dashboard", "setDashboard",
                 "Replace the whole layout",
-                "Validates strictly (no silent fixing) and saves. On error nothing is changed and `error.details` lists every problem with its path. Measurement ids that are not in the imported ECU folder are accepted but returned as `warnings`. Add `?dryRun=true` to only validate.",
+                "Validates strictly (no silent fixing) and saves. On error nothing is changed and `error.details` lists every problem with its path. Measurement ids that are not in the imported ECU folder are accepted but returned as `warnings`. Add `?dryRun=true` to only validate. " +
+                    "Android Auto shows exactly the phone's cards: `carPages` may move, resize and regroup them (and name, size and order its pages), phone cards missing there are placed automatically, " +
+                    "and the Android Auto cards of phone cards removed or changed in the same request follow; an Android Auto card that is not on the phone or differs from its phone card, or taking a card off Android Auto, is refused (422 `car_cards_mismatch`). The answer is the layout as saved.",
                 params = listOf(Param("dryRun", "query", "Validate only, do not save.", S.bool(default = false), required = false)),
                 body = Body(S.ref("Dashboard"), example = buildJsonObject {
                     putJsonArray("phonePages") { addJsonObject {
@@ -614,12 +620,15 @@ class ApiService(
                 }),
                 reply = Reply(description = "Saved (or valid, with dryRun)", schema = S.obj(null, listOf("saved", "dashboard"), false, null,
                     "saved" to S.bool(), "dashboard" to S.ref("Dashboard"), "warnings" to S.arr(S.ref("LayoutIssue")))),
-                errors = mapOf(400 to "Not JSON or wrong field types / unknown fields.", 422 to "Layout rules violated (details: LayoutIssue[])."),
+                errors = mapOf(400 to "Not JSON or wrong field types / unknown fields.", 422 to "Layout rules violated (details: LayoutIssue[]), or Android Auto cards different from the phone's (car_cards_mismatch)."),
             ) { call ->
-                val d = call.decode(Dashboard.serializer(), what = "dashboard")
-                LayoutOps.requireValid(d)
+                val sent = call.decode(Dashboard.serializer(), what = "dashboard")
+                LayoutOps.requireValid(sent)
                 val dry = call.queryBool("dryRun", false)
-                if (!dry) synchronized(layoutLock) { backend.saveDashboard(d) }
+                val d = synchronized(layoutLock) {
+                    LayoutOps.requireCarFollows(backend.loadDashboard(), sent)
+                    DashboardRules.syncCar(sent).also { if (!dry) backend.saveDashboard(it) }
+                }
                 ok(buildJsonObject {
                     put("saved", !dry)
                     put("dashboard", dashboardJson(d))
@@ -636,7 +645,7 @@ class ApiService(
                 errors = mapOf(400 to "Not JSON or wrong field types / unknown fields."),
             ) { call ->
                 val d = call.decode(Dashboard.serializer(), what = "dashboard")
-                val issues = LayoutOps.validate(d)
+                val issues = LayoutOps.validate(d) + LayoutOps.carIssues(backend.loadDashboard(), d)
                 ok(buildJsonObject {
                     put("valid", issues.isEmpty())
                     put("issues", ApiJson.encodeToJsonElement(issues))
@@ -665,11 +674,10 @@ class ApiService(
             },
             Route(
                 "POST", "/api/v1/dashboard/car/from-phone", RouteAccess.Needs(Scope.Layout), "Dashboard", "carFromPhone",
-                "Android Auto = the phone's cards",
-                "Replaces every Android Auto page by the cards of the phone pages: one Android Auto page per 8 cards of a phone page on its 4 x 2 grid (both rows used from 4 cards on), " +
+                "Lay Android Auto out again from the phone",
+                "Android Auto always shows the phone's cards (enforced on every write); this replaces its pages by a fresh layout of them: one Android Auto page per 8 cards of a phone page on its 4 x 2 grid (both rows used from 4 cards on), " +
                     "in the phone's reading order (\"Engine\" with 10 cards gives \"Engine 1/2\" and \"Engine 2/2\"), one card per cell." +
-                    "Cards keep their type, values, title, thresholds and decimals. Run it after changing the phone pages when Android Auto " +
-                    "must show the same cards as the phone (layout rule of this API, see the dashboard docs).",
+                    " Use it to undo hand-made Android Auto arrangements.",
                 reply = Reply(description = "The new layout", schema = S.ref("Dashboard")),
             ) {
                 val d = editLayout { d -> io.github.jonathangtd.bimmerdata.dashboard.DashboardMirror.carFromPhone(d).let { it to it } }
@@ -757,7 +765,7 @@ class ApiService(
             Route(
                 "POST", "/api/v1/dashboard/{target}/pages/{page}/cards", RouteAccess.Needs(Scope.Layout), "Dashboard", "addCard",
                 "Add a card",
-                "With `col` and/or `row` the card goes exactly there (409 `card_overlap` / 422 `out_of_grid` otherwise, with the free cells in the message). Without them it takes the first free slot of its span (reading order). The answer is the stored card with its id; `warnings` flags measurement ids missing from the ECU folder.",
+                "Phone pages only: a card added to the phone appears on Android Auto by itself (422 `car_cards_locked` on `car`). With `col` and/or `row` the card goes exactly there (409 `card_overlap` / 422 `out_of_grid` otherwise, with the free cells in the message). Without them it takes the first free slot of its span (reading order). The answer is the stored card with its id; `warnings` flags measurement ids missing from the ECU folder.",
                 params = listOf(targetParam, pageParam),
                 body = Body(S.ref("Card"), example = buildJsonObject {
                     put("type", "Dial"); putJsonArray("measurementIds") { add("<sgbd>/<id>") }; put("title", "Oil"); put("warnAbove", 120); put("colSpan", 1); put("rowSpan", 2)
@@ -799,7 +807,7 @@ class ApiService(
             Route(
                 "DELETE", "/api/v1/dashboard/{target}/pages/{page}/cards/{card}", RouteAccess.Needs(Scope.Layout), "Dashboard", "deleteCard",
                 "Delete a card",
-                "Removes the card from the page.",
+                "Removes the card from the page. Phone cards only: an Android Auto card goes with its phone card (422 `car_cards_locked`).",
                 params = listOf(targetParam, pageParam, cardParam),
                 reply = Reply(204, "Deleted"),
                 errors = layoutErrors,
@@ -913,7 +921,7 @@ class ApiService(
             Route(
                 "PUT", "/api/v1/profiles/{profile}", RouteAccess.Needs(Scope.Layout), "Profiles", "updateProfile",
                 "Change a profile",
-                "Changes the fields given (others are kept): name, series and model, ECUs (new ones must be in its car's ECU list: 422 `ecu_not_in_car`), and / or the whole `dashboard` (validated like PUT /api/v1/dashboard; nothing is changed on error). Works on any profile, active or not. Its car does not change: POST /api/v1/profiles/{profile}/copy puts a copy on another car. Taking out of `ecus` an ECU that still has cards or graph values in the profile answers 409 `ecu_in_use`, unless `removeCards` is true: its cards (phone and Android Auto) and graph values are then deleted too.",
+                "Changes the fields given (others are kept): name, series and model, ECUs (new ones must be in its car's ECU list: 422 `ecu_not_in_car`), and / or the whole `dashboard` (validated like PUT /api/v1/dashboard, Android Auto cards included: 422 `car_cards_mismatch`; nothing is changed on error). Works on any profile, active or not. Its car does not change: POST /api/v1/profiles/{profile}/copy puts a copy on another car. Taking out of `ecus` an ECU that still has cards or graph values in the profile answers 409 `ecu_in_use`, unless `removeCards` is true: its cards (phone and Android Auto) and graph values are then deleted too.",
                 params = listOf(profileParam),
                 body = Body(S.obj(null, emptyList(), false, null,
                     "name" to S.str("New name."),
@@ -942,11 +950,12 @@ class ApiService(
                     val withCards = dropped
                         .mapNotNull { sgbd -> EcuUsage.use(current, sgbd)?.takeIf { it.cards > 0 || it.graphSeries > 0 }?.let { sgbd to listOf(it) } }.toMap()
                     if (withCards.isNotEmpty() && !removeCards) throw ecuInUse(withCards)
+                    if (dashboard != null) LayoutOps.requireCarFollows(current.dashboard, dashboard)
                     var next = Cars.editProfile(space, id, name, vehicle, ecus, dropCards = withCards.keys)
-                    if (dashboard != null) next = next.copy(profiles = Profiles.writeDashboard(next.profiles, id, dashboard.copy(name = null)))
+                    if (dashboard != null) next = next.copy(profiles = Profiles.writeDashboard(next.profiles, id, DashboardRules.syncCar(dashboard.copy(name = null))))
                     next to next.profiles.profile(id)!!
                 }
-                ok(profileJson(updated))
+                ok(profileJson(requireProfile(backend.profiles(), updated.id)))
             },
             Route(
                 "DELETE", "/api/v1/profiles/{profile}", RouteAccess.Needs(Scope.Layout), "Profiles", "deleteProfile",

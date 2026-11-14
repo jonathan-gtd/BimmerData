@@ -215,7 +215,7 @@ BimmerData reads live data from BMW ECUs (E-series, through a USB cable or a Dee
 
 ## Building dashboards
 - **Cars → profiles → pages.** Layouts belong to **profiles**, and each profile to one **car** (`GET /api/v1/cars`; the app adds a car when it reads an unknown VIN at connection, or `POST /api/v1/cars` adds one by hand). `GET /api/v1/profiles` lists the selected car's profiles; the dashboard routes act on the active profile, always one of the selected car's. `POST /api/v1/profiles/{profile}/activate` (or `POST /api/v1/cars/{car}/select`) switches the phone and Android Auto. A fresh install has no car and no profile: `POST /api/v1/profiles` creates one (and a car "My car"; a `PUT /api/v1/dashboard` without profile does too). A profile's `ecus` must come from its car's ECU list (`ecus` of the car).
-- `GET /api/v1/dashboard` returns the whole layout: `phonePages` (portrait phone, grid up to ${GridLimits.Phone.maxColumns}×${GridLimits.Phone.maxRows}, ${GridLimits.Phone.maxCards} cards) and `carPages` (Android Auto, landscape, grid up to ${GridLimits.Car.maxColumns}×${GridLimits.Car.maxRows}, at most ${GridLimits.Car.maxCards} big cards). **Android Auto shows the same cards as the phone** (order free): after changing phone pages, call `POST /api/v1/dashboard/car/from-phone` (${GridLimits.Car.maxCards} cards per Android Auto page); never leave a card on one side only.
+- `GET /api/v1/dashboard` returns the whole layout: `phonePages` (portrait phone, grid up to ${GridLimits.Phone.maxColumns}×${GridLimits.Phone.maxRows}, ${GridLimits.Phone.maxCards} cards) and `carPages` (Android Auto, landscape, grid up to ${GridLimits.Car.maxColumns}×${GridLimits.Car.maxRows}, at most ${GridLimits.Car.maxCards} big cards). **Android Auto shows exactly the phone's cards, enforced by the app**: add, change and delete cards on phone pages, Android Auto follows by itself; on `car` only the place of a card (`col`, `row`, `colSpan`, `rowSpan`, its page) and the pages can change (`422 car_cards_locked` / `car_cards_mismatch` otherwise). `POST /api/v1/dashboard/car/from-phone` lays Android Auto out again (${GridLimits.Car.maxCards} cards per page).
 - A page is a `columns × rows` grid; a card covers `colSpan × rowSpan` cells from its top-left cell (`col`, `row`, 0-based). Cards may not overlap or leave the grid.
 - Card types (`GET /api/v1/card-types`): ${GaugeType.entries.joinToString { it.name }}. Most take one measurement; `BipolarBar` takes 1–4 (e.g. fuel trims per bank), `MultiValue` 2–3.
 - Small edits: `POST …/pages`, `POST …/pages/{page}/cards`, `PATCH …/cards/{card}`, `DELETE …`. Whole layout: `PUT /api/v1/dashboard` (validate first with `POST /api/v1/dashboard/validate`). Errors say exactly what is wrong (`error.details` lists each problem with its JSON path).
@@ -391,6 +391,7 @@ Clearing faults and running EDIABAS jobs (scope `diag`) and changing the CAN mod
             "warnAbove" to S.num("Card turns amber above this value.", 120.0),
             "decimals" to S.int("Decimals shown, 0..4; default from the unit.", 0, 4),
             "windowSeconds" to S.int("Trend cards: seconds of history shown by the curve, ${TrendWindow.MIN_SECONDS}..${TrendWindow.MAX_SECONDS}; default ${TrendWindow.DEFAULT_SECONDS}. Ignored by other card types.", TrendWindow.MIN_SECONDS.toLong(), TrendWindow.MAX_SECONDS.toLong(), 300),
+            "phoneCardId" to S.str("Android Auto cards: id of the phone card it shows (set by the app; its content always comes from that card). Absent on phone cards.", "a1b2c3d4e5"),
             "col" to S.int("Left column, 0-based.", 0, 3, 0, 0),
             "row" to S.int("Top row, 0-based.", 0, 7, 0, 0),
             "colSpan" to S.int("Width in cells.", 1, 4, 1, 1),
@@ -407,7 +408,7 @@ Clearing faults and running EDIABAS jobs (scope `diag`) and changing the CAN mod
         put("CardPatch", S.obj(
             "Fields to change on a card (JSON merge: absent = unchanged, null = back to automatic). The card must still fit where it is.", emptyList(), false,
             buildJsonObject { put("warnAbove", 130); put("rowSpan", 2) },
-            *cardProps.filter { it.first != "id" }.toTypedArray(),
+            *cardProps.filter { it.first != "id" && it.first != "phoneCardId" }.toTypedArray(),
         ))
         put("CardType", S.str(
             "Dial: 270° arc with the value (oil, coolant, rpm). BipolarBar: bars centred on 0, one row per measurement (fuel trims). " +

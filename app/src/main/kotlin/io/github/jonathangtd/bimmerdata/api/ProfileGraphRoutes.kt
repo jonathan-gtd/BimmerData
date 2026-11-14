@@ -136,9 +136,13 @@ internal class ProfileGraphRoutes(
                     val (space, car) = if (carId != null) start to requireCar(start, carId) else (Cars.selectedOrFirst(start, clock()) ?: throw noCar())
                     Cars.importProfile(space, export, car.id, clock(), "Imported", activate)
                 }
+                // as stored: Android Auto brought to the phone's cards (DashboardRules)
+                val stored = backend.profiles().profile(created.id) ?: created
+                val carAdjusted = !io.github.jonathangtd.bimmerdata.dashboard.DashboardRules.follows(created.dashboard)
                 ok(buildJsonObject {
-                    put("profile", ApiJson.encodeToJsonElement(Profile.serializer(), created))
-                    put("warnings", warnings(created.dashboard.measurementIds() + created.graphs.flatMap { it.measurementIds() }))
+                    put("profile", ApiJson.encodeToJsonElement(Profile.serializer(), stored))
+                    val list = warnings(stored.dashboard.measurementIds() + stored.graphs.flatMap { it.measurementIds() })
+                    put("warnings", if (!carAdjusted) list else JsonArray(list + JsonPrimitive("The Android Auto pages of the file did not show exactly the phone cards: they were brought to them (Android Auto always shows the phone's cards)")))
                 }, 201)
             },
             Route(

@@ -109,6 +109,11 @@ data class Card(
     val decimals: Int? = null,
     /** Trend cards: seconds of history shown ([io.github.jonathangtd.bimmerdata.gauges.TrendWindow]); null = 45 s. */
     val windowSeconds: Int? = null,
+    /**
+     * Android Auto cards only: id of the phone card this card shows ([DashboardRules]: Android Auto
+     * has exactly the phone's cards and takes their content from them). Null on phone cards.
+     */
+    val phoneCardId: String? = null,
     val col: Int = 0,
     val row: Int = 0,
     val colSpan: Int = 1,

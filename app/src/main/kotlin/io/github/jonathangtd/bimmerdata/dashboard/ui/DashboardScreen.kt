@@ -246,19 +246,29 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
     val pageIndex = ui.pageIndex(target).coerceIn(0, (pages.size - 1).coerceAtLeast(0))
     val currentPage = pages.getOrNull(pageIndex)
 
+    // Android Auto shows the phone's cards (DashboardRules): there, cards are only moved and resized.
+    fun carCardsFollowPhone() = message(res.getString(R.string.car_cards_follow_phone))
+
     fun actionsFor(t: Target, page: Page) = GridActions(
         onMove = { id, c, r -> vm.moveCard(t, page.id, id, c, r) },
         onResize = { id, cs, rs ->
             vm.resizeCard(t, page.id, id, cs, rs).also { if (!it) message(res.getString(R.string.size_refused)) }
         },
-        onCardTap = { id -> sheet = Sheet.EditCard(t, page.id, id) },
-        onEmptyTap = { c, r -> sheet = addSheetOrMessage(res, t, page, c, r) { message(it) } ?: sheet },
+        onCardTap = { id -> if (t == Target.Car) carCardsFollowPhone() else sheet = Sheet.EditCard(t, page.id, id) },
+        onEmptyTap = { c, r -> if (t == Target.Car) carCardsFollowPhone() else sheet = addSheetOrMessage(res, t, page, c, r) { message(it) } ?: sheet },
         onLongPress = { vm.setEditing(true) },
-        onCardDoubleTap = { id -> vm.cycleTrendWindow(t, page.id, id)?.let { message(res.getString(R.string.trend_window_now, it)) } },
+        onCardDoubleTap = { id ->
+            if (t == Target.Car) carCardsFollowPhone()
+            else vm.cycleTrendWindow(t, page.id, id)?.let { message(res.getString(R.string.trend_window_now, it)) }
+        },
     )
 
     /** "Add a card": on the current page of [t], or on a first page created on the fly (default grid). */
     fun addFirstOrNext(t: Target) {
+        if (t == Target.Car) {
+            carCardsFollowPhone()
+            return
+        }
         vm.setEditing(true)
         val page = vm.ensurePage(t, res.getString(R.string.new_page, 1)) ?: return
         sheet = addSheetOrMessage(res, t, page, null, null) { message(it) } ?: sheet
@@ -306,11 +316,12 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
             if (ui.editing) {
                 EditorToolbar(
                     onPages = { sheet = Sheet.Pages(target) },
-                    onAddCard = { addFirstOrNext(target) },
+                    // Android Auto: no card of its own, and "lay out like the phone" replaces the reset
+                    onAddCard = if (target == Target.Phone) ({ addFirstOrNext(target) }) else null,
                     onShare = ::share,
                     onSaveFile = { saveFile.launch("bimmerdata-layout.json") },
                     onImport = { openFile.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
-                    onReset = { sheet = Sheet.ConfirmReset(target) },
+                    onReset = if (target == Target.Phone) ({ sheet = Sheet.ConfirmReset(target) }) else null,
                     onRename = { sheet = Sheet.RenameDashboard },
                     onCarFromPhone = if (target == Target.Car) {
                         {
@@ -322,7 +333,7 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                     },
                 )
                 Text(
-                    stringResource(R.string.edit_hint), color = Cockpit.Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    stringResource(if (target == Target.Car) R.string.car_edit_hint else R.string.edit_hint), color = Cockpit.Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
                 )
             }
@@ -626,15 +637,16 @@ private fun EditorHeader(target: Target, onTarget: (Target) -> Unit, onDone: () 
 
 @Composable
 private fun EditorToolbar(
-    onPages: () -> Unit, onAddCard: () -> Unit,
-    onShare: () -> Unit, onSaveFile: () -> Unit, onImport: () -> Unit, onReset: () -> Unit,
+    /** Null on Android Auto: its cards are the phone's. */
+    onPages: () -> Unit, onAddCard: (() -> Unit)?,
+    onShare: () -> Unit, onSaveFile: () -> Unit, onImport: () -> Unit, onReset: (() -> Unit)?,
     onRename: () -> Unit,
     /** Android Auto side only: rebuild its pages from the phone's cards. */
     onCarFromPhone: (() -> Unit)? = null,
 ) {
     var menu by remember { mutableStateOf(false) }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        PillButton(stringResource(R.string.add_card_short), onClick = onAddCard, icon = R.drawable.ic_add, color = Cockpit.Accent, modifier = Modifier.weight(1f))
+        onAddCard?.let { add -> PillButton(stringResource(R.string.add_card_short), onClick = add, icon = R.drawable.ic_add, color = Cockpit.Accent, modifier = Modifier.weight(1f)) }
         PillButton(stringResource(R.string.pages), onClick = onPages, icon = R.drawable.ic_pages, modifier = Modifier.weight(1f))
         Box {
             RoundIconButton(R.drawable.ic_more, stringResource(R.string.more), onClick = { menu = true }, background = Track)
@@ -646,7 +658,7 @@ private fun EditorToolbar(
                 MenuItem(R.drawable.ic_share, stringResource(R.string.share_layout)) { menu = false; onShare() }
                 MenuItem(R.drawable.ic_download, stringResource(R.string.export_file)) { menu = false; onSaveFile() }
                 MenuItem(R.drawable.ic_upload, stringResource(R.string.import_file)) { menu = false; onImport() }
-                MenuItem(R.drawable.ic_reset, stringResource(R.string.reset_default)) { menu = false; onReset() }
+                onReset?.let { reset -> MenuItem(R.drawable.ic_reset, stringResource(R.string.reset_default)) { menu = false; reset() } }
             }
         }
     }

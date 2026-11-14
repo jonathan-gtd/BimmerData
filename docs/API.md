@@ -170,7 +170,7 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 | PUT | `/api/v1/dashboard[?dryRun=true]` | layout | Replace the layout (strict validation) |
 | POST | `/api/v1/dashboard/validate` | read | Validate a layout without saving |
 | POST | `/api/v1/dashboard/reset`, `/api/v1/dashboard/{target}/reset` | layout | Empty both sides / one side |
-| POST | `/api/v1/dashboard/car/from-phone` | layout | Rebuild the Android Auto pages from the phone's cards (layout rule: same cards on both) |
+| POST | `/api/v1/dashboard/car/from-phone` | layout | Lay the Android Auto pages out again like the phone pages (it always shows the phone's cards) |
 | GET / POST | `/api/v1/dashboard/{target}/pages` | read / layout | List / add pages |
 | GET / PATCH / DELETE | `/api/v1/dashboard/{target}/pages/{page}` | read / layout | One page: get, rename / resize / move, delete |
 | POST | `/api/v1/dashboard/{target}/pages/{page}/cards` | layout | Add a card (exact cell or first free slot) |
@@ -238,12 +238,24 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
   one ECU's dynamic block holds 42 values. A card, a layout or a profile file that would make more
   is refused (`409 too_many_values`, `422 invalid_layout` with an issue `too_many_values`,
   `422 invalid_profile_file`): split the values into several profiles.
-- **Android Auto shows the same cards as the phone** (the order may differ): every card of the
-  phone pages is on an Android Auto page, and Android Auto has no other card. After creating or
-  changing phone pages, call `POST /api/v1/dashboard/car/from-phone`: it rebuilds the Android Auto
-  pages from the phone pages (up to 8 cards per Android Auto page on its 4 × 2 grid, "Engine 1/2", "Engine 2/2"…). For a
-  profile file, build `carPages` the same way. The app does not refuse a layout that breaks the
-  rule (older or shared profiles), but an agent must not create one.
+- **Android Auto shows exactly the phone's cards — enforced by the app on every write** (editor,
+  API, profile files, backups). Each Android Auto card is linked to one phone card
+  (`phoneCardId`) and shows what it shows; Android Auto only owns **where** its cards are (page,
+  `col`, `row`, `colSpan`, `rowSpan`) and its pages (name, grid, order). So:
+  - add, change or delete a card **on a phone page**: Android Auto follows by itself (a new phone
+    card goes to a free cell of an Android Auto page showing cards of the same phone page, its
+    grid growing up to 4 × 2, else to a new Android Auto page named after the phone page);
+  - on `car`, `POST …/cards` and `DELETE …/cards/{card}` answer `422 car_cards_locked`, and
+    `PATCH …/cards/{card}` may only change `col`, `row`, `colSpan`, `rowSpan` (else
+    `422 car_cards_locked`);
+  - `PUT /api/v1/dashboard` and `PUT /api/v1/profiles/{profile}` may move Android Auto cards
+    between its pages and leave out phone cards not on Android Auto yet (placed automatically),
+    but an Android Auto card that is not on the phone, that differs from its phone card, or taking
+    a card off Android Auto answers `422 car_cards_mismatch` (`error.details` lists the cards);
+  - deleting an Android Auto page puts its cards back on the other pages (or a new one);
+  - a profile file or backup that breaks the rule is brought to it on import (a warning says so);
+  - `POST /api/v1/dashboard/car/from-phone` lays Android Auto out again from scratch (up to 8
+    cards per page on its 4 × 2 grid, "Engine 1/2", "Engine 2/2"…).
 - Unknown JSON fields are rejected (400), so typos do not silently vanish.
 - Measurement ids that are not in the imported ECU folder are accepted but reported as
   `warnings` (the card shows "--" until the SGBD is imported).
@@ -399,9 +411,8 @@ step is on the phone, see [Enabling it](#enabling-it)). Order of the calls:
    with a profile file (the JSON of `GET /api/v1/profiles/{profile}/export`, pages and graphs
    included), or `POST /api/v1/profiles` and the dashboard routes; graphs with
    `/api/v1/profiles/{profile}/graphs`; `POST /api/v1/profiles/{profile}/copy` puts a copy on
-   another car. Android Auto gets the same cards as the phone:
-   `POST /api/v1/dashboard/car/from-phone` once the phone pages are done (see
-   [Layout rules](#layout-rules)).
+   another car. Android Auto always shows the same cards as the phone (see
+   [Layout rules](#layout-rules)); `POST /api/v1/dashboard/car/from-phone` lays it out again.
 8. **Connect**: `POST /api/v1/connect` `{"mode":"usb"}` / `{"mode":"bluetooth"}` /
    `{"mode":"simulation"}`, then `GET /api/v1/status`.
 

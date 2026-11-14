@@ -6,6 +6,7 @@ package io.github.jonathangtd.bimmerdata.api
 import io.github.jonathangtd.bimmerdata.dashboard.Card
 import io.github.jonathangtd.bimmerdata.gauges.TrendWindow
 import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
+import io.github.jonathangtd.bimmerdata.dashboard.DashboardRules
 import io.github.jonathangtd.bimmerdata.dashboard.GridLimits
 import io.github.jonathangtd.bimmerdata.dashboard.GridRules
 import io.github.jonathangtd.bimmerdata.dashboard.Page
@@ -124,6 +125,35 @@ object LayoutOps {
         return issues
     }
 
+    /**
+     * Refuses a write from [before] (stored) to [after] that adds, removes or changes an Android
+     * Auto card on its own ([DashboardRules.carViolations]): Android Auto follows the phone.
+     */
+    fun requireCarFollows(before: Dashboard, after: Dashboard) {
+        val v = DashboardRules.carViolations(before, after)
+        if (v.isEmpty) return
+        throw ApiException(
+            422, "car_cards_mismatch",
+            "Android Auto shows exactly the phone's cards and takes their content from them (${v.describe()}). Change the phone pages instead: " +
+                "Android Auto follows by itself; on the Android Auto side only the place of the cards (page, col, row, colSpan, rowSpan) and the pages can change",
+            ApiJson.encodeToJsonElement(carIssues(v)) as JsonArray,
+        )
+    }
+
+    /** [DashboardRules.carViolations] of a write from [before] to [after] as layout issues (for validation). */
+    fun carIssues(before: Dashboard, after: Dashboard): List<LayoutIssue> = carIssues(DashboardRules.carViolations(before, after))
+
+    private fun carIssues(v: DashboardRules.CarViolations): List<LayoutIssue> =
+        v.extra.map { LayoutIssue("carPages", "car_cards_mismatch", "Android Auto card '${it.id}' (${it.type} ${it.measurementIds.joinToString("+")}) is not on a phone page: add it to the phone, Android Auto follows") } +
+            v.missing.map { LayoutIssue("carPages", "car_cards_mismatch", "Phone card '${it.id}' (${it.type} ${it.measurementIds.joinToString("+")}) is taken off Android Auto: remove it from the phone instead") } +
+            v.changed.map { LayoutIssue("carPages", "car_cards_mismatch", "Android Auto card '${it.id}' differs from its phone card: change the phone card, Android Auto follows") }
+
+    /** Android Auto cards are the phone's: none added or deleted there ([DashboardRules]). */
+    private fun carLocked(what: String) = ApiException(
+        422, "car_cards_locked",
+        "Android Auto shows exactly the phone's cards: $what on the phone page instead, Android Auto follows by itself. On Android Auto a card can only be moved or resized (PATCH col, row, colSpan, rowSpan)",
+    )
+
     fun requireValid(d: Dashboard) {
         val issues = validate(d)
         if (issues.isNotEmpty()) throw invalid("The dashboard is not valid (${issues.size} problem(s))", issues)
@@ -206,6 +236,7 @@ object LayoutOps {
      */
     fun addCard(d: Dashboard, t: Target, ref: String, card: Card, explicitPosition: Boolean): Pair<Dashboard, Card> {
         val (_, page) = findPage(d, t, ref)
+        if (t == Target.Car) throw carLocked("add the card")
         val limits = GridLimits.of(t)
         var c = card
         if (c.id.isBlank()) c = c.copy(id = io.github.jonathangtd.bimmerdata.dashboard.newId())
@@ -234,8 +265,9 @@ object LayoutOps {
     /** Replaces card [cardId] by [updated] (same id); it must still fit where it is placed. */
     fun updateCard(d: Dashboard, t: Target, ref: String, cardId: String, updated: Card): Pair<Dashboard, Card> {
         val (_, page) = findPage(d, t, ref)
-        findCard(page, cardId)
+        val current = findCard(page, cardId)
         if (updated.id != cardId) throw badRequest("A card id cannot be changed (was '$cardId', got '${updated.id}')")
+        if (t == Target.Car && !DashboardRules.placeOnly(current, updated)) throw carLocked("change what the card shows")
         val issues = cardIssues(updated)
         if (issues.isNotEmpty()) throw invalidCard(issues)
         if (!GridRules.inBounds(page, updated)) throw ApiException(422, "out_of_grid", "${describe(updated)} is outside the ${page.columns}×${page.rows} grid of page '${page.id}'")
@@ -250,6 +282,7 @@ object LayoutOps {
     fun deleteCard(d: Dashboard, t: Target, ref: String, cardId: String): Dashboard {
         val (_, page) = findPage(d, t, ref)
         findCard(page, cardId)
+        if (t == Target.Car) throw carLocked("delete the card")
         return d.updatePage(t, page.id) { p -> p.copy(cards = p.cards.filterNot { it.id == cardId }) }
     }
 

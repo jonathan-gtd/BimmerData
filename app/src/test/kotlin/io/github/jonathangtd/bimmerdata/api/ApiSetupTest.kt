@@ -303,7 +303,9 @@ class ApiSetupTest {
         val p = r.json().obj("profile")
         assertEquals("My car", p.str("name"))
         assertEquals(1, p["graphs"]!!.jsonArray.size)
-        assertEquals(1, r.json()["warnings"]!!.jsonArray.size, "zzz/0x1 is unknown")
+        val warnings = r.json()["warnings"]!!.jsonArray.map { it.jsonPrimitive.content }
+        assertEquals(2, warnings.size, "zzz/0x1 is unknown, and the file has no Android Auto card: $warnings")
+        assertTrue(warnings.any { "Android Auto" in it })
         // the file goes onto the selected car; being that car's only profile, it is shown even with activate=false
         assertEquals("My car", fake.garage.current?.label)
         assertEquals(fake.profileSet.profiles.single().id, fake.profileSet.activeId)

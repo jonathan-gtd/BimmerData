@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BimmerData - Copyright (C) 2026 Jonathan GATARD - GPL-3.0-or-later, see LICENSE. -->
+<resources>
+    <string name="car_cards_follow_phone">Android Auto shows the phone\'s cards: add, change or delete a card on the phone. Here, cards are moved and resized.</string>
+    <string name="car_edit_hint">Drag to move · corner to resize · cards = the phone\'s</string>
+</resources>

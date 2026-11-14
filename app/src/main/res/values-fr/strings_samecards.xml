@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BimmerData - Copyright (C) 2026 Jonathan GATARD - GPL-3.0-or-later, see LICENSE. -->
+<resources>
+    <string name="car_cards_follow_phone">Android Auto montre les cartes du téléphone : une carte s\'ajoute, se règle et se supprime sur le téléphone. Ici, on les déplace et on change leur taille.</string>
+    <string name="car_edit_hint">Glisser : déplacer · coin : taille · cartes = celles du téléphone</string>
+</resources>

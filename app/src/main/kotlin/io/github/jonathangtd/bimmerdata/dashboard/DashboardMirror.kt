@@ -4,13 +4,14 @@
 package io.github.jonathangtd.bimmerdata.dashboard
 
 /**
- * Android Auto shows the same cards as the phone: [carFromPhone] rebuilds the Android Auto pages
- * from the phone pages (the owner's rule for his profiles, offered to everyone as an action).
+ * Android Auto shows the same cards as the phone ([DashboardRules], enforced on every save):
+ * [carFromPhone] lays the Android Auto pages out again from the phone pages.
  *
  * Each phone page becomes one Android Auto page per [GridLimits.Car] `maxCards` (8) cards, in the
  * phone's reading order (row, then column), one card per cell, using both rows of the 4 x 2 grid
  * from 4 cards on ([gridFor]): "Engine" with 10 cards gives "Engine 1/2" (8 cards) and
- * "Engine 2/2" (2 cards). Cards keep everything but their id and place.
+ * "Engine 2/2" (2 cards). Cards keep everything but their id and place, and are linked to their
+ * phone card ([Card.phoneCardId]).
  */
 object DashboardMirror {
     fun carFromPhone(d: Dashboard): Dashboard {
@@ -30,7 +31,7 @@ object DashboardMirror {
                     name = if (chunks.size == 1) page.name else "${page.name} ${i + 1}/${chunks.size}",
                     columns = columns,
                     rows = rows,
-                    cards = chunk.mapIndexed { c, card -> card.copy(id = fresh(), col = c % columns, row = c / columns, colSpan = 1, rowSpan = 1) },
+                    cards = chunk.mapIndexed { c, card -> card.copy(id = fresh(), phoneCardId = card.id, col = c % columns, row = c / columns, colSpan = 1, rowSpan = 1) },
                 )
             }
         }

@@ -3,6 +3,8 @@
  */
 package io.github.jonathangtd.bimmerdata.api
 
+import io.github.jonathangtd.bimmerdata.dashboard.Card
+import io.github.jonathangtd.bimmerdata.dashboard.DashboardJson
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
@@ -367,30 +369,75 @@ class ApiServerTest {
         val pid = page["id"]!!.jsonPrimitive.content
         val tooBig = call("POST", "/api/v1/dashboard/car/pages", """{"name":"X","rows":3}""")
         assertEquals(422, tooBig.status)
-        repeat(3) { call("POST", "/api/v1/dashboard/car/pages/$pid/cards", """{"type":"Dial","measurementIds":["msv70/0x4402"]}""") }
+        // Android Auto has no card of its own: cards are added on the phone and follow there
+        val locked = call("POST", "/api/v1/dashboard/car/pages/$pid/cards", """{"type":"Dial","measurementIds":["msv70/0x4402"]}""")
+        assertEquals(422, locked.status)
+        assertEquals("car_cards_locked", locked.errorCode)
+        repeat(3) { assertEquals(201, call("POST", "/api/v1/dashboard/phone/pages/p1/cards", """{"type":"Dial","measurementIds":["msv70/0x4402"]}""").status) }
+        val engine = backend.dashboard.carPages.last()
+        assertEquals("Engine" to 3, engine.name to engine.cards.size, "a new Android Auto page named after the phone page")
         // the 3 cards do not fit a 1×1 grid; a 3×1 grid takes them
-        assertEquals(409, call("PATCH", "/api/v1/dashboard/car/pages/$pid", """{"columns":1,"rows":1}""").status)
-        assertEquals(200, call("PATCH", "/api/v1/dashboard/car/pages/$pid", """{"columns":3,"rows":1}""").status)
-        assertEquals(3 to 1, backend.dashboard.carPages[1].let { it.columns to it.rows })
+        assertEquals(409, call("PATCH", "/api/v1/dashboard/car/pages/${engine.id}", """{"columns":1,"rows":1}""").status)
+        assertEquals(200, call("PATCH", "/api/v1/dashboard/car/pages/${engine.id}", """{"columns":2,"rows":2}""").status)
+        assertEquals(2 to 2, backend.dashboard.carPages.last().let { it.columns to it.rows })
         // ready-made arrangements no longer exist
         assertEquals(404, call("GET", "/api/v1/presets?target=car").status)
         assertEquals(400, call("POST", "/api/v1/dashboard/car/pages", """{"name":"X","presetId":"hero"}""").status, "unknown field")
         assertEquals(200, call("PATCH", "/api/v1/dashboard/car/pages/$pid", """{"name":"Renamed","position":0}""").status)
         assertEquals("Renamed", backend.dashboard.carPages[0].name)
         assertEquals(204, call("DELETE", "/api/v1/dashboard/car/pages/c1").status)
-        // Deleting the last page leaves the side empty (valid); resets touch one side only.
-        val phoneBefore = backend.dashboard.phonePages
         assertEquals(204, call("DELETE", "/api/v1/dashboard/car/pages/0").status)
-        assertTrue(backend.dashboard.carPages.isEmpty())
+        // Deleting an Android Auto page puts its cards back (they are the phone's); resets touch one side only.
+        val phoneBefore = backend.dashboard.phonePages
+        assertEquals(204, call("DELETE", "/api/v1/dashboard/car/pages/${engine.id}").status)
+        assertEquals(3, backend.dashboard.carPages.sumOf { it.cards.size })
         assertEquals(phoneBefore, backend.dashboard.phonePages)
         assertEquals(201, call("POST", "/api/v1/dashboard/car/pages", """{"name":"Again"}""").status)
         assertEquals(200, call("POST", "/api/v1/dashboard/car/reset").status)
-        assertTrue(backend.dashboard.carPages.isEmpty())
+        assertEquals(listOf("Engine"), backend.dashboard.carPages.map { it.name }, "Android Auto emptied, then laid out again from the phone")
         assertEquals(phoneBefore, backend.dashboard.phonePages, "car reset leaves the phone alone")
         assertEquals(200, call("GET", "/api/v1/dashboard").status)
         assertEquals(200, call("POST", "/api/v1/dashboard/reset").status)
         assertTrue(backend.dashboard.phonePages.isEmpty() && backend.dashboard.carPages.isEmpty())
         assertEquals(6, call("GET", "/api/v1/card-types").json()["types"]!!.jsonArray.size)
+    }
+
+    @Test
+    fun `Android Auto cards follow the phone - only their place changes on the car side`() {
+        val added = call("POST", "/api/v1/dashboard/phone/pages/p1/cards", """{"type":"Dial","measurementIds":["msv70/0x4402"],"title":"Oil"}""")
+        assertEquals(201, added.status, added.text)
+        val phoneId = added.json()["card"]!!.jsonObject["id"]!!.jsonPrimitive.content
+        val carCard = backend.dashboard.carPages.flatMap { it.cards }.single()
+        assertEquals(phoneId to "Oil", carCard.phoneCardId to carCard.title, "on Android Auto at once, linked")
+        val carPage = backend.dashboard.carPages.first { carCard in it.cards }.id
+        // moving it is fine, changing what it shows or deleting it is not
+        assertEquals(200, call("PATCH", "/api/v1/dashboard/car/pages/$carPage/cards/${carCard.id}", """{"col":0}""").status)
+        assertEquals("car_cards_locked", call("PATCH", "/api/v1/dashboard/car/pages/$carPage/cards/${carCard.id}", """{"title":"X"}""").errorCode)
+        assertEquals("car_cards_locked", call("DELETE", "/api/v1/dashboard/car/pages/$carPage/cards/${carCard.id}").errorCode)
+        // changed on the phone: Android Auto follows
+        assertEquals(200, call("PATCH", "/api/v1/dashboard/phone/pages/p1/cards/$phoneId", """{"title":"Huile","warnAbove":130}""").status)
+        assertEquals("Huile" to 130.0, backend.dashboard.carPages.flatMap { it.cards }.single().let { it.title to it.warnAbove })
+
+        // whole layout: an Android Auto card of its own, or one taken off, is refused and nothing is saved
+        val stored = backend.dashboard
+        val saves = backend.saves
+        val own = stored.copy(carPages = stored.carPages.map { p -> if (p.id != carPage) p else p.copy(columns = 4, cards = p.cards + Card(id = "own", type = io.github.jonathangtd.bimmerdata.gauges.GaugeType.BigNumber, measurementIds = listOf("msv70/0x4300"), col = 3)) })
+        val r = call("PUT", "/api/v1/dashboard", DashboardJson.encode(own))
+        assertEquals(422, r.status, r.text)
+        assertEquals("car_cards_mismatch", r.errorCode)
+        val off = stored.copy(carPages = stored.carPages.map { it.copy(cards = emptyList()) })
+        assertEquals("car_cards_mismatch", call("PUT", "/api/v1/dashboard", DashboardJson.encode(off)).errorCode)
+        assertEquals(saves, backend.saves)
+        val v = call("POST", "/api/v1/dashboard/validate", DashboardJson.encode(off)).json()
+        assertEquals(false, v["valid"]!!.jsonPrimitive.boolean)
+        // a phone card left off Android Auto in the request (new) is placed automatically
+        val phoneOnly = stored.copy(phonePages = stored.phonePages.map { p -> p.copy(cards = p.cards + Card(id = "new1", type = io.github.jonathangtd.bimmerdata.gauges.GaugeType.BigNumber, measurementIds = listOf("msv70/0x4300"), col = 1)) })
+        val ok = call("PUT", "/api/v1/dashboard", DashboardJson.encode(phoneOnly))
+        assertEquals(200, ok.status, ok.text)
+        assertEquals(setOf(phoneId, "new1"), backend.dashboard.carPages.flatMap { it.cards }.mapNotNull { it.phoneCardId }.toSet())
+        // deleted on the phone: gone from Android Auto too
+        assertEquals(204, call("DELETE", "/api/v1/dashboard/phone/pages/p1/cards/$phoneId").status)
+        assertEquals(listOf("new1"), backend.dashboard.carPages.flatMap { it.cards }.map { it.phoneCardId })
     }
 
     @Test
