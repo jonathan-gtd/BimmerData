@@ -64,7 +64,8 @@ sealed interface MeasurementSource {
 /** Latest value of a measurement. Numeric results fill [value]; text results fill [text]. */
 data class Sample(val value: Double?, val text: String?, val timestampMs: Long)
 
-enum class AcquisitionState { Stopped, Connecting, Running, Error }
+/** [Paused]: connected, reading stopped by the user (see [AcquisitionEngine.setPaused]). */
+enum class AcquisitionState { Stopped, Connecting, Running, Paused, Error }
 
 data class AcquisitionStatus(
     val state: AcquisitionState = AcquisitionState.Stopped,

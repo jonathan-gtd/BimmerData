@@ -117,6 +117,25 @@ class ProfilesTest {
     }
 
     @Test
+    fun `Android Auto lists the active profile first, then the most recently used, then the others in order`() {
+        var set = sample()
+        val lambda = set.profiles[0]
+        set = Profiles.duplicate(set, lambda.id, nowMs = 0, name = "A")!!.first
+        set = Profiles.duplicate(set, lambda.id, nowMs = 0, name = "B")!!.first
+        set = Profiles.duplicate(set, lambda.id, nowMs = 0, name = "C")!!.first
+        val id = { name: String -> set.profiles.first { it.name == name }.id }
+        // never used profiles (lastUsedMs 0) keep the list order
+        set = set.copy(profiles = set.profiles.map { if (it.carId == "car-e90") it.copy(lastUsedMs = 0) else it })
+        set = Profiles.activate(set, id("C"), nowMs = 5_000)
+        set = Profiles.activate(set, id("A"), nowMs = 6_000)
+        set = Profiles.activate(set, id("Mini R50"), nowMs = 7_000) // another car: not listed
+        set = Profiles.activate(set, id("E90 330i · Lambda"), nowMs = 8_000)
+        assertEquals(listOf("E90 330i · Lambda", "A", "C", "B"), Profiles.carChoice(set).map { it.name })
+        set = Profiles.activate(set, id("C"), nowMs = 9_000)
+        assertEquals(listOf("C", "E90 330i · Lambda", "A", "B"), Profiles.carChoice(set).map { it.name })
+    }
+
+    @Test
     fun `an exported profile never contains the VIN link and imports as a new profile`() {
         val set = sample()
         val p = set.profiles[0]

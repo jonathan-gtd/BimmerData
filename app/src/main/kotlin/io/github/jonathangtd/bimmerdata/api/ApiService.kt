@@ -1047,6 +1047,28 @@ class ApiService(
                 ok(statusJson())
             },
             Route(
+                "POST", "/api/v1/acquisition/pause", RouteAccess.Needs(Scope.Config), "Connection", "pauseReading",
+                "Stop reading, stay connected",
+                "Stops the reading of measurements while the cable or Bluetooth adapter stays connected: nothing is sent to the car any more, except one-off jobs (faults, Tool32, POST /api/v1/jobs). The state is `Paused`; it survives an automatic reconnection and ends with /resume, a new connection or a disconnection. A running recording stays open and gets no rows meanwhile.",
+                reply = Reply(description = "Status after pausing", schema = S.ref("Status")),
+                errors = mapOf(409 to "Not connected."),
+            ) {
+                requireConnected()
+                backend.setReadingPaused(true)
+                waitFor(2000) { backend.status().acquisition.state == "Paused" }
+                ok(statusJson())
+            },
+            Route(
+                "POST", "/api/v1/acquisition/resume", RouteAccess.Needs(Scope.Config), "Connection", "resumeReading",
+                "Resume reading",
+                "Reads the measurements again after POST /api/v1/acquisition/pause.",
+                reply = Reply(description = "Status after resuming", schema = S.ref("Status")),
+            ) {
+                backend.setReadingPaused(false)
+                waitFor(2000) { backend.status().acquisition.state != "Paused" }
+                ok(statusJson())
+            },
+            Route(
                 "GET", "/api/v1/recording", RouteAccess.Needs(Scope.Read), "Connection", "getRecording",
                 "CSV recording state",
                 "Whether a recording runs, its file and row count.",

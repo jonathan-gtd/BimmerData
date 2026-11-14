@@ -113,7 +113,7 @@ class AndroidApiBackend(
         }
         return BackendStatus(
             connection = connection,
-            acquisition = AcquisitionInfo(s.state.name, s.cyclesPerSecond, s.errorCount, s.message, repo.readStats()?.summary()),
+            acquisition = AcquisitionInfo(s.state.name, s.cyclesPerSecond, s.errorCount, s.message, repo.readStats()?.summary(), paused = repo.paused.value),
             measurementsRead = repo.measurementsRead().map { it.id },
         )
     }
@@ -204,6 +204,8 @@ class AndroidApiBackend(
     }
 
     override fun disconnect() = repo.disconnect()
+
+    override fun setReadingPaused(paused: Boolean) = repo.setReadingPaused(paused)
 
     override fun backup(): String = BackupManager.get(app).export()
 

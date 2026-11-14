@@ -18,6 +18,8 @@ data class BackgroundSnapshot(
     val telegrafLive: Boolean = false,
     /** Active profile name, null when there is none. */
     val profileName: String? = null,
+    /** Reading stopped by the user, the interface still connected ([LiveRepository.setReadingPaused]). */
+    val readingPaused: Boolean = false,
     val nowMs: Long = System.currentTimeMillis(),
 )
 
@@ -40,10 +42,21 @@ data class BackgroundTexts(
     /** `%1$s` = profile name. */
     val profile: String,
     val locale: Locale,
+    /** Reading stopped by the user, still connected. */
+    val paused: String = "Reading paused",
 )
 
-/** Content of the ongoing notification. */
-data class BackgroundNotification(val title: String, val text: String, val canStopRecording: Boolean)
+/**
+ * Content of the ongoing notification. [canPause]: connected, so the reading can be stopped or
+ * resumed ([paused] = which of the two the action does: resume when true).
+ */
+data class BackgroundNotification(
+    val title: String,
+    val text: String,
+    val canStopRecording: Boolean,
+    val canPause: Boolean = false,
+    val paused: Boolean = false,
+)
 
 /**
  * What BimmerData does in the background, and how it is shown (pure logic, no Android):
@@ -75,9 +88,10 @@ object BackgroundWork {
             }
             is LiveConnection.Connected -> {
                 parts += modeLabel(c.mode, c.label, t)
-                parts += when (s.status.state) {
+                parts += if (s.readingPaused) t.paused else when (s.status.state) {
                     AcquisitionState.Running -> t.readsPerSecond.format(String.format(t.locale, "%.1f", s.status.cyclesPerSecond))
                     AcquisitionState.Error -> t.noAnswer
+                    AcquisitionState.Paused -> t.paused
                     AcquisitionState.Connecting, AcquisitionState.Stopped -> t.starting
                 }
             }
@@ -90,7 +104,11 @@ object BackgroundWork {
         }
         if (s.telegrafLive && s.connection is LiveConnection.Connected) parts += t.telegrafLive
         s.profileName?.takeIf { it.isNotBlank() }?.let { parts += t.profile.format(it) }
-        return BackgroundNotification(t.title, parts.joinToString(" · "), canStopRecording = rec)
+        val connected = s.connection is LiveConnection.Connected
+        return BackgroundNotification(
+            t.title, parts.joinToString(" · "), canStopRecording = rec,
+            canPause = connected, paused = connected && s.readingPaused,
+        )
     }
 
     private fun modeLabel(mode: LiveMode, label: String?, t: BackgroundTexts): String = when (mode) {

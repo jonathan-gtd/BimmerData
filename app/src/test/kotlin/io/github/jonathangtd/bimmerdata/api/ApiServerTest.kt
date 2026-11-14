@@ -447,6 +447,19 @@ class ApiServerTest {
     // ---------------------------------------------------------------- config
 
     @Test
+    fun `reading paused and resumed while staying connected`() {
+        assertEquals(409, call("POST", "/api/v1/acquisition/pause").status, "not connected")
+        call("POST", "/api/v1/connect", """{"mode":"usb"}""")
+        val paused = call("POST", "/api/v1/acquisition/pause").json()
+        assertEquals("connected", paused["connection"]!!.jsonObject["state"]!!.jsonPrimitive.content)
+        assertEquals("Paused", paused["acquisition"]!!.jsonObject["state"]!!.jsonPrimitive.content)
+        assertTrue(paused["acquisition"]!!.jsonObject["paused"]!!.jsonPrimitive.boolean)
+        val resumed = call("POST", "/api/v1/acquisition/resume").json()
+        assertEquals("Running", resumed["acquisition"]!!.jsonObject["state"]!!.jsonPrimitive.content)
+        assertFalse(resumed["acquisition"]!!.jsonObject["paused"]!!.jsonPrimitive.boolean)
+    }
+
+    @Test
     fun `recording, recordings and settings`() {
         assertEquals(409, call("POST", "/api/v1/recording/start").status)
         call("POST", "/api/v1/connect", """{"mode":"usb"}""")

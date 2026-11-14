@@ -134,6 +134,8 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
 
     fun connect(mode: io.github.jonathangtd.bimmerdata.live.LiveMode) = deps.connect(mode)
     fun disconnect() = deps.disconnect()
+    val readingPaused: StateFlow<Boolean> get() = deps.readingPaused
+    fun setReadingPaused(paused: Boolean) = deps.setReadingPaused(paused)
 
     private val _index = MutableStateFlow<Map<String, Measurement>>(emptyMap())
 

@@ -67,9 +67,16 @@ class FakeApiBackend : ApiBackend {
         producer.join(500)
     }
 
+    @Volatile var pausedReading = false
+
+    override fun setReadingPaused(paused: Boolean) { pausedReading = paused }
+
     override fun status() = BackendStatus(
         connection,
-        AcquisitionInfo(if (connection.state == "connected") "Running" else "Stopped", if (connection.state == "connected") 12.5 else 0.0, 0),
+        AcquisitionInfo(
+            when { connection.state != "connected" -> "Stopped"; pausedReading -> "Paused"; else -> "Running" },
+            if (connection.state == "connected" && !pausedReading) 12.5 else 0.0, 0, paused = pausedReading,
+        ),
         requested.map { it.id },
     )
 
@@ -127,6 +134,7 @@ class FakeApiBackend : ApiBackend {
 
     override fun disconnect() {
         connection = ConnectionInfo("disconnected")
+        pausedReading = false
         _recording.value = RecordingState()
     }
 

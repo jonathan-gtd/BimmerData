@@ -214,7 +214,7 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
             is LiveConnection.Failed -> return chrome.copy(statusText = context.getString(R.string.conn_failed, c.message), statusColor = StatusLine.DANGER)
             else -> return chrome
         }
-        if (status.state != AcquisitionState.Running) return chrome
+        if (status.state != AcquisitionState.Running && status.state != AcquisitionState.Paused) return chrome
         val label = context.getString(
             when (mode) {
                 LiveMode.Usb -> R.string.conn_usb_short
@@ -222,6 +222,9 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
                 LiveMode.Simulation -> R.string.conn_sim
             },
         )
+        if (status.state == AcquisitionState.Paused) {
+            return chrome.copy(statusText = context.getString(R.string.car_status_paused, label), statusColor = StatusLine.MUTED)
+        }
         return chrome.copy(statusText = context.getString(R.string.status_running, label, renderer.gauges.format.format(status.cyclesPerSecond, 1)))
     }
 

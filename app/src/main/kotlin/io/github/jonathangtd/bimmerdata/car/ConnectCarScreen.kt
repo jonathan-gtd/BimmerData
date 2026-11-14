@@ -16,7 +16,10 @@ import io.github.jonathangtd.bimmerdata.live.LiveConnection
 import io.github.jonathangtd.bimmerdata.live.LiveMode
 import io.github.jonathangtd.bimmerdata.settings.AppSettings
 
-/** Connection choice from the car: K+DCAN cable, Bluetooth adapter (once chosen), simulated ECU, or disconnect. */
+/**
+ * Connection choice from the car: K+DCAN cable, Bluetooth adapter (once chosen), simulated ECU;
+ * once connected, stop / resume the reading (the interface stays connected) and disconnect.
+ */
 class ConnectCarScreen(carContext: CarContext, private val deps: DashboardDependencies) : Screen(carContext) {
 
     override fun onGetTemplate(): Template {
@@ -36,6 +39,15 @@ class ConnectCarScreen(carContext: CarContext, private val deps: DashboardDepend
             )
         }
         list.addItem(row(R.string.conn_sim, if (current == LiveMode.Simulation) R.string.car_connected else R.string.car_sim_hint) { connect(LiveMode.Simulation) })
+        if (c is LiveConnection.Connected) {
+            val paused = deps.readingPaused.value
+            list.addItem(
+                row(if (paused) R.string.car_resume else R.string.car_pause, if (paused) R.string.car_resume_hint else R.string.car_pause_hint) {
+                    deps.setReadingPaused(!paused)
+                    screenManager.pop()
+                },
+            )
+        }
         if (current != null) list.addItem(row(R.string.conn_disconnect, null) { deps.disconnect(); screenManager.pop() })
         @Suppress("DEPRECATION")
         return ListTemplate.Builder()

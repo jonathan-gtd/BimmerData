@@ -216,18 +216,35 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
      */
     fun connect(mode: LiveMode, automatic: Boolean = false) {
         connectJob?.cancel()
+        setReadingPaused(false) // a new connection reads
         connectJob = scope.launch { connectNow(mode, automatic) }
     }
 
     /** Stops reading and recording and releases the cable. */
     fun disconnect() {
         connectJob?.cancel()
+        setReadingPaused(false)
         scope.launch {
             mutex.withLock {
                 shutdownEngine()
                 _connection.value = LiveConnection.Disconnected
             }
         }
+    }
+
+    private val _paused = MutableStateFlow(false)
+
+    /**
+     * Reading stopped by the user while the cable or adapter stays connected: nothing is sent to
+     * the car except one-off operations (faults, Tool32, API jobs). Kept across the automatic
+     * reconnections, cleared by [connect] and [disconnect].
+     */
+    val paused: StateFlow<Boolean> = _paused.asStateFlow()
+
+    /** Stops ([paused] = true) or restarts the reading without disconnecting. */
+    fun setReadingPaused(paused: Boolean) {
+        _paused.value = paused
+        engine?.setPaused(paused)
     }
 
     /** Starts or stops the CSV recording (used by the notification action). */
@@ -300,6 +317,7 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
                 }
             }
             val e = AcquisitionEngine(iface, edCatalog, AcquisitionEngine.Config(firstConnectAttempts = FirstConnectAttempts))
+            e.setPaused(_paused.value)
             engine = e
             proxy.attach(e)
             e.start()

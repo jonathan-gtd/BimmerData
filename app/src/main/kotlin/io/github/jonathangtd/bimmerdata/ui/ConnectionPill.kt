@@ -63,22 +63,23 @@ import io.github.jonathangtd.bimmerdata.settings.AppSettings
 /** Green of the "reading" state (the cockpit palette has no green of its own). */
 internal val ConnectionOk = Color(0xFF4CD787)
 
-/** How the pill looks for a connection + acquisition status. */
-internal enum class PillTone { Idle, Ok, Busy, Error }
+/** How the pill looks for a connection + acquisition status ([Paused]: connected, reading stopped by the user). */
+internal enum class PillTone { Idle, Ok, Busy, Paused, Error }
 
-internal fun pillTone(connection: LiveConnection, status: AcquisitionStatus): PillTone = when (connection) {
+internal fun pillTone(connection: LiveConnection, status: AcquisitionStatus, paused: Boolean = false): PillTone = when (connection) {
     LiveConnection.Disconnected -> PillTone.Idle
     is LiveConnection.Failed -> PillTone.Error
     is LiveConnection.Connecting -> PillTone.Busy
-    is LiveConnection.Connected -> when (status.state) {
+    is LiveConnection.Connected -> if (paused) PillTone.Paused else when (status.state) {
         AcquisitionState.Running -> PillTone.Ok
+        AcquisitionState.Paused -> PillTone.Paused
         AcquisitionState.Connecting, AcquisitionState.Stopped -> PillTone.Busy
         AcquisitionState.Error -> PillTone.Error
     }
 }
 
 private fun toneColor(tone: PillTone): Color = when (tone) {
-    PillTone.Idle -> Cockpit.Muted
+    PillTone.Idle, PillTone.Paused -> Cockpit.Muted
     PillTone.Ok -> ConnectionOk
     PillTone.Busy -> Cockpit.Warning
     PillTone.Error -> Cockpit.Danger
@@ -97,9 +98,10 @@ fun ConnectionPill(modifier: Modifier = Modifier) {
     val status by repo.liveDataSource.status.collectAsStateWithLifecycle()
     val s by settings.state.collectAsStateWithLifecycle()
     val rec by repo.recorder.state.collectAsStateWithLifecycle()
+    val paused by repo.paused.collectAsStateWithLifecycle()
     ConnectionPillContent(
         connection, status, s.lastMode, onConnect = repo::connect, onDisconnect = repo::disconnect, modifier = modifier,
-        recording = rec.recording,
+        recording = rec.recording, paused = paused, onPause = repo::setReadingPaused,
     )
 }
 
@@ -108,7 +110,8 @@ fun ConnectionPill(modifier: Modifier = Modifier) {
  * - disconnected (or failed): a big "Connect" pill. The first time it asks Cable / Bluetooth /
  *   Simulation; afterwards it connects at once in the last mode, and its "▾" end changes the mode;
  * - connecting / connected: a colored status pill (green = reading, amber = connecting or
- *   reconnecting, red = error) with the read rate; a tap opens a menu with only "Disconnect".
+ *   reconnecting, grey = reading stopped, red = error) with the read rate; a tap opens a menu
+ *   with "Stop reading" / "Resume reading" (when [onPause] is given) and "Disconnect".
  *
  * Cable and Bluetooth: asks first for the missing runtime permissions (notification of the
  * foreground service, Bluetooth connect).
@@ -125,6 +128,10 @@ fun ConnectionPillContent(
     recording: Boolean = false,
     /** Show that the app keeps working off screen while connected ([BackgroundNotice]). */
     showBackgroundNotice: Boolean = true,
+    /** Reading stopped by the user, still connected. */
+    paused: Boolean = false,
+    /** Stops (true) or resumes (false) the reading without disconnecting; null = no menu entry. */
+    onPause: ((Boolean) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     var pendingMode by remember { mutableStateOf<LiveMode?>(null) }
@@ -142,7 +149,7 @@ fun ConnectionPillContent(
         }
     }
     var menu by remember { mutableStateOf(false) }
-    val tone = pillTone(connection, status)
+    val tone = pillTone(connection, status, paused)
 
     Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
     Box {
@@ -168,7 +175,14 @@ fun ConnectionPillContent(
                 MenuEntry(stringResource(R.string.cp_mode_usb), R.drawable.ic_plug) { menu = false; connect(LiveMode.Usb) }
                 MenuEntry(stringResource(R.string.bt_mode), R.drawable.ic_bluetooth) { menu = false; connect(LiveMode.Bluetooth) }
                 MenuEntry(stringResource(R.string.cp_mode_sim), R.drawable.ic_dashboard) { menu = false; connect(LiveMode.Simulation) }
-            } else { // connected: only Disconnect (to change the mode: disconnect, then Connect ▾)
+            } else { // connected: stop / resume reading, Disconnect (to change the mode: disconnect, then Connect ▾)
+                if (onPause != null && connection is LiveConnection.Connected) {
+                    if (paused) {
+                        MenuEntry(stringResource(R.string.cp_resume), R.drawable.ic_play) { menu = false; onPause(false) }
+                    } else {
+                        MenuEntry(stringResource(R.string.cp_pause), R.drawable.ic_pause) { menu = false; onPause(true) }
+                    }
+                }
                 MenuEntry(stringResource(R.string.cp_disconnect), null, Cockpit.Danger) { menu = false; onDisconnect() }
             }
         }
@@ -270,6 +284,7 @@ private fun StatusButton(connection: LiveConnection, status: AcquisitionStatus, 
     val text = when {
         connection is LiveConnection.Connecting -> stringResource(R.string.cp_connecting, name)
         tone == PillTone.Ok -> stringResource(R.string.cp_reading, name, String.format(currentLocale(), "%.1f", status.cyclesPerSecond))
+        tone == PillTone.Paused -> stringResource(R.string.cp_paused, name)
         tone == PillTone.Error -> stringResource(R.string.cp_no_answer, name)
         else -> stringResource(R.string.cp_reconnecting, name)
     }

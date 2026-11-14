@@ -91,6 +91,9 @@ interface ApiBackend {
     fun connect(mode: ConnectMode?)
     fun disconnect()
 
+    /** Stops (true) or restarts the reading of measurements, the interface staying connected. */
+    fun setReadingPaused(paused: Boolean): Unit = notAvailable("Pausing the reading")
+
     val recording: StateFlow<RecordingState>
     fun startRecording()
     fun stopRecording()
@@ -280,13 +283,15 @@ data class ConnectionInfo(
 
 @Serializable
 data class AcquisitionInfo(
-    /** Stopped, Connecting, Running, Error */
+    /** Stopped, Connecting, Running, Paused, Error */
     val state: String,
     val readsPerSecond: Double,
     val errorCount: Int,
     val message: String? = null,
     /** Read loop statistics (block modes, cycle times), see ReadStats.summary. */
     val stats: String? = null,
+    /** Reading stopped by the user (POST /api/v1/acquisition/pause), still connected. */
+    val paused: Boolean = false,
 )
 
 @Serializable

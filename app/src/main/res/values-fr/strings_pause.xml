@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lecture arrêtée par l'utilisateur, câble / adaptateur toujours connecté (pastille, notification, Android Auto). -->
+<resources>
+    <string name="cp_pause">Arrêter la lecture</string>
+    <string name="cp_resume">Reprendre la lecture</string>
+    <string name="cp_paused">%1$s · en pause</string>
+    <string name="bg_paused">lecture en pause</string>
+    <string name="bg_action_pause">Pause</string>
+    <string name="bg_action_resume">Reprendre</string>
+    <string name="status_paused">En pause</string>
+    <string name="car_status_paused">%1$s · en pause</string>
+    <string name="car_pause">Arrêter la lecture</string>
+    <string name="car_pause_hint">Reste connecté, plus rien n\'est demandé à la voiture</string>
+    <string name="car_resume">Reprendre la lecture</string>
+    <string name="car_resume_hint">Lecture en pause, toujours connecté</string>
+</resources>

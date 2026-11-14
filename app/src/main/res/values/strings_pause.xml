@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reading stopped by the user while the cable / adapter stays connected (pill, notification, Android Auto). -->
+<resources>
+    <string name="cp_pause">Stop reading</string>
+    <string name="cp_resume">Resume reading</string>
+    <string name="cp_paused">%1$s · paused</string>
+    <string name="bg_paused">reading paused</string>
+    <string name="bg_action_pause">Pause</string>
+    <string name="bg_action_resume">Resume</string>
+    <string name="status_paused">Paused</string>
+    <string name="car_status_paused">%1$s · paused</string>
+    <string name="car_pause">Stop reading</string>
+    <string name="car_pause_hint">Stays connected, nothing is asked from the car</string>
+    <string name="car_resume">Resume reading</string>
+    <string name="car_resume_hint">Reading paused, still connected</string>
+</resources>

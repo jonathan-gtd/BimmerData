@@ -129,6 +129,7 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
     val status by vm.status.collectAsStateWithLifecycle()
     val rec by vm.recording.collectAsStateWithLifecycle()
     val connection by vm.connection.collectAsStateWithLifecycle()
+    val readingPaused by vm.readingPaused.collectAsStateWithLifecycle()
     val index by vm.measurementIndex.collectAsStateWithLifecycle()
     val profiles by vm.profiles.collectAsStateWithLifecycle()
     val selectedCar by vm.selectedCar.collectAsStateWithLifecycle()
@@ -283,6 +284,7 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                     status = status, rec = rec,
                     onRecord = vm::toggleRecording, onEdit = { if (noProfile) sheet = Sheet.EditProfile(null) else vm.setEditing(true) },
                     connection = connection, lastMode = appSettings.lastMode, onConnect = vm::connect, onDisconnect = vm::disconnect,
+                    paused = readingPaused, onPause = vm::setReadingPaused,
                 )
             }
             Spacer(Modifier.height(12.dp))
@@ -535,6 +537,7 @@ internal fun DashboardHeader(
     switchable: Boolean = true,
     onRecord: () -> Unit, onEdit: () -> Unit,
     connection: LiveConnection, lastMode: LiveMode?, onConnect: (LiveMode) -> Unit, onDisconnect: () -> Unit,
+    paused: Boolean = false, onPause: ((Boolean) -> Unit)? = null,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -562,7 +565,7 @@ internal fun DashboardHeader(
             }
             RoundIconButton(R.drawable.ic_edit, stringResource(R.string.edit), onClick = onEdit)
         }
-        ConnectionPillContent(connection, status, lastMode, onConnect, onDisconnect, Modifier.fillMaxWidth(), recording = rec.recording)
+        ConnectionPillContent(connection, status, lastMode, onConnect, onDisconnect, Modifier.fillMaxWidth(), recording = rec.recording, paused = paused, onPause = onPause)
     }
 }
 

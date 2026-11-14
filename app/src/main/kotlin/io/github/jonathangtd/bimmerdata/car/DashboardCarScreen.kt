@@ -4,6 +4,7 @@
 package io.github.jonathangtd.bimmerdata.car
 
 import android.graphics.Rect
+import android.os.SystemClock
 import android.util.Log
 import androidx.car.app.AppManager
 import androidx.car.app.CarContext
@@ -18,6 +19,7 @@ import androidx.car.app.model.GridTemplate
 import androidx.car.app.model.ItemList
 import androidx.car.app.model.Template
 import androidx.car.app.navigation.model.NavigationTemplate
+import androidx.car.app.versioning.CarAppApiLevels
 import androidx.core.graphics.drawable.IconCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
@@ -48,7 +50,9 @@ import java.util.Locale
 /**
  * The Android Auto dashboard: the car pages of the user's layout, drawn on the host's surface
  * (navigation template, so the whole screen is ours) by [CarSurfaceRenderer], with the page and
- * connection buttons in the host's action strip.
+ * connection buttons in the host's action strip. A horizontal swipe on the surface changes the page
+ * too ([SwipePager]; car API 2+: the host only sends gestures to a template with [Action.PAN] in
+ * its map action strip, a button touch screens do not show).
  *
  * If the host never hands over a surface (a host that only allows plain templates), the screen
  * falls back after [SURFACE_TIMEOUT_MS] to a grid template whose items are the same cards
@@ -76,6 +80,8 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
     private var fallbackJob: Job? = null
     private var activeProfileId: String? = null
     private var profileCount = 0
+    private val swipe = SwipePager()
+    private var surfaceWidth = 0
 
     init {
         try {
@@ -224,7 +230,13 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
 
     // ---------------------------------------------------------------- templates
 
-    override fun onGetTemplate(): Template = if (fallback) gridTemplate() else NavigationTemplate.Builder().setActionStrip(actionStrip()).build()
+    override fun onGetTemplate(): Template {
+        if (fallback) return gridTemplate()
+        val b = NavigationTemplate.Builder().setActionStrip(actionStrip())
+        // without the pan action the host sends no gesture (onScroll / onFling) to the surface
+        if (carContext.carAppApiLevel >= CarAppApiLevels.LEVEL_2) b.setMapActionStrip(ActionStrip.Builder().addAction(Action.PAN).build())
+        return b.build()
+    }
 
     private fun icon(res: Int) = CarIcon.Builder(IconCompat.createWithResource(carContext, res)).build()
 
@@ -307,6 +319,7 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
     override fun onSurfaceAvailable(surfaceContainer: SurfaceContainer) {
         Log.i(TAG, "Surface ${surfaceContainer.width}x${surfaceContainer.height} dpi ${surfaceContainer.dpi}")
         surfaceSeen = true
+        surfaceWidth = surfaceContainer.width
         val surface = surfaceContainer.surface ?: return
         renderer.setSurface(surface, surfaceContainer.width, surfaceContainer.height)
         if (fallback) {
@@ -326,6 +339,20 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
     override fun onStableAreaChanged(stableArea: Rect) {
         Log.i(TAG, "Stable area $stableArea")
         renderer.setStableArea(stableArea)
+    }
+
+    /** Drag on the surface (touch screens, or a rotary controller in pan mode): may change the page. */
+    override fun onScroll(distanceX: Float, distanceY: Float) {
+        swiped(swipe.scroll(distanceX, distanceY, surfaceWidth, SystemClock.uptimeMillis()))
+    }
+
+    /** Flick on the surface: may change the page. */
+    override fun onFling(velocityX: Float, velocityY: Float) {
+        swiped(swipe.fling(velocityX, velocityY, SystemClock.uptimeMillis()))
+    }
+
+    private fun swiped(delta: Int) {
+        if (delta != 0) changePage(delta)
     }
 
     override fun onSurfaceDestroyed(surfaceContainer: SurfaceContainer) {

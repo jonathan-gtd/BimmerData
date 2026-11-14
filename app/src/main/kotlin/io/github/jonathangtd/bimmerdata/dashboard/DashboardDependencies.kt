@@ -32,10 +32,18 @@ interface DashboardDependencies {
     fun connect(mode: LiveMode)
     fun disconnect()
 
+    /** Reading stopped by the user, the interface still connected ([LiveRepository.paused]). */
+    val readingPaused: StateFlow<Boolean> get() = NeverPaused
+
+    /** Stops or restarts the reading without disconnecting ([LiveRepository.setReadingPaused]). */
+    fun setReadingPaused(paused: Boolean) {}
+
     /** Measurements [client] shows (see [MeasurementRequests] for how phone and car share the engine). */
     fun requestMeasurements(client: MeasurementClient, measurements: List<Measurement>, foreground: Boolean)
     fun clearMeasurements(client: MeasurementClient)
 }
+
+private val NeverPaused: StateFlow<Boolean> = MutableStateFlow(false)
 
 /**
  * Hooks other features plug into the dashboard, process-wide (set them once, e.g. at startup or
@@ -69,6 +77,8 @@ class LiveDashboardDependencies(private val repo: LiveRepository) : DashboardDep
     override val connection: StateFlow<LiveConnection> get() = repo.connection
     override fun connect(mode: LiveMode) = repo.connect(mode)
     override fun disconnect() = repo.disconnect()
+    override val readingPaused: StateFlow<Boolean> get() = repo.paused
+    override fun setReadingPaused(paused: Boolean) = repo.setReadingPaused(paused)
     override fun requestMeasurements(client: MeasurementClient, measurements: List<Measurement>, foreground: Boolean) =
         repo.requests.set(client, measurements, foreground)
     override fun clearMeasurements(client: MeasurementClient) = repo.requests.clear(client)

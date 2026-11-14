@@ -70,6 +70,10 @@ import kotlin.coroutines.coroutineContext
  * read, all of them in a row when nothing is read (every block read defines its record again
  * anyway, so an operation that cleared F0 does no harm). An operation longer than
  * [Config.pauseThresholdMs] while measurements are read is reported in [pauses].
+ *
+ * Paused ([setPaused]): the interface stays connected but the loop sends nothing to the car on
+ * its own (state [AcquisitionState.Paused]); one-off operations still run, back to back. Resuming
+ * defines the blocks again and reads at once.
  */
 class AcquisitionEngine(
     private val iface: EdInterfaceBase,
@@ -212,6 +216,19 @@ class AcquisitionEngine(
     /** Extra measurements read whatever [setMeasurements] says (null/empty = none). */
     fun setPinnedMeasurements(measurements: List<Measurement>?) {
         _pinned.value = measurements?.distinctBy { it.id } ?: emptyList()
+    }
+
+    private val _paused = MutableStateFlow(false)
+
+    /** Reading stopped by [setPaused] (the interface stays connected). */
+    val paused: StateFlow<Boolean> = _paused.asStateFlow()
+
+    /**
+     * Stops ([paused] = true) or restarts the reading of measurements without releasing the
+     * interface: while paused, nothing is sent to the car except one-off operations ([exclusive]).
+     */
+    fun setPaused(paused: Boolean) {
+        _paused.value = paused
     }
 
     @Volatile private var readIntervalMs = config.minReadIntervalMs.coerceAtLeast(0)
@@ -416,6 +433,7 @@ class AcquisitionEngine(
         lastCycleAt = 0
         var connectFailures = 0
         var unreachable: String? = null
+        var wasPaused = false
         try {
             while (true) {
                 coroutineContext.ensureActive()
@@ -433,11 +451,30 @@ class AcquisitionEngine(
                             abortRequested = true
                             return
                         }
-                        waitOrChange(backoff(connectFailures))
+                        waitOrChange(backoff(connectFailures), wakeOnPause = false)
                         continue
                     }
                     connectFailures = 0
                     _link.value = LinkState.Up
+                }
+                if (_paused.value) {
+                    synchronized(cycleTimes) { cycleTimes.clear() }
+                    _status.value = AcquisitionStatus(AcquisitionState.Paused, 0.0, errorCount, null)
+                    wasPaused = true
+                    val sig = opSignal.value
+                    if (hasOps()) {
+                        runOps(ed, all = true) // nothing is read: run them back to back
+                        continue
+                    }
+                    merge(_paused.filter { !it }.map { }, opSignal.filter { it != sig }.map { }).first()
+                    continue
+                }
+                if (wasPaused) {
+                    // the car may have forgotten the records meanwhile; a pause is not a slow cycle
+                    wasPaused = false
+                    plan.forEach { if (it is BlockGroup) it.reader.invalidate() }
+                    lastCycleAt = 0
+                    failedCycles = 0
                 }
                 val wanted = effectiveNow()
                 if (wanted != plannedFor) replan(ed, wanted)
@@ -449,7 +486,7 @@ class AcquisitionEngine(
                         runOps(ed, all = true) // nothing to read: run them back to back
                         continue
                     }
-                    merge(effective.filter { it != plannedFor }.map { }, opSignal.filter { it != sig }.map { }).first()
+                    merge(effective.filter { it != plannedFor }.map { }, opSignal.filter { it != sig }.map { }, _paused.filter { it }.map { }).first()
                     continue
                 }
                 runOps(ed, all = false) // one-off operation between two read cycles
@@ -468,6 +505,7 @@ class AcquisitionEngine(
                 for (group in due) {
                     coroutineContext.ensureActive()
                     if (plannedFor != wanted) break // replanned (refused ids)
+                    if (_paused.value) break // stopped by the user: not one more request
                     val started = clock()
                     if (nextReadAt(group.sgbd) > started) continue // this ECU was just read by another group
                     val interval = readIntervalMs
@@ -761,11 +799,15 @@ class AcquisitionEngine(
     private fun backoff(failures: Int): Long =
         (config.retryDelayMinMs shl (failures - 1).coerceIn(0, 16)).coerceAtMost(config.retryDelayMaxMs)
 
-    /** Waits [ms], or until the measurement set changes or a one-off operation is queued. */
-    private suspend fun waitOrChange(ms: Long) {
+    /**
+     * Waits [ms], or until the measurement set changes, a one-off operation is queued or (when
+     * [wakeOnPause]) the reading is paused.
+     */
+    private suspend fun waitOrChange(ms: Long, wakeOnPause: Boolean = true) {
         val sig = opSignal.value
-        if (hasOps()) return
-        withTimeoutOrNull(ms) { merge(effective.drop(1).map { }, opSignal.filter { it != sig }.map { }).first() }
+        if (hasOps() || (wakeOnPause && _paused.value)) return
+        val pause = _paused.filter { wakeOnPause && it }.map { }
+        withTimeoutOrNull(ms) { merge(effective.drop(1).map { }, opSignal.filter { it != sig }.map { }, pause).first() }
     }
 
     /** Earliest start of the next read of [sgbd] allowed by [currentReadIntervalMs]. */

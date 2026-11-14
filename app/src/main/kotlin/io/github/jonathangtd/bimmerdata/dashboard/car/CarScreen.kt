@@ -37,13 +37,14 @@ object StatusLine {
         )
         AcquisitionState.Connecting -> context.getString(R.string.status_connecting)
         AcquisitionState.Stopped -> context.getString(R.string.status_stopped)
+        AcquisitionState.Paused -> context.getString(R.string.status_paused)
         AcquisitionState.Error -> status.message ?: context.getString(R.string.status_error)
     }
 
     fun color(status: AcquisitionStatus): Int = when (status.state) {
         AcquisitionState.Running -> ACCENT
         AcquisitionState.Connecting -> WARNING
-        AcquisitionState.Stopped -> MUTED
+        AcquisitionState.Stopped, AcquisitionState.Paused -> MUTED
         AcquisitionState.Error -> DANGER
     }
 

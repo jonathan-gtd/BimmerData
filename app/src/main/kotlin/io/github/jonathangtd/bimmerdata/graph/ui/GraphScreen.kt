@@ -124,6 +124,7 @@ fun GraphScreen(vm: GraphViewModel = viewModel()) {
     val selectedCar by vm.selectedCar.collectAsStateWithLifecycle()
     val status by vm.status.collectAsStateWithLifecycle()
     val connection by vm.connection.collectAsStateWithLifecycle()
+    val readingPaused by vm.readingPaused.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val appSettings by remember { AppSettings.get(context) }.state.collectAsStateWithLifecycle()
     val navigator = LocalAppNavigator.current
@@ -191,7 +192,7 @@ fun GraphScreen(vm: GraphViewModel = viewModel()) {
             }
         }
         Spacer(Modifier.height(10.dp))
-        ConnectionPillContent(connection, status, appSettings.lastMode, vm::connect, vm::disconnect, Modifier.fillMaxWidth())
+        ConnectionPillContent(connection, status, appSettings.lastMode, vm::connect, vm::disconnect, Modifier.fillMaxWidth(), paused = readingPaused, onPause = vm::setReadingPaused)
         Spacer(Modifier.height(12.dp))
 
         val selected = ui.selected

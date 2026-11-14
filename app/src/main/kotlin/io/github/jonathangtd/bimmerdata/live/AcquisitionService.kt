@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit
  *
  * Ongoing, silent notification on its own channel, refreshed at most once a second: interface,
  * read rate, recording time and rows, live export, active profile; actions Stop recording /
- * Disconnect; a tap opens the app. Holds a partial wake lock so the read loop is not suspended.
+ * Stop or resume reading (the interface stays connected) / Disconnect; a tap opens the app. Holds a partial wake lock so the read loop is not suspended.
  */
 class AcquisitionService : Service() {
 
@@ -111,6 +111,11 @@ class AcquisitionService : Service() {
             }
             ActionStopRecording -> {
                 if (repo.recorder.state.value.recording) repo.recorder.stop()
+                if (!foreground) stopSelf()
+                return START_NOT_STICKY
+            }
+            ActionPause, ActionResume -> {
+                repo.setReadingPaused(intent.action == ActionPause)
                 if (!foreground) stopSelf()
                 return START_NOT_STICKY
             }
@@ -180,6 +185,10 @@ class AcquisitionService : Service() {
             .setContentIntent(open)
             .apply {
                 if (content.canStopRecording) addAction(0, getString(R.string.bg_action_stop_recording), actionIntent(ActionStopRecording, 1))
+                if (content.canPause) {
+                    if (content.paused) addAction(0, getString(R.string.bg_action_resume), actionIntent(ActionResume, 4))
+                    else addAction(0, getString(R.string.bg_action_pause), actionIntent(ActionPause, 3))
+                }
             }
             .addAction(0, getString(R.string.bg_action_disconnect), actionIntent(ActionDisconnect, 2))
             .build()
@@ -199,6 +208,8 @@ class AcquisitionService : Service() {
         const val NotificationId = 42
         const val ActionDisconnect = "io.github.jonathangtd.bimmerdata.live.DISCONNECT"
         const val ActionStopRecording = "io.github.jonathangtd.bimmerdata.live.STOP_RECORDING"
+        const val ActionPause = "io.github.jonathangtd.bimmerdata.live.PAUSE_READING"
+        const val ActionResume = "io.github.jonathangtd.bimmerdata.live.RESUME_READING"
 
         fun createChannel(context: Context) {
             val nm = context.getSystemService(NotificationManager::class.java)
@@ -222,6 +233,7 @@ class AcquisitionService : Service() {
                 recording = repo.recorder.state.value,
                 telegrafLive = tg.enabled && tg.mode == ExportMode.Live && tg.url.isNotBlank(),
                 profileName = ProfileStore.state.value?.active?.name,
+                readingPaused = repo.paused.value,
             )
         }
 
@@ -239,6 +251,7 @@ class AcquisitionService : Service() {
                 telegrafLive = getString(R.string.bg_telegraf_live),
                 profile = getString(R.string.bg_profile),
                 locale = resources.configuration.locales[0],
+                paused = getString(R.string.bg_paused),
             )
         }
     }

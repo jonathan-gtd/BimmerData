@@ -105,6 +105,8 @@ class GraphViewModel(app: Application) : AndroidViewModel(app) {
     val connection: StateFlow<LiveConnection> = deps.connection
     fun connect(mode: LiveMode) = deps.connect(mode)
     fun disconnect() = deps.disconnect()
+    val readingPaused: StateFlow<Boolean> get() = deps.readingPaused
+    fun setReadingPaused(paused: Boolean) = deps.setReadingPaused(paused)
 
     private val foreground = MutableStateFlow(false)
 

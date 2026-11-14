@@ -224,4 +224,11 @@ object Profiles {
         val car = set.active?.carId ?: return emptyList()
         return set.profiles.filter { it.carId == car }
     }
+
+    /**
+     * [sameCar] in the order of the Android Auto list: the active profile, then the most recently
+     * used ([Profile.lastUsedMs]), then those never used in list order.
+     */
+    fun carChoice(set: ProfileSet): List<Profile> =
+        sameCar(set).sortedWith(compareByDescending<Profile> { it.id == set.activeId }.thenByDescending { it.lastUsedMs })
 }

@@ -189,6 +189,7 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 | GET | `/api/v1/profiles/{profile}/export` | read | The shareable profile file (never the VIN nor the user's car) |
 | POST | `/api/v1/connect` | config | Connect (`usb` / `simulation`) |
 | POST | `/api/v1/disconnect` | config | Disconnect |
+| POST | `/api/v1/acquisition/pause`, `/resume` | config | Stop / restart reading while staying connected (state `Paused`, `acquisition.paused` in the status; one-off jobs still run) |
 | GET | `/api/v1/recording` | read | Recording state |
 | POST | `/api/v1/recording/start`, `/stop`, `/markers` | config | Control the CSV recording |
 | GET | `/api/v1/recordings`, `/api/v1/recordings/{name}` | read | List / download CSV files |

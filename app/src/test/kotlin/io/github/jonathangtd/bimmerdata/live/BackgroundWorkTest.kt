@@ -26,6 +26,19 @@ class BackgroundWorkTest {
     private val bt = LiveConnection.Connected(LiveMode.Bluetooth, "JGOBD")
 
     @Test
+    fun `notification - reading paused, still connected, the action resumes`() {
+        val reading = BackgroundWork.notification(BackgroundSnapshot(bt, running), en)
+        assertTrue(reading.canPause)
+        assertFalse(reading.paused)
+        val n = BackgroundWork.notification(BackgroundSnapshot(bt, AcquisitionStatus(AcquisitionState.Paused), readingPaused = true), en.copy(paused = "reading paused"))
+        assertEquals("Bluetooth JGOBD · reading paused", n.text)
+        assertTrue(n.canPause)
+        assertTrue(n.paused)
+        // not connected yet: nothing to pause
+        assertFalse(BackgroundWork.notification(BackgroundSnapshot(LiveConnection.Connecting(LiveMode.Usb)), en).canPause)
+    }
+
+    @Test
     fun `the service runs while a connection is open or opening, in every mode`() {
         assertFalse(BackgroundWork.needsService(BackgroundSnapshot(LiveConnection.Disconnected)))
         assertFalse(BackgroundWork.needsService(BackgroundSnapshot(LiveConnection.Failed(LiveMode.Usb, "no cable"))))
