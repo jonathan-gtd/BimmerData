@@ -50,6 +50,7 @@ class AndroidBackupParts(context: Context) : BackupParts {
             settings = BackupSettings.of(settings.state.value),
             translations = BackupTranslations.of(translationSettings.state.value, if (keep) all else null, if (keep) 0 else all.size),
             events = captureEvents(limit = limitTranslations),
+            dyno = io.github.jonathangtd.bimmerdata.dyno.DynoRuntime.get(app).store.load(),
         )
     }
 
@@ -71,6 +72,16 @@ class AndroidBackupParts(context: Context) : BackupParts {
 
     override fun applyEvents(events: List<BackupEvent>) {
         EventRuntime.store(app).replaceAll(events.map { it.event to it.snapshot })
+    }
+
+    override fun applyDyno(book: io.github.jonathangtd.bimmerdata.dyno.DynoBook) {
+        val runtime = io.github.jonathangtd.bimmerdata.dyno.DynoRuntime.get(app)
+        runtime.disarm()
+        try {
+            runtime.store.update { book }
+        } catch (e: Exception) {
+            throw BackupException("storage_error", "the dyno runs could not be written", e)
+        }
     }
 
     private fun cachedFiles(): List<BackupTranslationFile> {

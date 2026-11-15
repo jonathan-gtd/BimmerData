@@ -7,6 +7,7 @@ import io.github.jonathangtd.bimmerdata.dashboard.Dashboard
 import io.github.jonathangtd.bimmerdata.dashboard.newId
 import io.github.jonathangtd.bimmerdata.graph.Graph
 import io.github.jonathangtd.bimmerdata.live.vehicle.CarMatch
+import io.github.jonathangtd.bimmerdata.live.vehicle.CarPhysics
 import io.github.jonathangtd.bimmerdata.live.vehicle.Vehicle
 import io.github.jonathangtd.bimmerdata.live.vehicle.VinDecision
 import io.github.jonathangtd.bimmerdata.profiles.Profile
@@ -120,9 +121,13 @@ object Cars {
     /**
      * Changes the fields given (null = unchanged; "" removes [series] / [model]). [sgbds] is the new
      * ECU list by hand: the ECUs found by the last scan always stay, so only the others are kept as
-     * [Vehicle.addedSgbds].
+     * [Vehicle.addedSgbds]. [physics] replaces the virtual dyno values (the caller checks
+     * [CarPhysics.problem]).
      */
-    fun update(space: CarSpace, id: String, label: String? = null, series: String? = null, model: String? = null, sgbds: List<String>? = null): CarSpace {
+    fun update(
+        space: CarSpace, id: String, label: String? = null, series: String? = null, model: String? = null, sgbds: List<String>? = null,
+        physics: CarPhysics? = null,
+    ): CarSpace {
         val car = space.car(id) ?: return space
         val scanned = car.ecus.mapNotNull { it.sgbd }.toSet()
         return space.withCar(
@@ -131,6 +136,7 @@ object Cars {
                 series = if (series != null) cleanField(series) else car.series,
                 model = if (model != null) cleanField(model) else car.model,
                 addedSgbds = sgbds?.let { list -> cleanSgbds(list).filter { it !in scanned } } ?: car.addedSgbds,
+                physics = physics ?: car.physics,
             ),
         )
     }

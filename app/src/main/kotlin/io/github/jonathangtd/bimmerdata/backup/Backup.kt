@@ -189,6 +189,8 @@ data class BackupContent(
     val settings: BackupSettings,
     val translations: BackupTranslations,
     val events: List<BackupEvent>? = null,
+    /** Virtual dyno runs and inputs; null = not in this backup (the phone's are kept). */
+    val dyno: io.github.jonathangtd.bimmerdata.dyno.DynoBook? = null,
 )
 
 /** A driver event in a backup, with its snapshot when it fitted ([BackupCodec.MAX_EVENT_SNAPSHOT_BYTES]). */
@@ -222,6 +224,8 @@ internal data class BackupFileDto(
     val translations: BackupTranslations = BackupTranslations(),
     /** Driver events and the values kept around them (newest first); absent in older files. */
     val events: List<BackupEvent>? = null,
+    /** Virtual dyno: inputs per car and runs with their readings (absent in older backups). */
+    val dyno: JsonElement? = null,
 )
 
 object BackupCodec {
@@ -258,6 +262,7 @@ object BackupCodec {
             settings = content.settings,
             translations = content.translations,
             events = content.events,
+            dyno = content.dyno?.let { json.parseToJsonElement(io.github.jonathangtd.bimmerdata.dyno.DynoJson.encode(it)) },
         ),
     )
 
@@ -305,7 +310,14 @@ object BackupCodec {
         dto.translations.files?.firstOrNull { !BackupTranslations.LANG.matches(it.language) || !BackupTranslations.SGBD.matches(it.sgbd) }?.let {
             throw BackupException("invalid_backup", "Invalid backup: bad translation file name '${it.language.take(10)}/${it.sgbd.take(40)}'")
         }
-        val content = BackupContent(garage, profiles, dto.settings, dto.translations, dto.events)
+        val dyno = dto.dyno?.takeUnless { it is kotlinx.serialization.json.JsonNull }?.let { el ->
+            try {
+                io.github.jonathangtd.bimmerdata.dyno.DynoRuns.keepCars(io.github.jonathangtd.bimmerdata.dyno.DynoJson.decode(el.toString()), carIds)
+            } catch (e: Exception) {
+                throw BackupException("invalid_backup", "Invalid backup: the dyno runs cannot be read (${e.message?.lineSequence()?.firstOrNull()?.take(200)})", e)
+            }
+        }
+        val content = BackupContent(garage, profiles, dto.settings, dto.translations, dto.events, dyno)
         return content to BackupInfo(dto.appVersion, dto.appVersionCode, dto.createdAtMs)
     }
 
@@ -338,6 +350,8 @@ data class RestoreSummary(
     val todoCodes: List<String> = emptyList(),
     /** True for a dry run: nothing was changed. */
     val dryRun: Boolean = false,
+    /** Virtual dyno runs put back; null when the backup had none (the phone's were kept). */
+    val dynoRuns: Int? = null,
 ) {
     companion object {
         fun of(content: BackupContent, info: BackupInfo, includeApi: Boolean, dryRun: Boolean, telegrafSecretSet: Boolean): RestoreSummary {
@@ -366,6 +380,7 @@ data class RestoreSummary(
                 todo = codes.map { it.text },
                 todoCodes = codes.map { it.code },
                 dryRun = dryRun,
+                dynoRuns = content.dyno?.runs?.size,
             )
         }
     }
@@ -407,6 +422,9 @@ interface BackupParts {
 
     /** A Telegraf token / password is stored on this phone. */
     fun telegrafSecretSet(): Boolean = false
+
+    /** Virtual dyno runs and inputs (default: no dyno, nothing done). */
+    fun applyDyno(book: io.github.jonathangtd.bimmerdata.dyno.DynoBook) {}
 }
 
 /**
@@ -430,6 +448,7 @@ class BackupRestorer(private val parts: BackupParts) {
             parts.applySettings(content.settings, includeApi)
             parts.applyTranslations(content.translations)
             content.events?.let(parts::applyEvents)
+            content.dyno?.let(parts::applyDyno)
         } catch (e: Exception) {
             val rollback = runCatching {
                 parts.applyGarage(before.garage)
@@ -437,6 +456,7 @@ class BackupRestorer(private val parts: BackupParts) {
                 parts.applySettings(before.settings, includeApi = true)
                 parts.applyTranslations(before.translations)
                 if (content.events != null) before.events?.let(parts::applyEvents)
+                before.dyno?.let(parts::applyDyno)
             }
             throw BackupException(
                 "restore_failed",

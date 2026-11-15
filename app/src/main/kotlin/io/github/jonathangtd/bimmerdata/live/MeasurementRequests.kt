@@ -6,10 +6,10 @@ package io.github.jonathangtd.bimmerdata.live
 import java.util.EnumMap
 
 /**
- * A screen that shows live values (phone dashboard, Android Auto, the phone Graph tab), or the
- * REST API (measurements requested by scripts / AI agents).
+ * A screen that shows live values (phone dashboard, Android Auto, the phone Graph tab), the REST
+ * API (measurements requested by scripts / AI agents), or the virtual dyno while armed.
  */
-enum class MeasurementClient { Phone, Car, Graph, Api }
+enum class MeasurementClient { Phone, Car, Graph, Api, Dyno }
 
 /**
  * Decides what the single acquisition engine reads when several screens show live values (the

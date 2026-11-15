@@ -6,16 +6,19 @@ package io.github.jonathangtd.bimmerdata.api
 import io.github.jonathangtd.bimmerdata.cars.Cars
 import io.github.jonathangtd.bimmerdata.cars.CarSpace
 import io.github.jonathangtd.bimmerdata.cars.EcuUse
+import io.github.jonathangtd.bimmerdata.live.vehicle.CarPhysics
 import io.github.jonathangtd.bimmerdata.live.vehicle.Vehicle
 import io.github.jonathangtd.bimmerdata.profiles.Profile
 import io.github.jonathangtd.bimmerdata.profiles.Profiles
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 
@@ -97,9 +100,35 @@ internal class CarRoutes(private val backend: ApiBackend, private val clock: () 
         val profiles = space.profilesOf(car.id)
         put("profileCount", profiles.size)
         put("selected", car.id == space.garage.currentId)
+        put("physics", physicsJson(car.physics))
         if (withProfiles) putJsonArray("profiles") {
             for (p in profiles) addJsonObject { put("id", p.id); put("name", p.name); put("active", p.id == space.profiles.activeId) }
         }
+    }
+
+    /**
+     * `physics` of [b] merged into [current]: each field given replaces it (null removes it), the
+     * others are kept; `"physics": null` removes them all. Null when absent.
+     */
+    private fun physics(b: JsonObject, current: CarPhysics): CarPhysics? {
+        if ("physics" !in b) return null
+        val el = b["physics"]
+        if (el == null || el is JsonNull) return CarPhysics()
+        val o = el as? JsonObject ?: throw invalidCar("'physics' must be an object")
+        val unknown = o.keys - PHYSICS_FIELDS
+        if (unknown.isNotEmpty()) throw invalidCar("Unknown field(s) in 'physics': ${unknown.joinToString()} (allowed: ${PHYSICS_FIELDS.joinToString()})")
+        fun num(key: String, old: Double?): Double? {
+            if (key !in o) return old
+            val v = o[key]
+            if (v == null || v is JsonNull) return null
+            return (v as? JsonPrimitive)?.takeUnless { it.isString }?.doubleOrNull ?: throw invalidCar("'physics.$key' must be a number or null")
+        }
+        val p = CarPhysics(
+            num("massKg", current.massKg), num("dragAreaM2", current.dragAreaM2),
+            num("rollingResistance", current.rollingResistance), num("airDensity", current.airDensity),
+        )
+        p.problem()?.let { throw invalidCar("Invalid physics: $it") }
+        return p
     }
 
     /** `label` of [b]: trimmed, not empty, at most [Cars.MAX_LABEL_LENGTH]; null when absent. */
@@ -136,6 +165,7 @@ internal class CarRoutes(private val backend: ApiBackend, private val clock: () 
             "series" to S.str("Series (free text, ≤ ${Cars.MAX_FIELD_LENGTH}); \"\" removes it.", "<series>"),
             "model" to S.str("Model (free text, ≤ ${Cars.MAX_FIELD_LENGTH}); \"\" removes it.", "<model>"),
             "ecus" to S.arr(S.str(example = "<sgbd>"), "The car's ECU list by hand (SGBD names of the ECU folder): its profiles may only name these. The ECUs found by the last scan always stay in the list.", 0, Cars.MAX_ADDED_SGBDS),
+            "physics" to S.ref("CarPhysics"),
         )
         return listOf(
             Route(
@@ -201,7 +231,7 @@ internal class CarRoutes(private val backend: ApiBackend, private val clock: () 
             ) { call ->
                 val id = call.path("car")
                 val b = call.bodyObject()
-                b.allowOnly("label", "series", "model", "ecus", "removeCards")
+                b.allowOnly("label", "series", "model", "ecus", "removeCards", "physics")
                 val name = label(b)
                 val series = field(b, "series")
                 val model = field(b, "model")
@@ -216,7 +246,7 @@ internal class CarRoutes(private val backend: ApiBackend, private val clock: () 
                         if (inUse.isNotEmpty() && !removeCards) throw ecuInUse(inUse)
                         for (sgbd in inUse.keys) next = Cars.removeEcu(next, id, sgbd)
                     }
-                    Cars.update(next, id, name, series, model, sgbds).let { it to it }
+                    Cars.update(next, id, name, series, model, sgbds, physics(b, car.physics)).let { it to it }
                 }
                 ok(carJson(space, space.car(id)!!, withProfiles = true))
             },
@@ -314,7 +344,24 @@ internal class CarRoutes(private val backend: ApiBackend, private val clock: () 
     }
 
     companion object {
+        private val PHYSICS_FIELDS = setOf("massKg", "dragAreaM2", "rollingResistance", "airDensity")
+
+        internal fun physicsJson(p: CarPhysics): JsonObject = buildJsonObject {
+            p.massKg?.let { put("massKg", it) }
+            p.dragAreaM2?.let { put("dragAreaM2", it) }
+            p.rollingResistance?.let { put("rollingResistance", it) }
+            p.airDensity?.let { put("airDensity", it) }
+        }
+
         internal fun schemas(): Map<String, JsonObject> = mapOf(
+            "CarPhysics" to S.obj(
+                "Values of the car for the virtual dyno, typed by the user (GET /api/v1/dyno). Each field is optional; in PUT /api/v1/cars/{car} a field given replaces it, null removes it, `\"physics\": null` removes them all.",
+                emptyList(), false, null,
+                "massKg" to S.num("Mass while measuring, driver and fuel included (kg, ${CarPhysics.MASS_RANGE.start.toInt()}..${CarPhysics.MASS_RANGE.endInclusive.toInt()}). Required for a dyno run.", 1600.0),
+                "dragAreaM2" to S.num("Drag area Cd × frontal area (m², ${CarPhysics.DRAG_AREA_RANGE.start}..${CarPhysics.DRAG_AREA_RANGE.endInclusive}); absent = ${CarPhysics.DEFAULT_DRAG_AREA}.", CarPhysics.DEFAULT_DRAG_AREA),
+                "rollingResistance" to S.num("Rolling resistance coefficient (${CarPhysics.ROLLING_RANGE.start}..${CarPhysics.ROLLING_RANGE.endInclusive}); absent = ${CarPhysics.DEFAULT_ROLLING}.", CarPhysics.DEFAULT_ROLLING),
+                "airDensity" to S.num("Air density (kg/m³, ${CarPhysics.AIR_DENSITY_RANGE.start}..${CarPhysics.AIR_DENSITY_RANGE.endInclusive}); absent = ${CarPhysics.DEFAULT_AIR_DENSITY}.", CarPhysics.DEFAULT_AIR_DENSITY),
+            ),
             "Car" to S.obj(
                 "One of the user's cars (the VIN is never returned).", listOf("id", "label", "vinKnown", "ecus", "profileCount", "selected"), false, null,
                 "id" to S.str("Stable id: the short VIN when the car was first seen with it, else a generated one.", "car-a1b2c3d4e5"),
@@ -326,6 +373,7 @@ internal class CarRoutes(private val backend: ApiBackend, private val clock: () 
                 "scannedAtMs" to S.int("Last full scan (Faults tab), epoch ms.", format = "int64"),
                 "profileCount" to S.int(),
                 "selected" to S.bool("The car the app shows."),
+                "physics" to S.ref("CarPhysics"),
                 "profiles" to S.arr(S.obj(null, listOf("id", "name", "active"), false, null, "id" to S.str(), "name" to S.str(), "active" to S.bool()),
                     "Its profiles (GET /api/v1/cars/{car} only)."),
             ),

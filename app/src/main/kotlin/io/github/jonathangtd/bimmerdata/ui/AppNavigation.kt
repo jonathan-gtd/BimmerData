@@ -6,7 +6,7 @@ package io.github.jonathangtd.bimmerdata.ui
 import androidx.compose.runtime.staticCompositionLocalOf
 
 /** Secondary screens shown over the tabs (the bottom bar is hidden; system back closes them). */
-enum class AppOverlay { Tool32, ApiDocs, Cars, Events }
+enum class AppOverlay { Tool32, ApiDocs, Cars, Events, Dyno }
 
 /** Opens secondary screens, or switches tab, from anywhere in the tab screens. */
 class AppNavigator(
@@ -22,6 +22,8 @@ class AppNavigator(
     val openCars: () -> Unit = {},
     /** The driver events (« Événement » button): list, values around each one. */
     val openEvents: () -> Unit = {},
+    /** The virtual dyno of the car shown. */
+    val openDyno: () -> Unit = {},
 )
 
 val LocalAppNavigator = staticCompositionLocalOf { AppNavigator() }

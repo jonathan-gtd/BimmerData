@@ -189,6 +189,9 @@ interface ApiBackend {
      * only checks it. Throws [io.github.jonathangtd.bimmerdata.backup.BackupException]. Blocking.
      */
     fun restoreBackup(text: String, dryRun: Boolean): RestoreSummary = notAvailable("The backup")
+
+    /** The virtual dyno (see DynoRoutes). */
+    fun dyno(): io.github.jonathangtd.bimmerdata.dyno.DynoControl = notAvailable("The virtual dyno")
 }
 
 internal fun notAvailable(what: String): Nothing = throw ApiException(501, "not_available", "$what is not available")

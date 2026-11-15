@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Virtual dyno (dyno/ui). -->
+<resources>
+    <string name="dyno_title">Power dyno</string>
+    <string name="dyno_open">Power dyno</string>
+    <string name="dyno_back">Back</string>
+    <string name="dyno_no_car">Add or choose a car first: the dyno measures the car shown.</string>
+    <string name="dyno_car_values">Car</string>
+    <string name="dyno_mass_missing">Mass not set: the dyno needs it (driver and fuel included).</string>
+    <string name="dyno_car_summary">%1$s kg · drag area %2$s m² · rolling %3$s</string>
+    <string name="dyno_edit">Edit</string>
+    <string name="cars_physics">Mass and drag</string>
+    <string name="dyno_physics_title">%1$s: mass and drag</string>
+    <string name="dyno_mass">Mass (kg)</string>
+    <string name="dyno_mass_hint" formatted="false">While measuring: the car with the driver, passengers and fuel. 10 kg off changes the power by less than 1 %.</string>
+    <string name="dyno_drag_area">Drag area Cd×A (m²)</string>
+    <string name="dyno_rolling">Rolling coef.</string>
+    <string name="dyno_air_density">Air density (kg/m³)</string>
+    <string name="dyno_loss" formatted="false">Driveline loss (%)</string>
+    <string name="dyno_physics_hint">Empty fields use the default shown. A saloon is about 0.6 to 0.7 m², an SUV 0.9 to 1.1. The driveline loss only changes the estimated engine power.</string>
+    <string name="dyno_save">Save</string>
+    <string name="dyno_inputs">Values read</string>
+    <string name="dyno_input_rpm">Engine speed</string>
+    <string name="dyno_input_speed">Vehicle speed</string>
+    <string name="dyno_input_pedal">Pedal (starts a run by itself)</string>
+    <string name="dyno_input_overlay">Car value to compare (torque or power)</string>
+    <string name="dyno_input_none">None</string>
+    <string name="dyno_input_missing">To choose</string>
+    <string name="dyno_input_auto">(automatic)</string>
+    <string name="dyno_input_default">Automatic</string>
+    <string name="dyno_input_no_choice">No value of the active profile has the right unit</string>
+    <string name="dyno_inputs_hint">Choices come from the active profile (and the GPS speed). A profile holding only these values is read the fastest: more points per run. An ECU speed is better than the GPS one.</string>
+    <string name="dyno_idle">Not armed</string>
+    <string name="dyno_armed_pedal">Armed: full throttle in one gear starts a run</string>
+    <string name="dyno_armed_manual">Armed: tap Start at the beginning of the pull</string>
+    <plurals name="dyno_running">
+        <item quantity="one">Measuring… %1$d point</item>
+        <item quantity="other">Measuring… %1$d points</item>
+    </plurals>
+    <plurals name="dyno_live">
+        <item quantity="one">%1$s rpm · pedal %2$s · %3$d reading</item>
+        <item quantity="other">%1$s rpm · pedal %2$s · %3$d readings</item>
+    </plurals>
+    <plurals name="dyno_discarded">
+        <item quantity="one">Last run too short (%1$d point): not kept</item>
+        <item quantity="other">Last run too short (%1$d points): not kept</item>
+    </plurals>
+    <string name="dyno_err_mass">Set the car\'s mass first (Edit).</string>
+    <string name="dyno_err_inputs">Choose an engine speed and a vehicle speed first.</string>
+    <string name="dyno_err_car">No car selected.</string>
+    <string name="dyno_arm">Arm</string>
+    <string name="dyno_disarm">Disarm</string>
+    <string name="dyno_start">Start</string>
+    <string name="dyno_stop">Stop</string>
+    <string name="dyno_problem_mass">No mass for this car: set it to see the curve.</string>
+    <string name="dyno_problem_few">Too few readings for a curve.</string>
+    <string name="dyno_problem_speed">No vehicle speed during the run.</string>
+    <string name="dyno_problem_gear">Speed and engine speed do not stay in one ratio: gear change, clutch slip or wheel spin. Do the pull in one gear.</string>
+    <string name="dyno_problem_accel">The car was not accelerating.</string>
+    <string name="dyno_chart_description">Power and torque against engine speed: peak %1$s ch at %2$s rpm, %3$s Nm at %4$s rpm</string>
+    <string name="dyno_legend_power">Wheel power (ch)</string>
+    <string name="dyno_legend_torque">Torque at the engine (Nm)</string>
+    <string name="dyno_legend_overlay">Dashed: the car\'s own value.</string>
+    <string name="dyno_legend_compared">Thin lines: the run compared.</string>
+    <string name="dyno_peak_wheel">Wheel power</string>
+    <string name="dyno_peak_torque">Torque at the engine, transmission losses not counted</string>
+    <string name="dyno_peak_engine">Engine power, estimated (+%1$s %%)</string>
+    <string name="dyno_peak_overlay">Car value: %1$s</string>
+    <string name="dyno_compared">Compared: %1$s</string>
+    <string name="dyno_rpm">rpm</string>
+    <plurals name="dyno_run_facts">
+        <item quantity="one">%1$s km/h per 1000 rpm (spread %2$s %%) · %3$d point · %4$s per second</item>
+        <item quantity="other">%1$s km/h per 1000 rpm (spread %2$s %%) · %3$d points · %4$s per second</item>
+    </plurals>
+    <string name="dyno_warn_few">Few points: the curve is rough. A profile with fewer values gives more.</string>
+    <string name="dyno_warn_rate">Fewer than 3 readings per second: peaks may be smoothed out.</string>
+    <string name="dyno_warn_flat">The road is assumed flat: do runs both ways on the same stretch and compare.</string>
+    <string name="dyno_hints_title">How to measure</string>
+    <string name="dyno_hints">• Only where it is legal and safe: a closed road or a track.\n• Flat, straight road; do the same pull both ways and compare.\n• One gear from low to high engine speed, full throttle; 3rd or 4th gear is best (in low gears the wheels and the gearbox take a part of the power that is not counted).\n• Warm engine, windows closed, tyres at their usual pressure.\n• Set the mass with the driver. The curve is the power reaching the road; the torque shown is that power at the engine, without the transmission losses.</string>
+    <string name="dyno_runs">Runs (tap one to show it, a second one to compare)</string>
+    <string name="dyno_run_summary">%1$s ch at %2$s rpm · %3$s Nm · %4$s km/h/1000</string>
+    <string name="dyno_run_actions">Run actions</string>
+    <string name="dyno_share">Share CSV</string>
+    <string name="dyno_rename">Name</string>
+    <string name="dyno_rename_placeholder">e.g. 4th, northbound</string>
+    <string name="dyno_delete">Delete</string>
+    <string name="dyno_delete_title">Delete this run?</string>
+    <string name="dyno_delete_text">Its readings and its curve are deleted.</string>
+</resources>

@@ -6,6 +6,7 @@ package io.github.jonathangtd.bimmerdata.vehicle
 import android.content.Context
 import android.util.Log
 import androidx.core.util.AtomicFile
+import io.github.jonathangtd.bimmerdata.live.vehicle.CarPhysics
 import io.github.jonathangtd.bimmerdata.live.vehicle.EcuFaultStatus
 import io.github.jonathangtd.bimmerdata.live.vehicle.EcuFaults
 import io.github.jonathangtd.bimmerdata.live.vehicle.Fault
@@ -103,6 +104,16 @@ object GarageJson {
         val busTopology: Boolean = false,
         val model: String? = null,
         val addedSgbds: List<String> = emptyList(),
+        /** Virtual dyno values typed by the user (absent: none). */
+        val physics: PhysicsDto? = null,
+    )
+
+    @Serializable
+    internal data class PhysicsDto(
+        val massKg: Double? = null,
+        val dragAreaM2: Double? = null,
+        val rollingResistance: Double? = null,
+        val airDensity: Double? = null,
     )
 
     @Serializable
@@ -162,11 +173,13 @@ object GarageJson {
     }
 
     private fun Vehicle.toDto() =
-        VehicleDto(id, label, vin, vinShort, series, seriesSgbd, seriesByUser, ecus.map { it.toDto() }, scannedAtMs, scanMethod?.name, busTopology, model, addedSgbds)
+        VehicleDto(id, label, vin, vinShort, series, seriesSgbd, seriesByUser, ecus.map { it.toDto() }, scannedAtMs, scanMethod?.name, busTopology, model, addedSgbds,
+            physics.takeUnless { it.isEmpty }?.let { PhysicsDto(it.massKg, it.dragAreaM2, it.rollingResistance, it.airDensity) })
 
     private fun VehicleDto.toModel() = Vehicle(
         id, label, vin, vinShort, series, seriesSgbd, seriesByUser, ecus.map { it.toModel() }, scannedAtMs,
         ScanMethod.entries.firstOrNull { it.name == scanMethod }, busTopology, model, addedSgbds,
+        physics?.let { CarPhysics(it.massKg, it.dragAreaM2, it.rollingResistance, it.airDensity).takeIf { p -> p.problem() == null } } ?: CarPhysics(),
     )
 
     private fun VehicleEcu.toDto() = EcuDto(address, name, description, group, sgbd, sgbdAvailable, bus, ident.map { ValueDto(it.name, it.value, it.unit) })
