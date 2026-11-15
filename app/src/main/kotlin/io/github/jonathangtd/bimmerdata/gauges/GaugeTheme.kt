@@ -49,6 +49,8 @@ class GaugeTheme(
     val muted: Int,
     val accent: Int,
     val warning: Int,
+    /** Red of the cards in [AlertLevel.Danger]. */
+    val danger: Int,
     val centerTick: Int,
     val record: Int,
     val recordText: Int,
@@ -56,7 +58,7 @@ class GaugeTheme(
     val cornerRadius: Float,
 ) {
     fun withUnit(newUnit: Float) = GaugeTheme(
-        car, newUnit, fonts, background, card, track, text, muted, accent, warning, centerTick, record, recordText, cornerRadius,
+        car, newUnit, fonts, background, card, track, text, muted, accent, warning, danger, centerTick, record, recordText, cornerRadius,
     )
 
     companion object {
@@ -64,7 +66,7 @@ class GaugeTheme(
             car = false, unit = density, fonts = GaugeFonts.get(context),
             background = 0xFF0A0C0F.toInt(), card = 0xFF14171C.toInt(), track = 0xFF232830.toInt(),
             text = 0xFFE8EAED.toInt(), muted = 0xFF8E97A3.toInt(), accent = 0xFF5CC8FF.toInt(),
-            warning = 0xFFFFB547.toInt(), centerTick = 0xFF4A525C.toInt(),
+            warning = 0xFFFFB547.toInt(), danger = 0xFFFF4D4F.toInt(), centerTick = 0xFF4A525C.toInt(),
             record = 0xFFFF5A5F.toInt(), recordText = 0xFFFF8A8E.toInt(),
             cornerRadius = 20f,
         )
@@ -78,7 +80,7 @@ class GaugeTheme(
             background = 0xFF07090B.toInt(), card = 0xFF111418.toInt(), track = 0xFF22272E.toInt(),
             text = if (night) 0xFFCDD1D6.toInt() else 0xFFE8EAED.toInt(),
             muted = if (night) 0xFF7F8894.toInt() else 0xFF8E97A3.toInt(), accent = 0xFF5CC8FF.toInt(),
-            warning = 0xFFFFB547.toInt(), centerTick = 0xFF4A525C.toInt(),
+            warning = 0xFFFFB547.toInt(), danger = 0xFFFF4D4F.toInt(), centerTick = 0xFF4A525C.toInt(),
             record = 0xFFFF5A5F.toInt(), recordText = 0xFFFF8A8E.toInt(),
             cornerRadius = 26f,
         )

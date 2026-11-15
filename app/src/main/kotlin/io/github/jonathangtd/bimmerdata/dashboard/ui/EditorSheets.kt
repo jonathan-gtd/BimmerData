@@ -96,6 +96,8 @@ import io.github.jonathangtd.bimmerdata.dashboard.car.CarScreen
 import io.github.jonathangtd.bimmerdata.gauges.GaugeCard
 import io.github.jonathangtd.bimmerdata.gauges.GaugeChannel
 import io.github.jonathangtd.bimmerdata.gauges.GaugeFeed
+import io.github.jonathangtd.bimmerdata.gauges.AlertCondition
+import io.github.jonathangtd.bimmerdata.gauges.CardAlert
 import io.github.jonathangtd.bimmerdata.gauges.GaugeRenderer
 import io.github.jonathangtd.bimmerdata.gauges.GaugeSpec
 import io.github.jonathangtd.bimmerdata.gauges.GaugeState
@@ -240,12 +242,12 @@ private class DemoFeed : GaugeFeed {
 }
 
 private fun demoSpec(type: GaugeType, title: String, rpmUnit: String): GaugeSpec = when (type) {
-    GaugeType.Dial -> GaugeSpec(type, title, null, 40.0, 140.0, 80.0, null, listOf(GaugeChannel("d/oil", "", "°C", 0)))
-    GaugeType.BipolarBar -> GaugeSpec(type, title, null, -25.0, 25.0, -10.0, 10.0, listOf(GaugeChannel("d/b1", "B1", "%", 1), GaugeChannel("d/b2", "B2", "%", 1)))
-    GaugeType.BigNumber -> GaugeSpec(type, title, null, 40.0, 120.0, null, null, listOf(GaugeChannel("d/cool", "", "°C", 0)))
-    GaugeType.Trend -> GaugeSpec(type, title, null, 0.0, 7000.0, null, null, listOf(GaugeChannel("d/rpm", "", rpmUnit, 0)))
-    GaugeType.MultiValue -> GaugeSpec(type, title, null, 0.8, 1.2, null, null, listOf(GaugeChannel("d/l1", "B1", "λ", 2), GaugeChannel("d/l2", "B2", "λ", 2)))
-    GaugeType.Status -> GaugeSpec(type, title, null, 0.0, 1.0, null, null, listOf(GaugeChannel("d/status", "", "", 0)))
+    GaugeType.Dial -> GaugeSpec(type, title, null, 40.0, 140.0, listOf(CardAlert(condition = AlertCondition.Below, threshold = 80.0)), listOf(GaugeChannel("d/oil", "", "°C", 0)))
+    GaugeType.BipolarBar -> GaugeSpec(type, title, null, -25.0, 25.0, listOf(CardAlert(condition = AlertCondition.Below, threshold = -10.0), CardAlert(condition = AlertCondition.Above, threshold = 10.0)), listOf(GaugeChannel("d/b1", "B1", "%", 1), GaugeChannel("d/b2", "B2", "%", 1)))
+    GaugeType.BigNumber -> GaugeSpec(type, title, null, 40.0, 120.0, emptyList(), listOf(GaugeChannel("d/cool", "", "°C", 0)))
+    GaugeType.Trend -> GaugeSpec(type, title, null, 0.0, 7000.0, emptyList(), listOf(GaugeChannel("d/rpm", "", rpmUnit, 0)))
+    GaugeType.MultiValue -> GaugeSpec(type, title, null, 0.8, 1.2, emptyList(), listOf(GaugeChannel("d/l1", "B1", "λ", 2), GaugeChannel("d/l2", "B2", "λ", 2)))
+    GaugeType.Status -> GaugeSpec(type, title, null, 0.0, 1.0, emptyList(), listOf(GaugeChannel("d/status", "", "", 0)))
 }
 
 // ------------------------------------------------------------------ measurement picker
@@ -541,8 +543,7 @@ internal fun CardEditorSheet(
     val labels = remember(card.id) { mutableStateListOf<String>().apply { addAll(card.channelLabels.orEmpty()) } }
     var min by remember(card.id) { mutableStateOf(editNumber(card.min, locale)) }
     var max by remember(card.id) { mutableStateOf(editNumber(card.max, locale)) }
-    var warnBelow by remember(card.id) { mutableStateOf(editNumber(card.warnBelow, locale)) }
-    var warnAbove by remember(card.id) { mutableStateOf(editNumber(card.warnAbove, locale)) }
+    val alertRules = remember(card.id) { mutableStateListOf<AlertDraft>().apply { addAll(card.withLegacyAlerts().alerts.map { AlertDraft.of(it, locale) }) } }
     var decimals by remember(card.id) { mutableIntStateOf(card.decimals ?: -1) }
     var windowSeconds by remember(card.id) { mutableStateOf(card.windowSeconds) }
     var colSpan by remember(card.id) { mutableIntStateOf(card.colSpan) }
@@ -552,7 +553,8 @@ internal fun CardEditorSheet(
     val draft = card.copy(
         type = type, measurementIds = ids, title = title.trim().ifEmpty { null },
         channelLabels = labels.toList().takeIf { l -> l.any { it.isNotBlank() } }?.let { l -> List(ids.size) { l.getOrNull(it).orEmpty() } },
-        min = parseNumber(min), max = parseNumber(max), warnBelow = parseNumber(warnBelow), warnAbove = parseNumber(warnAbove),
+        min = parseNumber(min), max = parseNumber(max), warnBelow = null, warnAbove = null,
+        alerts = alertRules.mapNotNull { it.rule() },
         decimals = decimals.takeIf { it >= 0 }, colSpan = colSpan, rowSpan = rowSpan,
         windowSeconds = windowSeconds.takeIf { type == GaugeType.Trend },
     )
@@ -626,11 +628,6 @@ internal fun CardEditorSheet(
                         NumberField(stringResource(R.string.min), min, { min = it }, editNumber(auto.min, locale), Modifier.weight(1f), isError = minError)
                         NumberField(stringResource(R.string.max), max, { max = it }, editNumber(auto.max, locale), Modifier.weight(1f), isError = minError)
                     }
-                    SectionTitle(stringResource(R.string.thresholds))
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        NumberField(stringResource(R.string.warn_below), warnBelow, { warnBelow = it }, "—", Modifier.weight(1f))
-                        NumberField(stringResource(R.string.warn_above), warnAbove, { warnAbove = it }, "—", Modifier.weight(1f))
-                    }
                     Stepper(
                         stringResource(R.string.decimals), if (decimals < 0) stringResource(R.string.auto) else decimals.toString(),
                         onDecrease = { decimals-- }, onIncrease = { decimals++ }, canDecrease = decimals >= 0, canIncrease = decimals < 3,
@@ -641,6 +638,8 @@ internal fun CardEditorSheet(
                 if (type == GaugeType.Trend) {
                     TrendWindowSection(windowSeconds) { windowSeconds = it }
                 }
+
+                AlertsSection(alertRules, auto.channels.firstOrNull()?.unit.orEmpty())
 
                 SectionTitle(stringResource(R.string.size))
                 Stepper(
@@ -660,7 +659,7 @@ internal fun CardEditorSheet(
                 PillButton(stringResource(R.string.cancel), onClick = onDismiss, modifier = Modifier.weight(1f))
                 PillButton(
                     stringResource(R.string.save), onClick = { onSave(draft) },
-                    enabled = fits && !minError && draft.windowSeconds?.let { TrendWindow.isValid(it) } != false,
+                    enabled = fits && !minError && draft.windowSeconds?.let { TrendWindow.isValid(it) } != false && alertRules.all { it.rule() != null },
                     color = Cockpit.OnAccent, background = Cockpit.Accent, modifier = Modifier.weight(1f),
                 )
             }

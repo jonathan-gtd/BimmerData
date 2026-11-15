@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="alerts_title">Alertes</string>
+    <string name="alerts_hint">La carte passe en orange ou en rouge quand une règle est vraie ; avec la cloche, un bip court sonne quand l’alerte commence (aussi dans la voiture).</string>
+    <string name="alert_add">Ajouter une alerte</string>
+    <string name="alert_if">Si la valeur est</string>
+    <string name="alert_below">inférieure à</string>
+    <string name="alert_above">supérieure à</string>
+    <string name="alert_threshold">Seuil</string>
+    <string name="alert_orange">Orange</string>
+    <string name="alert_red">Rouge</string>
+    <string name="alert_sound">Son</string>
+    <string name="alert_delete">Supprimer l’alerte</string>
+    <string name="alert_threshold_missing">Indique un seuil</string>
+    <string name="settings_alert_sounds">Sons d’alerte</string>
+    <string name="settings_alert_sounds_hint">Bip court quand une alerte de carte avec cloche commence, aussi écran éteint et via Android Auto.</string>
+</resources>

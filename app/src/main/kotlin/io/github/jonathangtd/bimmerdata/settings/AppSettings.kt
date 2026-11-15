@@ -29,6 +29,8 @@ data class Settings(
     val bluetooth: BluetoothSettings = BluetoothSettings(),
     /** Phone GPS position as measurements (Settings › GPS position); off by default. */
     val gps: GpsSettings = GpsSettings(),
+    /** Tone of the card alerts that have a bell ([io.github.jonathangtd.bimmerdata.alerts.AlertMonitor]); on by default. */
+    val alertSounds: Boolean = true,
 )
 
 data class ApiConfig(
@@ -82,6 +84,7 @@ class AppSettings private constructor(context: Context) {
             telegraf = loadTelegraf(prefs),
             bluetooth = loadBluetooth(prefs),
             gps = loadGps(prefs),
+            alertSounds = prefs.getBoolean(K_ALERT_SOUNDS, true),
         )
     }
 
@@ -96,6 +99,7 @@ class AppSettings private constructor(context: Context) {
             putInt(K_PORT, s.api.port)
             putString(K_TOKEN, s.api.token)
             putBoolean(K_HTTPS, s.api.https)
+            putBoolean(K_ALERT_SOUNDS, s.alertSounds)
             putStringSet(K_SCOPES, s.api.scopes.filter { it in ApiConfig.GRANTABLE }.map { it.id }.toSet())
             if (s.lastMode != null) putString(K_LAST_MODE, s.lastMode.name) else remove(K_LAST_MODE)
             remove(K_AUTO_OLD)
@@ -129,6 +133,7 @@ class AppSettings private constructor(context: Context) {
         private const val K_TOKEN = "api_token"
         private const val K_SCOPES = "api_scopes"
         private const val K_HTTPS = "api_https"
+        private const val K_ALERT_SOUNDS = "alert_sounds"
 
         // holds only the application context
         @SuppressLint("StaticFieldLeak")

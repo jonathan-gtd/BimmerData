@@ -74,6 +74,8 @@ data class BackupSettings(
     val telegrafMode: String = "afterTrip",
     /** Settings › Local API without the token; restored on the phone only (never through the API itself). */
     val api: BackupApi? = null,
+    /** Tone of the card alerts with a bell (absent in older backups = on). */
+    val alertSounds: Boolean = true,
 ) {
     /** [current] with these settings; keeps what a backup never holds (token, picked folder). */
     fun applyTo(current: Settings, includeApi: Boolean): Settings = current.copy(
@@ -98,6 +100,7 @@ data class BackupSettings(
             mode = if (telegrafMode.equals("live", ignoreCase = true)) ExportMode.Live else ExportMode.AfterTrip,
         ),
         api = if (includeApi && api != null) api.applyTo(current.api) else current.api,
+        alertSounds = alertSounds,
     )
 
     companion object {
@@ -105,6 +108,7 @@ data class BackupSettings(
 
         fun of(s: Settings) = BackupSettings(
             autoConnectOnCable = s.autoConnectOnCable,
+            alertSounds = s.alertSounds,
             lastMode = s.lastMode?.name?.lowercase(Locale.ROOT),
             bluetoothAddress = s.bluetooth.address,
             bluetoothName = s.bluetooth.name,

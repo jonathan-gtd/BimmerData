@@ -387,8 +387,9 @@ Clearing faults and running EDIABAS jobs (scope `diag`) and changing the CAN mod
             "channelLabels" to S.arr(S.str(), "Short label per measurement for multi-value cards (e.g. [\"B1\",\"B2\"]); default derived from the labels."),
             "min" to S.num("Scale minimum; default from the measurement or its unit."),
             "max" to S.num("Scale maximum (> min)."),
-            "warnBelow" to S.num("Card turns amber below this value."),
-            "warnAbove" to S.num("Card turns amber above this value.", 120.0),
+            "alerts" to S.arr(S.ref("CardAlert"), "Alert rules (at most ${io.github.jonathangtd.bimmerdata.gauges.CardAlert.MAX_PER_CARD}): when a value of the card is below / above a threshold the card turns orange (Warning) or red (Danger, wins), optionally with a short tone when the alert starts. Hysteresis: an alert ends only once the value is back past the threshold by max(one step of the last digit shown, 0.5 % of the scale). Android Auto cards take them from their phone card.", 0, io.github.jonathangtd.bimmerdata.gauges.CardAlert.MAX_PER_CARD),
+            "warnBelow" to S.num("Deprecated (input only): same as an orange alert rule `Below` without sound; turned into `alerts` when saved, never returned."),
+            "warnAbove" to S.num("Deprecated (input only): same as an orange alert rule `Above` without sound; turned into `alerts` when saved, never returned."),
             "decimals" to S.int("Decimals shown, 0..4; default from the unit.", 0, 4),
             "windowSeconds" to S.int("Trend cards: seconds of history shown by the curve, ${TrendWindow.MIN_SECONDS}..${TrendWindow.MAX_SECONDS}; default ${TrendWindow.DEFAULT_SECONDS}. Ignored by other card types.", TrendWindow.MIN_SECONDS.toLong(), TrendWindow.MAX_SECONDS.toLong(), 300),
             "phoneCardId" to S.str("Android Auto cards: id of the phone card it shows (set by the app; its content always comes from that card). Absent on phone cards.", "a1b2c3d4e5"),
@@ -401,13 +402,22 @@ Clearing faults and running EDIABAS jobs (scope `diag`) and changing the CAN mod
             "A card placed on the grid: what it shows and where. Omitted optional fields = automatic.", listOf("type", "measurementIds"), false,
             buildJsonObject {
                 put("type", "Dial"); put("measurementIds", JsonArray(listOf(JsonPrimitive("<sgbd>/<id>"))))
-                put("title", "Oil"); put("warnAbove", 120); put("col", 0); put("row", 0); put("colSpan", 1); put("rowSpan", 2)
+                put("title", "Oil"); put("alerts", alertsExample()); put("col", 0); put("row", 0); put("colSpan", 1); put("rowSpan", 2)
             },
             *cardProps,
         ))
+        put("CardAlert", S.obj(
+            "One alert rule of a card.", listOf("condition", "threshold"), false,
+            buildJsonObject { put("condition", "Above"); put("threshold", 120); put("level", "Danger"); put("sound", true) },
+            "enabled" to S.bool("Switched on; a rule switched off is kept but never fires.", true),
+            "condition" to S.str("Below: the value is under the threshold. Above: over it.", enum = io.github.jonathangtd.bimmerdata.gauges.AlertCondition.entries.map { it.name }),
+            "threshold" to S.num("Threshold, in the unit shown by the card.", 120.0),
+            "level" to S.str("Warning: orange. Danger: red (wins over Warning).", enum = io.github.jonathangtd.bimmerdata.gauges.AlertLevel.entries.map { it.name }, default = "Warning"),
+            "sound" to S.bool("Play a short tone when the alert starts (at most once per 10 s per card; Settings › alert sounds must be on). Played by the phone, so also through the car with Android Auto.", false),
+        ))
         put("CardPatch", S.obj(
             "Fields to change on a card (JSON merge: absent = unchanged, null = back to automatic). The card must still fit where it is.", emptyList(), false,
-            buildJsonObject { put("warnAbove", 130); put("rowSpan", 2) },
+            buildJsonObject { put("alerts", alertsExample()); put("rowSpan", 2) },
             *cardProps.filter { it.first != "id" && it.first != "phoneCardId" }.toTypedArray(),
         ))
         put("CardType", S.str(
@@ -448,6 +458,7 @@ Clearing faults and running EDIABAS jobs (scope `diag`) and changing the CAN mod
             "bluetoothAdapter" to S.obj("Deep OBD Bluetooth adapter chosen on the phone (read-only); absent when none.", listOf("address"), false, null,
                 "name" to S.str(example = "Deep OBD BMW"), "address" to S.str(example = "00:11:22:33:44:55")),
             "bluetoothConnectOnStart" to S.bool("Connect to the Bluetooth adapter when the app starts."),
+            "alertSounds" to S.bool("Short tone when a card alert with `sound` starts (Settings › Connection › Alerts), on by default."),
             "api" to S.obj("Read-only here: change them on the phone.", listOf("enabled", "port", "scopes", "https"), false, null,
                 "enabled" to S.bool(), "port" to S.int(), "scopes" to S.arr(S.str(enum = Scope.entries.map { it.id })),
                 "https" to S.bool("HTTPS only, with the phone's self-signed certificate."),
@@ -458,3 +469,9 @@ Clearing faults and running EDIABAS jobs (scope `diag`) and changing the CAN mod
         ))
     }
 }
+
+/** Example `alerts` of a card: orange under 70, red with a tone over 120. */
+internal fun alertsExample(): JsonArray = JsonArray(listOf(
+    buildJsonObject { put("condition", "Below"); put("threshold", 70); put("level", "Warning") },
+    buildJsonObject { put("condition", "Above"); put("threshold", 120); put("level", "Danger"); put("sound", true) },
+))

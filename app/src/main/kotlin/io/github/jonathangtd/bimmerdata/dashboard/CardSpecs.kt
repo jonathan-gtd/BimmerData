@@ -33,7 +33,7 @@ object CardSpecs {
         val min = card.min ?: autoMin
         val max = (card.max ?: autoMax).let { if (it > min) it else min + 1.0 }
         val title = card.title?.takeIf { it.isNotBlank() } ?: first?.label ?: card.measurementIds.firstOrNull().orEmpty()
-        return GaugeSpec(card.type, title, null, min, max, card.warnBelow, card.warnAbove, channels, TrendWindow.ms(card.windowSeconds))
+        return GaugeSpec(card.type, title, null, min, max, card.withLegacyAlerts().alerts, channels, TrendWindow.ms(card.windowSeconds))
     }
 
     private val bank = Regex("""\bBank\s*(\d)""", RegexOption.IGNORE_CASE)

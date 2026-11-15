@@ -93,7 +93,7 @@ class DashboardStoreTest {
 
         val loaded = store(dir).load()
         assertTrue(DashboardRules.follows(loaded), "every phone card on Android Auto, nothing else")
-        assertEquals(raw.phonePages, loaded.phonePages, "the phone pages are not touched")
+        assertEquals(raw.withLegacyAlerts().phonePages, loaded.phonePages, "the phone pages are not touched (but their older amber thresholds became alert rules)")
         assertEquals(raw.phonePages.sumOf { it.cards.size }, loaded.carPages.sumOf { it.cards.size })
         assertEquals(phoneCard.title, loaded.carPages[0].cards.first { it.id == "k1" }.title, "the hand-made copy is kept in place, with the phone's content")
         assertTrue(File(dir, ProfileStore.FILE_NAME).readText().contains("phoneCardId"), "written back at once")

@@ -96,9 +96,6 @@
     <string name="scale">Scale</string>
     <string name="min">Min</string>
     <string name="max">Max</string>
-    <string name="warn_below">Warn below</string>
-    <string name="warn_above">Warn above</string>
-    <string name="thresholds">Warning thresholds</string>
     <string name="decimals">Decimals</string>
     <string name="size">Size</string>
     <string name="width">Width</string>

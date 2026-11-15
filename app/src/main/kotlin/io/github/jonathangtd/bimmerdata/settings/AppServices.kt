@@ -39,6 +39,8 @@ object AppServices {
         io.github.jonathangtd.bimmerdata.profiles.ProfileRuntime.start(app)
         // history of every value read, for the Graph tab (no read of its own)
         io.github.jonathangtd.bimmerdata.graph.SharedHistory.start(LiveRepository.get(app).liveDataSource)
+        // alert tones of the cards (rules with a bell), whatever page is shown
+        io.github.jonathangtd.bimmerdata.alerts.AlertMonitor.start(app)
         AutoConnect.register(app)
         // folder the REST API imports ECU files from (adb push target)
         io.github.jonathangtd.bimmerdata.files.EcuImportFolder.prepare(app)

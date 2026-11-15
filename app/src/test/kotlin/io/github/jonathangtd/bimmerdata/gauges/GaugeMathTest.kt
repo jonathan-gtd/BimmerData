@@ -85,6 +85,6 @@ class GaugeMathTest {
         assertEquals(listOf("B1", "msv70/0xFFFF"), spec.channels.map { it.label })
         assertEquals(-25.0 to 25.0, spec.min to spec.max)
         assertEquals(1, spec.channels[0].decimals)
-        assertTrue(spec.isWarning(Double.NaN).not())
+        assertTrue(spec.alertLevel(Double.NaN) == null)
     }
 }

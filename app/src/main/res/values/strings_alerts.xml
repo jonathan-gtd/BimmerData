@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="alerts_title">Alerts</string>
+    <string name="alerts_hint">The card turns orange or red when a rule is met; with the bell, a short tone plays when the alert starts (also in the car).</string>
+    <string name="alert_add">Add an alert</string>
+    <string name="alert_if">If the value is</string>
+    <string name="alert_below">below</string>
+    <string name="alert_above">above</string>
+    <string name="alert_threshold">Threshold</string>
+    <string name="alert_orange">Orange</string>
+    <string name="alert_red">Red</string>
+    <string name="alert_sound">Sound</string>
+    <string name="alert_delete">Delete the alert</string>
+    <string name="alert_threshold_missing">Enter a threshold</string>
+    <string name="settings_alert_sounds">Alert sounds</string>
+    <string name="settings_alert_sounds_hint">Short tone when a card alert with a bell starts, also with the screen off and through Android Auto.</string>
+</resources>

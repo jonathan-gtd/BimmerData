@@ -3,6 +3,7 @@
  */
 package io.github.jonathangtd.bimmerdata.dashboard
 
+import io.github.jonathangtd.bimmerdata.gauges.CardAlert
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 
@@ -35,7 +36,9 @@ object DashboardJson {
 
     /**
      * Makes an imported layout safe to show: grid sizes within limits, unique ids, cards inside
-     * the grid and not overlapping (cards that cannot be placed are dropped). No page is valid.
+     * the grid and not overlapping (cards that cannot be placed are dropped), older amber
+     * thresholds turned into alert rules, at most [CardAlert.MAX_PER_CARD] rules with a finite
+     * threshold. No page is valid.
      */
     fun sanitize(d: Dashboard): Dashboard {
         val seen = HashSet<String>()
@@ -49,7 +52,7 @@ object DashboardJson {
                 )
                 for (card in page.cards) {
                     if (card.measurementIds.isEmpty()) continue
-                    val c = card.copy(
+                    val c = card.withLegacyAlerts().let { it.copy(alerts = it.alerts.filter { a -> a.threshold.isFinite() }.take(CardAlert.MAX_PER_CARD)) }.copy(
                         id = uniqueId(card.id),
                         colSpan = card.colSpan.coerceIn(1, p.columns), rowSpan = card.rowSpan.coerceIn(1, p.rows),
                         decimals = card.decimals?.coerceIn(0, 4),

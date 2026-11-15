@@ -58,7 +58,9 @@ class DashboardRulesTest {
         var d = DashboardRules.syncCar(Dashboard(phonePages = listOf(phone)))
         // changed on the phone
         d = DashboardRules.syncCar(d.updatePage(Target.Phone, "p") { it.replace(it.card("b")!!.copy(title = "Nm", warnAbove = 300.0)) })
-        assertEquals("Nm" to 300.0, d.carPages[0].cards.first { it.phoneCardId == "b" }.let { it.title to it.warnAbove })
+        // (the older warnAbove becomes an orange alert rule on the way, on both sides)
+        assertEquals("Nm" to 300.0, d.carPages[0].cards.first { it.phoneCardId == "b" }.let { it.title to it.alerts.single().threshold })
+        assertEquals(null, d.phonePages[0].card("b")!!.warnAbove)
         // removed on the phone
         d = DashboardRules.syncCar(d.updatePage(Target.Phone, "p") { p -> p.copy(cards = p.cards.filterNot { it.id == "a" }) })
         assertEquals(listOf("b", "c"), d.carPages[0].cards.map { it.phoneCardId })

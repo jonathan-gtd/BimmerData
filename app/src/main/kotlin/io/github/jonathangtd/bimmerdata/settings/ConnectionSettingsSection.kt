@@ -72,6 +72,15 @@ fun ConnectionSettingsSection() {
             )
         }
         BluetoothAdapterCard(settings.bluetooth, store)
+        SettingsCard {
+            SectionLabel(stringResource(R.string.alerts_title))
+            SwitchRow(
+                title = stringResource(R.string.settings_alert_sounds),
+                hint = stringResource(R.string.settings_alert_sounds_hint),
+                checked = settings.alertSounds,
+                onChange = { on -> store.update { it.copy(alertSounds = on) } },
+            )
+        }
     }
 }
 

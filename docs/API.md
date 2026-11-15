@@ -117,9 +117,10 @@ curl -N -H "$H" "$BD/stream?ids=<sgbd>/<id>,<sgbd>/<id2>&intervalMs=250"
 # Layout: whole dashboard, a new car page, a card, a change, a picture (scope layout for writes)
 curl -s -H "$H" "$BD/dashboard" > dashboard-backup.json
 curl -s -H "$H" -X POST "$BD/dashboard/car/pages" -d '{"name":"Temps","columns":4,"rows":1}'
-curl -s -H "$H" -X POST "$BD/dashboard/car/pages/1/cards" \
-     -d '{"type":"Dial","measurementIds":["<sgbd>/<id>"],"title":"Oil","warnAbove":120}'
-curl -s -H "$H" -X PATCH "$BD/dashboard/car/pages/1/cards/<cardId>" -d '{"warnAbove":125}'
+curl -s -H "$H" -X POST "$BD/dashboard/phone/pages/1/cards" \
+     -d '{"type":"Dial","measurementIds":["<sgbd>/<id>"],"title":"Oil","alerts":[{"condition":"Below","threshold":70,"level":"Danger"}]}'
+curl -s -H "$H" -X PATCH "$BD/dashboard/phone/pages/1/cards/<cardId>" \
+     -d '{"alerts":[{"condition":"Below","threshold":70,"level":"Danger"},{"condition":"Above","threshold":130,"sound":true}]}'
 curl -s -H "$H" "$BD/dashboard/car/pages/1/render.png" -o page.png
 
 # Validate, then replace the whole layout
@@ -259,6 +260,28 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 - Unknown JSON fields are rejected (400), so typos do not silently vanish.
 - Measurement ids that are not in the imported ECU folder are accepted but reported as
   `warnings` (the card shows "--" until the SGBD is imported).
+
+### Card alerts
+
+Each card has up to 4 alert rules in `alerts`:
+`{"enabled":true,"condition":"Below|Above","threshold":70,"level":"Warning|Danger","sound":false}`.
+
+- When a value of the card is below / above the threshold the whole card changes: value, arc or bar
+  and a tinted background with a border, orange for `Warning`, red for `Danger` (red wins). Phone,
+  Android Auto and `render.png` draw the same.
+- Hysteresis: an alert ends only once the value is back past the threshold by
+  max(one step of the last digit shown, 0.5 % of the card's scale), so a value hovering around the
+  threshold does not flicker. No value (no data, stale) is no alert.
+- `sound: true`: a short tone when the alert starts (not while it lasts), at most once per 10 s per
+  card, whatever page is shown and with the screen off while connected; played as navigation
+  guidance, so through the car's speakers with Android Auto. Global switch: `alertSounds` of
+  `GET/PATCH /api/v1/settings` (Settings › Connection › Alerts on the phone), on by default.
+- Thresholds are in the unit the card shows; a rule switched off (`enabled:false`) is kept.
+- More than 4 rules or a threshold that is not a finite number: 422 `invalid_card`, detail code
+  `invalid_alerts`.
+- Older layouts: `warnBelow` / `warnAbove` (amber thresholds) are still accepted on input and turned
+  into orange rules without sound when saved; they are never returned.
+- Android Auto cards take their rules from their phone card, like the rest of their content.
 
 ### Cars, profiles and ECU lists
 

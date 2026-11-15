@@ -97,9 +97,6 @@
     <string name="scale">Échelle</string>
     <string name="min">Min</string>
     <string name="max">Max</string>
-    <string name="warn_below">Alerte sous</string>
-    <string name="warn_above">Alerte au-dessus</string>
-    <string name="thresholds">Seuils d’alerte</string>
     <string name="decimals">Décimales</string>
     <string name="size">Taille</string>
     <string name="width">Largeur</string>

@@ -47,14 +47,17 @@ class GaugeSpec(
     val caption: String?,
     val min: Double,
     val max: Double,
-    val warnBelow: Double?,
-    val warnAbove: Double?,
+    /** Alert rules of the card ([Alerts]); empty = never in alert. */
+    val alerts: List<CardAlert>,
     val channels: List<GaugeChannel>,
     /** Time window of a [GaugeType.Trend] curve. */
     val windowMs: Long = TrendWindow.DEFAULT_MS,
 ) {
-    fun isWarning(value: Double): Boolean =
-        !value.isNaN() && ((warnBelow != null && value < warnBelow) || (warnAbove != null && value > warnAbove))
+    /** Hysteresis of the alerts ([Alerts.margin]): range and the finest decimals shown. */
+    val alertMargin: Double = Alerts.margin(min, max, channels.maxOfOrNull { it.decimals } ?: 1)
+
+    /** Alert level of [value] alone, without history (still pictures). */
+    fun alertLevel(value: Double): AlertLevel? = Alerts.levelFor(alerts, value)
 }
 
 /** Where cards read live data from at draw time (no recomposition per sample). */
@@ -85,6 +88,12 @@ class GaugeState {
     private var cachedTarget = DoubleArray(0)
     private var cachedDecimals = IntArray(0)
     private var cachedValueText = arrayOfNulls<String>(0)
+    private var alertMasks = IntArray(0)
+    private var alertRules: List<CardAlert>? = null
+
+    /** Alert level of the whole card: the strongest of its values ([alert]). */
+    var cardAlert: AlertLevel? = null
+        private set
 
     var animating = false
         private set
@@ -104,6 +113,12 @@ class GaugeState {
         if (n != count) resize(n)
         val now = feed.nowMs
         var moving = false
+        // edited rules: start again (bit i of a mask is rule i)
+        if (alertRules != spec.alerts) {
+            alertRules = spec.alerts
+            alertMasks.fill(0)
+        }
+        var card: AlertLevel? = null
         for (i in 0 until n) {
             val sample = feed.sample(spec.channels[i].measurementId)
             val fresh = sample != null && now - sample.timestampMs <= feed.staleAfterMs
@@ -113,9 +128,15 @@ class GaugeState {
             smoothed[i] = smooth[i].update(target, frameNanos)
             val epsilon = (spec.max - spec.min).let { if (it > 0) it * 0.0005 else 0.001 }
             if (!smooth[i].isSettled(target, epsilon)) moving = true
+            alertMasks[i] = Alerts.step(spec.alerts, target, alertMasks[i], spec.alertMargin)
+            card = Alerts.max(card, Alerts.levelOf(spec.alerts, alertMasks[i]))
         }
+        cardAlert = card
         animating = moving
     }
+
+    /** Alert level of value [i] now (with hysteresis), null = none. */
+    fun alert(i: Int): AlertLevel? = if (i < count) Alerts.levelOf(alertRules.orEmpty(), alertMasks[i]) else null
 
     /** Formatted (target, not smoothed) value of channel [i], cached until it changes. */
     fun valueText(i: Int, format: GaugeFormat, decimals: Int, signed: Boolean = false): String {
@@ -140,6 +161,7 @@ class GaugeState {
         cachedTarget = DoubleArray(n) { Double.NaN }
         cachedDecimals = IntArray(n)
         cachedValueText = arrayOfNulls(n)
+        alertMasks = IntArray(n)
     }
 
     // ---- ellipsized text cache, a few slots per card ----

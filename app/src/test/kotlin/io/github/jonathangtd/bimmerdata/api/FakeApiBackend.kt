@@ -151,6 +151,7 @@ class FakeApiBackend : ApiBackend {
         settings = settings.copy(
             autoConnectOnCable = patch.autoConnectOnCable ?: settings.autoConnectOnCable,
             bluetoothConnectOnStart = patch.bluetoothConnectOnStart ?: settings.bluetoothConnectOnStart,
+            alertSounds = patch.alertSounds ?: settings.alertSounds,
         )
         return settings
     }

@@ -63,8 +63,9 @@ object DashboardRules {
         return car.indices.mapNotNull { i -> l[i]?.let { car[i].id to it.id } }.toMap()
     }
 
-    /** True when [d] follows the rule (a layout written before the link field may lack it). */
-    fun follows(d: Dashboard): Boolean {
+    /** True when [input] follows the rule (a layout written before the link field may lack it). */
+    fun follows(input: Dashboard): Boolean {
+        val d = input.withLegacyAlerts()
         val phone = phoneCards(d).map { it.second }
         val car = d.carPages.flatMap { it.cards }
         if (phone.size != car.size) return false
@@ -72,8 +73,12 @@ object DashboardRules {
         return car.indices.all { i -> l[i]?.let { content(it) == content(car[i]) } == true }
     }
 
-    /** [d] brought to the rule (see the class). */
-    fun syncCar(d: Dashboard): Dashboard {
+    /**
+     * [input] brought to the rule (see the class). Also the place where the older amber thresholds
+     * of a card become alert rules ([Dashboard.withLegacyAlerts]): it runs on every save.
+     */
+    fun syncCar(input: Dashboard): Dashboard {
+        val d = input.withLegacyAlerts()
         val phone = phoneCards(d)
         val carFlat = d.carPages.flatMap { it.cards }
         val l = links(phone.map { it.second }, carFlat)
@@ -172,7 +177,9 @@ object DashboardRules {
      * Android Auto page, pages; phone cards not on Android Auto yet (placed by [syncCar]); Android
      * Auto cards of phone cards removed or changed by the same write (they follow).
      */
-    fun carViolations(before: Dashboard, after: Dashboard): CarViolations {
+    fun carViolations(beforeInput: Dashboard, afterInput: Dashboard): CarViolations {
+        val before = beforeInput.withLegacyAlerts()
+        val after = afterInput.withLegacyAlerts()
         val beforeLinks = linkMap(before)
         val beforeCar = before.carPages.flatMap { it.cards }.associateBy { it.id }
         val phone = phoneCards(after).map { it.second }

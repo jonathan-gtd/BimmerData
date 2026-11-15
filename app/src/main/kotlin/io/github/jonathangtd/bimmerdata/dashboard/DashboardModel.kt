@@ -3,6 +3,8 @@
  */
 package io.github.jonathangtd.bimmerdata.dashboard
 
+import io.github.jonathangtd.bimmerdata.gauges.Alerts
+import io.github.jonathangtd.bimmerdata.gauges.CardAlert
 import io.github.jonathangtd.bimmerdata.gauges.GaugeType
 import kotlinx.serialization.Serializable
 import java.util.UUID
@@ -47,6 +49,13 @@ data class Dashboard(
      */
     fun valueCount(computed: List<io.github.jonathangtd.bimmerdata.profiles.ComputedValue> = emptyList()): Int =
         io.github.jonathangtd.bimmerdata.live.ComputedValues.expandIds(measurementIds(), io.github.jonathangtd.bimmerdata.profiles.Computeds.defs(computed)).size
+
+    /** Every card with its older amber thresholds turned into alert rules ([Card.withLegacyAlerts]); the same instance when none has any. */
+    fun withLegacyAlerts(): Dashboard {
+        if ((phonePages + carPages).none { p -> p.cards.any { it.warnBelow != null || it.warnAbove != null } }) return this
+        fun fix(pages: List<Page>) = pages.map { p -> p.copy(cards = p.cards.map { it.withLegacyAlerts() }) }
+        return copy(phonePages = fix(phonePages), carPages = fix(carPages))
+    }
 
     /** [name] if set, else [fallback]. */
     fun title(fallback: String): String = name?.trim()?.takeIf { it.isNotEmpty() } ?: fallback
@@ -104,8 +113,15 @@ data class Card(
     val channelLabels: List<String>? = null,
     val min: Double? = null,
     val max: Double? = null,
+    /**
+     * Older amber thresholds (before [alerts]): still read from files and the REST API, turned into
+     * alert rules when the layout is saved ([withLegacyAlerts]); never written.
+     */
     val warnBelow: Double? = null,
+    /** See [warnBelow]. */
     val warnAbove: Double? = null,
+    /** Alert rules ([CardAlert]: below / above a threshold -> orange or red, optional sound), at most 4. */
+    val alerts: List<CardAlert> = emptyList(),
     val decimals: Int? = null,
     /** Trend cards: seconds of history shown ([io.github.jonathangtd.bimmerdata.gauges.TrendWindow]); null = 45 s. */
     val windowSeconds: Int? = null,
@@ -121,6 +137,11 @@ data class Card(
 ) {
     val colEnd get() = col + colSpan
     val rowEnd get() = row + rowSpan
+
+    /** This card with its older amber thresholds turned into [alerts] ([Alerts.withLegacy]). */
+    fun withLegacyAlerts(): Card =
+        if (warnBelow == null && warnAbove == null) this
+        else copy(alerts = Alerts.withLegacy(alerts, warnBelow, warnAbove), warnBelow = null, warnAbove = null)
 
     companion object {
         /** How many measurements each card type takes. */

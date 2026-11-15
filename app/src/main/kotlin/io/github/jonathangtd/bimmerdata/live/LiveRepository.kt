@@ -385,6 +385,8 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
     }
 
     private fun startService() {
+        // alert tones of the cards, also when the connection was started by Android Auto or the API
+        io.github.jonathangtd.bimmerdata.alerts.AlertMonitor.start(app)
         try {
             ContextCompat.startForegroundService(app, Intent(app, AcquisitionService::class.java))
         } catch (ex: Exception) {

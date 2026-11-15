@@ -225,6 +225,7 @@ class AndroidApiBackend(
         val s = settingsStore.state.value
         return SettingsView(
             autoConnectOnCable = s.autoConnectOnCable,
+            alertSounds = s.alertSounds,
             recordingFolder = RecordingStorage.describe(app),
             api = ApiRuntime.get(app).state.value.tls.let { tls ->
                 ApiSettingsView(
@@ -500,6 +501,7 @@ class AndroidApiBackend(
         settingsStore.update { s ->
             s.copy(
                 autoConnectOnCable = patch.autoConnectOnCable ?: s.autoConnectOnCable,
+                alertSounds = patch.alertSounds ?: s.alertSounds,
                 bluetooth = s.bluetooth.copy(connectOnStart = patch.bluetoothConnectOnStart ?: s.bluetooth.connectOnStart),
             )
         }

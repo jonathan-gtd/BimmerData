@@ -768,7 +768,7 @@ class ApiService(
                 "Phone pages only: a card added to the phone appears on Android Auto by itself (422 `car_cards_locked` on `car`). With `col` and/or `row` the card goes exactly there (409 `card_overlap` / 422 `out_of_grid` otherwise, with the free cells in the message). Without them it takes the first free slot of its span (reading order). The answer is the stored card with its id; `warnings` flags measurement ids missing from the ECU folder.",
                 params = listOf(targetParam, pageParam),
                 body = Body(S.ref("Card"), example = buildJsonObject {
-                    put("type", "Dial"); putJsonArray("measurementIds") { add("<sgbd>/<id>") }; put("title", "Oil"); put("warnAbove", 120); put("colSpan", 1); put("rowSpan", 2)
+                    put("type", "Dial"); putJsonArray("measurementIds") { add("<sgbd>/<id>") }; put("title", "Oil"); put("alerts", alertsExample()); put("colSpan", 1); put("rowSpan", 2)
                 }),
                 reply = Reply(201, "The new card", S.obj(null, listOf("card"), false, null, "card" to S.ref("Card"), "warnings" to S.arr(S.str()))),
                 errors = layoutErrors,
@@ -785,7 +785,7 @@ class ApiService(
                 "Change a card (move, resize, retitle, other measurement…)",
                 "JSON merge patch on the card: listed fields replace the current ones, `null` resets an optional field to automatic, absent fields stay. The result must still fit the grid without overlapping (move another card first if needed).",
                 params = listOf(targetParam, pageParam, cardParam),
-                body = Body(S.ref("CardPatch"), example = buildJsonObject { put("col", 1); put("row", 0); put("warnAbove", 125) }),
+                body = Body(S.ref("CardPatch"), example = buildJsonObject { put("col", 1); put("row", 0); put("alerts", alertsExample()) }),
                 reply = Reply(description = "The updated card", schema = S.obj(null, listOf("card"), false, null, "card" to S.ref("Card"), "warnings" to S.arr(S.str()))),
                 errors = layoutErrors,
             ) { call ->
@@ -1154,17 +1154,17 @@ class ApiService(
             Route(
                 "PATCH", "/api/v1/settings", RouteAccess.Needs(Scope.Config), "Settings", "updateSettings",
                 "Change app settings",
-                "Changes `autoConnectOnCable` and / or `bluetoothConnectOnStart`. The Bluetooth adapter is chosen with PUT /api/v1/bluetooth/adapter; GPS, recording and translations have their own routes under /api/v1/settings/. The API settings (enable, port, token, scopes) can only be changed on the phone: sending `api` answers 403.",
+                "Changes `autoConnectOnCable`, `bluetoothConnectOnStart` and / or `alertSounds`. The Bluetooth adapter is chosen with PUT /api/v1/bluetooth/adapter; GPS, recording and translations have their own routes under /api/v1/settings/. The API settings (enable, port, token, scopes) can only be changed on the phone: sending `api` answers 403.",
                 body = Body(S.obj(null, emptyList(), false, null,
-                    "autoConnectOnCable" to S.bool(), "bluetoothConnectOnStart" to S.bool()),
+                    "autoConnectOnCable" to S.bool(), "bluetoothConnectOnStart" to S.bool(), "alertSounds" to S.bool()),
                     example = buildJsonObject { put("autoConnectOnCable", true) }),
                 reply = Reply(description = "Settings after the change", schema = S.ref("Settings")),
                 errors = mapOf(400 to "Unknown field or wrong value.", 403 to "Tried to change API settings (phone only) or the config scope is not enabled."),
             ) { call ->
                 val b = call.bodyObject()
                 if ("api" in b) throw ApiException(403, "phone_only", "API settings (enable, port, token, scopes) can only be changed on the phone, in Settings › Local API")
-                b.allowOnly("autoConnectOnCable", "bluetoothConnectOnStart")
-                ok(ApiJson.encodeToJsonElement(backend.updateSettings(SettingsPatch(b.bool("autoConnectOnCable"), b.bool("bluetoothConnectOnStart")))))
+                b.allowOnly("autoConnectOnCable", "bluetoothConnectOnStart", "alertSounds")
+                ok(ApiJson.encodeToJsonElement(backend.updateSettings(SettingsPatch(b.bool("autoConnectOnCable"), b.bool("bluetoothConnectOnStart"), b.bool("alertSounds")))))
             },
 
             // ------------------------------------------------------------ Telegraf export
@@ -1302,7 +1302,7 @@ class ApiService(
         const val MAX_DOWNLOAD = 50_000_000L
 
         val CARD_TYPE_DOCS = mapOf(
-            GaugeType.Dial to "270° arc with the value in the middle; for temperatures, rpm, pressures. Uses min / max for the scale and warnBelow / warnAbove for the amber zone.",
+            GaugeType.Dial to "270° arc with the value in the middle; for temperatures, rpm, pressures. Uses min / max for the scale; `alerts` color the arc and the card.",
             GaugeType.BipolarBar to "Bars centred on 0, one row per measurement (1–4); for fuel trims per bank or other signed corrections. Scale ±25 by default.",
             GaugeType.BigNumber to "One big value with unit, label and the session min / max; good for a 2×2 hero card.",
             GaugeType.Trend to "Value with a curve of the last `windowSeconds` (5 s to 60 min, default 45 s); good for slowly changing values (temperatures, voltages).",

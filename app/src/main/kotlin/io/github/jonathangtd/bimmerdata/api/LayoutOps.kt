@@ -122,6 +122,9 @@ object LayoutOps {
         card.decimals?.let { if (it !in 0..4) issues += LayoutIssue("$path.decimals", "invalid_decimals", "decimals must be 0..4 (got $it)") }
         if (card.min != null && card.max != null && card.max <= card.min) issues += LayoutIssue("$path.max", "invalid_range", "max (${card.max}) must be greater than min (${card.min})")
         card.channelLabels?.let { if (it.size > card.measurementIds.size) issues += LayoutIssue("$path.channelLabels", "invalid_labels", "More channel labels (${it.size}) than measurements (${card.measurementIds.size})") }
+        io.github.jonathangtd.bimmerdata.gauges.Alerts.problem(card.withLegacyAlerts().alerts)?.let {
+            issues += LayoutIssue("$path.alerts", "invalid_alerts", "Card '${card.id}': $it")
+        }
         return issues
     }
 
@@ -238,7 +241,7 @@ object LayoutOps {
         val (_, page) = findPage(d, t, ref)
         if (t == Target.Car) throw carLocked("add the card")
         val limits = GridLimits.of(t)
-        var c = card
+        var c = card.withLegacyAlerts()
         if (c.id.isBlank()) c = c.copy(id = io.github.jonathangtd.bimmerdata.dashboard.newId())
         if (c.id in usedIds(d)) throw ApiException(409, "duplicate_id", "Id '${c.id}' is already used in the dashboard; omit id to get a new one")
         val issues = cardIssues(c)
@@ -263,7 +266,8 @@ object LayoutOps {
     }
 
     /** Replaces card [cardId] by [updated] (same id); it must still fit where it is placed. */
-    fun updateCard(d: Dashboard, t: Target, ref: String, cardId: String, updated: Card): Pair<Dashboard, Card> {
+    fun updateCard(d: Dashboard, t: Target, ref: String, cardId: String, sent: Card): Pair<Dashboard, Card> {
+        val updated = sent.withLegacyAlerts() // older warnBelow / warnAbove become alert rules
         val (_, page) = findPage(d, t, ref)
         val current = findCard(page, cardId)
         if (updated.id != cardId) throw badRequest("A card id cannot be changed (was '$cardId', got '${updated.id}')")

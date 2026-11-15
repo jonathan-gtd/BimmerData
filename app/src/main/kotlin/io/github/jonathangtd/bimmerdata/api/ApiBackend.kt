@@ -330,6 +330,8 @@ data class SettingsView(
     val bluetoothConnectOnStart: Boolean = false,
     /** Mode of the last connection (read-only): used by `POST /connect` without a mode. */
     val lastMode: ConnectMode? = null,
+    /** Tone of the card alerts that have a bell. */
+    val alertSounds: Boolean = true,
 )
 
 @Serializable
@@ -356,6 +358,7 @@ data class ApiSettingsView(
 data class SettingsPatch(
     val autoConnectOnCable: Boolean? = null,
     val bluetoothConnectOnStart: Boolean? = null,
+    val alertSounds: Boolean? = null,
 )
 
 class RenderRequest(

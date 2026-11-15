@@ -28,6 +28,8 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
         }
 
     private val cardPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val alertFillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val alertStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
     private val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
     private val arcPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -69,6 +71,17 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
         state.sync(spec, feed, frameNanos)
         val radius = min(theme.cornerRadius * theme.unit, min(rect.width(), rect.height()) * 0.25f)
         canvas.drawRoundRect(rect, radius, radius, cardPaint)
+        state.cardAlert?.let { level ->
+            // the whole card says it: tinted background and a border in the level's color
+            val color = levelColor(level)
+            alertFillPaint.color = (color and 0x00FFFFFF) or ALERT_TINT
+            canvas.drawRoundRect(rect, radius, radius, alertFillPaint)
+            val w = (2.5f * theme.unit).coerceAtMost(min(rect.width(), rect.height()) / 8f)
+            alertStrokePaint.strokeWidth = w
+            alertStrokePaint.color = color
+            rr.set(rect.left + w / 2f, rect.top + w / 2f, rect.right - w / 2f, rect.bottom - w / 2f)
+            canvas.drawRoundRect(rr, radius - w / 2f, radius - w / 2f, alertStrokePaint)
+        }
         if (rect.width() < 8f || rect.height() < 8f) return state.animating
         when (spec.type) {
             GaugeType.Dial -> drawDial(canvas, rect, spec, state)
@@ -117,7 +130,7 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
             val f = ((v - spec.min) / (spec.max - spec.min)).coerceIn(0.0, 1.0).toFloat()
             if (f > 0.001f) {
                 arcPaint.strokeWidth = stroke
-                arcPaint.color = if (spec.isWarning(target)) theme.warning else theme.accent
+                arcPaint.color = st.alert(0)?.let(::levelColor) ?: theme.accent
                 c.drawArc(arcRect, 135f, 270f * f, false, arcPaint)
             }
         }
@@ -204,7 +217,7 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
             mutedPaint.color = theme.muted
             c.drawText(st.ellipsized(3 + i.coerceAtMost(3), ch.label, mutedPaint, labelCol - 6f * s), left, cy + 13f * s * CAP / 2f, mutedPaint)
             val target = st.target(i)
-            drawBipolarTrack(c, left + labelCol, right - valueCol - 10f * s, cy, barH, s, st.smoothed(i), maxAbs(spec), spec.isWarning(target))
+            drawBipolarTrack(c, left + labelCol, right - valueCol - 10f * s, cy, barH, s, st.smoothed(i), maxAbs(spec), st.alert(i))
             val text = format.withUnit(st.valueText(i, format, ch.decimals, signed = true), if (target.isNaN()) "" else ch.unit)
             numberPaint.color = if (st.hasData(i)) theme.text else theme.muted
             val size = fit(numberPaint, text, valueCol, 20f * s, 9f * u)
@@ -251,13 +264,13 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
             c.drawText(text, right, baseline, numberPaint)
             numberPaint.textAlign = Paint.Align.LEFT
             val barCy = y + valueSize + 8f * s + 6f * s
-            drawBipolarTrack(c, left, right, barCy, 12f * s, s, st.smoothed(i), maxAbs(spec), spec.isWarning(target))
+            drawBipolarTrack(c, left, right, barCy, 12f * s, s, st.smoothed(i), maxAbs(spec), st.alert(i))
             y += rowH + 22f * s
         }
     }
 
     private fun drawBipolarTrack(
-        c: Canvas, left: Float, right: Float, cy: Float, barH: Float, s: Float, v: Double, maxAbs: Double, warn: Boolean,
+        c: Canvas, left: Float, right: Float, cy: Float, barH: Float, s: Float, v: Double, maxAbs: Double, alert: AlertLevel?,
     ) {
         if (right <= left) return
         val half = barH / 2f
@@ -269,7 +282,7 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
             val len = ((abs(v) / maxAbs).coerceAtMost(1.0) * (right - left) / 2.0).toFloat()
             if (len > 0.5f) {
                 if (v >= 0) rr.set(center, cy - half, center + len, cy + half) else rr.set(center - len, cy - half, center, cy + half)
-                fillPaint.color = if (warn) theme.warning else theme.accent
+                fillPaint.color = alert?.let(::levelColor) ?: theme.accent
                 c.drawRoundRect(rr, half, half, fillPaint)
             }
         }
@@ -317,7 +330,7 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
         val unit = if (target.isNaN()) "" else ch?.unit.orEmpty()
         numberPaint.color = when {
             !hasData -> theme.muted
-            spec.isWarning(target) -> theme.warning
+            st.alert(0) != null -> levelColor(st.alert(0))
             else -> theme.text
         }
         // Large but calm: the digits fill about half of the free height.
@@ -375,10 +388,10 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
         y += 9f * ls + valueSize * CAP
         val text = st.valueText(0, format, ch?.decimals ?: 1)
         val unit = if (target.isNaN()) "" else ch?.unit.orEmpty()
-        val warn = spec.isWarning(target)
+        val alert = st.alert(0)
         numberPaint.color = when {
             !hasData -> theme.muted
-            warn -> theme.warning
+            alert != null -> levelColor(alert)
             else -> theme.text
         }
         mutedPaint.textSize = max(13f * ls, valueSize * 0.4f)
@@ -393,13 +406,13 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
         val sparkTop = y + 8f * min(s, 1.6f * u)
         val sparkBottom = r.bottom - padV
         if (sparkBottom - sparkTop >= 10f * u && ch != null) {
-            drawSparkline(c, left, sparkTop, right, sparkBottom, feed.history(ch.measurementId), feed.nowMs, spec, st, warn, 1.6f * u)
+            drawSparkline(c, left, sparkTop, right, sparkBottom, feed.history(ch.measurementId), feed.nowMs, spec, st, alert, 1.6f * u)
         }
     }
 
     private fun drawSparkline(
         c: Canvas, left: Float, top: Float, right: Float, bottom: Float,
-        history: ValueHistory?, nowMs: Long, spec: GaugeSpec, st: GaugeState, warn: Boolean, strokeWidth: Float,
+        history: ValueHistory?, nowMs: Long, spec: GaugeSpec, st: GaugeState, alert: AlertLevel?, strokeWidth: Float,
     ) {
         if (history == null || history.size < 2) {
             fillPaint.color = theme.track
@@ -455,7 +468,7 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
         }
         fill.lineTo(lastX, bottom)
         fill.close()
-        val color = if (warn) theme.warning else theme.accent
+        val color = alert?.let(::levelColor) ?: theme.accent
         if (areaShaderTop != top || areaShaderBottom != bottom || areaShaderColor != color) {
             areaPaint.shader = LinearGradient(
                 0f, top, 0f, bottom,
@@ -547,7 +560,7 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
             val t = st.valueText(i, format, ch.decimals)
             numberPaint.color = when {
                 !st.hasData(i) -> theme.muted
-                spec.isWarning(target) -> theme.warning
+                st.alert(i) != null -> levelColor(st.alert(i))
                 else -> theme.text
             }
             c.drawText(if (sharedUnit.isEmpty() && !target.isNaN()) format.withUnit(t, ch.unit) else t, cx, baseline, numberPaint)
@@ -581,7 +594,7 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
             ?: format.withUnit(st.valueText(0, format, ch?.decimals ?: 0), if (target.isNaN()) "" else ch?.unit.orEmpty())
         labelPaint.color = when {
             !st.hasData(0) -> theme.muted
-            spec.isWarning(target) -> theme.warning
+            st.alert(0) != null -> levelColor(st.alert(0))
             else -> theme.text
         }
         val areaTop = titleBaseline + 4f * ls
@@ -593,6 +606,9 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
     }
 
     // ---------------------------------------------------------------- helpers
+
+    /** Color of an alert level: red for [AlertLevel.Danger], orange otherwise. */
+    private fun levelColor(level: AlertLevel?): Int = if (level == AlertLevel.Danger) theme.danger else theme.warning
 
     /** Sets [paint]'s size to [size], shrunk so [text] fits [maxWidth] (not below [minSize]). */
     private fun fit(paint: Paint, text: String, maxWidth: Float, size: Float, minSize: Float): Float {
@@ -609,5 +625,8 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
         /** Same word in English and French. */
         private const val MIN_LABEL = "min"
         private const val MAX_LABEL = "max"
+
+        /** Alpha of the card tint in alert (about 18 %). */
+        private const val ALERT_TINT = 0x2E000000
     }
 }

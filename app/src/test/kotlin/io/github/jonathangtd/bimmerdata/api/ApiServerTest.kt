@@ -48,6 +48,30 @@ class ApiServerTest {
         backend.close()
     }
 
+    @Test
+    fun `card alert rules - stored, validated, older fields mapped, sound setting`() {
+        val add = call("POST", "/api/v1/dashboard/phone/pages/p1/cards", """{"type":"BigNumber","measurementIds":["msv70/0x4402"],"alerts":[{"condition":"Below","threshold":70,"level":"Danger","sound":true}]}""")
+        assertEquals(201, add.status, add.text)
+        val id = add.json()["card"]!!.jsonObject["id"]!!.jsonPrimitive.content
+        val stored = backend.dashboard.phonePages[0].card(id)!!.alerts.single()
+        assertEquals(io.github.jonathangtd.bimmerdata.gauges.AlertLevel.Danger to true, stored.level to stored.sound)
+        assertEquals(stored, backend.dashboard.carPages.flatMap { it.cards }.single { it.phoneCardId == id }.alerts.single(), "Android Auto follows")
+
+        val five = (1..5).joinToString(",") { """{"condition":"Above","threshold":$it}""" }
+        val bad = call("PATCH", "/api/v1/dashboard/phone/pages/p1/cards/$id", """{"alerts":[$five]}""")
+        assertEquals(422, bad.status, bad.text)
+        assertEquals("invalid_alerts", bad.json()["error"]!!.jsonObject["details"]!!.jsonArray[0].jsonObject["code"]!!.jsonPrimitive.content)
+
+        val legacy = call("POST", "/api/v1/dashboard/phone/pages/p1/cards", """{"type":"Dial","measurementIds":["msv70/0x4300"],"warnAbove":112}""")
+        assertEquals(201, legacy.status, legacy.text)
+        val card = legacy.json()["card"]!!.jsonObject
+        assertEquals(null, card["warnAbove"], "never returned")
+        assertEquals("112.0", card["alerts"]!!.jsonArray.single().jsonObject["threshold"]!!.jsonPrimitive.content)
+
+        assertEquals(true, call("GET", "/api/v1/settings").json()["alertSounds"]!!.jsonPrimitive.boolean)
+        assertEquals(false, call("PATCH", "/api/v1/settings", """{"alertSounds":false}""").json()["alertSounds"]!!.jsonPrimitive.boolean)
+    }
+
     // ---------------------------------------------------------------- tiny HTTP client
 
     class Resp(val status: Int, val headers: Map<String, String>, val body: ByteArray) {
@@ -346,7 +370,8 @@ class ApiServerTest {
         val patch = call("PATCH", "/api/v1/dashboard/phone/pages/p1/cards/$id", """{"warnAbove":130,"title":null}""")
         assertEquals(200, patch.status, patch.text)
         val patched = backend.dashboard.phonePages[0].card(id)!!
-        assertEquals(130.0, patched.warnAbove)
+        assertEquals(130.0, patched.alerts.single { it.condition == io.github.jonathangtd.bimmerdata.gauges.AlertCondition.Above }.threshold, "older warnAbove -> alert rule")
+        assertEquals(null, patched.warnAbove)
         assertEquals(null, patched.title)
 
         val moveOnto = call("PATCH", "/api/v1/dashboard/phone/pages/p1/cards/$id", """{"col":1}""")
@@ -416,7 +441,7 @@ class ApiServerTest {
         assertEquals("car_cards_locked", call("DELETE", "/api/v1/dashboard/car/pages/$carPage/cards/${carCard.id}").errorCode)
         // changed on the phone: Android Auto follows
         assertEquals(200, call("PATCH", "/api/v1/dashboard/phone/pages/p1/cards/$phoneId", """{"title":"Huile","warnAbove":130}""").status)
-        assertEquals("Huile" to 130.0, backend.dashboard.carPages.flatMap { it.cards }.single().let { it.title to it.warnAbove })
+        assertEquals("Huile" to 130.0, backend.dashboard.carPages.flatMap { it.cards }.single().let { it.title to it.alerts.single().threshold })
 
         // whole layout: an Android Auto card of its own, or one taken off, is refused and nothing is saved
         val stored = backend.dashboard

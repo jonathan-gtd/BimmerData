@@ -30,6 +30,7 @@ import io.github.jonathangtd.bimmerdata.dashboard.Page
 import io.github.jonathangtd.bimmerdata.dashboard.car.CarPageRenderer
 import io.github.jonathangtd.bimmerdata.dashboard.car.CarScreen
 import io.github.jonathangtd.bimmerdata.gauges.GaugeFonts
+import io.github.jonathangtd.bimmerdata.gauges.AlertLevel
 import io.github.jonathangtd.bimmerdata.gauges.GaugeSpec
 import io.github.jonathangtd.bimmerdata.gauges.GaugeState
 import io.github.jonathangtd.bimmerdata.gauges.GaugeType
@@ -268,7 +269,7 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
         val s = r.width()
         glyphPaint.style = Paint.Style.STROKE
         glyphPaint.strokeCap = Paint.Cap.ROUND
-        val warn = spec.isWarning(state.target(0))
+        val alert = spec.alertLevel(state.target(0))
         if (spec.type == GaugeType.BipolarBar) {
             val n = spec.channels.size.coerceAtLeast(1)
             val maxAbs = maxOf(abs(spec.min), abs(spec.max)).takeIf { it > 0 } ?: 25.0
@@ -283,7 +284,11 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
                 val v = state.smoothed(i)
                 if (!v.isNaN()) {
                     val len = ((abs(v) / maxAbs).coerceAtMost(1.0) * (right - left) / 2).toFloat()
-                    glyphPaint.color = if (spec.isWarning(state.target(i))) theme.warning else theme.accent
+                    glyphPaint.color = when (spec.alertLevel(state.target(i))) {
+                        AlertLevel.Danger -> theme.danger
+                        AlertLevel.Warning -> theme.warning
+                        null -> theme.accent
+                    }
                     canvas.drawLine(mid, y, if (v >= 0) mid + len else mid - len, y, glyphPaint)
                 }
             }
@@ -300,7 +305,11 @@ class CarSurfaceRenderer(private val context: Context, private val locale: Local
         if (!v.isNaN() && spec.max > spec.min) {
             val f = ((v - spec.min) / (spec.max - spec.min)).coerceIn(0.0, 1.0).toFloat()
             if (f > 0.001f) {
-                glyphPaint.color = if (warn) theme.warning else theme.accent
+                glyphPaint.color = when (alert) {
+                    AlertLevel.Danger -> theme.danger
+                    AlertLevel.Warning -> theme.warning
+                    null -> theme.accent
+                }
                 canvas.drawArc(glyphRect, 135f, 270f * f, false, glyphPaint)
             }
         }
