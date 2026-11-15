@@ -26,7 +26,9 @@ import io.github.jonathangtd.bimmerdata.gauges.GridGeometry
 import io.github.jonathangtd.bimmerdata.gauges.ValueHistory
 import io.github.jonathangtd.bimmerdata.live.AcquisitionState
 import io.github.jonathangtd.bimmerdata.live.AcquisitionStatus
+import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.Sample
+import io.github.jonathangtd.bimmerdata.live.i18n.Translations
 import java.io.ByteArrayOutputStream
 import java.util.Locale
 
@@ -37,15 +39,18 @@ import java.util.Locale
  */
 class AndroidPageRenderer(private val context: Context) {
     fun render(r: RenderRequest): ByteArray {
+        // Same texts as on the phone and in the car: labels in the app's language (the API's own
+        // catalog keeps the ECU's original texts).
+        val index = r.index.mapValues { Translations.shared.measurement(it.value) }
         val locale = context.resources.configuration.locales[0] ?: Locale.getDefault()
         val feed = SnapshotFeed(r)
         val status = r.status.acquisition.let { a ->
             AcquisitionStatus(runCatching { AcquisitionState.valueOf(a.state) }.getOrDefault(AcquisitionState.Stopped), a.readsPerSecond, a.errorCount, a.message)
         }
         val bitmap = if (r.target == Target.Car) {
-            CarScreen.render(context, locale, r.page, r.pageIndex, r.pageCount, r.index, feed, status, r.recording, r.width, r.height)
+            CarScreen.render(context, locale, r.page, r.pageIndex, r.pageCount, index, feed, status, r.recording, r.width, r.height)
         } else {
-            renderPhone(r, locale, feed, status)
+            renderPhone(r, index, locale, feed, status)
         }
         return try {
             ByteArrayOutputStream(64 * 1024).also { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
@@ -54,7 +59,7 @@ class AndroidPageRenderer(private val context: Context) {
         }
     }
 
-    private fun renderPhone(r: RenderRequest, locale: Locale, feed: GaugeFeed, status: AcquisitionStatus): Bitmap {
+    private fun renderPhone(r: RenderRequest, index: Map<String, Measurement>, locale: Locale, feed: GaugeFeed, status: AcquisitionStatus): Bitmap {
         val bitmap = createBitmap(r.width, r.height)
         val canvas = Canvas(bitmap)
         // Same density as a ~411 dp wide phone, whatever the bitmap width.
@@ -85,7 +90,7 @@ class AndroidPageRenderer(private val context: Context) {
         for (card in r.page.cards) {
             GridGeometry.spanRect(left, top, r.width - 2 * left, r.height - top - left, r.page.columns, r.page.rows, gap,
                 card.col, card.row, card.colSpan, card.rowSpan, rect)
-            renderer.draw(canvas, rect, CardSpecs.build(card, r.index, renderer.format), GaugeState(), feed, now)
+            renderer.draw(canvas, rect, CardSpecs.build(card, index, renderer.format), GaugeState(), feed, now)
         }
         return bitmap
     }
