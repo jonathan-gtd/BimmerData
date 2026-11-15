@@ -168,6 +168,16 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
         }
     }
 
+    // Driver event: saved at once; the snackbar offers to add a note.
+    var noteFor by remember { mutableStateOf<String?>(null) }
+    fun markEvent() {
+        val e = io.github.jonathangtd.bimmerdata.events.EventRuntime.mark(context, null, io.github.jonathangtd.bimmerdata.events.EventSource.Phone)
+        message(res.getString(R.string.event_marked), actionLabel = res.getString(R.string.event_add_note)) { noteFor = e.id }
+    }
+    noteFor?.let { id ->
+        io.github.jonathangtd.bimmerdata.events.ui.EventNoteDialog(id, onDismiss = { noteFor = null })
+    }
+
     // Car recognized by its VIN, profile choice and ECU check at connection (ProfileRuntime).
     LaunchedEffect(Unit) {
         ProfileRuntime.notices.collect { n ->
@@ -295,6 +305,7 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
                     onRecord = vm::toggleRecording, onEdit = { if (noProfile) sheet = Sheet.EditProfile(null) else vm.setEditing(true) },
                     connection = connection, lastMode = appSettings.lastMode, onConnect = vm::connect, onDisconnect = vm::disconnect,
                     paused = readingPaused, onPause = vm::setReadingPaused,
+                    onEvent = { markEvent() },
                 )
             }
             Spacer(Modifier.height(12.dp))
@@ -382,10 +393,8 @@ fun DashboardScreen(onEditingChange: (Boolean) -> Unit = {}, vm: DashboardViewMo
 
             if (rec.recording && !ui.editing) {
                 Spacer(Modifier.height(12.dp))
-                RecordingBar(rec, onMark = {
-                    vm.mark()
-                    message(res.getString(R.string.rec_marker_added))
-                })
+                // the recording's marker is an event too (it writes the marker row, and more)
+                RecordingBar(rec, onMark = { markEvent() })
             }
             Spacer(Modifier.height(12.dp))
         }
@@ -549,6 +558,8 @@ internal fun DashboardHeader(
     onRecord: () -> Unit, onEdit: () -> Unit,
     connection: LiveConnection, lastMode: LiveMode?, onConnect: (LiveMode) -> Unit, onDisconnect: () -> Unit,
     paused: Boolean = false, onPause: ((Boolean) -> Unit)? = null,
+    /** Marks a driver event (« Événement »); its button shows next to the pill while connected. */
+    onEvent: (() -> Unit)? = null,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -576,7 +587,12 @@ internal fun DashboardHeader(
             }
             RoundIconButton(R.drawable.ic_edit, stringResource(R.string.edit), onClick = onEdit)
         }
-        ConnectionPillContent(connection, status, lastMode, onConnect, onDisconnect, Modifier.fillMaxWidth(), recording = rec.recording, paused = paused, onPause = onPause)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            ConnectionPillContent(connection, status, lastMode, onConnect, onDisconnect, Modifier.weight(1f), recording = rec.recording, paused = paused, onPause = onPause)
+            if (onEvent != null && connection is LiveConnection.Connected) {
+                RoundIconButton(R.drawable.ic_flag, stringResource(R.string.event_button), onClick = onEvent, tint = Cockpit.Accent)
+            }
+        }
     }
 }
 

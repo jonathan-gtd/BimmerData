@@ -232,35 +232,46 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
 
     override fun onGetTemplate(): Template {
         if (fallback) return gridTemplate()
-        val b = NavigationTemplate.Builder().setActionStrip(actionStrip())
-        // without the pan action the host sends no gesture (onScroll / onFling) to the surface
-        if (carContext.carAppApiLevel >= CarAppApiLevels.LEVEL_2) b.setMapActionStrip(ActionStrip.Builder().addAction(Action.PAN).build())
+        val mapStrip = carContext.carAppApiLevel >= CarAppApiLevels.LEVEL_2
+        val b = NavigationTemplate.Builder().setActionStrip(actionStrip(event = !mapStrip))
+        // The « Événement » flag, one tap, in the map action strip (the main one is full); without
+        // the pan action the host sends no gesture (onScroll / onFling) to the surface. Car API 1
+        // has no map action strip: the flag goes in the main strip when there is room.
+        if (mapStrip) b.setMapActionStrip(ActionStrip.Builder().addAction(eventAction()).addAction(Action.PAN).build())
         return b.build()
+    }
+
+    private fun eventAction(): Action = Action.Builder().setIcon(icon(R.drawable.ic_flag)).setOnClickListener { markEvent() }.build()
+
+    /** A driver event now (values around it kept, Telegraf point, CSV marker); a toast says so. */
+    private fun markEvent() {
+        io.github.jonathangtd.bimmerdata.events.EventRuntime.mark(carContext, null, io.github.jonathangtd.bimmerdata.events.EventSource.Car)
+        androidx.car.app.CarToast.makeText(carContext, R.string.event_marked, androidx.car.app.CarToast.LENGTH_SHORT).show()
     }
 
     private fun icon(res: Int) = CarIcon.Builder(IconCompat.createWithResource(carContext, res)).build()
 
     /**
      * Previous, next, profiles (from two profiles on), connect: at most 4, the navigation template's
-     * limit. [compact] (plain templates allow only 2 actions): next and connect.
+     * limit. [compact] (plain templates allow only 2 actions): next and connect. [event]: the
+     * « Événement » flag too when a place is left (hosts without the map action strip).
      */
-    private fun actionStrip(compact: Boolean = false): ActionStrip {
-        val strip = ActionStrip.Builder()
+    private fun actionStrip(compact: Boolean = false, event: Boolean = false): ActionStrip {
+        val actions = mutableListOf<Action>()
         if (pageCount > 1) {
-            if (!compact) strip.addAction(Action.Builder().setIcon(icon(R.drawable.ic_chevron_left)).setOnClickListener { changePage(-1) }.build())
-            strip.addAction(Action.Builder().setIcon(icon(R.drawable.ic_chevron_right)).setOnClickListener { changePage(1) }.build())
+            if (!compact) actions += Action.Builder().setIcon(icon(R.drawable.ic_chevron_left)).setOnClickListener { changePage(-1) }.build()
+            actions += Action.Builder().setIcon(icon(R.drawable.ic_chevron_right)).setOnClickListener { changePage(1) }.build()
         }
         if (!compact && profileCount > 1) {
-            strip.addAction(
-                Action.Builder().setIcon(icon(R.drawable.ic_profile)).setOnClickListener { screenManager.push(ProfilesCarScreen(carContext)) }.build(),
-            )
+            actions += Action.Builder().setIcon(icon(R.drawable.ic_profile)).setOnClickListener { screenManager.push(ProfilesCarScreen(carContext)) }.build()
         }
         val connect = Action.Builder().setIcon(icon(R.drawable.ic_plug))
             .setOnClickListener { screenManager.push(ConnectCarScreen(carContext, deps)) }
         // Spelled out only while it is the thing to do.
         if (!isConnected(connection)) connect.setTitle(carContext.getString(R.string.car_connect))
-        strip.addAction(connect.build())
-        return strip.build()
+        if (event && actions.size + 2 <= if (compact) COMPACT_ACTIONS else MAX_ACTIONS) actions += eventAction()
+        actions += connect.build()
+        return ActionStrip.Builder().apply { actions.forEach(::addAction) }.build()
     }
 
     // Title and action strip setters still work on every host (the Header replacement needs car API 7).
@@ -269,7 +280,7 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
         val c = dashboard.value
         val pages = c?.carPages.orEmpty()
         val page = pages.getOrNull(pageIndex.value.coerceIn(0, (pages.size - 1).coerceAtLeast(0)))
-        val builder = GridTemplate.Builder().setTitle(page?.name ?: carContext.getString(R.string.app_name)).setActionStrip(actionStrip(compact = true))
+        val builder = GridTemplate.Builder().setTitle(page?.name ?: carContext.getString(R.string.app_name)).setActionStrip(actionStrip(compact = true, event = true))
         if (images.isEmpty()) {
             if (page == null && c != null) {
                 builder.setSingleList(ItemList.Builder().setNoItemsMessage(carContext.getString(R.string.car_no_pages)).build())
@@ -365,6 +376,10 @@ class DashboardCarScreen(carContext: CarContext) : Screen(carContext), SurfaceCa
         private const val SURFACE_TIMEOUT_MS = 4_000L
         private const val FALLBACK_REFRESH_MS = 1_000L
         private const val FALLBACK_IMAGE_PX = 192
+
+        /** Actions of the navigation template's strip, and of the plain templates' one. */
+        private const val MAX_ACTIONS = 4
+        private const val COMPACT_ACTIONS = 2
 
         fun isConnected(c: LiveConnection) =
             c is LiveConnection.Connected || c is LiveConnection.Connecting

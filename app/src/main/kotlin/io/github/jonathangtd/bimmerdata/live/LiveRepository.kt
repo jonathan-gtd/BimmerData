@@ -247,6 +247,16 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
         engine?.setPaused(paused)
     }
 
+    /**
+     * A driver event at [timeMs] ([io.github.jonathangtd.bimmerdata.events.EventRuntime]): a reading
+     * of `bimmerdata/event` (Telegraf export, labelled [label]) and a marker row in the running
+     * CSV recording.
+     */
+    fun putEvent(timeMs: Long, label: String, csvMarker: String) {
+        proxy.putReadings(listOf(io.github.jonathangtd.bimmerdata.live.EventPoints.sample(timeMs, label)))
+        if (csvRecorder.state.value.recording) csvRecorder.mark(csvMarker)
+    }
+
     /** Starts or stops the CSV recording (used by the notification action). */
     fun toggleRecording() {
         if (csvRecorder.state.value.recording) csvRecorder.stop() else csvRecorder.start()

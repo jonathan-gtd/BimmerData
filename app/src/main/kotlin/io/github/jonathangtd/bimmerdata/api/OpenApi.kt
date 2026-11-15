@@ -199,6 +199,7 @@ internal object OpenApi {
         "Connection" to "Connect to the car (USB cable or Deep OBD Bluetooth adapter) or to the built-in simulated car, and record CSV logs.",
         "Settings" to "App settings that may be changed remotely. API settings (enable, port, token, scopes) can only be changed on the phone.",
         "Export" to "Export of the live values to Telegraf (line protocol over HTTP), which writes them to TimescaleDB for Grafana. See docs/TELEGRAF.md in the BimmerData repository.",
+        EventRoutes.TAG to EventRoutes.TAG_DESCRIPTION,
         BackupRoutes.TAG to "Full backup of the app (cars with their VIN, profiles, graphs, settings, cached translations; never a token or password) and its restore, which replaces everything. Same file as Settings › Backup on the phone.",
         DiagApi.TAG to "Fault memory and EDIABAS jobs (scope diag). Reading is free; clearing faults and running jobs need the user's confirmation on the phone for every call and are refused while the car is moving.",
     )
@@ -239,6 +240,7 @@ Clearing faults and running EDIABAS jobs (scope `diag`) and changing the CAN mod
         for ((name, schema) in SetupRoutes.schemas()) put(name, schema)
         for ((name, schema) in ProfileGraphRoutes.schemas()) put(name, schema)
         for ((name, schema) in ComputedRoutes.schemas()) put(name, schema)
+        for ((name, schema) in EventRoutes.schemas()) put(name, schema)
         for ((name, schema) in CarRoutes.schemas()) put(name, schema)
         for ((name, schema) in BackupRoutes.schemas()) put(name, schema)
         put("Error", S.obj(

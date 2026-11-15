@@ -3,6 +3,8 @@
  */
 package io.github.jonathangtd.bimmerdata.backup
 
+import io.github.jonathangtd.bimmerdata.events.EventJson
+import io.github.jonathangtd.bimmerdata.events.EventRuntime
 import android.annotation.SuppressLint
 import android.content.Context
 import io.github.jonathangtd.bimmerdata.i18n.TranslationRepository
@@ -47,7 +49,28 @@ class AndroidBackupParts(context: Context) : BackupParts {
             profiles = profiles.load(),
             settings = BackupSettings.of(settings.state.value),
             translations = BackupTranslations.of(translationSettings.state.value, if (keep) all else null, if (keep) 0 else all.size),
+            events = captureEvents(limit = limitTranslations),
         )
+    }
+
+    /** Every event, newest first, with its snapshot while they fit ([BackupCodec.MAX_EVENT_SNAPSHOT_BYTES], export only). */
+    private fun captureEvents(limit: Boolean): List<BackupEvent> {
+        val store = EventRuntime.store(app)
+        var budget = BackupCodec.MAX_EVENT_SNAPSHOT_BYTES
+        return store.all().map { e ->
+            val snap = store.snapshot(e.id)
+            val size = snap?.let { EventJson.encodeSnapshot(it).length.toLong() } ?: 0L
+            if (snap != null && (!limit || size <= budget)) {
+                budget -= size
+                BackupEvent(e, snap)
+            } else {
+                BackupEvent(e, null)
+            }
+        }
+    }
+
+    override fun applyEvents(events: List<BackupEvent>) {
+        EventRuntime.store(app).replaceAll(events.map { it.event to it.snapshot })
     }
 
     private fun cachedFiles(): List<BackupTranslationFile> {

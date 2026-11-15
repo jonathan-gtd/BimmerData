@@ -142,6 +142,29 @@ class FakeApiBackend : ApiBackend {
     override fun stopRecording() { _recording.value = RecordingState() }
     override fun addMarker(label: String) { markers += label }
 
+    // driver events, in memory
+    val eventList = ArrayList<io.github.jonathangtd.bimmerdata.events.DriveEvent>()
+    val eventSnapshots = HashMap<String, io.github.jonathangtd.bimmerdata.events.EventSnapshot>()
+    var eventClock = 1_700_000_000_000L
+    override fun events() = io.github.jonathangtd.bimmerdata.events.Events.sorted(eventList)
+    override fun eventSnapshot(id: String) = eventSnapshots[id]
+    override fun markEvent(note: String?, source: io.github.jonathangtd.bimmerdata.events.EventSource): io.github.jonathangtd.bimmerdata.events.DriveEvent {
+        eventClock += 1000
+        val e = io.github.jonathangtd.bimmerdata.events.DriveEvent(
+            id = "ev-${eventList.size + 1}", timeMs = eventClock, carId = "car-1",
+            note = io.github.jonathangtd.bimmerdata.events.Events.cleanNote(note), source = source,
+        )
+        eventList += e
+        markers += io.github.jonathangtd.bimmerdata.live.EventPoints.csvMarker(e.note)
+        return e
+    }
+    override fun setEventNote(id: String, note: String): io.github.jonathangtd.bimmerdata.events.DriveEvent? {
+        val i = eventList.indexOfFirst { it.id == id }.takeIf { it >= 0 } ?: return null
+        eventList[i] = eventList[i].copy(note = io.github.jonathangtd.bimmerdata.events.Events.cleanNote(note))
+        return eventList[i]
+    }
+    override fun deleteEvent(id: String) = eventList.removeIf { it.id == id }.also { eventSnapshots.remove(id) }
+
     override fun recordings() = listOf(RecordingFile("bimmerdata_test.csv", 24, 1_700_000_000_000))
     override fun openRecording(name: String): InputStream? =
         if (name == "bimmerdata_test.csv") ByteArrayInputStream("time;oil\n0.0;90.1\n".toByteArray()) else null

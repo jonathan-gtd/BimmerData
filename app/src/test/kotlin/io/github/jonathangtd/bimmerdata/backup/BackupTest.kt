@@ -50,6 +50,7 @@ class FakeBackupParts(
     var failOn: String? = null
     var prepared = 0
     var busy = false
+    var events: List<BackupEvent> = emptyList()
 
     private fun maybeFail(part: String) {
         if (failOn == part) {
@@ -66,7 +67,12 @@ class FakeBackupParts(
     override fun capture(limitTranslations: Boolean) = BackupContent(
         garage, profiles, BackupSettings.of(settings),
         BackupTranslations.of(translationConfig, translationFiles.map { (k, v) -> BackupTranslationFile(k.substringBefore('/'), k.substringAfter('/'), v) }),
+        events,
     )
+
+    override fun applyEvents(events: List<BackupEvent>) {
+        maybeFail("events"); this.events = events
+    }
 
     override fun applyGarage(garage: Garage) {
         maybeFail("garage"); this.garage = garage
@@ -285,6 +291,26 @@ class BackupTest {
         assertEquals(ApiConfig.DEFAULT_PORT, r.api.port)
         assertEquals(setOf(Scope.Read), r.api.scopes)
         assertEquals("t", r.api.token)
+    }
+
+    @Test
+    fun `driver events and their snapshots go through a backup, an older file keeps the phone events`() {
+        val t = 1_800_000_000_000L
+        val ev = io.github.jonathangtd.bimmerdata.events.DriveEvent("ev-1", t, "car-e90", "E90 330i", note = "jerk", latitude = 46.1, longitude = -0.4)
+        val snap = io.github.jonathangtd.bimmerdata.events.EventSnapshot(t, t - 60_000, t + 30_000, listOf(io.github.jonathangtd.bimmerdata.events.SnapshotSeries("msv70/0x4807", "rpm", "rpm", listOf(-100, 0), listOf(800.0, 900.0))))
+        val phone = FakeBackupParts.populated().apply { events = listOf(BackupEvent(ev, snap), BackupEvent(ev.copy(id = "ev-0", timeMs = t - 1))) }
+        val file = BackupRestorer(phone).export(BackupInfo("0.5.0", 25, t))
+        val fresh = FakeBackupParts()
+        val summary = BackupRestorer(fresh).restore(file, includeApi = false)
+        assertEquals(2, summary.events)
+        assertEquals(phone.events, fresh.events)
+        // a file made before the events: the phone keeps its own
+        val old = kotlinx.serialization.json.JsonObject(kotlinx.serialization.json.Json.parseToJsonElement(file).let { it as kotlinx.serialization.json.JsonObject } - "events").toString()
+        assertFalse(old.contains("\"events\""), old.takeLast(300))
+        val kept = FakeBackupParts().apply { events = listOf(BackupEvent(ev)) }
+        val s2 = BackupRestorer(kept).restore(old, includeApi = false)
+        assertNull(s2.events)
+        assertEquals(listOf(BackupEvent(ev)), kept.events)
     }
 
     @Test

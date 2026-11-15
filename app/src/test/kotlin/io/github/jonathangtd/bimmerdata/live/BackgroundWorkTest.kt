@@ -39,6 +39,16 @@ class BackgroundWorkTest {
     }
 
     @Test
+    fun `notification - the event action while connected, unless recording takes the third place`() {
+        assertTrue(BackgroundWork.notification(BackgroundSnapshot(bt, running), en).canMarkEvent)
+        val rec = RecordingState(recording = true, startedAtMs = 0, rows = 10)
+        val recording = BackgroundWork.notification(BackgroundSnapshot(bt, running, rec), en)
+        assertTrue(recording.canStopRecording && recording.canPause)
+        assertFalse(recording.canMarkEvent, "stop recording + pause + disconnect: Android shows 3 actions")
+        assertFalse(BackgroundWork.notification(BackgroundSnapshot(LiveConnection.Connecting(LiveMode.Usb)), en).canMarkEvent)
+    }
+
+    @Test
     fun `the service runs while a connection is open or opening, in every mode`() {
         assertFalse(BackgroundWork.needsService(BackgroundSnapshot(LiveConnection.Disconnected)))
         assertFalse(BackgroundWork.needsService(BackgroundSnapshot(LiveConnection.Failed(LiveMode.Usb, "no cable"))))

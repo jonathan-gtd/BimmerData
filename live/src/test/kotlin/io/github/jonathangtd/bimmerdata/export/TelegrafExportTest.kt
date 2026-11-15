@@ -6,6 +6,7 @@ package io.github.jonathangtd.bimmerdata.export
 import com.sun.net.httpserver.HttpServer
 import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.MeasurementSource
+import io.github.jonathangtd.bimmerdata.live.EventPoints
 import io.github.jonathangtd.bimmerdata.live.Sample
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -77,6 +78,30 @@ class TelegrafExportTest {
             assertEquals(200, tg.lines.size)
             assertEquals(200, tg.lines.map { it.substringAfterLast(' ') }.toSet().size, "one point per reading, no duplicate")
         }
+    }
+
+    @Test
+    fun `a driver event is exported as bimmerdata event with its note as label`(@TempDir dir: File) = FakeTelegraf().use { tg ->
+        exporterTest(dir) { exporter, samples, config, net ->
+            net.value = NetworkKind.Unmetered
+            config.value = ExportConfig(enabled = true, url = tg.url, car = "E90", mode = ExportMode.Live)
+            delay(50)
+            samples.value = mapOf(EventPoints.sample(5_000L, "jerk at 90"))
+            samples.value = mapOf(EventPoints.sample(6_000L, ""))
+            until("sent") { exporter.state.value.sentLines == 2L }
+            val lines = tg.lines.sortedBy { it.substringAfterLast(' ').toLong() }
+            assertEquals("bimmerdata,car=E90,ecu=bimmerdata,id=event,label=jerk\\ at\\ 90 value=1 5000000000", lines[0])
+            assertEquals("bimmerdata,car=E90,ecu=bimmerdata,id=event,label=Event value=1 6000000000", lines[1])
+        }
+    }
+
+    @Test
+    fun `event marker of the CSV recording`() {
+        assertEquals("event", EventPoints.csvMarker(null))
+        assertEquals("event", EventPoints.csvMarker("  "))
+        assertEquals("event: noise left", EventPoints.csvMarker(" noise left "))
+        assertTrue(EventPoints.isEvent("bimmerdata/event"))
+        assertEquals("bimmerdata", EventPoints.measurement(null).sgbd)
     }
 
     // ---------------------------------------------------------------- queue

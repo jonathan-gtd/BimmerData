@@ -46,6 +46,8 @@ data class GraphFrame(
     val view: GraphView,
     val nowMs: Long,
     val cursorMs: Long? = null,
+    /** Times of driver events (epoch ms): a dashed vertical line with a flag where in range. */
+    val markers: List<Long> = emptyList(),
 )
 
 /**
@@ -76,6 +78,12 @@ class GraphRenderer(
     private val valuePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = theme.text; textSize = 13f * u; typeface = theme.fonts.numbers }
     private val cursorPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = (theme.text and 0x00FFFFFF) or 0x99000000.toInt(); strokeWidth = 1.2f * u }
     private val pillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = theme.track }
+    private val markerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = theme.warning; strokeWidth = 1.5f * u; style = Paint.Style.STROKE
+        pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f * u, 4f * u), 0f)
+    }
+    private val flagPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = theme.warning; style = Paint.Style.FILL }
+    private val flagPath = Path()
 
     /** Time labels are not drawn between these x (the cursor time pill sits there). */
     private var blockedLeft = Float.NaN
@@ -380,6 +388,7 @@ class GraphRenderer(
      * once paused ("14:32:10").
      */
     private fun drawTimeAxis(c: Canvas, left: Float, top: Float, right: Float, bottom: Float, frame: GraphFrame, from: Long) {
+        drawMarkers(c, left, top, right, bottom, frame, from)
         val w = right - left
         val span = frame.view.spanMs
         val maxLines = (w / (70f * u)).toInt().coerceIn(1, 6)
@@ -414,6 +423,22 @@ class GraphRenderer(
             t += step
         }
         tickPaint.textAlign = Paint.Align.LEFT
+    }
+
+    /** Driver events in range: dashed line over the plot height, small flag at the top. */
+    private fun drawMarkers(c: Canvas, left: Float, top: Float, right: Float, bottom: Float, frame: GraphFrame, from: Long) {
+        if (frame.markers.isEmpty()) return
+        val span = frame.view.spanMs
+        for (t in frame.markers) {
+            val x = xOf(t, from, span, left, right) ?: continue
+            c.drawLine(x, top, x, bottom, markerPaint)
+            flagPath.reset()
+            flagPath.moveTo(x, top)
+            flagPath.lineTo(x + 8f * u, top + 3.5f * u)
+            flagPath.lineTo(x, top + 7f * u)
+            flagPath.close()
+            c.drawPath(flagPath, flagPaint)
+        }
     }
 
     private fun xOf(t: Long, from: Long, span: Long, left: Float, right: Float): Float? {

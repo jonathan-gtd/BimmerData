@@ -48,7 +48,9 @@ data class BackgroundTexts(
 
 /**
  * Content of the ongoing notification. [canPause]: connected, so the reading can be stopped or
- * resumed ([paused] = which of the two the action does: resume when true).
+ * resumed ([paused] = which of the two the action does: resume when true). [canMarkEvent]: the
+ * « Événement » action, while connected and when the three actions Android shows leave room
+ * (not while recording: stop recording, pause and disconnect take them).
  */
 data class BackgroundNotification(
     val title: String,
@@ -56,6 +58,7 @@ data class BackgroundNotification(
     val canStopRecording: Boolean,
     val canPause: Boolean = false,
     val paused: Boolean = false,
+    val canMarkEvent: Boolean = false,
 )
 
 /**
@@ -108,6 +111,7 @@ object BackgroundWork {
         return BackgroundNotification(
             t.title, parts.joinToString(" · "), canStopRecording = rec,
             canPause = connected, paused = connected && s.readingPaused,
+            canMarkEvent = connected && !rec,
         )
     }
 

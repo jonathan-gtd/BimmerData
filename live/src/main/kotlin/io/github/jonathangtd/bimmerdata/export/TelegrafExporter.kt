@@ -3,6 +3,7 @@
  */
 package io.github.jonathangtd.bimmerdata.export
 
+import io.github.jonathangtd.bimmerdata.live.EventPoints
 import io.github.jonathangtd.bimmerdata.live.Measurement
 import io.github.jonathangtd.bimmerdata.live.MeasurementSource
 import io.github.jonathangtd.bimmerdata.live.Sample
@@ -255,7 +256,11 @@ class TelegrafExporter(
             }
             queue.reserveBytes = cfg.reserveBytes
             val enc = encoderFor(cfg.car, cfg.profile)
-            val lines = dedup.select(batch).mapNotNull { (id, s) -> enc.encode(metadata(id) ?: unknown(id), s) }
+            val lines = dedup.select(batch).mapNotNull { (id, s) ->
+                // driver events carry their label (the note) in the sample
+                val m = if (EventPoints.isEvent(id)) EventPoints.measurement(s.text) else metadata(id) ?: unknown(id)
+                enc.encode(m, s)
+            }
             if (lines.isEmpty()) return@collect
             if (queue.append(lines)) rate.add(clock(), lines.sumOf { it.length + 1L })
             _state.update { it.copy(measurementCount = dedup.measurementCount) }

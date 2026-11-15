@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit
  *
  * Ongoing, silent notification on its own channel, refreshed at most once a second: interface,
  * read rate, recording time and rows, live export, active profile; actions Stop recording /
- * Stop or resume reading (the interface stays connected) / Disconnect; a tap opens the app. Holds a partial wake lock so the read loop is not suspended.
+ * Stop or resume reading (the interface stays connected) / Événement (not while recording) / Disconnect; a tap opens the app. Holds a partial wake lock so the read loop is not suspended.
  */
 class AcquisitionService : Service() {
 
@@ -111,6 +111,13 @@ class AcquisitionService : Service() {
             }
             ActionStopRecording -> {
                 if (repo.recorder.state.value.recording) repo.recorder.stop()
+                if (!foreground) stopSelf()
+                return START_NOT_STICKY
+            }
+            ActionEvent -> {
+                val e = io.github.jonathangtd.bimmerdata.events.EventRuntime.mark(this, null, io.github.jonathangtd.bimmerdata.events.EventSource.Notification)
+                android.widget.Toast.makeText(this, getString(R.string.event_marked), android.widget.Toast.LENGTH_SHORT).show()
+                Log.i(Tag, "Event ${e.id} from the notification")
                 if (!foreground) stopSelf()
                 return START_NOT_STICKY
             }
@@ -189,6 +196,7 @@ class AcquisitionService : Service() {
                     if (content.paused) addAction(0, getString(R.string.bg_action_resume), actionIntent(ActionResume, 4))
                     else addAction(0, getString(R.string.bg_action_pause), actionIntent(ActionPause, 3))
                 }
+                if (content.canMarkEvent) addAction(0, getString(R.string.event_button), actionIntent(ActionEvent, 5))
             }
             .addAction(0, getString(R.string.bg_action_disconnect), actionIntent(ActionDisconnect, 2))
             .build()
@@ -210,6 +218,7 @@ class AcquisitionService : Service() {
         const val ActionStopRecording = "io.github.jonathangtd.bimmerdata.live.STOP_RECORDING"
         const val ActionPause = "io.github.jonathangtd.bimmerdata.live.PAUSE_READING"
         const val ActionResume = "io.github.jonathangtd.bimmerdata.live.RESUME_READING"
+        const val ActionEvent = "io.github.jonathangtd.bimmerdata.live.MARK_EVENT"
 
         fun createChannel(context: Context) {
             val nm = context.getSystemService(NotificationManager::class.java)

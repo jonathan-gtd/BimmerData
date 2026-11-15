@@ -216,6 +216,15 @@ class AndroidApiBackend(
     override fun stopRecording() = repo.recorder.stop()
     override fun addMarker(label: String) = repo.recorder.mark(label)
 
+    private val events get() = io.github.jonathangtd.bimmerdata.events.EventRuntime.store(app)
+    override fun events() = events.all()
+    override fun event(id: String) = events.get(id)
+    override fun eventSnapshot(id: String) = events.snapshot(id)
+    override fun markEvent(note: String?, source: io.github.jonathangtd.bimmerdata.events.EventSource) =
+        io.github.jonathangtd.bimmerdata.events.EventRuntime.mark(app, note, source)
+    override fun setEventNote(id: String, note: String) = events.setNote(id, note)
+    override fun deleteEvent(id: String) = events.delete(id)
+
     /** CSV files of the recording folder (Settings › Recording), newest first. */
     override fun recordings(): List<RecordingFile> = RecordingStorage.list(app).map { RecordingFile(it.name, it.sizeBytes, it.modifiedMs) }
 

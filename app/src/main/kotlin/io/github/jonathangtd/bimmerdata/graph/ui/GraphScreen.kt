@@ -185,6 +185,7 @@ fun GraphScreen(vm: GraphViewModel = viewModel()) {
                     Icon(painterResource(R.drawable.ic_chevron_down), contentDescription = null, tint = Cockpit.Muted, modifier = Modifier.size(22.dp))
                 }
             }
+            RoundIconButton(R.drawable.ic_flag, stringResource(R.string.events_title), onClick = navigator.openEvents)
             val g = ui.selected
             if (g != null) {
                 RoundIconButton(R.drawable.ic_pages, stringResource(R.string.graphs), onClick = { sheet = GraphSheet.Manage })
@@ -448,6 +449,9 @@ private fun GraphCanvas(
     val ids = specs.map { it.id }
     val rect = remember { RectF() }
     val description = stringResource(R.string.graph_cursor_desc, specs.joinToString(", ") { it.label })
+    // driver events: a flag on the time axis
+    val events by remember { io.github.jonathangtd.bimmerdata.events.EventRuntime.store(context).state }.collectAsStateWithLifecycle()
+    val markers = remember(events) { events.map { it.timeMs } }
     Canvas(
         modifier
             .semantics { contentDescription = description }
@@ -518,7 +522,7 @@ private fun GraphCanvas(
     ) {
         frameClock.value
         rect.set(0f, 0f, size.width, size.height)
-        val frame = GraphFrame(specs, graph.axes, state.view, clock(), state.cursorMs)
+        val frame = GraphFrame(specs, graph.axes, state.view, clock(), state.cursorMs, markers)
         drawIntoCanvas { renderer.draw(it.nativeCanvas, rect, frame, SharedHistory::history) }
     }
 }

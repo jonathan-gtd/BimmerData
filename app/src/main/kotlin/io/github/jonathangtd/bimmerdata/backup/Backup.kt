@@ -182,12 +182,20 @@ data class BackupTranslations(
 @Serializable
 data class BackupTranslationFile(val language: String, val sgbd: String, val csv: String)
 
-/** What a backup holds, decoded. */
+/** What a backup holds, decoded. [events] null: the file has none (older app), the phone keeps its own. */
 data class BackupContent(
     val garage: Garage,
     val profiles: ProfileSet,
     val settings: BackupSettings,
     val translations: BackupTranslations,
+    val events: List<BackupEvent>? = null,
+)
+
+/** A driver event in a backup, with its snapshot when it fitted ([BackupCodec.MAX_EVENT_SNAPSHOT_BYTES]). */
+@Serializable
+data class BackupEvent(
+    val event: io.github.jonathangtd.bimmerdata.events.DriveEvent,
+    val snapshot: io.github.jonathangtd.bimmerdata.events.EventSnapshot? = null,
 )
 
 /** Who made a backup and when (header of the file). */
@@ -212,6 +220,8 @@ internal data class BackupFileDto(
     val profiles: JsonElement,
     val settings: BackupSettings = BackupSettings(),
     val translations: BackupTranslations = BackupTranslations(),
+    /** Driver events and the values kept around them (newest first); absent in older files. */
+    val events: List<BackupEvent>? = null,
 )
 
 object BackupCodec {
@@ -220,6 +230,9 @@ object BackupCodec {
 
     /** Translation files beyond this total size are left out of a backup (they can be downloaded again). */
     const val MAX_TRANSLATION_BYTES = 4L * 1024 * 1024
+
+    /** Event snapshots beyond this total size are left out of a backup (the events themselves stay). */
+    const val MAX_EVENT_SNAPSHOT_BYTES = 4L * 1024 * 1024
 
     /** Largest backup file read (the API upload limit too). */
     const val MAX_FILE_BYTES = 16L * 1024 * 1024
@@ -244,6 +257,7 @@ object BackupCodec {
             profiles = json.parseToJsonElement(ProfileJson.encode(content.profiles)),
             settings = content.settings,
             translations = content.translations,
+            events = content.events,
         ),
     )
 
@@ -291,7 +305,7 @@ object BackupCodec {
         dto.translations.files?.firstOrNull { !BackupTranslations.LANG.matches(it.language) || !BackupTranslations.SGBD.matches(it.sgbd) }?.let {
             throw BackupException("invalid_backup", "Invalid backup: bad translation file name '${it.language.take(10)}/${it.sgbd.take(40)}'")
         }
-        val content = BackupContent(garage, profiles, dto.settings, dto.translations)
+        val content = BackupContent(garage, profiles, dto.settings, dto.translations, dto.events)
         return content to BackupInfo(dto.appVersion, dto.appVersionCode, dto.createdAtMs)
     }
 
@@ -310,6 +324,8 @@ data class RestoreSummary(
     val graphs: Int,
     val activeProfile: String? = null,
     val selectedCar: String? = null,
+    /** Driver events put back; null when the backup had none (the phone's were kept). */
+    val events: Int? = null,
     /** Translation files put back; null when the backup had none (the phone's cache was kept). */
     val translationFiles: Int? = null,
     /** True when Settings › Local API was restored too (phone only); false: kept as it was. */
@@ -343,6 +359,7 @@ data class RestoreSummary(
                 activeProfile = p.active?.name,
                 selectedCar = g.current?.label,
                 translationFiles = content.translations.files?.size,
+                events = content.events?.size,
                 apiSettingsRestored = includeApi && s.api != null,
                 createdAt = info.createdAtMs.takeIf { it > 0 }?.let { Instant.ofEpochMilli(it).toString() },
                 appVersion = info.appVersion,
@@ -385,6 +402,9 @@ interface BackupParts {
     /** Translation settings, and the cache replaced by [BackupTranslations.files] unless that is null (cache kept). */
     fun applyTranslations(translations: BackupTranslations)
 
+    /** Replaces the driver events (only called when the backup has them). */
+    fun applyEvents(events: List<BackupEvent>) = Unit
+
     /** A Telegraf token / password is stored on this phone. */
     fun telegrafSecretSet(): Boolean = false
 }
@@ -409,12 +429,14 @@ class BackupRestorer(private val parts: BackupParts) {
             parts.applyProfiles(content.profiles)
             parts.applySettings(content.settings, includeApi)
             parts.applyTranslations(content.translations)
+            content.events?.let(parts::applyEvents)
         } catch (e: Exception) {
             val rollback = runCatching {
                 parts.applyGarage(before.garage)
                 parts.applyProfiles(before.profiles)
                 parts.applySettings(before.settings, includeApi = true)
                 parts.applyTranslations(before.translations)
+                if (content.events != null) before.events?.let(parts::applyEvents)
             }
             throw BackupException(
                 "restore_failed",

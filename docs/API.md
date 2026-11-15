@@ -147,6 +147,11 @@ curl -s -H "$H" -X POST "$BD/recording/markers" -d '{"label":"full throttle"}'
 curl -s -H "$H" -X POST "$BD/recording/stop"
 curl -s -H "$H" "$BD/recordings"
 curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
+
+# Driver events: mark one (scope config), list, the values around one (JSON or CSV)
+curl -s -H "$H" -X POST "$BD/events" -d '{"note":"jerk at 90 km/h"}'
+curl -s -H "$H" "$BD/events"
+curl -s -H "$H" "$BD/events/<id>?format=csv" -o event.csv
 ```
 
 ## Operations
@@ -194,6 +199,9 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 | GET | `/api/v1/recording` | read | Recording state |
 | POST | `/api/v1/recording/start`, `/stop`, `/markers` | config | Control the CSV recording |
 | GET | `/api/v1/recordings`, `/api/v1/recordings/{name}` | read | List / download CSV files |
+| POST | `/api/v1/events` | config | Mark a driver event now (`{"note":"…"}` optional), like the « Événement » button |
+| GET | `/api/v1/events`, `/api/v1/events/{id}` | read | Events (newest first, `?car=`, `?limit=`) / one event with the values read around it (`?format=csv` for CSV) |
+| PATCH / DELETE | `/api/v1/events/{id}` | config | Change the note / delete the event and its values |
 | GET / PATCH | `/api/v1/settings` | read / config | App settings: auto-connect on the cable, Bluetooth connect-on-start (API settings are read-only) |
 | GET / PATCH | `/api/v1/settings/gps` | read / config | GPS position: switch, interval, permission and state |
 | GET / PATCH | `/api/v1/settings/recording` | read / config | CSV recording: row rate, file prefix, back to the default folder |
@@ -339,6 +347,27 @@ Each card has up to 4 alert rules in `alerts`:
 
   then put `calc/power` on a card like any measurement id. Profile files (`…/export`, `…/import`)
   and the full backup carry `computed`; files without it still load.
+
+### Driver events
+
+- The « Événement » button (phone dashboard next to the connection pill, Android Auto map action
+  strip, the ongoing notification when not recording) and `POST /api/v1/events` mark the instant
+  something was felt or heard. The event is saved at once with the car, the profile and the last
+  GPS fix; its **snapshot** keeps every value read from 60 s before to 30 s after it
+  (`snapshotComplete` false while the 30 s after are still coming, or cut short when the
+  connection ends first). At most 500 events are kept on the phone; the full backup carries them.
+- The same instant is also:
+  - a marker row in the running CSV recording, `marker` = `event` or `event: <note>`;
+  - a point of the Telegraf export, pseudo ECU `bimmerdata`, id `event`, value 1, label = the note
+    (or `Event`). In Grafana (TimescaleDB), an annotation query:
+
+    ```sql
+    SELECT time, label AS text FROM bimmerdata
+    WHERE ecu = 'bimmerdata' AND id = 'event' AND $__timeFilter(time)
+    ```
+- `GET /api/v1/events/{id}` returns `event` and `snapshot` (`series`: id, label, unit, `t` in ms
+  from the event, negative before, and `v`); `?format=csv` the same as a CSV in the format of the
+  recordings, `time_ms` counted from the event, marker `event` at 0.
 
 ### Errors
 

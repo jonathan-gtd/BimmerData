@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="event_label">Événement</string>
+    <string name="event_button">Événement</string>
+    <string name="event_marked">Événement noté</string>
+    <string name="event_add_note">Ajouter une note</string>
+    <string name="events_title">Événements</string>
+    <string name="events_intro">Chaque appui sur le bouton Événement (tableau de bord, Android Auto, notification) garde l\'instant et les valeurs lues une minute avant et 30 s après. Ils sont aussi dans l\'enregistrement CSV (repère « event ») et dans l\'export Telegraf (ecu bimmerdata, id event).</string>
+    <string name="events_empty">Aucun événement pour l\'instant. Une fois connecté, touchez le drapeau à côté de la connexion, dans Android Auto ou dans la notification quand quelque chose se passe.</string>
+    <string name="event_speed">%1$d km/h</string>
+    <string name="event_no_note">Pas de note</string>
+    <string name="event_source_phone">Téléphone</string>
+    <string name="event_source_car">Android Auto</string>
+    <string name="event_source_notification">Notification</string>
+    <string name="event_source_api">API</string>
+    <string name="event_map">Carte</string>
+    <string name="event_note">Note</string>
+    <string name="event_note_hint">Qu\'avez-vous ressenti ou entendu ?</string>
+    <string name="event_no_values">Aucune valeur n\'a été lue autour de cet événement.</string>
+    <string name="event_capturing">Enregistrement des 30 s suivantes…</string>
+    <string name="event_export_csv">Exporter en CSV</string>
+    <string name="event_delete_title">Supprimer cet événement ?</string>
+    <string name="event_delete_text">L\'événement et les valeurs gardées autour sont supprimés du téléphone. Les points déjà exportés vers Telegraf y restent.</string>
+    <string name="event_graph_desc">Valeurs lues autour de l\'événement</string>
+    <string name="event_graph_hint">La ligne pointillée est l\'événement. Touchez le graphe pour lire les valeurs à un instant, touchez une valeur pour l\'afficher ou la masquer.</string>
+</resources>

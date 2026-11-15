@@ -73,6 +73,7 @@ class ApiService(
     val routes: List<Route> = buildRoutes() +
         ProfileGraphRoutes(backend, clock, ::meta).routes() +
         ComputedRoutes(backend, ::meta).routes() +
+        EventRoutes(backend).routes() +
         CarRoutes(backend, clock).routes() +
         BackupRoutes(backend, clock).routes() +
         SetupRoutes(backend, guard, confirmTimeoutMs, clock, ::meta, catalogCache::clear).routes() +

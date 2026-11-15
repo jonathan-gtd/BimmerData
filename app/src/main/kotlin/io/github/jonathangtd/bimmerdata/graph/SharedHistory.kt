@@ -48,6 +48,21 @@ object SharedHistory {
     /** Main thread only. */
     fun history(id: String): ValueHistory? = histories[id]
 
+    /** Every value with a history. Main thread only. */
+    fun ids(): Set<String> = histories.keys.toSet()
+
+    /** Points of [id] between [fromMs] and [toMs], oldest first (raw while kept, else 1 s min / max). Main thread only. */
+    fun points(id: String, fromMs: Long, toMs: Long): List<Pair<Long, Double>> {
+        val h = histories[id] ?: return emptyList()
+        val out = ArrayList<Pair<Long, Double>>()
+        h.forEachPoint(fromMs, object : ValueHistory.PointSink {
+            override fun point(timeMs: Long, value: Float) {
+                out += timeMs to value.toDouble()
+            }
+        }, toMs)
+        return out
+    }
+
     /** Oldest point kept among [ids] (how far back a graph can scroll), null when none. */
     fun oldestMs(ids: Collection<String>): Long? = ids.mapNotNull { histories[it]?.oldestTimestampMs }.minOrNull()
 

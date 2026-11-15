@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="event_label">Event</string>
+    <string name="event_button">Event</string>
+    <string name="event_marked">Event noted</string>
+    <string name="event_add_note">Add a note</string>
+    <string name="events_title">Events</string>
+    <string name="events_intro">Each tap on the Event button (dashboard, Android Auto, notification) keeps the instant and the values read a minute before and 30 s after it. They are also in the CSV recording (marker \"event\") and in the Telegraf export (ecu bimmerdata, id event).</string>
+    <string name="events_empty">No event yet. While connected, tap the flag next to the connection, in Android Auto or in the notification when something happens.</string>
+    <string name="event_speed">%1$d km/h</string>
+    <string name="event_no_note">No note</string>
+    <string name="event_source_phone">Phone</string>
+    <string name="event_source_car">Android Auto</string>
+    <string name="event_source_notification">Notification</string>
+    <string name="event_source_api">API</string>
+    <string name="event_map">Map</string>
+    <string name="event_note">Note</string>
+    <string name="event_note_hint">What did you feel or hear?</string>
+    <string name="event_no_values">No value was read around this event.</string>
+    <string name="event_capturing">Keeping the values of the next 30 s…</string>
+    <string name="event_export_csv">Export CSV</string>
+    <string name="event_delete_title">Delete this event?</string>
+    <string name="event_delete_text">The event and the values kept around it are deleted from the phone. Points already exported to Telegraf stay there.</string>
+    <string name="event_graph_desc">Values read around the event</string>
+    <string name="event_graph_hint">The dashed line is the event. Tap the graph for the values at a time; tap a value to show or hide it.</string>
+</resources>

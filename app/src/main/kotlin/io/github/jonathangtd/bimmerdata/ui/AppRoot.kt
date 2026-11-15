@@ -105,6 +105,7 @@ fun AppRoot() {
             openCar = { overlay = null; tab = AppTab.Car },
             openDashboard = { overlay = null; tab = AppTab.Dashboard },
             openCars = { overlay = AppOverlay.Cars },
+            openEvents = { overlay = AppOverlay.Events },
         )
     }
     BackHandler(enabled = overlay != null) { overlay = null }
@@ -145,6 +146,7 @@ fun AppRoot() {
                     AppOverlay.Tool32 -> Tool32Screen(initialSgbd = tool32Sgbd, onBack = { overlay = null })
                     AppOverlay.ApiDocs -> ApiDocsScreen(onBack = { overlay = null })
                     // a car chosen: back to the Profiles tab when opened from it, else to the dashboard
+                    AppOverlay.Events -> io.github.jonathangtd.bimmerdata.events.ui.EventsScreen(onBack = { overlay = null })
                     AppOverlay.Cars -> CarsScreen(onBack = { overlay = null }, onShown = { overlay = null; if (tab != AppTab.Car) tab = AppTab.Dashboard })
                     null -> holder.SaveableStateProvider(tab.name) {
                         when (tab) {

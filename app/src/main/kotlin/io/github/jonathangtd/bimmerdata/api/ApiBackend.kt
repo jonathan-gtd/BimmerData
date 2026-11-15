@@ -99,6 +99,16 @@ interface ApiBackend {
     fun stopRecording()
     fun addMarker(label: String)
 
+    /** Driver events (« Événement »), newest first ([io.github.jonathangtd.bimmerdata.events.EventRuntime]). */
+    fun events(): List<io.github.jonathangtd.bimmerdata.events.DriveEvent> = notAvailable("Events")
+    fun event(id: String): io.github.jonathangtd.bimmerdata.events.DriveEvent? = events().firstOrNull { it.id == id }
+    fun eventSnapshot(id: String): io.github.jonathangtd.bimmerdata.events.EventSnapshot? = notAvailable("Events")
+
+    /** Marks an event now (as the button does). */
+    fun markEvent(note: String?, source: io.github.jonathangtd.bimmerdata.events.EventSource): io.github.jonathangtd.bimmerdata.events.DriveEvent = notAvailable("Events")
+    fun setEventNote(id: String, note: String): io.github.jonathangtd.bimmerdata.events.DriveEvent? = notAvailable("Events")
+    fun deleteEvent(id: String): Boolean = notAvailable("Events")
+
     fun recordings(): List<RecordingFile>
 
     /** Opens a recording listed by [recordings] by its exact name; null if there is none. */
