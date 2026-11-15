@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import io.github.jonathangtd.bimmerdata.gauges.GaugeType
 import org.junit.jupiter.api.Test
 import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
@@ -424,7 +425,7 @@ class ApiServerTest {
         assertEquals(200, call("GET", "/api/v1/dashboard").status)
         assertEquals(200, call("POST", "/api/v1/dashboard/reset").status)
         assertTrue(backend.dashboard.phonePages.isEmpty() && backend.dashboard.carPages.isEmpty())
-        assertEquals(6, call("GET", "/api/v1/card-types").json()["types"]!!.jsonArray.size)
+        assertEquals(GaugeType.entries.size, call("GET", "/api/v1/card-types").json()["types"]!!.jsonArray.size)
     }
 
     @Test

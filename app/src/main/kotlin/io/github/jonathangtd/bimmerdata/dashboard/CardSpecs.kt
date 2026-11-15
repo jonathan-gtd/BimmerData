@@ -32,8 +32,16 @@ object CardSpecs {
         }
         val min = card.min ?: autoMin
         val max = (card.max ?: autoMax).let { if (it > min) it else min + 1.0 }
-        val title = card.title?.takeIf { it.isNotBlank() } ?: first?.label ?: card.measurementIds.firstOrNull().orEmpty()
-        return GaugeSpec(card.type, title, null, min, max, card.withLegacyAlerts().alerts, channels, TrendWindow.ms(card.windowSeconds))
+        val autoTitle = if (card.type == GaugeType.Curve && measurements.size > 1) {
+            // "Power / Engine speed": what is drawn against what
+            "${measurements[1]?.label ?: card.measurementIds[1]} / ${first?.label ?: card.measurementIds[0]}"
+        } else {
+            first?.label ?: card.measurementIds.firstOrNull().orEmpty()
+        }
+        val title = card.title?.takeIf { it.isNotBlank() } ?: autoTitle
+        // a curve has no alert (its first value is an axis) and scales itself on what it shows
+        val alerts = if (card.type == GaugeType.Curve) emptyList() else card.withLegacyAlerts().alerts
+        return GaugeSpec(card.type, title, null, min, max, alerts, channels, TrendWindow.ms(card.windowSeconds))
     }
 
     private val bank = Regex("""\bBank\s*(\d)""", RegexOption.IGNORE_CASE)

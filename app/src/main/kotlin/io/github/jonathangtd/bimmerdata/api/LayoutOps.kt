@@ -40,7 +40,7 @@ object LayoutOps {
 
     /** Every rule a stored layout must satisfy; empty list = valid. */
     /**
-     * Computed values of the active profile (the layouts these operations edit): a `calc/<key>`
+     * Computed values of the active profile (the layouts these operations edit): a formula
      * value costs its inputs ([Dashboard.valueCount]). Set by [ApiService].
      */
     @Volatile var activeComputed: () -> List<io.github.jonathangtd.bimmerdata.profiles.ComputedValue> = { emptyList() }

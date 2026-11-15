@@ -228,7 +228,7 @@ curl -s -H "$H" "$BD/events/<id>?format=csv" -o event.csv
 | POST | `/api/v1/profiles/import[?activate=false&car=<id>]` | layout | Import a profile file (pages and graphs) as a new profile of the selected car (or of `car`) |
 | GET / POST | `/api/v1/profiles/{profile}/graphs` | read / layout | Graphs of the Graph tab / add one |
 | GET / PUT / DELETE | `/api/v1/profiles/{profile}/graphs/{graph}` | read / layout | One graph / replace it / delete it (pages never touched) |
-| GET / POST | `/api/v1/profiles/{profile}/computed` | read / layout | Computed values of a profile (ids `calc/<key>`, e.g. the power) / add one |
+| GET / POST | `/api/v1/profiles/{profile}/computed` | read / layout | Computed values (formulas) of a profile, each tied to an ECU (ids `<ecu>/<key>`, e.g. the power) / add one |
 | PUT / DELETE | `/api/v1/profiles/{profile}/computed/{key}[?removeCards=true]` | layout | Replace a computed value / delete it (`409 computed_in_use` while cards or graphs show it, unless `removeCards=true`) |
 | GET | `/api/v1/diag/vehicle` | diag | The selected car, the ECUs of its last detection and their last fault read (no car traffic, never the VIN) |
 | GET | `/api/v1/diag/faults` | diag | Read the fault memory from the car (`?ecu=0x12` for one ECU, `?cached=true` for the last read) |
@@ -241,7 +241,9 @@ curl -s -H "$H" "$BD/events/<id>?format=csv" -o event.csv
 - A card covers `colSpan × rowSpan` cells from (`col`, `row`), 0-based; cards may not overlap
   or leave the grid.
 - Card types: `Dial`, `BipolarBar` (1–4 measurements), `BigNumber`, `Trend`, `MultiValue`
-  (2–3 measurements), `Status`; the others take exactly one measurement.
+  (2–3 measurements), `Status`, `Curve` (2–4 measurements: the others drawn against the first
+  one, the horizontal axis, over the last `windowSeconds`, older readings fading; it scales itself
+  and has no alerts); the others take exactly one measurement.
 - A profile holds at most **42 values** (distinct measurement ids over all its phone and Android
   Auto pages; a value on several cards counts once). The whole profile is read at every cycle and
   one ECU's dynamic block holds 42 values. A card, a layout or a profile file that would make more
@@ -328,25 +330,32 @@ Each card has up to 4 alert rules in `alerts`:
 
 ### Computed values
 
-- A profile can hold values computed by the app from its other values (`computed` of the profile,
-  at most 8), measurement ids `calc/<key>`. Cards, graphs, the CSV recording, the Telegraf export
-  (tag `ecu=calc`) and `/api/v1/values` treat them like any measurement, session min / max
-  included; `GET /api/v1/ecus/calc/measurements` lists those of the active profile.
+- A profile can hold values computed by the app (formulas, `computed` of the profile, at most 8).
+  A formula **belongs to one ECU**: its inputs are values of that ECU and its id is
+  `<ecu>/<key>` (e.g. `<sgbd>/power`). It is listed with that ECU's values
+  (`GET /api/v1/ecus/<sgbd>/measurements`, the card picker) and cards, graphs, the CSV recording,
+  the Telegraf export (tag `ecu=<sgbd>`) and `/api/v1/values` treat it like the ECU's other values,
+  session min / max included.
+- `ecu` defaults to the ECU of the inputs; inputs of two ECUs are refused (`422 invalid_computed`).
+  The key (1–24 of a-z, 0-9, _, unique in the profile, not starting with `0x`) must not be a value
+  id of that ECU (`422 computed_key_taken`).
 - Only kind today: **`Power`** in ch, from inputs `torque` (N·m) and `rpm`:
   power = torque × rpm / 9549.3 × 1.35962. A negative torque (engine braking) gives 0. A value is
   computed each time an input gets a new sample, only when the two inputs are at most 2 s apart;
   its time is the newer input's.
 - Its inputs are read whenever the computed value is shown or recorded, and they count toward the
   profile's 42 values (an input already on a card counts once); the computed id itself costs nothing.
-- Create one:
+- Create one, then show it, e.g. against the engine speed on a `Curve` card:
 
   ```sh
   curl -s -H "$H" -X POST "$BD/profiles/<profile>/computed"     -d '{"kind":"Power","label":"Power","inputs":{"torque":"<sgbd>/<id>","rpm":"<sgbd>/<id2>"}}'
-  # -> {"computed":{"id":"calc/power","key":"power","kind":"Power","label":"Power","unit":"ch","inputs":{...}},"warnings":[]}
+  # -> {"computed":{"id":"<sgbd>/power","ecu":"<sgbd>","key":"power","kind":"Power","label":"Power","unit":"ch","inputs":{...}},"warnings":[]}
+  curl -s -H "$H" -X POST "$BD/dashboard/phone/pages/1/cards" -d '{"type":"Curve","measurementIds":["<sgbd>/<id2>","<sgbd>/power"],"windowSeconds":30}'
   ```
 
-  then put `calc/power` on a card like any measurement id. Profile files (`…/export`, `…/import`)
-  and the full backup carry `computed`; files without it still load.
+  Profile files (`…/export`, `…/import`) and the full backup carry `computed`; files without it
+  still load. Files from before formulas belonged to an ECU (ids `calc/<key>`) are converted when
+  read: each formula gets the ECU of its inputs and the cards and graphs showing it the new id.
 
 ### Driver events
 

@@ -27,6 +27,12 @@ enum class GaugeType {
 
     /** Text or state result. */
     Status,
+
+    /**
+     * Values against another one over the last [GaugeSpec.windowMs]: the first measurement is the
+     * horizontal axis, the others (1 to 3) are drawn against it (e.g. a power against the engine speed).
+     */
+    Curve,
 }
 
 /** One measurement shown by a card, already resolved to display strings. */
@@ -50,7 +56,7 @@ class GaugeSpec(
     /** Alert rules of the card ([Alerts]); empty = never in alert. */
     val alerts: List<CardAlert>,
     val channels: List<GaugeChannel>,
-    /** Time window of a [GaugeType.Trend] curve. */
+    /** Time window of a [GaugeType.Trend] or [GaugeType.Curve] card. */
     val windowMs: Long = TrendWindow.DEFAULT_MS,
 ) {
     /** Hysteresis of the alerts ([Alerts.margin]): range and the finest decimals shown. */
@@ -101,6 +107,7 @@ class GaugeState {
     internal val path = Path()
     internal val fillPath = Path()
     internal val trend = TrendDecimator()
+    internal val curves = Array(3) { CurvePoints() }
 
     fun target(i: Int): Double = if (i < count) targets[i] else Double.NaN
     fun smoothed(i: Int): Double = if (i < count) smoothed[i] else Double.NaN

@@ -72,7 +72,7 @@ class ApiService(
 
     val routes: List<Route> = buildRoutes() +
         ProfileGraphRoutes(backend, clock, ::meta).routes() +
-        ComputedRoutes(backend, ::meta).routes() +
+        ComputedRoutes(backend, ::meta, catalogCache::clear).routes() +
         EventRoutes(backend).routes() +
         CarRoutes(backend, clock).routes() +
         BackupRoutes(backend, clock).routes() +
@@ -159,17 +159,23 @@ class ApiService(
         val now = clock()
         // a new ECU folder (import from the phone or the in-app import) makes the cache stale at once
         val stamp = backend.ecuFiles?.ecuDir?.lastModified() ?: 0L
-        // computed values follow the active profile: never cached
-        if (key == io.github.jonathangtd.bimmerdata.live.ComputedValues.CALC) {
-            return runCatching { backend.measurements(key) }.getOrElse { emptyList() }.associateBy { it.id }
-        }
         catalogCache[key]?.let { (at, folder, map) -> if (now - at < 60_000 && folder == stamp) return map }
         val map = runCatching { backend.measurements(key) }.getOrElse { emptyList() }.associateBy { it.id }
         catalogCache[key] = Triple(now, stamp, map)
         return map
     }
 
-    private fun meta(id: String): Measurement? = catalog(id.substringBefore('/')).get(id)
+    /**
+     * The measurement [id]. The lists are cached a minute, but the formulas of an ECU follow the
+     * active profile: an id missing from the cached list is looked up once more in a fresh one.
+     */
+    private fun meta(id: String): Measurement? {
+        val sgbd = id.substringBefore('/')
+        return catalog(sgbd)[id] ?: run {
+            catalogCache.remove(sgbd.lowercase())
+            catalog(sgbd)[id]
+        }
+    }
 
     /** Measurements for [ids]; 404 listing the unknown ones. */
     private fun resolve(ids: List<String>): List<Measurement> {
@@ -1309,6 +1315,7 @@ class ApiService(
             GaugeType.Trend to "Value with a curve of the last `windowSeconds` (5 s to 60 min, default 45 s); good for slowly changing values (temperatures, voltages).",
             GaugeType.MultiValue to "2–3 values side by side with short labels (lambda B1 · B2); use channelLabels to name them.",
             GaugeType.Status to "Text or state results (e.g. switch states, ECU text results).",
+            GaugeType.Curve to "2–4 measurements: the others drawn against the first one (horizontal axis) over the last `windowSeconds` (default 45 s), e.g. `[<sgbd>/<engine speed>, <sgbd>/power]`; older readings fade. Scales itself, no alerts.",
         )
     }
 }

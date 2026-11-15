@@ -99,11 +99,10 @@ class LiveRepository private constructor(context: Context) : CableExecutor {
 
     private val sensorCatalog = SensorCatalog(edCatalog, { io.github.jonathangtd.bimmerdata.gps.PhoneSensorTexts.gpsMeasurements(app) }, app.getString(io.github.jonathangtd.bimmerdata.R.string.s3_gps_catalog))
 
-    /** The computed values of the active profile (pseudo ECU "calc"), on top of the ECU folder and the GPS. */
+    /** The computed values (formulas) of the active profile, listed with the values of their ECU. */
     private val computedCatalog = ComputedCatalog(
         sensorCatalog,
         { io.github.jonathangtd.bimmerdata.profiles.Computeds.defs(io.github.jonathangtd.bimmerdata.profiles.ProfileStore.state.value?.active?.computed.orEmpty()) },
-        app.getString(io.github.jonathangtd.bimmerdata.R.string.computed_catalog),
     )
 
     /** Measurements of the imported ECU folder, the phone's GPS and the active profile's computed values (call off the main thread: file I/O). */

@@ -217,9 +217,11 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
      * whole screen state (editor closed, first pages); the same profile goes through [DashboardSync].
      */
     private fun applyProfiles(set: ProfileSet) {
-        val computedChanged = allProfiles.value.active?.computed != set.active?.computed
+        val before = allProfiles.value.active?.computed.orEmpty()
+        val after = set.active?.computed.orEmpty()
         allProfiles.value = set
-        if (computedChanged) viewModelScope.launch { reloadComputed() }
+        // the formulas changed: the values of their ECUs again (old and new ones)
+        if (before != after) viewModelScope.launch { (before + after).map { it.ecu }.distinct().forEach { reloadComputed(it) } }
         val shown = set.activeDashboard()
         _ui.update { ui ->
             if (ui.dashboard == null || ui.profileId != set.activeId) {
@@ -290,18 +292,20 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    // ---- computed values (pseudo ECU "calc") ----
+    // ---- computed values (formulas of an ECU, listed with its values) ----
 
     /** Computed values of the active profile. */
     fun computedValues(): List<io.github.jonathangtd.bimmerdata.profiles.ComputedValue> = allProfiles.value.active?.computed.orEmpty()
 
     /** Cards and graph values of the active profile showing computed value [key]. */
     fun computedUses(key: String): Pair<Int, Int> =
-        allProfiles.value.active?.let { io.github.jonathangtd.bimmerdata.profiles.Computeds.uses(it, io.github.jonathangtd.bimmerdata.live.ComputedValues.idOf(key)) } ?: (0 to 0)
+        allProfiles.value.active?.let { p -> p.computed.firstOrNull { it.key == key }?.let { io.github.jonathangtd.bimmerdata.profiles.Computeds.uses(p, it.id) } } ?: (0 to 0)
 
     /** Adds or replaces (same key) a computed value of the active profile; false when refused (none active, too many, invalid). */
     suspend fun saveComputed(c: io.github.jonathangtd.bimmerdata.profiles.ComputedValue): Boolean = withContext(Dispatchers.IO) {
-        if (io.github.jonathangtd.bimmerdata.profiles.Computeds.problem(c) != null) return@withContext false
+        if (io.github.jonathangtd.bimmerdata.profiles.Computeds.problem(c, computedValues().filter { it.key != c.key }) != null) return@withContext false
+        // listed with the ECU's values: never one of its own ids
+        if (deps.catalog.measurements(c.ecu).any { it.id.equals(c.id, ignoreCase = true) && !io.github.jonathangtd.bimmerdata.live.ComputedValues.isComputed(it) }) return@withContext false
         flushNow()
         val id = _ui.value.profileId ?: return@withContext false
         var ok = false
@@ -314,7 +318,7 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
         }
-        reloadComputed()
+        reloadComputed(c.ecu)
         ok
     }
 
@@ -322,16 +326,17 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
     suspend fun deleteComputed(key: String) = withContext(Dispatchers.IO) {
         flushNow()
         val id = _ui.value.profileId ?: return@withContext
+        val ecu = computedValues().firstOrNull { it.key == key }?.ecu ?: return@withContext
         profileStore.update { set -> Profiles.updateProfile(set, id) { io.github.jonathangtd.bimmerdata.profiles.Computeds.remove(it, key) } }
-        reloadComputed()
+        reloadComputed(ecu)
     }
 
-    /** The computed values changed: their measurements again (labels, inputs). */
-    private suspend fun reloadComputed() {
-        val calc = io.github.jonathangtd.bimmerdata.live.ComputedValues.CALC
-        loadedSgbds.remove(calc)
-        _index.update { m -> m.filterKeys { !io.github.jonathangtd.bimmerdata.live.ComputedValues.isComputedId(it) } }
-        loadSgbd(calc)
+    /** The formulas of [ecu] changed: its values again (labels, inputs). */
+    private suspend fun reloadComputed(ecu: String) {
+        val sgbd = ecu.lowercase()
+        loadedSgbds.remove(sgbd)
+        _index.update { m -> m.filterValues { it.sgbd != sgbd } }
+        loadSgbd(sgbd)
     }
 
     /** File content to share profile [id] (no VIN, not the user's car). */

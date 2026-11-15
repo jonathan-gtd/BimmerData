@@ -28,7 +28,7 @@ data class ProfileExport(
     val ecus: List<String> = emptyList(),
     val dashboard: Dashboard = Dashboard(),
     val graphs: List<Graph> = emptyList(),
-    /** Computed values (ids `calc/<key>`) the pages and graphs may show. */
+    /** Computed values (formulas of an ECU, ids `<ecu>/<key>`) the pages and graphs may show. */
     val computed: List<ComputedValue> = emptyList(),
 ) {
     companion object {
@@ -57,13 +57,16 @@ object ProfileJson {
         require(parsed.formatVersion <= ProfileSet.FORMAT_VERSION) { "Profile format ${parsed.formatVersion} is newer than this app" }
         val seen = HashSet<String>()
         val profiles = parsed.profiles.filter { it.id.isNotBlank() && seen.add(it.id) }.map { p ->
+            val computed = Computeds.sanitize(p.computed)
+            // computed values of older files: pseudo ECU "calc" -> the ECU of their inputs
+            val (dashboard, graphs) = Computeds.ownedByEcu(computed, DashboardJson.sanitize(p.dashboard).copy(name = null), Graphs.sanitize(p.graphs))
             p.copy(
                 name = Profiles.cleanName(p.name).ifEmpty { "?" },
                 vehicle = Profiles.cleanVehicle(p.vehicle),
                 ecus = Profiles.normalizeEcus(p.ecus),
-                dashboard = DashboardJson.sanitize(p.dashboard).copy(name = null),
-                graphs = Graphs.sanitize(p.graphs),
-                computed = Computeds.sanitize(p.computed),
+                dashboard = dashboard,
+                graphs = graphs,
+                computed = computed,
             )
         }
         val active = parsed.activeId?.takeIf { id -> profiles.any { it.id == id } }
@@ -105,13 +108,15 @@ object ProfileJson {
         }
         require(e.formatVersion <= ProfileSet.FORMAT_VERSION) { "Profile format ${e.formatVersion} is newer than this app" }
         val computed = Computeds.sanitize(e.computed)
-        requireValueLimit(e.dashboard, computed)
+        // the file as written (before any repair), older formula ids converted
+        requireValueLimit(Computeds.ownedByEcu(computed, e.dashboard, emptyList()).first, computed)
+        val (dashboard, graphs) = Computeds.ownedByEcu(computed, DashboardJson.sanitize(e.dashboard).copy(name = null), Graphs.sanitize(e.graphs))
         return e.copy(
             computed = computed,
             name = Profiles.cleanName(e.name),
             ecus = Profiles.normalizeEcus(e.ecus),
-            dashboard = DashboardJson.sanitize(e.dashboard).copy(name = null),
-            graphs = Graphs.sanitize(e.graphs),
+            dashboard = dashboard,
+            graphs = graphs,
         )
     }
 

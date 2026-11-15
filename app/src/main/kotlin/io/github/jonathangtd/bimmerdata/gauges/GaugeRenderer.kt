@@ -94,6 +94,7 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
             GaugeType.Trend -> drawTrend(canvas, rect, spec, state, feed)
             GaugeType.MultiValue -> drawMultiValue(canvas, rect, spec, state)
             GaugeType.Status -> drawStatus(canvas, rect, spec, state)
+            GaugeType.Curve -> drawCurve(canvas, rect, spec, state, feed)
         }
         return state.animating
     }
@@ -506,6 +507,101 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
         }
     }
 
+    // ---------------------------------------------------------------- Curve
+
+    /** Each value after the first against the first one, recent readings bright, older ones fading. */
+    private fun drawCurve(c: Canvas, r: RectF, spec: GaugeSpec, st: GaugeState, feed: GaugeFeed) {
+        val u = theme.unit
+        val ls = min((min(r.height() / (84f * u), r.width() / (150f * u))).coerceIn(0.75f, 2.4f) * u, 1.4f * u) * if (theme.car) 1.4f else 1f
+        val pad = 12f * min(ls, 1.6f * u)
+        val left = r.left + pad
+        val right = r.right - pad
+        mutedPaint.color = theme.muted
+        mutedPaint.textSize = 13f * ls
+        var y = r.top + pad + 13f * ls * 0.82f
+        val windowText = TrendWindow.durationLabel(spec.windowMs)
+        val windowW = mutedPaint.measureText(windowText)
+        c.drawText(st.ellipsized(0, spec.title, mutedPaint, (right - left - windowW - 8f * ls).coerceAtLeast(0f)), left, y, mutedPaint)
+        mutedPaint.alpha = 150
+        c.drawText(windowText, right - windowW, y, mutedPaint)
+        mutedPaint.alpha = 255
+        val xCh = spec.channels.firstOrNull() ?: return
+        val ys = spec.channels.drop(1).take(st.curves.size)
+        if (ys.size > 1) {
+            // legend: one colored name per value
+            y += 15f * ls
+            var x = left
+            mutedPaint.textSize = 11f * ls
+            val labels = ys.map { ch -> ch.label + if (ch.unit.isNotEmpty()) " (${ch.unit})" else "" }
+            // the whole legend on one line: smaller text when it is too wide
+            val total = labels.sumOf { mutedPaint.measureText(it).toDouble() }.toFloat() + 10f * ls * (labels.size - 1)
+            if (total > right - left) mutedPaint.textSize = max(7f * u, mutedPaint.textSize * (right - left) / total)
+            labels.forEachIndexed { i, label ->
+                mutedPaint.color = curveColor(i)
+                c.drawText(label, x, y, mutedPaint)
+                x += mutedPaint.measureText(label) + 10f * ls * mutedPaint.textSize / (11f * ls)
+            }
+            mutedPaint.color = theme.muted
+        }
+        tickPaint.color = theme.muted
+        tickPaint.textSize = 10f * u * if (theme.car) 1.3f else 1f
+        val top = y + 8f * ls
+        val bottom = r.bottom - pad - tickPaint.textSize * 1.3f
+        if (bottom - top < 16f * u || right - left < 24f * u) return
+        var xLo = Float.MAX_VALUE; var xHi = -Float.MAX_VALUE; var yLo = Float.MAX_VALUE; var yHi = -Float.MAX_VALUE
+        ys.forEachIndexed { i, ch ->
+            val pts = st.curves[i]
+            pts.collect(feed.history(xCh.measurementId), feed.history(ch.measurementId), feed.nowMs, spec.windowMs)
+            for (k in 0 until pts.count) {
+                xLo = min(xLo, pts.xs[k]); xHi = max(xHi, pts.xs[k]); yLo = min(yLo, pts.ys[k]); yHi = max(yHi, pts.ys[k])
+            }
+        }
+        if (xLo > xHi) {
+            // nothing paired yet: the empty axes
+            gridPaint.color = theme.track
+            gridPaint.strokeWidth = max(1f, 0.8f * u)
+            c.drawLine(left, bottom, right, bottom, gridPaint)
+            return
+        }
+        if (xHi - xLo < 1e-3f) { xLo -= 1f; xHi += 1f }
+        if (yHi - yLo < 1e-3f) { yLo -= 1f; yHi += 1f }
+        // Y range left of the plot, X range under it
+        val y0 = ys.first()
+        val yHiText = format.withUnit(format.format(yHi.toDouble(), y0.decimals), if (ys.size == 1) y0.unit else "")
+        val yLoText = format.format(yLo.toDouble(), y0.decimals)
+        val plotLeft = left + max(tickPaint.measureText(yHiText), tickPaint.measureText(yLoText)) + 6f * u
+        if (right - plotLeft < 24f * u) return
+        gridPaint.color = theme.track
+        gridPaint.strokeWidth = max(1f, 0.8f * u)
+        c.drawLine(plotLeft, bottom, right, bottom, gridPaint)
+        c.drawLine(plotLeft, top, plotLeft, bottom, gridPaint)
+        c.drawText(yHiText, plotLeft - 4f * u - tickPaint.measureText(yHiText), top + tickPaint.textSize * 0.8f, tickPaint)
+        c.drawText(yLoText, plotLeft - 4f * u - tickPaint.measureText(yLoText), bottom, tickPaint)
+        val xText = format.withUnit(format.format(xLo.toDouble(), xCh.decimals), xCh.unit)
+        c.drawText(xText, plotLeft, bottom + tickPaint.textSize * 1.15f, tickPaint)
+        val xEnd = format.withUnit(format.format(xHi.toDouble(), xCh.decimals), xCh.unit)
+        c.drawText(xEnd, right - tickPaint.measureText(xEnd), bottom + tickPaint.textSize * 1.15f, tickPaint)
+        val radius = 2.2f * u * if (theme.car) 1.3f else 1f
+        // points kept off the axes and the edges
+        val pl = plotLeft + radius * 2f
+        val pr = right - radius
+        val pt = top + radius
+        val pb = bottom - radius * 2f
+        ys.indices.forEach { i ->
+            val pts = st.curves[i]
+            fillPaint.color = curveColor(i)
+            for (k in 0 until pts.count) {
+                fillPaint.alpha = (255 * (1f - 0.8f * pts.ages[k])).toInt()
+                val px = pl + (pr - pl) * (pts.xs[k] - xLo) / (xHi - xLo)
+                val py = pb - (pb - pt) * (pts.ys[k] - yLo) / (yHi - yLo)
+                c.drawCircle(px, py, radius, fillPaint)
+            }
+        }
+        fillPaint.alpha = 255
+    }
+
+    private fun curveColor(i: Int): Int = if (i == 0) theme.accent else CURVE_COLORS[i]
+
     // ---------------------------------------------------------------- Multi value
 
     private fun drawMultiValue(c: Canvas, r: RectF, spec: GaugeSpec, st: GaugeState) {
@@ -619,6 +715,9 @@ class GaugeRenderer(theme: GaugeTheme, val format: GaugeFormat) {
     }
 
     companion object {
+        /** Colors of the 2nd and 3rd values of a curve card (the 1st is the accent). */
+        private val CURVE_COLORS = intArrayOf(0, 0xFFB388FF.toInt(), 0xFF7CD992.toInt())
+
         /** Cap height of Barlow / Barlow Semi Condensed digits, relative to the font size. */
         const val CAP = 0.70f
 

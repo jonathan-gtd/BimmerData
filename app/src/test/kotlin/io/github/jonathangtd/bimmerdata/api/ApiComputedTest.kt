@@ -82,16 +82,23 @@ class ApiComputedTest {
         val made = call("POST", base, body)
         assertEquals(201, made.status, made.text)
         val c = made.json()["computed"]!!.jsonObject
-        assertEquals("calc/power", c["id"]!!.jsonPrimitive.content)
+        assertEquals("msv70/power", c["id"]!!.jsonPrimitive.content, "a formula belongs to the ECU of its inputs")
+        assertEquals("msv70", c["ecu"]!!.jsonPrimitive.content)
         assertEquals("ch", c["unit"]!!.jsonPrimitive.content)
         assertEquals(0, made.json()["warnings"]!!.jsonArray.size)
         // a second one gets the next key; unknown inputs are warned about
-        val second = call("POST", base, """{"kind":"power","inputs":{"torque":"other/0x1","rpm":"msv70/0x4807"}}""")
+        val second = call("POST", base, """{"kind":"power","inputs":{"torque":"msv70/0x1","rpm":"msv70/0x4807"}}""")
         assertEquals(201, second.status, second.text)
         assertEquals("power_2", second.json()["computed"]!!.jsonObject["key"]!!.jsonPrimitive.content)
         assertEquals(1, second.json()["warnings"]!!.jsonArray.size)
 
         assertEquals("invalid_computed", call("POST", base, """{"kind":"Boost","inputs":{}}""").errorCode)
+        // one ECU per formula; its id never one of the ECU's own values
+        val twoEcus = call("POST", base, """{"kind":"Power","inputs":{"torque":"dsc/0x1","rpm":"msv70/0x4807"}}""")
+        assertEquals("invalid_computed", twoEcus.errorCode, twoEcus.text)
+        assertEquals("invalid_computed", call("POST", base, """{"ecu":"dsc","kind":"Power","inputs":{"torque":"msv70/0x4402","rpm":"msv70/0x4807"}}""").errorCode)
+        assertEquals("invalid_computed", call("POST", base, """{"key":"0x4402","kind":"Power","inputs":{"torque":"msv70/0x4402","rpm":"msv70/0x4807"}}""").errorCode)
+        assertEquals("computed_key_taken", call("POST", base, """{"key":"status_motor","kind":"Power","inputs":{"torque":"msv70/0x4402","rpm":"msv70/0x4807"}}""").errorCode)
         assertEquals("invalid_computed", call("POST", base, """{"kind":"Power","inputs":{"torque":"msv70/0x4402"}}""").errorCode)
         assertEquals(409, call("POST", base, """{"key":"power","kind":"Power","inputs":{"torque":"msv70/0x4402","rpm":"msv70/0x4807"}}""").status)
         assertEquals(400, call("POST", base, """{"kind":"Power","inputs":{"torque":"msv70/0x4402","rpm":"msv70/0x4807"},"oops":1}""").status)
@@ -99,7 +106,7 @@ class ApiComputedTest {
 
         // on a card like any measurement (the fake keeps its dashboard apart: write it into the profile)
         val layout = Dashboard(phonePages = listOf(Page(id = "p", name = "Sport", columns = 2, rows = 2, cards = listOf(
-            Card(id = "c1", type = GaugeType.BigNumber, measurementIds = listOf("calc/power")),
+            Card(id = "c1", type = GaugeType.BigNumber, measurementIds = listOf("msv70/power")),
             Card(id = "c2", type = GaugeType.BigNumber, measurementIds = listOf("msv70/0x4300"), col = 1),
         ))))
         backend.profileSet = Profiles.writeDashboard(backend.profileSet, pid, layout)

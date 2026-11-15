@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test
 class LiveDataProxyComputedTest {
     private val torque = Measurement("ecu/0x58D0", "ecu", "Torque", "Nm", MeasurementSource.MeasurementTable(0x58D0, "STAT_TORQUE_WERT"))
     private val rpm = Measurement("ecu/0x4807", "ecu", "Engine speed", "rpm", MeasurementSource.MeasurementTable(0x4807, "STAT_RPM_WERT"))
-    private val power = ComputedValues.measurement(ComputedDef("power", ComputedKind.Power, mapOf("torque" to torque.id, "rpm" to rpm.id), "Power")) {
+    private val power = ComputedValues.measurement(ComputedDef("ecu", "power", ComputedKind.Power, mapOf("torque" to torque.id, "rpm" to rpm.id), "Power")) {
         listOf(torque, rpm).firstOrNull { m -> m.id == it }
     }!!
 

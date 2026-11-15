@@ -47,33 +47,35 @@ enum class ComputedKind(val unit: String, val roles: List<String>, val min: Doub
 }
 
 /**
- * One computed value of a profile, as the app stores it: measurement id `calc/<key>`, its [kind],
- * the measurement id of each input by role (e.g. "torque" -> "<sgbd>/<id>") and a label.
+ * One computed value (formula) of a profile, as the app stores it. It belongs to the ECU [ecu] whose
+ * values are its inputs: measurement id `<ecu>/<key>`, listed with that ECU's values. [inputs] =
+ * the measurement id of each input by role (e.g. "torque" -> "<ecu>/<id>").
  */
 data class ComputedDef(
+    val ecu: String,
     val key: String,
     val kind: ComputedKind,
     val inputs: Map<String, String>,
     val label: String,
 ) {
-    val id: String get() = ComputedValues.idOf(key)
+    val id: String get() = ComputedValues.idOf(ecu, key)
 
     /** Input ids in the order of [ComputedKind.roles]; null when one is missing. */
     fun inputIds(): List<String>? = kind.roles.map { inputs[it] ?: return null }
 }
 
 /**
- * Values computed by the app from other measurements (pseudo ECU [CALC], ids `calc/<key>`), next to
- * the ECU and phone sensor ones: cards, graphs, the CSV recording, the Telegraf export (tag
- * `ecu=calc`) and the REST API handle them like any other value.
+ * Values computed by the app from other values of one ECU (formulas), listed with that ECU's values
+ * (ids `<ecu>/<key>`): cards, graphs, the CSV recording, the Telegraf export (tag `ecu=<ecu>`) and
+ * the REST API handle them like any other value of the ECU.
  *
  * - The acquisition never reads a computed value itself: [expand] replaces it by its inputs.
  * - A sample is computed whenever an input gets a new one ([evaluate]), only when every input has
  *   a value no older than [MAX_SKEW_MS] from the others; its time is the newest input's time.
  */
 object ComputedValues {
-    /** Pseudo SGBD of the computed values. */
-    const val CALC = "calc"
+    /** Pseudo ECU of the computed values before they belonged to an ECU (ids `calc/<key>`, migrated). */
+    const val LEGACY_SGBD = "calc"
 
     /** Inputs further apart than this give no value (one of them is stale). */
     const val MAX_SKEW_MS = 2_000L
@@ -83,9 +85,10 @@ object ComputedValues {
 
     const val MAX_LABEL_LENGTH = 40
 
-    fun idOf(key: String): String = "$CALC/$key"
+    fun idOf(ecu: String, key: String): String = "${ecu.lowercase()}/$key"
 
-    fun isComputedId(id: String): Boolean = id.startsWith("$CALC/")
+    /** A key that could be mistaken for an ECU value id (table ids are `0x…`). */
+    fun looksLikeEcuId(key: String): Boolean = key.matches(Regex("0x[0-9a-f]*"))
 
     fun isComputed(m: Measurement): Boolean = m.source is MeasurementSource.Computed
 
@@ -97,7 +100,7 @@ object ComputedValues {
         val ids = def.inputIds() ?: return null
         val inputs = ids.map { resolve(it) ?: return null }
         return Measurement(
-            id = def.id, sgbd = CALC, label = def.label.ifBlank { def.kind.name }, unit = def.kind.unit,
+            id = def.id, sgbd = def.ecu.lowercase(), label = def.label.ifBlank { def.kind.name }, unit = def.kind.unit,
             source = MeasurementSource.Computed(def.kind, inputs), min = def.kind.min, max = def.kind.max,
             description = inputs.joinToString(" · ") { it.label },
         )
@@ -163,32 +166,29 @@ object ComputedValues {
 }
 
 /**
- * [MeasurementCatalog] with the computed values of the active profile ([defs]) as the pseudo ECU
- * [ComputedValues.CALC], their inputs looked up in [base]. The picker lists it with [description].
+ * [MeasurementCatalog] with the computed values of the active profile ([defs]) listed first among
+ * the values of their ECU, their inputs looked up in [base]. A formula whose id is also a value of
+ * the ECU is left out (the ECU's value wins).
  */
 class ComputedCatalog(
     private val base: MeasurementCatalog,
     private val defs: () -> List<ComputedDef>,
-    private val description: String = "Computed values",
 ) : MeasurementCatalog {
-    override fun sgbdsWithMeasurements(): List<String> =
-        base.sgbdsWithMeasurements().filter { it != ComputedValues.CALC } + ComputedValues.CALC
+    override fun sgbdsWithMeasurements(): List<String> = base.sgbdsWithMeasurements()
 
-    override fun measurements(sgbd: String): List<Measurement> =
-        if (sgbd.equals(ComputedValues.CALC, ignoreCase = true)) computed() else base.measurements(sgbd)
+    override fun measurements(sgbd: String): List<Measurement> {
+        val own = base.measurements(sgbd)
+        val mine = defs().filter { it.ecu.equals(sgbd, ignoreCase = true) }
+        if (mine.isEmpty()) return own
+        val ids = own.mapTo(HashSet()) { it.id.lowercase() }
+        val byId = own.associateBy { it.id }
+        fun resolve(id: String): Measurement? =
+            if (id.substringBefore('/').equals(sgbd, ignoreCase = true)) byId[id] else null
+        return mine.filter { it.id.lowercase() !in ids }.mapNotNull { ComputedValues.measurement(it, ::resolve) } + own
+    }
 
-    override fun sgbdInfos(): List<SgbdInfo> =
-        base.sgbdInfos().filter { it.name != ComputedValues.CALC } + SgbdInfo(ComputedValues.CALC, description, defs().size)
+    override fun sgbdInfos(): List<SgbdInfo> = base.sgbdInfos()
 
     /** The computed values whose inputs are all known. */
-    fun computed(): List<Measurement> {
-        val bySgbd = HashMap<String, Map<String, Measurement>>()
-        fun resolve(id: String): Measurement? {
-            if (!id.contains('/')) return null
-            val sgbd = id.substringBefore('/').lowercase()
-            val map = bySgbd.getOrPut(sgbd) { runCatching { base.measurements(sgbd) }.getOrDefault(emptyList()).associateBy { it.id } }
-            return map[id]
-        }
-        return defs().mapNotNull { ComputedValues.measurement(it, ::resolve) }
-    }
+    fun computed(): List<Measurement> = defs().map { it.ecu.lowercase() }.distinct().flatMap { e -> measurements(e).filter(ComputedValues::isComputed) }
 }

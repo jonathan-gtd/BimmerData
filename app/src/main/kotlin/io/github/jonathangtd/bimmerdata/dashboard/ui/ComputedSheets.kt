@@ -64,99 +64,44 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 
 /**
- * Step of the card picker for the computed values of the profile (pseudo ECU "calc"): pick one
- * like any measurement, create a power value, edit or delete one.
+ * Formulas of ECU [ecu] above its values in the card picker: one chip per formula of the active
+ * profile (tap = edit), and « New power value ». The formulas themselves are picked in the list
+ * below like any value of the ECU. [onChanged] gets the id of a deleted formula (null otherwise).
  */
 @Composable
-internal fun ComputedStep(
-    vm: DashboardViewModel, type: GaugeType, selected: MutableList<String>, profileEcus: List<String>, onConfirm: () -> Unit,
-) {
-    var version by remember { mutableIntStateOf(0) }
-    val all by produceState<List<Measurement>?>(null, version) { value = vm.measurements(ComputedValues.CALC) }
+internal fun FormulaBar(vm: DashboardViewModel, ecu: String, version: Int, onChanged: (removedId: String?) -> Unit) {
     var editing by remember { mutableStateOf<ComputedValue?>(null) }
-    val range = Card.measurementRange(type)
-    val single = range.last == 1
-    val defs = remember(version) { vm.computedValues() }
-    Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-        PillButton(
-            stringResource(R.string.computed_add_power),
-            onClick = { editing = ComputedValue(key = Computeds.newKey(defs, ComputedKind.Power), kind = ComputedKind.Power.name) },
-            icon = R.drawable.ic_add, enabled = profileEcus.isNotEmpty() && defs.size < Computeds.MAX,
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        )
-        when {
-            profileEcus.isEmpty() -> Text(stringResource(R.string.computed_no_ecu), color = Cockpit.Muted, fontSize = 14.sp, lineHeight = 19.sp)
-            defs.size >= Computeds.MAX -> Text(stringResource(R.string.computed_full, Computeds.MAX), color = Cockpit.Muted, fontSize = 13.sp)
-        }
-        if (defs.isEmpty()) {
-            Text(stringResource(R.string.computed_empty), color = Cockpit.Muted, fontSize = 14.sp, lineHeight = 19.sp, modifier = Modifier.padding(vertical = 8.dp))
-        }
-        val byId = all.orEmpty().associateBy { it.id }
-        LazyColumn(Modifier.weight(1f)) {
-            items(defs, key = { it.key }) { def ->
-                val m = byId[def.id]
-                val isSel = def.id in selected
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 60.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(if (isSel) Cockpit.Accent.copy(alpha = 0.10f) else Color.Transparent)
-                        .clickable(enabled = m != null) {
-                            if (single) {
-                                selected.clear()
-                                selected.add(def.id)
-                                onConfirm()
-                            } else if (isSel) {
-                                selected.remove(def.id)
-                            } else if (selected.size < range.last) {
-                                selected.add(def.id)
-                            }
-                        }
-                        .padding(start = 12.dp, top = 8.dp, bottom = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(def.label.ifBlank { def.kind }, color = if (m != null) Cockpit.Text else Cockpit.Muted, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(
-                            listOf(ComputedKind.of(def.kind)?.unit.orEmpty(), m?.description ?: def.inputs.values.joinToString(" · ")).filter { it.isNotBlank() }.joinToString("  ·  "),
-                            color = Cockpit.Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    if (isSel) Icon(painterResource(R.drawable.ic_check), contentDescription = null, tint = Cockpit.Accent, modifier = Modifier.padding(start = 8.dp))
-                    IconButton(onClick = { editing = def }) {
-                        Icon(painterResource(R.drawable.ic_edit), contentDescription = stringResource(R.string.computed_edit), tint = Cockpit.Muted)
-                    }
-                }
-                HorizontalDivider(color = Cockpit.Border)
-            }
-        }
-        if (!single) {
-            PillButton(
-                stringResource(R.string.add) + if (selected.isNotEmpty()) " (${selected.size})" else "",
-                onClick = onConfirm, enabled = selected.size in range, color = Cockpit.OnAccent, background = Cockpit.Accent,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-            )
+    val all = remember(version) { vm.computedValues() }
+    val mine = all.filter { it.ecu.equals(ecu, ignoreCase = true) }
+    Row(
+        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(stringResource(R.string.computed_formulas), color = Cockpit.Muted, fontSize = 13.sp)
+        mine.forEach { c -> Chip("✎ " + c.label.ifBlank { c.kind }, selected = false, onClick = { editing = c }) }
+        if (all.size < Computeds.MAX) {
+            Chip("+ " + stringResource(R.string.computed_add_power), selected = false, onClick = {
+                editing = ComputedValue(key = Computeds.newKey(all, ComputedKind.Power), kind = ComputedKind.Power.name, ecu = ecu.lowercase())
+            })
         }
     }
     editing?.let { c ->
         ComputedEditorDialog(
-            vm, initial = c, isNew = defs.none { it.key == c.key }, profileEcus = profileEcus,
+            vm, initial = c, isNew = all.none { it.key == c.key },
             onDismiss = { editing = null },
-            onChanged = { key, deleted ->
+            onChanged = { deleted ->
                 editing = null
-                if (deleted) selected.remove(ComputedValues.idOf(key))
-                version++
+                onChanged(if (deleted) c.id else null)
             },
         )
     }
 }
 
-/** Name and inputs of a power value; save, or delete (with the cards showing it, after confirmation). */
+/** Name and inputs (values of the formula's ECU) of a power value; save, or delete (with the cards showing it, after confirmation). */
 @Composable
 private fun ComputedEditorDialog(
-    vm: DashboardViewModel, initial: ComputedValue, isNew: Boolean, profileEcus: List<String>,
-    onDismiss: () -> Unit, onChanged: (key: String, deleted: Boolean) -> Unit,
+    vm: DashboardViewModel, initial: ComputedValue, isNew: Boolean,
+    onDismiss: () -> Unit, onChanged: (deleted: Boolean) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val defaultName = stringResource(R.string.computed_kind_power)
@@ -199,7 +144,7 @@ private fun ComputedEditorDialog(
                         label = name.trim(),
                         inputs = mapOf(ComputedKind.TORQUE to torque!!, ComputedKind.RPM to rpm!!),
                     )
-                    scope.launch { if (vm.saveComputed(c)) onChanged(c.key, false) }
+                    scope.launch { if (vm.saveComputed(c)) onChanged(false) }
                 },
                 modifier = Modifier.heightIn(min = MinTouch),
             ) { Text(stringResource(R.string.computed_save), color = if (canSave) Cockpit.Accent else Cockpit.Muted) }
@@ -210,7 +155,7 @@ private fun ComputedEditorDialog(
     )
     picking?.let { role ->
         InputPickerDialog(
-            vm, profileEcus, role,
+            vm, initial.ecu, role,
             onDismiss = { picking = null },
             onPick = { id ->
                 if (role == ComputedKind.TORQUE) torque = id else rpm = id
@@ -228,7 +173,7 @@ private fun ComputedEditorDialog(
                 confirmDelete = false
                 scope.launch {
                     vm.deleteComputed(initial.key)
-                    onChanged(initial.key, true)
+                    onChanged(true)
                 }
             },
             onDismiss = { confirmDelete = false },
@@ -260,10 +205,9 @@ internal fun unitFits(role: String, unit: String): Boolean {
     }
 }
 
-/** Measurements of the profile's ECUs to use as input [role]; those with a fitting unit first. */
+/** Values of [ecu] to use as input [role] (a formula takes its inputs from its own ECU); those with a fitting unit first. */
 @Composable
-private fun InputPickerDialog(vm: DashboardViewModel, profileEcus: List<String>, role: String, onDismiss: () -> Unit, onPick: (String) -> Unit) {
-    var ecu by remember { mutableStateOf(profileEcus.firstOrNull() ?: "") }
+private fun InputPickerDialog(vm: DashboardViewModel, ecu: String, role: String, onDismiss: () -> Unit, onPick: (String) -> Unit) {
     val all by produceState<List<Measurement>?>(null, ecu) {
         value = vm.measurements(ecu).filterNot { ComputedValues.isComputed(it) }.sortedByDescending { unitFits(role, it.unit) }
     }
@@ -272,14 +216,6 @@ private fun InputPickerDialog(vm: DashboardViewModel, profileEcus: List<String>,
         Surface(color = Cockpit.Card, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.86f)) {
             Column(Modifier.fillMaxSize().padding(top = 12.dp)) {
                 SheetHeader(stringResource(if (role == ComputedKind.TORQUE) R.string.computed_torque else R.string.computed_rpm), onBack = onDismiss)
-                if (profileEcus.size > 1) {
-                    Row(
-                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 6.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        profileEcus.forEach { e -> Chip(e.uppercase(), selected = e == ecu, onClick = { ecu = e }) }
-                    }
-                }
                 MeasurementList(all, GaugeType.BigNumber, selected, onConfirm = { selected.firstOrNull()?.let(onPick) })
             }
         }

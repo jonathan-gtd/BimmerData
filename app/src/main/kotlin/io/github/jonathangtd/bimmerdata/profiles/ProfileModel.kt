@@ -50,7 +50,7 @@ data class Profile(
     val lastUsedMs: Long = 0,
     /** Graphs of the Graph tab: values of this profile's cards on a time axis. */
     val graphs: List<Graph> = emptyList(),
-    /** Values computed by the app from this profile's values (ids `calc/<key>`), e.g. the power. */
+    /** Values computed by the app from values of one ECU (formulas, ids `<ecu>/<key>`), e.g. the power. */
     val computed: List<ComputedValue> = emptyList(),
 ) {
     /** The layout as the dashboard screens see it: named after the profile. */

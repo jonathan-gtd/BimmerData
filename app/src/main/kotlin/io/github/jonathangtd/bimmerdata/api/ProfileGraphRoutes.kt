@@ -46,7 +46,7 @@ internal class ProfileGraphRoutes(
 
     private fun invalidGraph(message: String) = ApiException(422, "invalid_graph", message)
 
-    private fun warnings(ids: Collection<String>): JsonArray = JsonArray(ids.filter { it.contains('/') && !io.github.jonathangtd.bimmerdata.live.ComputedValues.isComputedId(it) && meta(it) == null }.distinct().map {
+    private fun warnings(ids: Collection<String>): JsonArray = JsonArray(ids.filter { it.contains('/') && meta(it) == null }.distinct().map {
         JsonPrimitive("'$it' is not in the imported ECU folder: it will show no data until its SGBD is imported")
     })
 

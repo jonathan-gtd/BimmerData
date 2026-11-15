@@ -73,6 +73,8 @@
     <string name="type_bipolar_desc">Centrées sur 0, ex. richesse B1 / B2</string>
     <string name="type_big_desc">Valeur en grand, min / max de la session</string>
     <string name="type_trend_desc">Valeur et 45 dernières secondes</string>
+    <string name="type_curve">Courbe</string>
+    <string name="type_curve_desc">Valeurs selon une autre : la 1re valeur choisie est l\'axe horizontal (ex. régime, puis puissance)</string>
     <string name="type_multi_desc">2 ou 3 valeurs, ex. lambda B1 · B2</string>
     <string name="type_status_desc">Résultat texte ou état</string>
 

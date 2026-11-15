@@ -21,13 +21,16 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 /**
- * Computed values of a profile (ids `calc/<key>`, e.g. the power from a torque and an engine
- * speed): list, create, replace, delete. Cards and graphs then show them like any measurement.
+ * Computed values (formulas) of a profile, each belonging to the ECU of its inputs (ids
+ * `<ecu>/<key>`, e.g. the power from a torque and an engine speed): list, create, replace, delete.
+ * Cards and graphs then show them like any value of that ECU.
  * Part of [ApiService]; pure JVM.
  */
 internal class ComputedRoutes(
     private val backend: ApiBackend,
     private val meta: (String) -> Measurement?,
+    /** The formulas changed: the cached value lists of the ECUs are stale. */
+    private val changed: () -> Unit = {},
 ) {
     private fun ok(element: JsonElement, status: Int = 200) = json(status, element)
 
@@ -40,7 +43,7 @@ internal class ComputedRoutes(
     private fun invalid(message: String) = ApiException(422, "invalid_computed", message)
 
     private fun valueJson(c: ComputedValue) = buildJsonObject {
-        put("id", c.id); put("key", c.key); put("kind", c.kind); put("label", c.label)
+        put("id", c.id); put("ecu", c.ecu); put("key", c.key); put("kind", c.kind); put("label", c.label)
         put("unit", ComputedKind.of(c.kind)?.unit.orEmpty())
         put("inputs", JsonObject(c.inputs.mapValues { JsonPrimitive(it.value) }))
     }
@@ -51,7 +54,7 @@ internal class ComputedRoutes(
 
     /** A computed value from [b] (strict); [key] is kept when given. */
     private fun parse(b: JsonObject, existing: List<ComputedValue>, key: String?): ComputedValue {
-        b.allowOnly("key", "kind", "inputs", "label")
+        b.allowOnly("key", "kind", "inputs", "label", "ecu")
         val kindName = b.string("kind") ?: throw invalid("'kind' is required (${ComputedKind.entries.joinToString { it.name }})")
         val kind = ComputedKind.of(kindName) ?: throw invalid("Unknown kind '$kindName' (known: ${ComputedKind.entries.joinToString { it.name }})")
         val inputsEl = b["inputs"] as? JsonObject ?: throw invalid("'inputs' is required: an object role -> measurement id, roles ${kind.roles.joinToString()}")
@@ -63,21 +66,27 @@ internal class ComputedRoutes(
             }
             else -> b.string("key")?.trim()?.lowercase() ?: Computeds.newKey(existing, kind)
         }
-        val c = ComputedValue(key = newKey, kind = kind.name, inputs = inputs, label = (b.string("label") ?: "").trim())
-        Computeds.problem(c)?.let { throw invalid(it) }
+        val ecu = (b.string("ecu") ?: Computeds.ecuOfInputs(inputs) ?: "").trim().lowercase()
+        val c = ComputedValue(key = newKey, kind = kind.name, inputs = inputs, label = (b.string("label") ?: "").trim(), ecu = ecu)
+        Computeds.problem(c, existing.filter { it.key != newKey })?.let { throw invalid(it) }
+        // the formula is listed with the ECU's values: its id must not be one of them
+        meta(c.id)?.takeUnless { ComputedValues.isComputed(it) }?.let {
+            throw ApiException(422, "computed_key_taken", "'${c.id}' is already a value of ${c.ecu} (${it.label}): choose another key")
+        }
         return c
     }
 
     fun routes(): List<Route> {
         val profileParam = Param("profile", "path", "Profile id (see GET /api/v1/profiles).", S.str(), example = JsonPrimitive("a1b2c3d4e5"))
-        val keyParam = Param("key", "path", "Key of the computed value (its id is `calc/<key>`).", S.str(), example = JsonPrimitive("power"))
+        val keyParam = Param("key", "path", "Key of the computed value (its id is `<ecu>/<key>`).", S.str(), example = JsonPrimitive("power"))
         val body = S.obj(null, listOf("kind", "inputs"), false, null,
-            "key" to S.str("Only on POST: 1..24 of a-z, 0-9, _ (default: the kind, e.g. `power`, `power_2`…).", "power"),
+            "key" to S.str("Only on POST: 1..24 of a-z, 0-9, _, not starting with 0x, unique in the profile and not a value id of the ECU (default: the kind, e.g. `power`, `power_2`…).", "power"),
+            "ecu" to S.str("The ECU (SGBD) the formula belongs to: its id is `<ecu>/<key>` and it is listed with that ECU's values. Default: the ECU of the inputs, which must all be values of it.", "<sgbd>"),
             "kind" to S.ref("ComputedKind"),
-            "inputs" to S.obj("Measurement id per role of the kind (Power: `torque` in N·m, `rpm`).", emptyList(), true, null),
+            "inputs" to S.obj("Measurement id per role of the kind (Power: `torque` in N·m, `rpm`), all values of the same ECU.", emptyList(), true, null),
             "label" to S.str("Shown on cards; at most ${ComputedValues.MAX_LABEL_LENGTH} characters (default: the kind).", "Power"))
         val reply = S.obj(null, listOf("computed", "warnings"), false, null, "computed" to S.ref("ComputedValue"), "warnings" to S.arr(S.str()))
-        val errors = mapOf(400 to "Malformed body.", 404 to "Unknown profile or computed value.", 422 to "Invalid computed value (code invalid_computed) or too many (too_many_computed).")
+        val errors = mapOf(400 to "Malformed body.", 404 to "Unknown profile or computed value.", 422 to "Invalid computed value (code invalid_computed, e.g. inputs of two ECUs), id already a value of the ECU (computed_key_taken) or too many (too_many_computed).")
         val example = buildJsonObject {
             put("kind", "Power"); put("label", "Power")
             put("inputs", buildJsonObject { put("torque", "<sgbd>/<id>"); put("rpm", "<sgbd>/<id2>") })
@@ -86,7 +95,7 @@ internal class ComputedRoutes(
             Route(
                 "GET", "/api/v1/profiles/{profile}/computed", RouteAccess.Needs(Scope.Read), "Profiles", "listComputed",
                 "Computed values of a profile",
-                "Values the app computes from other values of the profile (measurement ids `calc/<key>`), and the kinds it knows. " +
+                "Values the app computes from other values of one ECU (formulas, measurement ids `<ecu>/<key>`, listed with that ECU's values in GET /api/v1/ecus/{sgbd}/measurements), and the kinds it knows. " +
                     "Put one on a card or a graph like any measurement: its inputs are then read too, and count toward the profile's ${io.github.jonathangtd.bimmerdata.dashboard.Dashboard.MAX_VALUES} values.",
                 params = listOf(profileParam),
                 reply = Reply(description = "Computed values", schema = S.obj(null, listOf("computed", "kinds"), false, null,
@@ -125,6 +134,7 @@ internal class ComputedRoutes(
                     if (p.computed.any { it.key == c.key }) throw ApiException(409, "duplicate_key", "Key '${c.key}' is already used in this profile")
                     Profiles.updateComputed(set, id) { it + c } to c
                 }
+                changed()
                 ok(buildJsonObject { put("computed", valueJson(created)); put("warnings", warnings(created)) }, 201)
             },
             Route(
@@ -145,6 +155,7 @@ internal class ComputedRoutes(
                     val c = parse(b, p.computed, key)
                     Profiles.updateComputed(set, id) { list -> list.map { if (it.key == key) c else it } } to c
                 }
+                changed()
                 ok(buildJsonObject { put("computed", valueJson(replaced)); put("warnings", warnings(replaced)) })
             },
             Route(
@@ -169,6 +180,7 @@ internal class ComputedRoutes(
                     }
                     Profiles.updateProfile(set, id) { Computeds.remove(it, key) } to Unit
                 }
+                changed()
                 HttpResponse.Bytes(204, HttpServer.JSON, ByteArray(0))
             },
         )
@@ -177,8 +189,8 @@ internal class ComputedRoutes(
     companion object {
         internal fun schemas(): Map<String, JsonObject> = mapOf(
             "ComputedKind" to S.str("Power: engine power in ch from inputs `torque` (N·m) and `rpm`.", enum = ComputedKind.entries.map { it.name }),
-            "ComputedValue" to S.obj("A value computed by the app from other values of the profile; measurement id `calc/<key>`.", listOf("id", "key", "kind", "inputs"), false, null,
-                "id" to S.str(example = "calc/power"), "key" to S.str(example = "power"),
+            "ComputedValue" to S.obj("A value computed by the app from other values of one ECU (formula), listed with that ECU's values; measurement id `<ecu>/<key>`.", listOf("id", "ecu", "key", "kind", "inputs"), false, null,
+                "id" to S.str(example = "<sgbd>/power"), "ecu" to S.str(example = "<sgbd>"), "key" to S.str(example = "power"),
                 "kind" to S.ref("ComputedKind"), "label" to S.str(example = "Power"), "unit" to S.str(example = "ch"),
                 "inputs" to S.obj("Measurement id per role.", emptyList(), true, null)),
         )

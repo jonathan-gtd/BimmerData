@@ -125,6 +125,7 @@ internal fun typeName(type: GaugeType): String = stringResource(
         GaugeType.Trend -> R.string.type_trend
         GaugeType.MultiValue -> R.string.type_multi
         GaugeType.Status -> R.string.type_status
+        GaugeType.Curve -> R.string.type_curve
     },
 )
 
@@ -137,6 +138,7 @@ private fun typeDescription(type: GaugeType): String = stringResource(
         GaugeType.Trend -> R.string.type_trend_desc
         GaugeType.MultiValue -> R.string.type_multi_desc
         GaugeType.Status -> R.string.type_status_desc
+        GaugeType.Curve -> R.string.type_curve_desc
     },
 )
 
@@ -147,7 +149,7 @@ internal fun newCard(type: GaugeType, ids: List<String>, target: Target, page: P
     } else {
         when (type) {
             GaugeType.Dial, GaugeType.BigNumber -> 1 to 2
-            GaugeType.BipolarBar -> 2 to 2
+            GaugeType.BipolarBar, GaugeType.Curve -> 2 to 2
             else -> 1 to 1
         }
     }
@@ -238,7 +240,16 @@ private class DemoFeed : GaugeFeed {
         else -> values[id]?.let { Sample(it, null, nowMs) }
     }
 
-    override fun history(id: String): ValueHistory? = if (id == "d/rpm") rpmHistory else null
+    /** A power rising with the engine speed of [rpmHistory], for the curve preview. */
+    private val powerHistory = ValueHistory().apply {
+        for (i in 0 until rpmHistory.size) add(rpmHistory.timeAt(i), rpmHistory.valueAt(i) * 0.042 - 20)
+    }
+
+    override fun history(id: String): ValueHistory? = when (id) {
+        "d/rpm" -> rpmHistory
+        "d/pw" -> powerHistory
+        else -> null
+    }
 }
 
 private fun demoSpec(type: GaugeType, title: String, rpmUnit: String): GaugeSpec = when (type) {
@@ -248,6 +259,7 @@ private fun demoSpec(type: GaugeType, title: String, rpmUnit: String): GaugeSpec
     GaugeType.Trend -> GaugeSpec(type, title, null, 0.0, 7000.0, emptyList(), listOf(GaugeChannel("d/rpm", "", rpmUnit, 0)))
     GaugeType.MultiValue -> GaugeSpec(type, title, null, 0.8, 1.2, emptyList(), listOf(GaugeChannel("d/l1", "B1", "λ", 2), GaugeChannel("d/l2", "B2", "λ", 2)))
     GaugeType.Status -> GaugeSpec(type, title, null, 0.0, 1.0, emptyList(), listOf(GaugeChannel("d/status", "", "", 0)))
+    GaugeType.Curve -> GaugeSpec(type, title, null, 0.0, 1.0, emptyList(), listOf(GaugeChannel("d/rpm", "", rpmUnit, 0), GaugeChannel("d/pw", "", "ch", 0)))
 }
 
 // ------------------------------------------------------------------ measurement picker
@@ -307,9 +319,8 @@ internal fun MeasurementPickerSheet(
                     SgbdStep(choices) { sgbd = it }
                 }
                 else -> {
-                    val isCalc = s.equals(io.github.jonathangtd.bimmerdata.live.ComputedValues.CALC, ignoreCase = true)
                     SheetHeader(
-                        if (isCalc) stringResource(R.string.computed_catalog) else s.uppercase(),
+                        s.uppercase(),
                         onBack = {
                             if (autoSkipped || (choices?.all?.size ?: 0) <= 1) {
                                 if (fixedType == null) type = null
@@ -321,16 +332,9 @@ internal fun MeasurementPickerSheet(
                         },
                     )
                     if (profileEcus.isNotEmpty()) {
-                        ProfileEcuBar(
-                            profileEcus, current = s, onPick = { sgbd = it }, onOther = { otherEcu = true; sgbd = null },
-                            onComputed = { sgbd = io.github.jonathangtd.bimmerdata.live.ComputedValues.CALC },
-                        )
+                        ProfileEcuBar(profileEcus, current = s, onPick = { sgbd = it }, onOther = { otherEcu = true; sgbd = null })
                     }
-                    if (isCalc) {
-                        ComputedStep(vm, t, selected, profileEcus, onConfirm = { onConfirm(t, selected.toList()) })
-                    } else {
-                        MeasurementStep(vm, s, t, selected, onConfirm = { onConfirm(t, selected.toList()) })
-                    }
+                    MeasurementStep(vm, s, t, selected, onConfirm = { onConfirm(t, selected.toList()) })
                 }
             }
         }
@@ -438,8 +442,12 @@ private fun SgbdRow(info: SgbdInfo, onPick: (String) -> Unit) {
 private fun MeasurementStep(
     vm: DashboardViewModel, sgbd: String, type: GaugeType, selected: MutableList<String>, onConfirm: () -> Unit,
 ) {
-    val all by produceState<List<Measurement>?>(null, sgbd) { value = vm.measurements(sgbd) }
-    MeasurementList(all, type, selected, onConfirm)
+    var version by remember { mutableIntStateOf(0) }
+    val all by produceState<List<Measurement>?>(null, sgbd, version) { value = vm.measurements(sgbd) }
+    Column {
+        FormulaBar(vm, sgbd, version, onChanged = { removedId -> removedId?.let(selected::remove); version++ })
+        MeasurementList(all, type, selected, onConfirm)
+    }
 }
 
 /** Searchable list of [all] measurements (null = still loading); [selected] is updated in place. */
@@ -554,9 +562,9 @@ internal fun CardEditorSheet(
         type = type, measurementIds = ids, title = title.trim().ifEmpty { null },
         channelLabels = labels.toList().takeIf { l -> l.any { it.isNotBlank() } }?.let { l -> List(ids.size) { l.getOrNull(it).orEmpty() } },
         min = parseNumber(min), max = parseNumber(max), warnBelow = null, warnAbove = null,
-        alerts = alertRules.mapNotNull { it.rule() },
+        alerts = if (type == GaugeType.Curve) emptyList() else alertRules.mapNotNull { it.rule() },
         decimals = decimals.takeIf { it >= 0 }, colSpan = colSpan, rowSpan = rowSpan,
-        windowSeconds = windowSeconds.takeIf { type == GaugeType.Trend },
+        windowSeconds = windowSeconds.takeIf { type == GaugeType.Trend || type == GaugeType.Curve },
     )
     val auto = remember(card.id, ids, type, index) { CardSpecs.build(card.copy(type = type, measurementIds = ids, title = null, min = null, max = null, channelLabels = null, decimals = null), index, renderer.format) }
     val spec = remember(draft, index) { CardSpecs.build(draft, index, renderer.format) }
@@ -622,7 +630,7 @@ internal fun CardEditorSheet(
                     modifier = Modifier.fillMaxWidth(), colors = fieldColors(),
                 )
 
-                if (type != GaugeType.Status) {
+                if (type != GaugeType.Status && type != GaugeType.Curve) {
                     SectionTitle(stringResource(R.string.scale))
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         NumberField(stringResource(R.string.min), min, { min = it }, editNumber(auto.min, locale), Modifier.weight(1f), isError = minError)
@@ -635,11 +643,12 @@ internal fun CardEditorSheet(
                     )
                 }
 
-                if (type == GaugeType.Trend) {
+                if (type == GaugeType.Trend || type == GaugeType.Curve) {
                     TrendWindowSection(windowSeconds) { windowSeconds = it }
                 }
 
-                AlertsSection(alertRules, auto.channels.firstOrNull()?.unit.orEmpty())
+                // a curve has no alert: its first value is an axis
+                if (type != GaugeType.Curve) AlertsSection(alertRules, auto.channels.firstOrNull()?.unit.orEmpty())
 
                 SectionTitle(stringResource(R.string.size))
                 Stepper(
@@ -659,7 +668,7 @@ internal fun CardEditorSheet(
                 PillButton(stringResource(R.string.cancel), onClick = onDismiss, modifier = Modifier.weight(1f))
                 PillButton(
                     stringResource(R.string.save), onClick = { onSave(draft) },
-                    enabled = fits && !minError && draft.windowSeconds?.let { TrendWindow.isValid(it) } != false && alertRules.all { it.rule() != null },
+                    enabled = fits && !minError && draft.windowSeconds?.let { TrendWindow.isValid(it) } != false && (type == GaugeType.Curve || alertRules.all { it.rule() != null }),
                     color = Cockpit.OnAccent, background = Cockpit.Accent, modifier = Modifier.weight(1f),
                 )
             }

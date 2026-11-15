@@ -73,6 +73,8 @@
     <string name="type_bipolar_desc">Centered on 0, e.g. fuel trims B1 / B2</string>
     <string name="type_big_desc">Large value with session min / max</string>
     <string name="type_trend_desc">Value and the last 45 seconds</string>
+    <string name="type_curve">Curve</string>
+    <string name="type_curve_desc">Values against another one: the first value picked is the horizontal axis (e.g. engine speed, then power)</string>
     <string name="type_multi_desc">2 or 3 values, e.g. lambda B1 · B2</string>
     <string name="type_status_desc">Text or state result</string>
 

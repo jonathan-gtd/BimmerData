@@ -44,7 +44,7 @@ data class Dashboard(
         (phonePages + carPages).flatMapTo(LinkedHashSet()) { p -> p.cards.flatMap { it.measurementIds } }
 
     /**
-     * Values this layout costs to read: its measurement ids, each computed value (`calc/<key>`)
+     * Values this layout costs to read: its measurement ids, each computed value (formula)
      * counted as its inputs from [computed] (an input already on a card is counted once).
      */
     fun valueCount(computed: List<io.github.jonathangtd.bimmerdata.profiles.ComputedValue> = emptyList()): Int =
@@ -148,6 +148,7 @@ data class Card(
         fun measurementRange(type: GaugeType): IntRange = when (type) {
             GaugeType.BipolarBar -> 1..4
             GaugeType.MultiValue -> 2..3
+            GaugeType.Curve -> 2..4
             else -> 1..1
         }
     }

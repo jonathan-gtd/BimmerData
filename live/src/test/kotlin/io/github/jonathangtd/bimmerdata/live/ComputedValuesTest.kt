@@ -25,7 +25,7 @@ class ComputedValuesTest {
     private val torque = Measurement("ecu/0x58D0", "ecu", "Torque", "Nm", MeasurementSource.MeasurementTable(0x58D0, "STAT_TORQUE_WERT"))
     private val rpm = Measurement("ecu/0x4807", "ecu", "Engine speed", "rpm", MeasurementSource.MeasurementTable(0x4807, "STAT_RPM_WERT"))
     private val oil = Measurement("ecu/0x4402", "ecu", "Oil", "°C", MeasurementSource.MeasurementTable(0x4402, "STAT_OIL_WERT"))
-    private val def = ComputedDef("power", ComputedKind.Power, mapOf("torque" to torque.id, "rpm" to rpm.id), "Power")
+    private val def = ComputedDef("ecu", "power", ComputedKind.Power, mapOf("torque" to torque.id, "rpm" to rpm.id), "Power")
     private val power = ComputedValues.measurement(def) { id -> listOf(torque, rpm).firstOrNull { it.id == id } }!!
 
     @Test
@@ -34,8 +34,8 @@ class ComputedValuesTest {
         assertEquals(256.29, ComputedKind.Power.compute(listOf(300.0, 6000.0)), 0.01)
         assertEquals(0.0, ComputedKind.Power.compute(listOf(0.0, 6000.0)))
         assertEquals(0.0, ComputedKind.Power.compute(listOf(-40.0, 3000.0)), "engine braking gives 0, not a negative power")
-        assertEquals("calc/power", power.id)
-        assertEquals("calc", power.sgbd)
+        assertEquals("ecu/power", power.id, "a formula belongs to the ECU of its inputs")
+        assertEquals("ecu", power.sgbd)
         assertEquals("ch", power.unit)
         assertEquals("Power", power.label)
         assertEquals(listOf(torque, rpm), (power.source as MeasurementSource.Computed).inputs)
@@ -57,19 +57,19 @@ class ComputedValuesTest {
     @Test
     fun `update computes only what a fresh input touches`() {
         val all = mapOf(torque.id to Sample(200.0, null, 1_000), rpm.id to Sample(3000.0, null, 1_100), oil.id to Sample(90.0, null, 1_100))
-        assertEquals(setOf("calc/power"), ComputedValues.update(listOf(power), mapOf(rpm.id to all[rpm.id]!!), all).keys)
+        assertEquals(setOf("ecu/power"), ComputedValues.update(listOf(power), mapOf(rpm.id to all[rpm.id]!!), all).keys)
         assertTrue(ComputedValues.update(listOf(power), mapOf(oil.id to all[oil.id]!!), all).isEmpty())
         assertTrue(ComputedValues.update(emptyList(), all, all).isEmpty())
         val why = ComputedValues.unavailable(listOf(power), mapOf(torque.id to "refused"))
-        assertEquals("Torque: refused", why["calc/power"])
+        assertEquals("Torque: refused", why["ecu/power"])
     }
 
     @Test
     fun `computed values are read through their inputs`() {
         assertEquals(listOf(oil, torque, rpm), ComputedValues.expand(listOf(oil, power, rpm)))
         assertEquals(listOf(oil, power, rpm, torque), ComputedValues.withInputs(listOf(oil, power, rpm)))
-        assertEquals(setOf(oil.id, torque.id, rpm.id), ComputedValues.expandIds(listOf(oil.id, "calc/power", rpm.id), listOf(def)))
-        assertEquals(setOf("calc/other"), ComputedValues.expandIds(listOf("calc/other"), listOf(def)), "unknown computed id counted as itself")
+        assertEquals(setOf(oil.id, torque.id, rpm.id), ComputedValues.expandIds(listOf(oil.id, "ecu/power", rpm.id), listOf(def)))
+        assertEquals(setOf("ecu/other"), ComputedValues.expandIds(listOf("ecu/other"), listOf(def)), "unknown id counted as itself")
         assertNull(ComputedValues.measurement(def) { null }, "an input missing from the ECU folder: no value")
         assertNull(ComputedValues.measurement(def.copy(inputs = mapOf("torque" to torque.id))) { torque }, "a role missing")
     }
@@ -88,19 +88,22 @@ class ComputedValuesTest {
             override fun sgbdsWithMeasurements() = listOf("ecu")
             override fun measurements(sgbd: String) = if (sgbd == "ecu") listOf(torque, rpm, oil) else emptyList()
         }
-        val broken = ComputedDef("power_2", ComputedKind.Power, mapOf("torque" to "other/0x1", "rpm" to rpm.id), "")
-        val catalog = ComputedCatalog(base, { listOf(def, broken) }, "Computed values")
-        assertEquals(listOf("ecu", "calc"), catalog.sgbdsWithMeasurements())
-        assertEquals(listOf("calc/power"), catalog.measurements("calc").map { it.id })
-        assertEquals(listOf(torque, rpm, oil), catalog.measurements("ecu"))
-        assertEquals(2, catalog.sgbdInfos().last().measurementCount)
-        assertEquals("Torque · Engine speed", catalog.measurements("calc").single().description)
+        // an input of another ECU never resolves; a key that is already a value id of the ECU is left out
+        val broken = ComputedDef("ecu", "power_2", ComputedKind.Power, mapOf("torque" to "other/0x1", "rpm" to rpm.id), "")
+        val taken = ComputedDef("ecu", "0x4402", ComputedKind.Power, mapOf("torque" to torque.id, "rpm" to rpm.id), "")
+        val elsewhere = ComputedDef("dsc", "power", ComputedKind.Power, mapOf("torque" to torque.id, "rpm" to rpm.id), "")
+        val catalog = ComputedCatalog(base, { listOf(def, broken, taken, elsewhere) })
+        assertEquals(listOf("ecu"), catalog.sgbdsWithMeasurements(), "no pseudo ECU")
+        assertEquals(listOf("ecu/power", torque.id, rpm.id, oil.id), catalog.measurements("ecu").map { it.id }, "formulas first, with the ECU's values")
+        assertEquals("Torque · Engine speed", catalog.measurements("ecu").first().description)
+        assertTrue(catalog.measurements("dsc").isEmpty(), "inputs of another ECU: no value")
+        assertEquals(listOf("ecu/power"), catalog.computed().map { it.id })
     }
 
     @Test
     fun `Telegraf line of a computed value`() {
         val line = LineEncoder("My car").encode(power, Sample(256.3, null, 1_762_633_500_000))!!
-        assertTrue(line.contains(",ecu=calc,"), line)
+        assertTrue(line.contains(",ecu=ecu,"), line)
         assertTrue(line.contains(",id=power,"), line)
         assertTrue(line.contains(",unit=ch "), line)
         assertTrue(line.contains(" value=256.3 "), line)
