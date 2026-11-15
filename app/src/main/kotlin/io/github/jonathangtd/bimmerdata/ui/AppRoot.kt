@@ -106,7 +106,6 @@ fun AppRoot() {
             openDashboard = { overlay = null; tab = AppTab.Dashboard },
             openCars = { overlay = AppOverlay.Cars },
             openEvents = { overlay = AppOverlay.Events },
-            openDyno = { overlay = AppOverlay.Dyno },
         )
     }
     BackHandler(enabled = overlay != null) { overlay = null }
@@ -149,7 +148,6 @@ fun AppRoot() {
                     // a car chosen: back to the Profiles tab when opened from it, else to the dashboard
                     AppOverlay.Events -> io.github.jonathangtd.bimmerdata.events.ui.EventsScreen(onBack = { overlay = null })
                     AppOverlay.Cars -> CarsScreen(onBack = { overlay = null }, onShown = { overlay = null; if (tab != AppTab.Car) tab = AppTab.Dashboard })
-                    AppOverlay.Dyno -> io.github.jonathangtd.bimmerdata.dyno.ui.DynoScreen(onBack = { overlay = null })
                     null -> holder.SaveableStateProvider(tab.name) {
                         when (tab) {
                             AppTab.Dashboard -> DashboardScreen(onEditingChange = { editing = it })

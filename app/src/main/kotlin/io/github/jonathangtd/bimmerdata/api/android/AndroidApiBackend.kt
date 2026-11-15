@@ -211,8 +211,6 @@ class AndroidApiBackend(
 
     override fun restoreBackup(text: String, dryRun: Boolean): RestoreSummary = BackupManager.get(app).restore(text, includeApi = false, dryRun = dryRun)
 
-    override fun dyno(): io.github.jonathangtd.bimmerdata.dyno.DynoControl = io.github.jonathangtd.bimmerdata.dyno.DynoRuntime.get(app)
-
     override val recording: StateFlow<RecordingState> get() = repo.recorder.state
     override fun startRecording() = repo.recorder.start()
     override fun stopRecording() = repo.recorder.stop()

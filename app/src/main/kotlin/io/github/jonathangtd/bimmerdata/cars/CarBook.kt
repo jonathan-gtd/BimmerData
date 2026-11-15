@@ -99,9 +99,6 @@ class CarBook private constructor(context: Context) {
 
     fun update(id: String, label: String? = null, sgbds: List<String>? = null) = change { Cars.update(it, id, label = label, sgbds = sgbds) }
 
-    /** The virtual dyno values of car [id] (mass, drag area, rolling resistance, air density). */
-    fun updatePhysics(id: String, physics: io.github.jonathangtd.bimmerdata.live.vehicle.CarPhysics) = change { Cars.update(it, id, physics = physics) }
-
     /** Deletes a car with its profiles and fault read (after the user's confirmation). */
     fun delete(id: String) = change { Cars.delete(it, id, now()) }
 

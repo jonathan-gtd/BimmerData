@@ -75,7 +75,6 @@ class ApiService(
         ComputedRoutes(backend, ::meta).routes() +
         EventRoutes(backend).routes() +
         CarRoutes(backend, clock).routes() +
-        DynoRoutes(backend, ::meta).routes() +
         BackupRoutes(backend, clock).routes() +
         SetupRoutes(backend, guard, confirmTimeoutMs, clock, ::meta, catalogCache::clear).routes() +
         extensions.flatMap { ext ->

@@ -187,7 +187,6 @@ fun GraphScreen(vm: GraphViewModel = viewModel()) {
             }
             RoundIconButton(R.drawable.ic_flag, stringResource(R.string.events_title), onClick = navigator.openEvents)
             val g = ui.selected
-            RoundIconButton(R.drawable.ic_dyno, stringResource(R.string.dyno_open), onClick = navigator.openDyno)
             if (g != null) {
                 RoundIconButton(R.drawable.ic_pages, stringResource(R.string.graphs), onClick = { sheet = GraphSheet.Manage })
                 RoundIconButton(R.drawable.ic_edit, stringResource(R.string.graph_edit), onClick = { sheet = GraphSheet.Edit(g.id) })

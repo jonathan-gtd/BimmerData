@@ -46,8 +46,6 @@ data class Vehicle(
      * of a car not scanned yet, or ECUs a scan did not identify. Scans keep them.
      */
     val addedSgbds: List<String> = emptyList(),
-    /** Mass, drag and rolling resistance for the virtual dyno, typed by the user (all optional). */
-    val physics: CarPhysics = CarPhysics(),
 ) {
     fun ecu(address: Int): VehicleEcu? = ecus.firstOrNull { it.address == address }
 

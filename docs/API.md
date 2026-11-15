@@ -230,12 +230,6 @@ curl -s -H "$H" "$BD/events/<id>?format=csv" -o event.csv
 | GET / PUT / DELETE | `/api/v1/profiles/{profile}/graphs/{graph}` | read / layout | One graph / replace it / delete it (pages never touched) |
 | GET / POST | `/api/v1/profiles/{profile}/computed` | read / layout | Computed values of a profile (ids `calc/<key>`, e.g. the power) / add one |
 | PUT / DELETE | `/api/v1/profiles/{profile}/computed/{key}[?removeCards=true]` | layout | Replace a computed value / delete it (`409 computed_in_use` while cards or graphs show it, unless `removeCards=true`) |
-| GET | `/api/v1/dyno` | read | Virtual dyno: state, the selected car's values (`physics`, ready or what is missing), its inputs |
-| GET / PUT | `/api/v1/dyno/settings[?car=<id>]` | read / config | Dyno inputs of a car: engine speed, speed, pedal, overlay, driveline loss (saved, used, candidates) |
-| POST | `/api/v1/dyno/arm`, `/disarm`, `/start`, `/stop` | config | Arm (runs start at full throttle), disarm, start / end a run by hand |
-| GET | `/api/v1/dyno/runs[?car=<id>\|all]` | read | Runs of a car, newest first, with their peaks |
-| GET / PUT / DELETE | `/api/v1/dyno/runs/{run}[?raw=true]` | read / config | One run with its curve (and every reading) / name it / delete it |
-| GET | `/api/v1/dyno/runs/{run}/csv` | read | A run as CSV (smoothed samples and curve) |
 | GET | `/api/v1/diag/vehicle` | diag | The selected car, the ECUs of its last detection and their last fault read (no car traffic, never the VIN) |
 | GET | `/api/v1/diag/faults` | diag | Read the fault memory from the car (`?ecu=0x12` for one ECU, `?cached=true` for the last read) |
 | POST | `/api/v1/diag/faults/clear` | diag | **Writes.** Clear one ECU (`{"ecu":"0x12"}`) or all (`{}`), after a confirmation on the phone |
@@ -374,39 +368,6 @@ Each card has up to 4 alert rules in `alerts`:
 - `GET /api/v1/events/{id}` returns `event` and `snapshot` (`series`: id, label, unit, `t` in ms
   from the event, negative before, and `v`); `?format=csv` the same as a CSV in the format of the
   recordings, `time_ms` counted from the event, marker `event` at 0.
-
-### Virtual dyno
-
-- Measures the power that reaches the wheels from the car's acceleration during a full-throttle
-  pull in **one gear**. In one gear speed = k × engine speed: k is fitted on the speed readings (a
-  run whose ratio moves more than 3 % — gear change, clutch slip, wheel spin — is refused) and
-  the speed used is k × the smoothed engine speed (finer than whole km/h). Then
-  power at the wheels = m·a·v + ½·ρ·CdA·v³ + Crr·m·g·v, by engine speed bins of 100 to 250 rpm.
-  The road is assumed flat (do runs both ways), rotating parts are not counted (a low gear reads a
-  little low). `torqueNm` is that wheel power at the engine, transmission losses not counted;
-  `enginePowerCh` adds `drivelineLossPct` back (an estimate).
-- Nothing in it knows a particular car. It needs, for the selected car:
-  1. its mass with the driver: `PUT /api/v1/cars/{car}` `{"physics":{"massKg":1600}}` (optional
-     `dragAreaM2` default 0.65, `rollingResistance` 0.012, `airDensity` 1.2; null removes one);
-  2. an engine speed (unit rpm) and a vehicle speed (km/h, an ECU's or `gps/speed`); by default the
-     first of the active profile (an ECU speed before the GPS). Optional: a pedal (%, lets an armed
-     dyno start runs by itself at ≥ 90 % with the engine speed rising, and end them on release),
-     an overlay (a torque in Nm or a power in ch / PS / kW / hp the car gives, e.g. a computed
-     `calc/power`) drawn dashed next to the measured curve:
-
-  ```sh
-  curl -s -H "$H" -X PUT "$BD/cars/<car>" -d '{"physics":{"massKg":1620,"dragAreaM2":0.62}}'
-  curl -s -H "$H" -X PUT "$BD/dyno/settings" -d '{"rpm":"<sgbd>/<id>","speed":"<sgbd>/<id2>","pedal":"<sgbd>/<id3>","overlay":"calc/power"}'
-  curl -s -H "$H" -X POST "$BD/dyno/arm"     # 409 car_mass_missing / dyno_inputs_missing when not ready
-  curl -s -H "$H" "$BD/dyno/runs"            # after the pulls
-  ```
-
-- While armed it requests its inputs like a screen does (they are read even when the active
-  profile does not show them); it never reads faster than the acquisition allows (read pace and
-  automatic slow-downs unchanged): a profile holding only these values gives the most points.
-- Runs are kept per car on the phone (40 per car, the oldest go first) and in the full backup;
-  their curves are computed again at each read with the car's **current** values, so a corrected
-  mass applies to every run (the values when measured are in `physicsWhenMeasured`).
 
 ### Errors
 

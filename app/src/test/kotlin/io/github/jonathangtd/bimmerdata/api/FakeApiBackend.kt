@@ -67,11 +67,6 @@ class FakeApiBackend : ApiBackend {
         producer.join(500)
     }
 
-    /** The virtual dyno; null = not available (501). */
-    @Volatile var dynoControl: io.github.jonathangtd.bimmerdata.dyno.DynoControl? = null
-
-    override fun dyno() = dynoControl ?: notAvailable("The virtual dyno")
-
     @Volatile var pausedReading = false
 
     override fun setReadingPaused(paused: Boolean) { pausedReading = paused }

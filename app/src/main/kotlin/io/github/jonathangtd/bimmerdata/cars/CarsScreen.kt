@@ -109,8 +109,6 @@ internal class CarActions(
     val onEcus: (String) -> Unit,
     val onRename: (String) -> Unit,
     val onDelete: (String) -> Unit,
-    /** Mass and drag of the car (virtual dyno). */
-    val onPhysics: (String) -> Unit = {},
 )
 
 private sealed interface CarsSheet {
@@ -118,7 +116,6 @@ private sealed interface CarsSheet {
     data class Rename(val id: String) : CarsSheet
     data class Delete(val id: String) : CarsSheet
     data class Ecus(val id: String) : CarsSheet
-    data class Physics(val id: String) : CarsSheet
 }
 
 /**
@@ -157,7 +154,6 @@ fun CarsScreen(onBack: () -> Unit, onShown: () -> Unit, vm: DashboardViewModel =
         onEcus = { id -> sheet = CarsSheet.Ecus(id) },
         onRename = { id -> sheet = CarsSheet.Rename(id) },
         onDelete = { id -> sheet = CarsSheet.Delete(id) },
-        onPhysics = { id -> sheet = CarsSheet.Physics(id) },
     )
 
     Box(Modifier.fillMaxSize().background(Cockpit.Background)) {
@@ -197,16 +193,6 @@ fun CarsScreen(onBack: () -> Unit, onShown: () -> Unit, vm: DashboardViewModel =
         }
         is CarsSheet.Ecus -> car(s.id)?.let { c ->
             CarEcusSheet(c, loadChoices = { vm.sgbdChoices() }, snackbar = snackbar, onDismiss = { sheet = null })
-        }
-        is CarsSheet.Physics -> car(s.id)?.let { c ->
-            io.github.jonathangtd.bimmerdata.dyno.ui.CarPhysicsDialog(
-                c.label, c.physics, loss = null,
-                onSave = { physics, _ ->
-                    sheet = null
-                    scope.io { book.updatePhysics(c.id, physics) }
-                },
-                onDismiss = { sheet = null },
-            )
         }
     }
 }
@@ -355,7 +341,6 @@ private fun CarRow(r: CarRowInfo, busy: Boolean, actions: CarActions) {
                 CarMenuItem(R.drawable.ic_plug, stringResource(R.string.cars_detect), enabled = !busy) { menu = false; actions.onDetect(c.id) }
                 CarMenuItem(R.drawable.ic_ecu, stringResource(R.string.cars_ecus_action)) { menu = false; actions.onEcus(c.id) }
                 CarMenuItem(R.drawable.ic_edit, stringResource(R.string.cars_rename)) { menu = false; actions.onRename(c.id) }
-                CarMenuItem(R.drawable.ic_dyno, stringResource(R.string.cars_physics)) { menu = false; actions.onPhysics(c.id) }
                 CarMenuItem(R.drawable.ic_delete, stringResource(R.string.cars_delete), color = Cockpit.Danger) { menu = false; actions.onDelete(c.id) }
             }
         }
