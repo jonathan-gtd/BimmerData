@@ -84,6 +84,11 @@ A typical agent session:
 5. `POST /api/v1/dashboard/car/pages`, `POST …/pages/{page}/cards` – build.
 6. `GET /api/v1/dashboard/car/pages/{page}/render.png` – look at the result, adjust with `PATCH`.
 
+While it changes profiles, pages, graphs or settings, an agent should **lock the app** so that the
+user does not edit the same things at the same time: `PUT /api/v1/lock` with
+`{"reason":"Adding the profile « Cold start »"}` before, `DELETE /api/v1/lock` after (see
+[Lock](#lock)).
+
 ## curl examples
 
 ```sh
@@ -152,6 +157,10 @@ curl -s -H "$H" "$BD/recordings/bimmerdata_2026-11-08_14-03-12.csv" -o run.csv
 curl -s -H "$H" -X POST "$BD/events" -d '{"note":"jerk at 90 km/h"}'
 curl -s -H "$H" "$BD/events"
 curl -s -H "$H" "$BD/events/<id>?format=csv" -o event.csv
+
+# Lock the app while changing things (scope layout), then unlock
+curl -s -H "$H" -X PUT "$BD/lock" -d '{"reason":"Adding a profile","seconds":300}'
+curl -s -H "$H" -X DELETE "$BD/lock"
 ```
 
 ## Operations
@@ -202,6 +211,8 @@ curl -s -H "$H" "$BD/events/<id>?format=csv" -o event.csv
 | POST | `/api/v1/events` | config | Mark a driver event now (`{"note":"…"}` optional), like the « Événement » button |
 | GET | `/api/v1/events`, `/api/v1/events/{id}` | read | Events (newest first, `?car=`, `?limit=`) / one event with the values read around it (`?format=csv` for CSV) |
 | PATCH / DELETE | `/api/v1/events/{id}` | config | Change the note / delete the event and its values |
+| GET | `/api/v1/lock` | read | Is the app locked by an API client? (`lock` or null) |
+| PUT / DELETE | `/api/v1/lock` | layout | Lock the phone's screens while changing things (`{"reason":"…","seconds":600}`, again to renew) / unlock |
 | GET / PATCH | `/api/v1/settings` | read / config | App settings: auto-connect on the cable, Bluetooth connect-on-start (API settings are read-only) |
 | GET / PATCH | `/api/v1/settings/gps` | read / config | GPS position: switch, interval, permission and state |
 | GET / PATCH | `/api/v1/settings/recording` | read / config | CSV recording: row rate, file prefix, back to the default folder |
@@ -377,6 +388,21 @@ Each card has up to 4 alert rules in `alerts`:
 - `GET /api/v1/events/{id}` returns `event` and `snapshot` (`series`: id, label, unit, `t` in ms
   from the event, negative before, and `v`); `?format=csv` the same as a CSV in the format of the
   recordings, `time_ms` counted from the event, marker `event` at 0.
+
+### Lock
+
+- An agent that changes the configuration (profiles, pages, graphs, settings, cars) while the user
+  may be using the phone takes the lock first: `PUT /api/v1/lock` with `reason` (shown on the
+  phone, at most 120 characters) and `seconds` (10–3600, default 600). The phone then shows a lock
+  screen over every tab with the reason and the time left; touches do not reach the app below.
+  Reading, recording, Android Auto, the Telegraf export and the API itself go on, and the
+  confirmations of the `diag` routes still show above it.
+- The agent decides: nothing locks by itself. Another `PUT` renews it (new reason and end, same
+  `sinceMs`); `DELETE /api/v1/lock` releases it (`released` false if it was not held).
+- It can never stay stuck: it ends by itself after `seconds`, a restart of the app releases it,
+  and the user can break it on the phone (« Déverrouiller », after a confirmation). During long
+  work, check `GET /api/v1/lock` and stop or ask before going on when it was broken.
+- The lock does not refuse API calls: it only keeps the user's hands off meanwhile.
 
 ### Errors
 

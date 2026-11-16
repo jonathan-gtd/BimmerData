@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Écran de verrouillage pendant qu’un client de l’API tient le verrou (PUT /api/v1/lock, ui/EditLockHost). -->
+<resources>
+    <string name="lock_title">Modifications en cours par l’API</string>
+    <string name="lock_body">Un script ou un agent IA modifie la configuration. L’application est verrouillée pendant ce temps pour que vous ne modifiiez pas les mêmes choses en même temps. La lecture et l’enregistrement continuent.</string>
+    <string name="lock_time_left">Se termine tout seul dans %1$s</string>
+    <string name="lock_unlock">Déverrouiller</string>
+    <string name="lock_unlock_title">Déverrouiller maintenant ?</string>
+    <string name="lock_unlock_text">Le client de l’API est peut-être encore en train de modifier : ce que vous changez peut être écrasé, ou écraser son travail.</string>
+    <string name="lock_keep">Garder verrouillé</string>
+</resources>

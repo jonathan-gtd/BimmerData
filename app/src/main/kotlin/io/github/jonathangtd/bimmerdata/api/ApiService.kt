@@ -59,6 +59,8 @@ class ApiService(
     /** Asks the user on the phone before a write to the Bluetooth adapter (CAN mode); default: refused. */
     private val guard: CarWriteGuard = CarWriteGuard.DenyAll,
     private val confirmTimeoutMs: Long = DiagApi.DEFAULT_CONFIRM_TIMEOUT_MS,
+    /** Lock of the phone's screens taken by API clients (PUT /api/v1/lock). */
+    private val editLock: EditLock = EditLock.shared,
 ) {
     val history = SampleHistory()
     val reads = ApiReads(backend::setApiMeasurements, clock)
@@ -76,6 +78,7 @@ class ApiService(
         EventRoutes(backend).routes() +
         CarRoutes(backend, clock).routes() +
         BackupRoutes(backend, clock).routes() +
+        LockRoutes(editLock, clock).routes() +
         SetupRoutes(backend, guard, confirmTimeoutMs, clock, ::meta, catalogCache::clear).routes() +
         extensions.flatMap { ext ->
         ext.routes(ExtensionContext(backend, ext.guard)).onEach {

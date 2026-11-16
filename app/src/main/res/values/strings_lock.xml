@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lock screen shown while an API client holds the lock (PUT /api/v1/lock, ui/EditLockHost). -->
+<resources>
+    <string name="lock_title">Changes in progress through the API</string>
+    <string name="lock_body">A script or an AI agent is changing the configuration. The app is locked meanwhile so that you do not change the same things at the same time. Reading and recording go on.</string>
+    <string name="lock_time_left">Ends by itself in %1$s</string>
+    <string name="lock_unlock">Unlock</string>
+    <string name="lock_unlock_title">Unlock now?</string>
+    <string name="lock_unlock_text">The API client may still be making changes: what you change may be overwritten, or overwrite its work.</string>
+    <string name="lock_keep">Keep locked</string>
+</resources>

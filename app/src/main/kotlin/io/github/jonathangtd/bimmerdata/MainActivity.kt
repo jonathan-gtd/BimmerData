@@ -27,6 +27,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             BimmerDataTheme {
                 AppRoot()
+                // lock screen while an API client changes the configuration (PUT /api/v1/lock)
+                io.github.jonathangtd.bimmerdata.ui.EditLockHost()
                 // REST API requests that write to the car wait for the user's answer here
                 io.github.jonathangtd.bimmerdata.ui.ApiConfirmHost()
             }
