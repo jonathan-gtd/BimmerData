@@ -220,6 +220,34 @@ class AcquisitionEngineTest {
     }
 
     @Test
+    fun `after an ignition off or a start, the ECU is read at 8 per second as soon as it answers`() = runBlocking {
+        val catalog = catalog()
+        val sim = EcuSimulator(liveValues = true)
+        val (_, iface) = kline(sim)
+        val engine = AcquisitionEngine(
+            iface, catalog,
+            // recovery by halvings would take minutes: only the absent-ECU rule can bring it back
+            AcquisitionEngine.Config(retryDelayMinMs = 50, retryDelayMaxMs = 400, reconnectAfterFailedCycles = 2,
+                recoverAfterMs = 600_000, absentAfterMs = 2000),
+        )
+        try {
+            engine.setMeasurements(tableMeasurements(catalog))
+            engine.start()
+            awaitUntil { sim.recordReads > 5 }
+            sim.silent = true // ignition off / cranking: nothing answers for a while
+            awaitUntil(what = "slowed down") { engine.currentReadIntervalMs > 125 }
+            delay(3000)
+            assertTrue(engine.currentReadIntervalMs > 125, "still slowed while silent: ${engine.currentReadIntervalMs}")
+            sim.silent = false
+            awaitUntil(what = "running again") { engine.status.value.state == AcquisitionState.Running && engine.status.value.cyclesPerSecond > 0.5 }
+            awaitUntil(timeoutMs = 3000, what = "back to 125 ms at once") { engine.currentReadIntervalMs == 125L }
+            assertTrue(engine.readStats().slowDowns >= 1, "the slow-down did happen: ${engine.readStats().summary()}")
+        } finally {
+            engine.close()
+        }
+    }
+
+    @Test
     fun `an id refused by the ECU is isolated, the others are still read`() = runBlocking {
         val catalog = catalog()
         val sim = EcuSimulator()

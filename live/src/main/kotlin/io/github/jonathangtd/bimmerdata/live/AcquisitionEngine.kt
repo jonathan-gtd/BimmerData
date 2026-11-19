@@ -50,6 +50,9 @@ import kotlin.coroutines.coroutineContext
  *   ([Config.minReadIntervalMs] = 125 ms, 8 reads/s). A read the car did not answer (timeout,
  *   transmission error) doubles the interval up to [Config.maxReadIntervalMs]; after
  *   [Config.recoverAfterMs] without incident it is halved again, never below the minimum.
+ *   An ECU that did not answer at all for [Config.absentAfterMs] (ignition off, cranking, ECU
+ *   rebooting) was absent, not overloaded: as soon as it answers again it is read at the
+ *   minimum interval, otherwise the first minutes after an engine start would be read slowly.
  *   Asked back to back for 40 values, an engine ECU misfired and the whole car glitched.
  * - [MeasurementSource.JobResult] measurements are grouped by (sgbd, job, args): one job run
  *   feeds every result of the group. When other groups are planned too, a job group runs at most
@@ -97,6 +100,11 @@ class AcquisitionEngine(
         val maxReadIntervalMs: Long = 1000,
         /** Without incident for this long, the interval is halved again (down to [minReadIntervalMs]). */
         val recoverAfterMs: Long = 180_000,
+        /**
+         * Every read failing (or no connection) for this long = the ECU was absent rather than
+         * overloaded: when it answers again, the slow-down is dropped at once.
+         */
+        val absentAfterMs: Long = 3000,
         val retryDelayMinMs: Long = 200,
         val retryDelayMaxMs: Long = 5000,
         val reconnectAfterFailedCycles: Int = 5,
@@ -234,6 +242,8 @@ class AcquisitionEngine(
     @Volatile private var readIntervalMs = config.minReadIntervalMs.coerceAtLeast(0)
     @Volatile private var slowDowns = 0L
     private var lastIncidentAt = 0L
+    /** Start of the current run of cycles where no read was answered (null while the ECU answers). */
+    private var silentSince: Long? = null
 
     /** Start-to-start interval between two reads of one ECU now (raised by the automatic slow-down). */
     val currentReadIntervalMs: Long get() = readIntervalMs
@@ -259,6 +269,24 @@ class AcquisitionEngine(
         if (readIntervalMs > base && now - lastIncidentAt >= config.recoverAfterMs) {
             readIntervalMs = (readIntervalMs / 2).coerceAtLeast(base)
             lastIncidentAt = now // next halving after another quiet period
+        }
+    }
+
+    /** No read answered in this cycle (or no connection): the ECU may be absent. */
+    private fun markSilent(now: Long) {
+        if (silentSince == null) silentSince = now
+    }
+
+    /**
+     * A read was answered. After [Config.absentAfterMs] without any answer the ECU was absent
+     * (ignition off, cranking), not overloaded: back to [Config.minReadIntervalMs] at once.
+     */
+    private fun markAnswered(now: Long) {
+        val since = silentSince ?: return
+        silentSince = null
+        if (now - since >= config.absentAfterMs) {
+            readIntervalMs = config.minReadIntervalMs.coerceAtLeast(0)
+            lastIncidentAt = now
         }
     }
 
@@ -427,6 +455,7 @@ class AcquisitionEngine(
         readIntervalMs = config.minReadIntervalMs.coerceAtLeast(0)
         slowDowns = 0
         lastIncidentAt = 0
+        silentSince = null
         intervalCount = 0
         totalCycles = 0
         slowCycles = 0
@@ -444,6 +473,7 @@ class AcquisitionEngine(
                         errorCount++
                         connectFailures++
                         lastError = err
+                        markSilent(clock())
                         _status.value = AcquisitionStatus(AcquisitionState.Error, 0.0, errorCount, err)
                         failQueued(err) // one-off operations do not wait for a reconnection
                         if (_link.value == LinkState.Pending && config.firstConnectAttempts in 1..connectFailures) {
@@ -543,6 +573,7 @@ class AcquisitionEngine(
                 }
                 if (successes > 0) {
                     failedCycles = 0
+                    markAnswered(clock())
                     markCycle()
                     _status.value = AcquisitionStatus(AcquisitionState.Running, cyclesPerSecond(), errorCount, planMessage(lastError.takeIf { failures > 0 }))
                 } else if (failures > 0 && linkFailures == 0) {
@@ -550,9 +581,11 @@ class AcquisitionEngine(
                     // service, missing result, protocol of that SGBD not implemented). Not a reason to
                     // show the connection as dead or to reconnect; the groups retry with their backoff.
                     failedCycles = 0
+                    markAnswered(clock())
                     _status.value = AcquisitionStatus(AcquisitionState.Running, 0.0, errorCount, planMessage(lastError))
                 } else if (failures > 0) {
                     failedCycles++
+                    markSilent(clock())
                     _status.value = AcquisitionStatus(AcquisitionState.Error, cyclesPerSecond(), errorCount, lastError)
                     if (failedCycles >= config.reconnectAfterFailedCycles) {
                         failedCycles = 0
