@@ -136,6 +136,7 @@ fun ConnectionPillContent(
     val context = LocalContext.current
     var pendingMode by remember { mutableStateOf<LiveMode?>(null) }
     val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        io.github.jonathangtd.bimmerdata.gps.GpsRuntime.get(context).recheck() // location maybe granted just now
         pendingMode?.let(onConnect) // connect anyway: a missing permission is reported by the connection
         pendingMode = null
     }

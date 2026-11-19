@@ -9,6 +9,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 import io.github.jonathangtd.bimmerdata.bluetooth.BluetoothAccess
+import io.github.jonathangtd.bimmerdata.gps.GpsRuntime
+import io.github.jonathangtd.bimmerdata.settings.AppSettings
 
 /**
  * Runtime permissions of the live acquisition. Only the notification permission (Android 13+)
@@ -39,11 +41,18 @@ object LivePermissions {
 
     /**
      * Runtime permissions still missing before connecting in [mode]: the notification of the
-     * foreground service (every mode, simulation included) and BLUETOOTH_CONNECT (Android 12+) for Bluetooth.
+     * foreground service (every mode, simulation included), BLUETOOTH_CONNECT (Android 12+) for
+     * Bluetooth, and the precise location when the GPS position is switched on in the settings.
+     * The location one matters after a reinstall or a backup restore: the GPS setting comes back
+     * on, the permission does not, and the position would silently stop being recorded.
      * Connect anyway once the dialog is answered: without them the connection reports why.
      */
     fun missingFor(context: Context, mode: LiveMode): Array<String> = buildList {
         if (shouldRequestNotifications(context)) add(Notifications)
         if (mode == LiveMode.Bluetooth && !BluetoothAccess.hasConnectPermission(context)) BluetoothAccess.connectPermission?.let(::add)
+        if (AppSettings.get(context).state.value.gps.enabled && !GpsRuntime.hasPermission(context)) {
+            add(Manifest.permission.ACCESS_FINE_LOCATION)
+            add(Manifest.permission.ACCESS_COARSE_LOCATION) // Android 12+ asks for both to offer the precise one
+        }
     }.toTypedArray()
 }
